@@ -1,3 +1,5 @@
+/* Matches two tables together */
+
 USE OWS;
 
 /*
