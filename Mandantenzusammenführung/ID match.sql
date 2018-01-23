@@ -1,30 +1,35 @@
+USE OWS;
+
+/*
 DECLARE @TableID TABLE (
   ID_OWS int,
   ID_Woz int
 );
+*/
 
-INSERT INTO @TableID
-SELECT Bereich.ID AS BereichID, Bereich_Woz.ID AS BereichID_Woz
-FROM Bereich 
-JOIN [ATENADVANTEX01\ADVANTEX].[Wozabal].[dbo].[Bereich] AS Bereich_Woz ON Bereich_Woz.Bereich = Bereich.Bereich
-WHERE Bereich_Woz.ID <> Bereich.ID;
+--INSERT INTO @TableID
+SELECT Mitarbei.ID AS MitarbeiID, Mitarbei_Woz.ID AS MitarbeiID_Woz
+FROM Mitarbei 
+JOIN [ATENADVANTEX01\ADVANTEX].[Wozabal].[dbo].[Mitarbei] AS Mitarbei_Woz ON Mitarbei_Woz.UserName = Mitarbei.UserName
+--WHERE Mitarbei_Woz.ID <> Mitarbei.ID
+ORDER BY Mitarbei.ID;
 
 /*
 
 SELECT * FROM @TableID ORDER BY ID_Woz;
 
 SELECT *
-FROM Bereich
+FROM Mitarbei
 WHERE ID IN (SELECT ID_Woz FROM @TableID);
 
 */
 
 /*
-ALTER TABLE Bereich DISABLE TRIGGER LastModified_Bereich_UPDATE;
+ALTER TABLE Mitarbei DISABLE TRIGGER LastModified_Mitarbei_UPDATE;
 
-UPDATE Bereich SET Bereich.ID = TableID.ID_Woz
-FROM Bereich
-JOIN @TableID AS TableID ON TableID.ID_OWS = Bereich.ID;
+UPDATE Mitarbei SET Mitarbei.ID = TableID.ID_Woz
+FROM Mitarbei
+JOIN @TableID AS TableID ON TableID.ID_OWS = Mitarbei.ID;
 
-ALTER TABLE Bereich ENABLE TRIGGER LastModified_Bereich_UPDATE;
+ALTER TABLE Mitarbei ENABLE TRIGGER LastModified_Mitarbei_UPDATE;
 */
