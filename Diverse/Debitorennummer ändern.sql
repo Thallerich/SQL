@@ -1,0 +1,1 @@
+UPDATE Kunden SET Debitor = INSERT(Kunden.Debitor, 1, 2, '27'), KdNr = IIF(CONVERT(INSERT(Kunden.Debitor, 1, 2, '27'), SQL_INTEGER) IS NULL, 0, CONVERT(INSERT(Kunden.Debitor, 1, 2, '27'), SQL_INTEGER)) WHERE KdNr NOT IN (30093, 1286, 30082, 0)
