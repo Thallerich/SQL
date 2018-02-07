@@ -1,34 +1,34 @@
-SELECT Nummer_von, Nummer_bis, Zeichenlänge, COUNT(DISTINCT TeileID) AS CodesWozabal
+SELECT Betriebsteil, Startwert, Endwert, Länge, COUNT(DISTINCT TeileID) AS CodesWozabal
 FROM (
-  SELECT _BCKreisSAL.Nummer_von, _BCKreisSAL.Nummer_bis, _BCKreisSAL.Zeichenlänge, N'TEILE_' + CAST(Teile.ID AS nvarchar(20)) AS TeileID
-  FROM _BCKreisSAL
-  INNER JOIN Teile ON Teile.Barcode >= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_von)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND Teile.Barcode <= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_bis)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND LEN(Teile.Barcode) = _BCKreisSAL.Zeichenlänge
+  SELECT _idbereiche_sal.Betriebsteil, _idbereiche_sal.Startwert, _idbereiche_sal.Endwert, _idbereiche_sal.Länge, N'TEILE_' + CAST(Teile.ID AS nvarchar(20)) AS TeileID
+  FROM _idbereiche_sal
+  INNER JOIN Teile ON Teile.Barcode >= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Startwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND Teile.Barcode <= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Endwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND LEN(Teile.Barcode) = _idbereiche_sal.Länge
 
   UNION ALL
 
-  SELECT _BCKreisSAL.Nummer_von, _BCKreisSAL.Nummer_bis, _BCKreisSAL.Zeichenlänge, N'TEILE_' + CAST(Teile.ID AS nvarchar(20)) AS TeileID
-  FROM _BCKreisSAL
-  INNER JOIN Teile ON Teile.RentomatChip >= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_von)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND Teile.RentomatChip <= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_bis)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND LEN(Teile.RentomatChip) = _BCKreisSAL.Zeichenlänge
+  SELECT _idbereiche_sal.Betriebsteil, _idbereiche_sal.Startwert, _idbereiche_sal.Endwert, _idbereiche_sal.Länge, N'TEILE_' + CAST(Teile.ID AS nvarchar(20)) AS TeileID
+  FROM _idbereiche_sal
+  INNER JOIN Teile ON Teile.RentomatChip >= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Startwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND Teile.RentomatChip <= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Endwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND LEN(Teile.RentomatChip) = _idbereiche_sal.Länge
 
   UNION ALL
 
-  SELECT _BCKreisSAL.Nummer_von, _BCKreisSAL.Nummer_bis, _BCKreisSAL.Zeichenlänge, N'OPTEILE_' + CAST(OPTeile.ID AS nvarchar(20)) AS TeileID
-  FROM _BCKreisSAL
-  INNER JOIN OPTeile ON OPTeile.Code >= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_von)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND OPTeile.Code <= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_bis)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND LEN(OPTeile.Code) = _BCKreisSAL.Zeichenlänge
+  SELECT _idbereiche_sal.Betriebsteil, _idbereiche_sal.Startwert, _idbereiche_sal.Endwert, _idbereiche_sal.Länge, N'OPTEILE_' + CAST(OPTeile.ID AS nvarchar(20)) AS TeileID
+  FROM _idbereiche_sal
+  INNER JOIN OPTeile ON OPTeile.Code >= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Startwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND OPTeile.Code <= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Endwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND LEN(OPTeile.Code) = _idbereiche_sal.Länge
 
   UNION ALL
 
-  SELECT _BCKreisSAL.Nummer_von, _BCKreisSAL.Nummer_bis, _BCKreisSAL.Zeichenlänge, N'OPTEILE_' + CAST(OPTeile.ID AS nvarchar(20)) AS TeileID
-  FROM _BCKreisSAL
-  INNER JOIN OPTeile ON OPTeile.Code2 >= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_bis)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND OPTeile.Code2 <= RIGHT(REPLICATE(N'0', _BCKreisSAL.Zeichenlänge) + LTRIM(RTRIM(_BCKreisSAL.Nummer_bis)), _BCKreisSAL.Zeichenlänge) COLLATE Latin1_General_CS_AS
-    AND LEN(OPTeile.Code2) = _BCKreisSAL.Zeichenlänge
+  SELECT _idbereiche_sal.Betriebsteil, _idbereiche_sal.Startwert, _idbereiche_sal.Endwert, _idbereiche_sal.Länge, N'OPTEILE_' + CAST(OPTeile.ID AS nvarchar(20)) AS TeileID
+  FROM _idbereiche_sal
+  INNER JOIN OPTeile ON OPTeile.Code2 >= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Endwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND OPTeile.Code2 <= RIGHT(REPLICATE(N'0', _idbereiche_sal.Länge) + LTRIM(RTRIM(_idbereiche_sal.Endwert)), _idbereiche_sal.Länge) COLLATE Latin1_General_CS_AS
+    AND LEN(OPTeile.Code2) = _idbereiche_sal.Länge
 ) AS BCKreis
-GROUP BY Nummer_von, Nummer_bis, Zeichenlänge
-ORDER BY Nummer_von ASC;
+GROUP BY Betriebsteil, Startwert, Endwert, Länge
+ORDER BY Betriebsteil, Länge, Startwert ASC;
