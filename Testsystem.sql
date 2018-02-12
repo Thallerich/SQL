@@ -54,7 +54,7 @@ BEGIN TRANSACTION;
     WHERE [Parameter] = N'WEB_EXPORT_UPLOAD_PATH';
 
   UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest\AdvanTex\Data\Logos\Wozabal_Test.bmp'
+    SET [ValueMemo] = N'\\srvatenadvtest\AdvanTex\Data\Logos\Wozabal_Miettex_Testsystem.bmp'
     WHERE [Parameter] = N'LOGO1_PATH_UND_DATEINAME';
     
   UPDATE Settings
