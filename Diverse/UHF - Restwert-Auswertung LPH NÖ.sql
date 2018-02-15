@@ -24,7 +24,7 @@ SELECT Kunden.KdNr,
   OPTeile.AnzWasch AS [Anzahl Wäschen],
   OPTeile.AlterInfo AS [Alter des Teils in Wochen],
   CAST(OPTeile.EkGrundAkt * 1.3 AS money) AS Preis,
-  CAST(OPTeile.RestwertInfo AS money) AS Restwert
+  CAST(OPTeile.AusDRestwert AS money) AS Restwert
 FROM OPTeile
 JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
 JOIN Vsa ON OPTeile.VsaID = Vsa.ID
@@ -34,6 +34,13 @@ JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Status ON OPTeile.Status = Status.Status AND Status.Tabelle = N'OPTEILE'
 JOIN Actions ON OPTeile.LastActionsID = Actions.ID
 WHERE Holding.Holding = N'LPH NÖ'
-  AND (OPTeile.Status = N'W' OR (OPTeile.Status = N'Q' AND OPTeile.LastActionsID = 102)) -- 102 = OP Auslesen
-  AND OPTeile.RechPoID < 0
+  --AND (OPTeile.Status = N'W' OR (OPTeile.Status = N'Q' AND OPTeile.LastActionsID = 102)) -- 102 = OP Auslesen
+  AND OPTeile.RechPoID IN (
+    SELECT RechPo.ID
+    FROM RechPo
+    JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+    JOIN RKoType ON RechKo.RKoTypeID = RKoType.ID
+    WHERE RechKo.KundenID = Kunden.ID
+      AND RKoType.Bez = N'Schwundverrechnung UHF-Pool'
+  )
 ORDER BY Kunden.KdNr, Abteil.Abteilung, Artikel.ArtikelNr;
