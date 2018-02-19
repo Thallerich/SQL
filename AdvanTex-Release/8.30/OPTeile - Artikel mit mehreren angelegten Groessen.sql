@@ -58,7 +58,19 @@ WITH ArtMultiGroe AS (
 )
 SELECT ArtMultiGroe.ArtikelID,
   ArtMultiGroe.ArtikelNr,
-  ArtMultiGroe.ArtikelBez
+  ArtMultiGroe.ArtikelBez,
+  [Teile ohne Größe] = (
+    SELECT COUNT(OPTeile.ID)
+    FROM OPTeile
+    WHERE OPTeile.ArtikelID = ArtMultiGroe.ArtikelID
+      AND OPTeile.ArtGroeID < 0
+  ), 
+  [Teile mit Größe] = (
+    SELECT COUNT(OPTeile.ID)
+    FROM OPTeile
+    WHERE OPTeile.ArtikelID = ArtMultiGroe.ArtikelID
+      AND OPTeile.ArtGroeID > 0
+  )
 FROM ArtMultiGroe
 WHERE EXISTS (
   SELECT OPTeile.*
