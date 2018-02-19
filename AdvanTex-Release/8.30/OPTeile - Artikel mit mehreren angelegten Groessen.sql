@@ -47,6 +47,26 @@ WHERE Artikel.ID IN (
   )
 ORDER BY AnzGroe DESC;
 
+-- Alternative zu oben - deutlich flotter:
+
+WITH ArtMultiGroe AS (
+  SELECT Artikel.ID AS ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelBez, COUNT(ArtGroe.ID) AS AnzGroe
+  FROM Artikel
+  JOIN ArtGroe ON ArtGroe.ArtikelID = Artikel.ID AND ArtGroe.Groesse <> N'-'
+  GROUP BY Artikel.ID, Artikel.ArtikelNr, Artikel.ArtikelBez
+  HAVING COUNT(ArtGroe.ID) > 1
+)
+SELECT ArtMultiGroe.ArtikelID,
+  ArtMultiGroe.ArtikelNr,
+  ArtMultiGroe.ArtikelBez
+FROM ArtMultiGroe
+WHERE EXISTS (
+  SELECT OPTeile.*
+  FROM OPTeile
+  WHERE OPTeile.ArtikelID = ArtMultiGroe.ArtikelID
+    AND OPTeile.ArtGroeID < 0
+);
+
 -- Zum Zuordnen der korrekten Größe zu den Teilen - 0 durch tatsächliche IDs ersetzen:
 /*
 UPDATE OPTeile SET OPTeile.ArtGroeID = 0
