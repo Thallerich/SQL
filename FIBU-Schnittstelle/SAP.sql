@@ -14,7 +14,7 @@ DECLARE @WaeCode nchar(4);
 DECLARE @BelegNr int;
 DECLARE @Nettowert money;
 DECLARE @Bruttowert money;
-DECLARE @Steuercode nchar(1);
+DECLARE @Steuerschl nchar(2);
 DECLARE @Debitor nchar(24);
 DECLARE @Gegenkonto nchar(17);
 DECLARE @Kostenstelle nchar(10);
@@ -24,7 +24,7 @@ DECLARE @i int = 0;
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT KopfPos, Art, Belegdat, WaeCode, BelegNr, Nettowert, Bruttowert, Steuercode, Debitor, Gegenkonto, Kostenstelle FROM #bookingexport ORDER BY OrderByAutoInc ASC;
+  SELECT KopfPos, Art, Belegdat, WaeCode, BelegNr, Nettowert, Bruttowert, Steuerschl, Debitor, Gegenkonto, Kostenstelle FROM #bookingexport ORDER BY OrderByAutoInc ASC;
 
 -- BGR00 - Belegkopf für Buchhaltungsbeleg
 INSERT INTO @output
@@ -42,7 +42,7 @@ SET @i = @i + 1;
 
 OPEN fibuexp;
 
-FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuercode, @Debitor, @Gegenkonto, @Kostenstelle;
+FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -100,12 +100,7 @@ BEGIN
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
-          CASE @Steuercode 
-            WHEN N'I' THEN N'A2' 
-            WHEN N'A' THEN N'XX' 
-            WHEN N'E' THEN N'XY' 
-            ELSE N'ZZ'
-          END +                                                               --fb_mwskz
+          @Steuerschl +                                                       --fb_mwskz
           N'/' +                                                              --fb_xskrl
           N'/               ' +                                               --fb_fwzuz
           N'/               ' +                                               --fb_hwzuz
@@ -652,7 +647,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuercode, @Debitor, @Gegenkonto, @Kostenstelle;
+  FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle;
 END;
 
 CLOSE fibuexp;
