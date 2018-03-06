@@ -4,6 +4,6 @@ JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Mitarbei ON LsKo.AenderMitarbeiID = Mitarbei.ID
-WHERE KdGf.ID IN ($2$)
-  AND LsKo.Datum = $1$
+WHERE KdGf.ID IN ($3$)
+  AND LsKo.Datum BETWEEN $1$ AND $2$
   AND LsKo.AenderMitarbeiID > 0;
