@@ -1,9 +1,12 @@
 DECLARE @KdNr Integer;
 DECLARE @VsaNr TABLE (VsaNr int);
 
-SET @KdNr = 6071; --Kunde, bei dem die im folgendenen angeführten VSAs umgestellt werden sollen.
+SET @KdNr = 23032; --Kunde, bei dem die im folgendenen angeführten VSAs umgestellt werden sollen.
 
-INSERT INTO @VsaNr(VsaNr) VALUES (31), (16), (620), (6), (32); --Vsa-Nummern die umgestellt werden sollen.
+INSERT INTO @VsaNr(VsaNr) VALUES (6), (7); --Vsa-Nummern die umgestellt werden sollen.
+
+
+-- Checkliste Ist-Bestands-Korrektur
 
 DROP TABLE IF EXISTS #OpTeilMeng;
 
@@ -22,27 +25,24 @@ INTO #OpTeilMeng
 
 FROM 
 (SELECT OpTeile.ID, OpTeile.VsaID, OpTeile.LastErsatzFuerKdArtiID, KdArti.KdBerID, KdArti.ID KdArtiID, KdArti.ArtikelID, KdArti.IstBestandAnpass 
- FROM OpTeile, KdArti, Vsa, Kunden
+ FROM OpTeile, KdArti, Vsa
  WHERE OpTeile.LastErsatzFuerKdArtiID > -1
  AND OpTeile.LastErsatzFuerKdArtiID = KdArti.ID
- AND OpTeile.Status = N'R'
+ -- Früher: OPTeile.Status='R', Jetzt: OpTeile.LastActionsID = ID_PRODSTAT_OPAUSLESEN
+ AND OpTeile.LastActionsID = 102
  AND OpTeile.VsaID > 0
  AND OpTeile.VsaID = Vsa.ID 
  AND Vsa.KundenID = KdArti.KundenID
- AND Vsa.KundenID = Kunden.ID
- AND Kunden.KdNr = @KdNr
  UNION ALL
  SELECT OpTeile.ID, OpTeile.VsaID, OpTeile.LastErsatzFuerKdArtiID, KdArti.KdBerID, KdArti.ID KdArtiID, KdArti.ArtikelID, KdArti.IstBestandAnpass
- FROM OpTeile, KdArti, Vsa, Kunden
+ FROM OpTeile, KdArti, Vsa
  WHERE OpTeile.LastErsatzFuerKdArtiID = -1
- AND OpTeile.Status = N'R'
+ -- Früher: OPTeile.Status='R', Jetzt: OpTeile.LastActionsID = ID_PRODSTAT_OPAUSLESEN
+ AND OpTeile.LastActionsID = 102
  AND OpTeile.VsaID > 0
  AND OpTeile.VsaID = Vsa.ID 
  AND Vsa.KundenID = KdArti.KundenID
- AND OpTeile.ArtikelID = KdArti.ArtikelID
- AND Vsa.KundenID = Kunden.ID
- AND Kunden.KdNr = @KdNr
-) Daten, Vsa, kdber, vsaanf, Kunden, Artikel
+ AND OpTeile.ArtikelID = KdArti.ArtikelID) Daten, Vsa, kdber, vsaanf, Kunden, Artikel
 WHERE Vsa.ID = Daten.VsaID
 AND Vsa.KundenID = KdBer.KundenID
 AND Kunden.ID = Vsa.KundenID
@@ -52,7 +52,6 @@ AND ((KdBer.IstBestandAnpass = 1) OR (Daten.IstBestandAnpass = 1))
 AND VsaAnf.VsaID = Vsa.ID
 AND VsaAnf.KdArtiID = Daten.KdArtiID
 AND VsaAnf.ArtGroeID = -1
-AND Kunden.KdNr = @KdNr
  
 GROUP BY VsaAnf.ID, Kunden.KdNr, Vsa.SuchCode, Vsa.Bez, 
 Artikel.ArtikelNr, Artikel.ArtikelBez, 
@@ -64,7 +63,7 @@ SET y.AnzLsUngedruckt = x.Menge
 FROM #OpTeilMeng y, (
 SELECT VsaID, KdArtiID, SUM(Menge) Menge 
 FROM LsKo, LsPo 
-WHERE LsKo.Status < N'O'
+WHERE LsKo.Status < 'O'
 AND LsKo.ID = LsPo.LsKOID
 AND LsKo.VsaID IN (SELECT VsaID FROM #OpTeilMeng)
 AND LsPo.KdArtiID IN (SELECT KdArtiID FROM #OpTeilMeng)
@@ -82,6 +81,8 @@ WHERE VsaAnf.ID = x.VsaAnfID AND
       (VsaAnf.BestandIst <> x.BestandIst OR
        VsaAnf.VomIstBestandErsatz <> x.VomIstBestandErsatz OR 
        VsaAnf.IstBestandOrig <> x.IstBestandOrig);
+
+-- ENDE: Checkliste Ist-Bestandskorrektur
 
 UPDATE VsaAnf SET BestandIst = 0
 WHERE ID IN (
@@ -102,7 +103,8 @@ WHERE ID IN (
       FROM OPTeile
       WHERE OPTeile.VsaID = Vsa.ID
         AND OPTeile.ArtikelID = Artikel.ID
-        AND OPTeile.Status = N'R'
+        AND OPTeile.Status = N'Q'
+        AND OPTeile.LastActionsID = 102
     )
     AND VsaAnf.BestandIst <> 0
 );
@@ -123,6 +125,8 @@ WHERE VsaAnf.KdArtiID = KdArti.ID
   AND Artikel.ArtikelNr <> N'114428020001' -- Windel ungebügelt inkl. Chip ausnehmen
   AND Artikel.BereichID <> 106
   AND Vsa.VsaNr IN (SELECT VsaNr FROM @VsaNr);
+
+SELECT * FROM #TmpVsaAnf;
 
 UPDATE VsaAnf SET Art = N'M', Bestand = IIF(x.Status = N'E', 0, x.Bestand), MitInventur = 0, SollPuffer = 0, IstPuffer = 0, IstDatum = NULL, NormMenge = 0, AusstehendeReduz = 0, ReduzAb = NULL --, Liefern1 = 0, Liefern2 = 0, Liefern3 = 0, Liefern4 = 0, Liefern5 = 0, Liefern6 = 0, Liefern7 = 0
 FROM VsaAnf, #TmpVsaAnf x
