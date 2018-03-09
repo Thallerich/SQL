@@ -55,7 +55,7 @@ BEGIN
       N'1' +                                                                --fk_stype
         N'FB01                ' +                                           --fk_tcode
         FORMAT(@Belegdat, 'ddMMyyyy', 'de-AT') +                            --fk_bldat
-        N'A' + @Art +                                                       --fk_blart
+        N'A' + @Art +                                                       --fk_blart --Anpassen: AR/GU
         N'1250' +                                                           --fk_bukrs
         FORMAT(@Belegdat, 'ddMMyyyy', 'de-AT') +                            --fk_budat
         N'/ ' +                                                             --fk_monat
@@ -63,7 +63,7 @@ BEGIN
         N'/         ' +                                                     --fk_kursf
         CAST(@BelegNr AS nchar(10)) +                                       --fk_belnr
         N'/       ' +                                                       --fk_wwert
-        N'A' + @Art + CAST(@BelegNr AS nchar(14)) +                         --fk_xblnr
+        N'A' + @Art + CAST(@BelegNr AS nchar(14)) +                         --fk_xblnr --Anpassen AR/GU+Beleg
         N'/               ' +                                               --fk_bvorg
         N'/                        ' +                                      --fk_bktxt
         N'    ' +                                                           --fk_pargb
@@ -92,11 +92,11 @@ BEGIN
       SELECT @i AS [Order], 
         N'2' +                                                                --fb_fbs_stype
           N'ZBSEG                         ' +                                 --fb_tbnam
-          IIF(@Art = N'G' OR @Nettowert < 0, N'11', N'01') +                  --fb_newbs
+          IIF(@Art = N'G', N'11', N'01') +                                    --fb_newbs
           N'/         ' +                                                     --fb_dummy
           N'/' +                                                              --fb_newum
           N'/   ' +                                                           --fb_newbk
-          CAST(FORMAT(@Bruttowert, 'F2', 'de-AT') AS nchar(16)) +             --fb_wrbtr
+          CAST(FORMAT(@Bruttowert, 'F2', 'de-AT') AS nchar(16)) +             --fb_wrbtr  --absolut-Wert
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
@@ -133,14 +133,14 @@ BEGIN
           N'/ ' +                                                             --fb_maber
           N'/               ' +                                               --fb_skfbt
           N'/               ' +                                               --fb_wskto
-          N'ZB01' +                                                           --fb_zterm
+          N'ZB01' +                                                           --fb_zterm  -- Zahlungsbedingscode
           N'/  ' +                                                            --fb_zbd1t
           N'/     ' +                                                         --fb_zbd1p
           N'/  ' +                                                            --fb_zbd2t
           N'/     ' +                                                         --fb_z2d2p
           N'/  ' +                                                            --fb_zbd3t
           N'/' +                                                              --fb_zlspr
-          N'          ' +                                                     --fb_rebzg
+          N'          ' +                                                     --fb_rebzg  -- Wenn möglich befüllen mit zugehöriger Rechnung bei Gutschrift
           N'/   ' +                                                           --fb_rebzj
           N'/  ' +                                                            --fb_rebzz
           N'/' +                                                              --fb_zlsch
@@ -306,7 +306,7 @@ BEGIN
           N'/' +                                                              --fb_xstba
           N'/  ' +                                                            --fb_rstgr
           N'/                       ' +                                       --fb_fipex
-          IIF(@Art = N'G' OR @Nettowert < 0, N'X', N'/') +                    --fb_xnegp
+          N'/' +                                                              --fb_xnegp
           N'/ ' +                                                             --fb_gricd
           N'/  ' +                                                            --fb_grirg
           N'/ ' +                                                             --fb_gityp
@@ -373,11 +373,11 @@ BEGIN
       SELECT @i AS [Order], 
         N'2' +                                                                --fb_fbs_stype
           N'ZBSEG                         ' +                                 --fb_tbnam
-          IIF(@Art = N'G' OR @Nettowert < 0, N'40', N'50') +                  --fb_newbs
+          IIF(@Art = N'G', N'40', N'50') +                                    --fb_newbs
           N'/         ' +                                                     --fb_dummy
           N'/' +                                                              --fb_newum
           N'/   ' +                                                           --fb_newbk
-          CAST(FORMAT(@Bruttowert, 'F2', 'de-AT') AS nchar(16)) +             --fb_wrbtr
+          CAST(FORMAT(@Bruttowert, 'F2', 'de-AT') AS nchar(16)) +             --fb_wrbtr  --Absolut-Wert
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
@@ -587,7 +587,7 @@ BEGIN
           N'/' +                                                              --fb_xstba
           N'/  ' +                                                            --fb_rstgr
           N'/                       ' +                                       --fb_fipex
-          IIF(@Art = N'G' OR @Nettowert < 0, N'X', N'/') +                    --fb_xnegp
+          N'/' +                                                              --fb_xnegp
           N'/ ' +                                                             --fb_gricd
           N'/  ' +                                                            --fb_grirg
           N'/ ' +                                                             --fb_gityp

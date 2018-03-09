@@ -5,14 +5,14 @@ SELECT DE.Debitor AS CustomerNumber,
   DE.Name1 AS LegalName,
   LEFT(DE.SuchCode, 10) AS SearchName,
   NULL AS LegacyCustomerNumber,
-  IIF(LEN(AnsprechTelefon) > 15, NULL, AnsprechTelefon) AS PhoneNo,
-  IIF(LEN(AnsprechTelefax) > 15, NULL, AnsprechTelefax) AS FaxNo,
+  IIF(LEN(DE.AnsprechTelefon) > 15, NULL, DE.AnsprechTelefon) AS PhoneNo,
+  IIF(LEN(DE.AnsprechTelefax) > 15, NULL, DE.AnsprechTelefax) AS FaxNo,
   AnsprecheMail AS EMail,
   FORMAT(DE.KundeSeit, N'dd/MM/yyyy') AS DateActive,
   NULL AS DateInactive,
   N'Y' AS Active,
   NULL AS Remark,
-  NULL AS SicCode,                                                                                --Branchencode - aktuell im AdvanTex nicht gepflegt - STHA, 01.03.2018
+  N'DIV' AS SicCode,                                                                                --Branchencode - aktuell im AdvanTex nicht gepflegt - STHA, 01.03.2018
   1 AS MasterAccount,
   NULL AS MasterAccountNumber,
   DE.GfStatistik1 AS MarketSegmentCode,
@@ -98,8 +98,8 @@ SELECT DE.Debitor AS CustomerNumber,
   0 AS FixedRentPerc,
   0 AS FixedWashPerc,
   0 AS PrepCharge,
-  IIF(Holding.ID = -1, NULL, Holding.Holding) AS ChainCode,
-  IIF(Holding.ID = -1, NULL, Holding.Bez) AS ChainName,
+  IIF(Holding.ID = -1, N'DIV', Holding.Holding) AS ChainCode,
+  IIF(Holding.ID = -1, N'DIV', Holding.Bez) AS ChainName,
   NULL AS InvoicingClusterCoder,
   0 AS RentPeriod,
   DE.UstIdNr AS VATNumber,
@@ -155,6 +155,7 @@ FROM #DebitorExport DE
 LEFT OUTER JOIN KdGf ON DE.GfBez = KdGf.Bez
 LEFT OUTER JOIN Kunden ON DE.KundenID = Kunden.ID
 LEFT OUTER JOIN Holding ON Kunden.HoldingID = Holding.ID
-WHERE (LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN ('23', '24', '25', '27'))
-  OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN ('27', '28'))
-  OR (LEN(DE.Debitor) = 6 AND LEFT(DE.Debitor, 2) IN ('28'));
+WHERE ((LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
+  OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28'))
+  --OR (LEN(DE.Debitor) = 6 AND LEFT(DE.Debitor, 2) IN (N'28')))
+  AND KdGf.KurzBez <> N'CZ';
