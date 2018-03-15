@@ -1,5 +1,5 @@
 SELECT DE.Debitor AS CustomerNumber, 
-  N'1250' AS BusinessUnit,                                                                        -- noch nicht bekannt! - STHA, 01.03.2018
+  N'1250' AS BusinessUnit,                                                                           -- Kürzel aus Standort, z.B. WOLI - 15.03.2018
   DE.Debitor AS AccountNumber,
   DE.SuchCode AS [Name],
   DE.Name1 AS LegalName,
@@ -12,7 +12,7 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS DateInactive,
   N'Y' AS Active,
   NULL AS Remark,
-  N'DIV' AS SicCode,                                                                                --Branchencode - aktuell im AdvanTex nicht gepflegt - STHA, 01.03.2018
+  N'DIV' AS SicCode,                                                                                -- Branchencode - aktuell im AdvanTex nicht gepflegt - daher standardmäßig DIV - STHA, 15.03.2018
   1 AS MasterAccount,
   NULL AS MasterAccountNumber,
   DE.GfStatistik1 AS MarketSegmentCode,
