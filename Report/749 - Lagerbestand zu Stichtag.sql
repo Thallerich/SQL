@@ -9,7 +9,7 @@ END CATCH;
 
 SET @Stichtag = $1$;
 
-SELECT Artikel.ID AS ArtikelID, Bestand.ID AS BestandID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, 0 AS Bestand, LagerArt.Neuwertig AS Neuware, Artikel.EKPreis, CONVERT(datetime, NULL) AS Letzte_Bewegung, Standort.SuchCode AS LagerStandort
+SELECT Artikel.ID AS ArtikelID, Bestand.ID AS BestandID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, 0 AS Bestand, LagerArt.Neuwertig AS Neuware, Artikel.EKPreis, CONVERT(datetime, NULL) AS Letzte_Bewegung, Standort.Bez AS LagerStandort
 INTO #TmpResultSet
 FROM Artikel, ArtGroe, Bestand, LagerArt, Standort
 WHERE Bestand.ArtGroeID = ArtGroe.ID
