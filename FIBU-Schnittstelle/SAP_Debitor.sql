@@ -1,5 +1,5 @@
 SELECT DE.Debitor AS CustomerNumber, 
-  N'1250' AS BusinessUnit,                                                                           -- Kürzel aus Standort, z.B. WOLI - 15.03.2018
+  Standort.SuchCode AS BusinessUnit,
   DE.Debitor AS AccountNumber,
   DE.SuchCode AS [Name],
   DE.Name1 AS LegalName,
@@ -154,6 +154,7 @@ SELECT DE.Debitor AS CustomerNumber,
 FROM #DebitorExport DE
 LEFT OUTER JOIN KdGf ON DE.GfBez = KdGf.Bez
 LEFT OUTER JOIN Kunden ON DE.KundenID = Kunden.ID
+LEFT OUTER JOIN Standort ON Kunden.StandortID = Standort.ID
 LEFT OUTER JOIN Holding ON Kunden.HoldingID = Holding.ID
 WHERE ((LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
   OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28')))
