@@ -17,8 +17,8 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS MasterAccountNumber,
   KdGf.KurzBez AS MarketSegmentCode,
   KdGf.Bez AS MarketSegmentDesc,
-  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', DE.Land)) AS SalesAreaCode,
-  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', DE.Land)) AS SalesAreaDesc,
+  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Sektor, DE.Land))) AS SalesAreaCode,  -- DE-Regionen sind als Sektoren über die PLZ zuordenbar, wenn keine Kombination aus Land + PLZ existiert, dann Länderkürzel
+  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Bez, DE.Land))) AS SalesAreaDesc,
   DE.Strasse AS MailAddress,
   NULL AS MailAddress2,
   DE.PLZ AS MailZipcode,
@@ -156,7 +156,8 @@ LEFT OUTER JOIN KdGf ON DE.GfBez = KdGf.Bez
 LEFT OUTER JOIN Kunden ON DE.KundenID = Kunden.ID
 LEFT OUTER JOIN Standort ON Kunden.StandortID = Standort.ID
 LEFT OUTER JOIN Holding ON Kunden.HoldingID = Holding.ID
+LEFT OUTER JOIN SektPLZ ON Kunden.Land = SektPLZ.Land AND Kunden.PLZ = SektPLZ.PLZ
+LEFT OUTER JOIN Sektor ON SektPLZ.SektorID = Sektor.ID
 WHERE ((LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
   OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28')))
-  --OR (LEN(DE.Debitor) = 6 AND LEFT(DE.Debitor, 2) IN (N'28')))
   AND KdGf.KurzBez <> N'CZ';
