@@ -3,8 +3,7 @@ DECLARE @VsaNr TABLE (VsaNr int);
 
 SET @KdNr = 23032; --Kunde, bei dem die im folgendenen angeführten VSAs umgestellt werden sollen.
 
-INSERT INTO @VsaNr(VsaNr) VALUES (6), (7); --Vsa-Nummern die umgestellt werden sollen.
-
+INSERT INTO @VsaNr(VsaNr) VALUES (4), (5), (21); --Vsa-Nummern die umgestellt werden sollen.
 
 -- Checkliste Ist-Bestands-Korrektur
 
