@@ -17,8 +17,8 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS MasterAccountNumber,
   KdGf.KurzBez AS MarketSegmentCode,
   KdGf.KurzBez AS MarketSegmentDesc,
-  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Sektor, DE.Land))) AS SalesAreaCode,  -- DE-Regionen sind als Sektoren über die PLZ zuordenbar, wenn keine Kombination aus Land + PLZ existiert, dann Länderkürzel
-  IIF(DE.Firma = N'51', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Bez, DE.Land))) AS SalesAreaDesc,
+  IIF(DE.Firma = N'51' AND DE.Land = N'AT', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Sektor, DE.Land))) AS SalesAreaCode,  -- DE-Regionen sind als Sektoren über die PLZ zuordenbar, wenn keine Kombination aus Land + PLZ existiert, dann Länderkürzel
+  IIF(DE.Firma = N'51' AND DE.Land = N'AT', N'SÜD', IIF(DE.Land = N'AT', N'WEST', ISNULL(Sektor.Bez, DE.Land))) AS SalesAreaDesc,
   DE.Strasse AS MailAddress,
   NULL AS MailAddress2,
   DE.PLZ AS MailZipcode,
