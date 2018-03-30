@@ -160,4 +160,5 @@ LEFT OUTER JOIN SektPLZ ON Kunden.Land = SektPLZ.Land AND Kunden.PLZ = SektPLZ.P
 LEFT OUTER JOIN Sektor ON SektPLZ.SektorID = Sektor.ID
 WHERE ((LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
   OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28')))
-  AND KdGf.Status = N'A';
+  AND KdGf.Status = N'A'
+  AND Kunden.StandortID > 0;
