@@ -20,13 +20,14 @@ DECLARE @Gegenkonto nchar(17);
 DECLARE @Kostenstelle nchar(10);
 DECLARE @ZahlZiel nchar(4);
 DECLARE @BasisRechnung nchar(10);
+DECLARE @ProduktionFibuNr nchar(4);
 
 DECLARE @i int = 0;
 
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung 
+  SELECT Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4)) AS ProduktionFibuNr
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
@@ -48,7 +49,7 @@ SET @i = @i + 1;
 
 OPEN fibuexp;
 
-FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung;
+FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -372,7 +373,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  IF @KopfPos = N'P'
+  IF @KopfPos = N'S'
   BEGIN
       -- BBESG-ERLKTO - Belegkopf für Buchhaltungsbeleg - Erlöskontobuchung
       INSERT INTO @output
@@ -392,7 +393,7 @@ BEGIN
           N'/               ' +                                               --fb_fwzuz
           N'/               ' +                                               --fb_hwzuz
           N'/   ' +                                                           --fb_gsber
-          @Kostenstelle +                                                     --fb_kostl
+          RTRIM(@ProduktionFibuNr) + @Kostenstelle +                          --fb_kostl
           N'/   ' +                                                           --fb_dummy4
           N'/           ' +                                                   --fb_aufnr
           N'/         ' +                                                     --fb_ebeln
@@ -653,7 +654,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung;
+  FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr;
 END;
 
 CLOSE fibuexp;
