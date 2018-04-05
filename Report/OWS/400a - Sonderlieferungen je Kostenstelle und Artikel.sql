@@ -20,7 +20,7 @@ FROM #TmpTblAnzLs400a AnzLs, (
 	WHERE AnfKo.LsKoID = LsKo.ID
 		AND LsPo.LsKoID = LsKo.ID
 		AND LsKo.Datum BETWEEN $1$ AND $2$
-		AND LsPo.Kostenlos = 1
+		AND AnfKo.LiefBerechArt = N'X'
 		AND AnfKo.Sonderfahrt = 1
 	GROUP BY LsPo.AbteilID, LsPo.KdArtiID
 ) a
@@ -34,7 +34,7 @@ FROM #TmpTblAnzLs400a AnzLs, (
 	WHERE AnfKo.LsKoID = LsKo.ID
 		AND LsPo.LsKoID = LsKo.ID
 		AND LsKo.Datum BETWEEN $1$ AND $2$
-		AND LsPo.Kostenlos = 0
+		AND (AnfKo.LiefBerechArt <> N'X' OR AnfKo.LiefBerechArt IS NULL)
 		AND AnfKo.Sonderfahrt = 1
 	GROUP BY LsPo.AbteilID, LsPo.KdArtiID
 ) a
