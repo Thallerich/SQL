@@ -1,8 +1,8 @@
-DECLARE @KdNr int = 30661;
-DECLARE @DateCorrect date = CAST(N'2018-03-20' AS date);
-DECLARE @DateWrong date = CAST(N'2018-03-23' AS date);
+DECLARE @KdNr int = 16031;
+DECLARE @DateCorrect date = CAST(N'2018-04-12' AS date);
+DECLARE @DateWrong date = CAST(N'2018-04-09' AS date);
 
-UPDATE LsKo SET Datum = @DateCorrect, FahrtID = 707803, TourenID = 317, Folge = 10, MemoIntern = MemoIntern + N'\r\nLieferdatum geändert laut Ticket tick.IT:23149  -- STHA'
+UPDATE LsKo SET Datum = @DateCorrect, FahrtID = 711362, TourenID = 21, Folge = 10, MemoIntern = MemoIntern + N'\r\nLieferdatum geändert laut Ticket tick.IT:23304  -- STHA'
 WHERE LsKo.ID IN (
   SELECT DISTINCT LsKo.ID
   FROM LsKo, Vsa, Kunden, LsKoArt, LsPo, Scans
@@ -20,9 +20,9 @@ WHERE LsKo.ID IN (
 
 -- To check for values above.
 /*
-DECLARE @KdNr int = 30661;
-DECLARE @DateCorrect date = CAST(N'2018-03-20' AS date);
-DECLARE @DateWrong date = CAST(N'2018-03-23' AS date);
+DECLARE @KdNr int = 16031;
+DECLARE @DateCorrect date = CAST(N'2018-04-12' AS date);
+DECLARE @DateWrong date = CAST(N'2018-04-09' AS date);
 
 SELECT DISTINCT LsKo.LsNr, LsKo.Datum
 FROM LsKo, Vsa, Kunden, LsKoArt, LsPo, Scans
@@ -38,12 +38,12 @@ WHERE LsKo.VsaID = Vsa.ID
   --AND Scans.DateTime < CAST(N'2018-01-19 12:00:00' AS datetime)
 ;
 
-SELECT N'Worng' AS Type, LsKo.ID, LsKo.LsNr, LsKo.Status, LsKo.VsaID, LsKo.TraegerID, LsKo.Datum, LsKo.UrDatum, LsKo.FahrtID, LsKo.TourenID, LsKo.Folge, LsKo.MemoIntern
+SELECT N'Wrong' AS Type, LsKo.ID, LsKo.LsNr, LsKo.Status, LsKo.VsaID, LsKo.TraegerID, LsKo.Datum, LsKo.UrDatum, LsKo.FahrtID, LsKo.TourenID, LsKo.Folge, LsKo.MemoIntern
 FROM LsKo
-WHERE LsKo.LsNr = 25622706
+WHERE LsKo.LsNr = 25746032
 UNION
 SELECT N'Right' AS Type, LsKo.ID, LsKo.LsNr, LsKo.Status, LsKo.VsaID, LsKo.TraegerID, LsKo.Datum, LsKo.UrDatum, LsKo.FahrtID, LsKo.TourenID, LsKo.Folge, LsKo.MemoIntern
 FROM LsKo
-WHERE LsKo.LsNr = 25623298;
+WHERE LsKo.LsNr = 25746030;
 
 */
