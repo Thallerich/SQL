@@ -1,3 +1,11 @@
+/*******************************************************************************************************************************
+**                                                                                                                            **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.0                       **
+** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
+**                                                                                                                            **
+*******************************************************************************************************************************/
+
+
 SELECT DE.Debitor AS CustomerNumber, 
   Standort.SuchCode AS BusinessUnit,
   DE.Debitor AS AccountNumber,

@@ -1,12 +1,13 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 15.03.2018, Version 0.3                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.0                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
 **                                                                                                                            **
 *******************************************************************************************************************************/
 
+DECLARE @OrderByAutoInc int;
 DECLARE @KopfPos nchar(1);
 DECLARE @Art nchar(1);
 DECLARE @Belegdat date;
@@ -21,16 +22,18 @@ DECLARE @Kostenstelle nchar(10);
 DECLARE @ZahlZiel nchar(4);
 DECLARE @BasisRechnung nchar(10);
 DECLARE @ProduktionFibuNr nchar(4);
+DECLARE @DetailNetto money;
 
 DECLARE @i int = 0;
 
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4)) AS ProduktionFibuNr
+  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4)) AS ProduktionFibuNr, SUM(Export.DetailNetto)
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
+  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4))
   ORDER BY OrderByAutoInc ASC;
 
 -- BGR00 - Belegkopf für Buchhaltungsbeleg
@@ -49,7 +52,7 @@ SET @i = @i + 1;
 
 OPEN fibuexp;
 
-FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr;
+FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr, @DetailNetto;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -384,7 +387,7 @@ BEGIN
           N'/         ' +                                                     --fb_dummy
           N'/' +                                                              --fb_newum
           N'/   ' +                                                           --fb_newbk
-          CAST(FORMAT(ABS(@Bruttowert), 'F2', 'de-AT') AS nchar(16)) +        --fb_wrbtr
+          CAST(FORMAT(ABS(@DetailNetto * 1.2), 'F2', 'de-AT') AS nchar(16)) + --fb_wrbtr
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
@@ -654,7 +657,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  FETCH NEXT FROM fibuexp INTO @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr;
+  FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @ProduktionFibuNr, @DetailNetto;
 END;
 
 CLOSE fibuexp;
