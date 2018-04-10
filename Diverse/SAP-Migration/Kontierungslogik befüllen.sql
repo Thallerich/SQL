@@ -1,6 +1,10 @@
 USE Wozabal;
 GO
 
+SELECT *
+INTO __RPoKontoBackup
+FROM RPoKonto;
+
 DELETE FROM RPoKonto WHERE FirmaID IN (SELECT DISTINCT FirmaID FROM [SRVATENADVTEST\ADVANTEX].Wozabal.dbo.__KTrLogik);
 GO
 
