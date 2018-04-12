@@ -15,8 +15,8 @@ WHERE RechPo.RechKoID = RechKo.ID
   AND RechPo.ArtGruID = ArtGru.ID
   AND RechKo.FibuExpID < 0
   AND RechPo.KontenID < 0
-  AND RechKo.Datum >= N'2018-04-01'
-  --AND RechKo.RechNr = 1000000
+  AND RechKo.RechDat >= N'2018-04-01'
+  --AND RechKo.RechNr = -10887237
   AND Firma.SuchCode <> N'STX'  -- Schweighofer Textilservice GmbH macht keine FIBU-Übergaben!
 GROUP BY Bereich.BereichBez, ArtGru.ArtGruBez, RPoType.RPoTypeBez, Branche.BrancheBez, Firma.Bez, KdGf.Bez, MwSt.Bez, RKoType.Bez, RechKo.RechDat, RechKo.RechNr, Kunden.KdNr, RechKo.FibuExpID
 ORDER BY Firma, Bereich, Typ;
