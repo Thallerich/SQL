@@ -396,7 +396,7 @@ BEGIN
           N'/               ' +                                               --fb_fwzuz
           N'/               ' +                                               --fb_hwzuz
           N'/   ' +                                                           --fb_gsber
-          RTRIM(@ProduktionFibuNr) + @Kostenstelle +                          --fb_kostl
+          CAST(RTRIM(@ProduktionFibuNr) + @Kostenstelle AS nchar(10)) +       --fb_kostl
           N'/   ' +                                                           --fb_dummy4
           N'/           ' +                                                   --fb_aufnr
           N'/         ' +                                                     --fb_ebeln
@@ -494,7 +494,7 @@ BEGIN
           N'/         ' +                                                     --fb_pstl2
           N'/' +                                                              --fb_spras
           N'/' +                                                              --fb_xinve
-          @Gegenkonto +                                                       --fb_newko
+          CAST(@Gegenkonto AS nchar(17)) +                                    --fb_newko
           N'/  ' +                                                            --fb_newbw
           N'/                ' +                                              --fb_knrze
           N'/         ' +                                                     --fb_hkont
