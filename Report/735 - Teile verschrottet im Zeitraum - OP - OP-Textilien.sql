@@ -1,10 +1,12 @@
-SELECT OpTeile.Code AS Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, Artikel.EKPreis, OpTeile.ErstWoche, OpTeile.WegDatum, WegGrund.WegGrundBez$LAN$ AS WegGrund, OpTeile.AnzSteril, OpTeile.AnzWasch, OpTeile.AnzImpregnier
-FROM OpTeile, Vsa, Kunden, Artikel, WegGrund
-WHERE OpTeile.VsaID = Vsa.ID
+SELECT OPTeile.Code AS Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, Artikel.EKPreis, OPTeile.ErstWoche, OPTeile.WegDatum, WegGrund.WegGrundBez$LAN$ AS WegGrund, OPTeile.AnzSteril, OPTeile.AnzWasch, OPTeile.AnzImpregnier
+FROM OPTeile, Vsa, Kunden, Artikel, WegGrund
+WHERE OPTeile.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
-  AND Kunden.KdGfID IN ($4$)
-  AND OpTeile.ArtikelID = Artikel.ID
-  AND OpTeile.WegGrundID = WegGrund.ID
-  AND OpTeile.WegGrundID IN ($3$)
-  AND OpTeile.WegDatum BETWEEN $1$ AND $2$
-ORDER BY Artikel.ArtikelBez$LAN$, OpTeile.WegDatum ASC;
+  AND Kunden.KdGfID IN ($5$)
+  AND Kunden.FirmaID IN ($4$)
+  AND OPTeile.ArtikelID = Artikel.ID
+  AND OPTeile.WegGrundID = WegGrund.ID
+  AND OPTeile.WegGrundID IN ($3$)
+  AND OPTeile.WegDatum BETWEEN $1$ AND $2$
+  AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'OP')
+ORDER BY Artikel.ArtikelBez$LAN$, OPTeile.WegDatum ASC;
