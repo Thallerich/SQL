@@ -145,8 +145,8 @@ BEGIN TRANSACTION;
     WHERE ExportFileName LIKE N'\\atenadvantex01%';
 
   UPDATE ExpDef
-    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq')
-    WHERE ExportFileName LIKE N'\\tsafile1.sal.co.at';
+    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq\')
+    WHERE ExportFileName LIKE N'\\tsafile1.sal.co.at%';
 
   UPDATE Settings
     SET ValueMemo = N'\\ATENADVANTEX01\AdvanTex\Data\Rechnungsarchiv_Testmandant\'
