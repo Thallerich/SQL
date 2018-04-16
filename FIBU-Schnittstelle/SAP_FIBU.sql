@@ -29,11 +29,12 @@ DECLARE @i int = 0;
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4)) AS ProduktionFibuNr, SUM(Export.DetailNetto)
+  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4)) AS ProduktionFibuNr, SUM(Export.DetailNetto)
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
-  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Export.WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4))
+  JOIN Wae ON RechKo.WaeID = Wae.ID
+  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(Export.ProduktionFibuNr AS int) AS nchar(4))
   ORDER BY OrderByAutoInc ASC;
 
 -- BGR00 - Belegkopf für Buchhaltungsbeleg
@@ -110,7 +111,7 @@ BEGIN
           N'/               ' +                                                     --fb_dmbtr
           N'/               ' +                                                     --fb_wmwst
           N'/               ' +                                                     --fb_mwsts
-          @Steuerschl +                                                             --fb_mwskz
+          CAST(@Steuerschl AS nchar(2)) +                                           --fb_mwskz
           N'/' +                                                                    --fb_xskrl
           N'/               ' +                                                     --fb_fwzuz
           N'/               ' +                                                     --fb_hwzuz
@@ -143,7 +144,7 @@ BEGIN
           N'/ ' +                                                                   --fb_maber
           N'/               ' +                                                     --fb_skfbt
           N'/               ' +                                                     --fb_wskto
-          @ZahlZiel +                                                               --fb_zterm  
+          CAST(@ZahlZiel AS nchar(4)) +                                             --fb_zterm  
           N'/  ' +                                                                  --fb_zbd1t
           N'/     ' +                                                               --fb_zbd1p
           N'/  ' +                                                                  --fb_zbd2t
