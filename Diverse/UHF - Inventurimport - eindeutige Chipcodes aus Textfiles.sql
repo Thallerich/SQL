@@ -1,9 +1,7 @@
 DECLARE @Filename nvarchar(100);
 DECLARE @BulkSQL nvarchar(max);
 
-SET @Filename = N'all-60650_2018-01-11-063039.txt';
-
-USE Wozabal_Test;
+SET @Filename = N'all-2301_2018-04-11-999999.txt';
 
 CREATE TABLE #Inventur (
   Chipcode nvarchar(100) COLLATE Latin1_General_CS_AS
