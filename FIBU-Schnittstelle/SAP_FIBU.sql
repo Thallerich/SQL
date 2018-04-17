@@ -29,14 +29,14 @@ DECLARE @i int = 0;
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(KdGf.FibuNr AS int) AS nchar(3)) AS KdGfFibuNr, SUM(Export.DetailNetto)
+  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3)) AS KdGfFibuNr, SUM(Export.DetailNetto)
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
   JOIN Wae ON RechKo.WaeID = Wae.ID
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
-  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(KdGf.FibuNr AS int) AS nchar(3))
+  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3))
   ORDER BY OrderByAutoInc ASC;
 
 -- BGR00 - Belegkopf für Buchhaltungsbeleg
