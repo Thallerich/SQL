@@ -23,21 +23,20 @@ DECLARE @ZahlZiel nchar(4);
 DECLARE @BasisRechnung nchar(10);
 DECLARE @KdGfFibuNr nchar(4);
 DECLARE @Buchungskreis int;
-DECLARE @DetailNetto money;
 
 DECLARE @i int = 0;
 
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT MAX(Export.OrderByAutoInc) AS OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3)) AS KdGfFibuNr, IIF(Kunden.FirmaID = 5001, 1260, 1250) AS Buchungskreis, SUM(Export.DetailNetto)
+  SELECT Export.OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3)) AS KdGfFibuNr, IIF(Kunden.FirmaID = 5001, 1260, 1250) AS Buchungskreis
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
   JOIN Wae ON RechKo.WaeID = Wae.ID
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
-  GROUP BY Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL), CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3)), IIF(Kunden.FirmaID = 5001, 1260, 1250)
+  WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
 
 -- BGR00 - Belegkopf für Buchhaltungsbeleg
@@ -56,7 +55,7 @@ SET @i = @i + 1;
 
 OPEN fibuexp;
 
-FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @KdGfFibuNr, @Buchungskreis, @DetailNetto;
+FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @KdGfFibuNr, @Buchungskreis;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -380,7 +379,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  IF @KopfPos = N'S'
+  IF @KopfPos = N'P'
   BEGIN
       -- BBESG-ERLKTO - Belegkopf für Buchhaltungsbeleg - Erlöskontobuchung
       INSERT INTO @output
@@ -391,7 +390,7 @@ BEGIN
           N'/         ' +                                                     --fb_dummy
           N'/' +                                                              --fb_newum
           N'/   ' +                                                           --fb_newbk
-          CAST(FORMAT(ABS(@DetailNetto * 1.2), 'F2', 'de-AT') AS nchar(16)) + --fb_wrbtr
+          CAST(FORMAT(ABS(@Bruttowert), 'F2', 'de-AT') AS nchar(16)) + --fb_wrbtr
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
@@ -661,7 +660,7 @@ BEGIN
       SET @i = @i + 1;
   END;
 
-  FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @KdGfFibuNr, @Buchungskreis, @DetailNetto;
+  FETCH NEXT FROM fibuexp INTO @OrderByAutoInc, @KopfPos, @Art, @Belegdat, @WaeCode, @BelegNr, @Nettowert, @Bruttowert, @Steuerschl, @Debitor, @Gegenkonto, @Kostenstelle, @ZahlZiel, @BasisRechnung, @KdGfFibuNr, @Buchungskreis;
 END;
 
 CLOSE fibuexp;
