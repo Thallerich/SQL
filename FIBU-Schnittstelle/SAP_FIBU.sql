@@ -390,7 +390,7 @@ BEGIN
           N'/         ' +                                                     --fb_dummy
           N'/' +                                                              --fb_newum
           N'/   ' +                                                           --fb_newbk
-          CAST(FORMAT(ABS(@Bruttowert), 'F2', 'de-AT') AS nchar(16)) + --fb_wrbtr
+          CAST(FORMAT(ABS(@Bruttowert), 'F2', 'de-AT') AS nchar(16)) +        --fb_wrbtr
           N'/               ' +                                               --fb_dmbtr
           N'/               ' +                                               --fb_wmwst
           N'/               ' +                                               --fb_mwsts
