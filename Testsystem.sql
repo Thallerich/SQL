@@ -115,7 +115,15 @@ BEGIN TRANSACTION;
     
   UPDATE ExpDef
     SET ExportFilename = N'\\srvatenadvtest\AdvanTex\Data\FIBU\'
-    WHERE ExportFilename IS NOT NULL;
+    WHERE ExportFilename LIKE N'\\atenadvantex01%';
+
+  UPDATE ExpDef
+    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq\')
+    WHERE ExportFileName LIKE N'\\tsafile1.sal.co.at%';
+
+  UPDATE ExpDef
+    SET BackupFolder = N'\\srvatenadvtest\AdvanTex\Data\FIBU\Backup\'
+    WHERE RIGHT(RTRIM(BackupFolder), 1) = N'\';
 
   UPDATE Settings
     SET ValueMemo = N'\\srvatenadvtest\AdvanTex\Data\Rechnungsarchiv\'
