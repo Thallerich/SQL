@@ -6,8 +6,8 @@ ALTER TABLE __auvainitial ALTER COLUMN Status nchar(7) COLLATE Latin1_General_CS
 ALTER TABLE __auvainitial ALTER COLUMN Typ nchar(7) COLLATE Latin1_General_CS_AS
 ALTER TABLE __auvainitial ALTER COLUMN Vorname nvarchar(30) COLLATE Latin1_General_CS_AS
 ALTER TABLE __auvainitial ALTER COLUMN Nachname nvarchar(30) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Titel nchar(20) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN TitelN nchar(20) COLLATE Latin1_General_CS_AS
+ALTER TABLE __auvainitial ALTER COLUMN Titel nvarchar(20) COLLATE Latin1_General_CS_AS
+ALTER TABLE __auvainitial ALTER COLUMN TitelN nvarchar(20) COLLATE Latin1_General_CS_AS
 ALTER TABLE __auvainitial ALTER COLUMN Standort nchar(2) COLLATE Latin1_General_CS_AS
 ALTER TABLE __auvainitial ALTER COLUMN Kostenstelle nchar(6) COLLATE Latin1_General_CS_AS
 */
@@ -33,7 +33,7 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.Vorname = i.I_Vorname, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.Vorname = LEFT(i.I_Vorname, 20), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
 FROM Traeger, (
   SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
   FROM Traeger, Vsa, #TmpImport x
@@ -55,7 +55,7 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.Nachname = i.I_Nachname, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.Nachname = LEFT(i.I_Nachname, 25), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
 FROM Traeger, (
   SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + ', ' + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
   FROM Traeger, Vsa, #TmpImport x
@@ -99,7 +99,9 @@ WHERE Traeger.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
   AND Traeger.AbteilID = Abteil.ID
   AND Traeger.Status = Status.Status
-  AND Traeger.PersNr IN (N'89000004', N'89000010', N'112752', N'112208', N'108225');
+  AND Traeger.PersNr IN (N'00109093');
+
+SELECT * FROM #TmpImport WHERE Nachname LIKE N'GRILL%'
 
 --------------------------------------
 */
