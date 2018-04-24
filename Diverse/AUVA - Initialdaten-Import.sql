@@ -17,7 +17,16 @@ DROP TABLE IF EXISTS #TmpImport;
 SELECT x.MifareID AS Kartennummer, x.Kartennummer AS PersNr, x.Status, x.Typ AS Kartentyp, x.Vorname, x.Nachname, x.Titel, x.TitelN, x.Standort, x.Kostenstelle, Rentomat.ID AS RentomatID
 INTO #TmpImport
 FROM __auvainitial x
-JOIN Rentomat ON Rentomat.SchrankNr LIKE '%' + x.Standort + '%'; 
+JOIN Rentomat ON Rentomat.SchrankNr LIKE '%' + x.Standort + '%'
+  AND Rentomat.ID = 36; 
+
+/* PersNr auffüllen */
+UPDATE Traeger SET PersNr = RIGHT(N'00000000' + Traeger.PersNr, 8)
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+WHERE Vsa.RentomatID IN (SELECT DISTINCT RentomatID FROM #TmpImport)
+  AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8);
+
 
 UPDATE Traeger SET Traeger.Status = 'I', Traeger.RentomatKarte = NULL
 WHERE Traeger.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport))
