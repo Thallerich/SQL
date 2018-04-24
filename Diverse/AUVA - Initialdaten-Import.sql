@@ -66,7 +66,7 @@ WHERE i.TraegerID = Traeger.ID;
 
 UPDATE Traeger SET Traeger.Nachname = LEFT(i.I_Nachname, 25), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + ', ' + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + IIF(x.TitelN IS NULL, N'', ', ') + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
   FROM Traeger, Vsa, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -87,6 +87,8 @@ FROM Traeger, (
     AND Abteil.KundenID = Vsa.KundenID
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
+
+SELECT * FROM __auvainitial;
 
 UPDATE Traeger SET Traeger.VormalsNr = i.I_Kartentyp, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
 FROM Traeger, (
