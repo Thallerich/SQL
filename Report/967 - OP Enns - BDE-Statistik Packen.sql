@@ -7,7 +7,7 @@ FROM (
   WHERE OPEtiKo.PackZeitpunkt IS NOT NULL
     AND CAST(OPEtiKo.PackZeitpunkt AS date) = CAST(GETDATE() AS date)
     AND OPEtiKo.PackMitarbeiID = (SELECT MitarbeiID FROM #AdvSession)
-    AND OPEtiKo.ProduktionID = 2 -- Enns
+    AND OPEtiKo.ProduktionID = 4 -- Enns
   GROUP BY CUBE (IIF(ProdHier.LagerKategorie IN (N'Lami', N'Mäntel'), ProdHier.LagerKategorie, N'Sonstige Sets'), DATEPART(hour, OPEtiKo.PackZeitpunkt))
 ) AS BDEData
 PIVOT (

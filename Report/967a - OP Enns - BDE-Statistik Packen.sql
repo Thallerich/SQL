@@ -7,7 +7,7 @@ FROM (
   JOIN Mitarbei ON OPEtiKo.PackMitarbeiID = Mitarbei.ID
   WHERE OPEtiKo.PackZeitpunkt IS NOT NULL
     AND CAST(OPEtiKo.PackZeitpunkt AS date) BETWEEN $1$ AND $2$
-    AND OPEtiKo.ProduktionID = 2 -- Enns
+    AND OPEtiKo.ProduktionID = 4 -- Enns
   GROUP BY CUBE ((Mitarbei.MitarbeiUser, Mitarbei.Name, IIF(ProdHier.LagerKategorie IN (N'Lami', N'Mäntel'), ProdHier.LagerKategorie, N'Sonstige Sets'), CAST(OPEtiKo.PackZeitpunkt AS date)), DATEPART(hour, OPEtiKo.PackZeitpunkt))
 ) AS BDEData
 PIVOT (
