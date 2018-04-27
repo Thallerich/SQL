@@ -12,6 +12,8 @@ ALTER TABLE __auvainitial ALTER COLUMN Standort nchar(2) COLLATE Latin1_General_
 ALTER TABLE __auvainitial ALTER COLUMN Kostenstelle nchar(6) COLLATE Latin1_General_CS_AS
 */
 
+-- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM __auvainitial WHERE Standort IS NULL;
+
 DROP TABLE IF EXISTS #TmpImport;
 
 SELECT x.MifareID AS Kartennummer, x.Kartennummer AS PersNr, x.Status, x.Typ AS Kartentyp, x.Vorname, x.Nachname, x.Titel, x.TitelN, x.Standort, x.Kostenstelle, Rentomat.ID AS RentomatID
@@ -88,8 +90,6 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-SELECT * FROM __auvainitial;
-
 UPDATE Traeger SET Traeger.VormalsNr = i.I_Kartentyp, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
 FROM Traeger, (
   SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + ', ' + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
@@ -131,7 +131,7 @@ UPDATE TRAEGER SET Status = 'I', RentomatKarte = NULL WHERE ID IN (
     AND Vsa.RentomatID = Rentomat.ID
     AND Rentomat.SchrankNr IS NOT NULL
     AND Traeger.RentoArtID IN (1, 2)
-    AND Traeger.Update_ < N'2017-11-28 07:45:00'
+    AND Traeger.Update_ < N'2018-04-27 08:00:00'
 );
 
 ENABLE TRIGGER LastModified_TRAEGER_UPDATE ON Wozabal.dbo.TRAEGER;
@@ -139,13 +139,4 @@ ENABLE TRIGGER LastModified_TRAEGER_UPDATE ON Wozabal.dbo.TRAEGER;
 COMMIT;
 
 ---------------------------------------------
-*/
-
-/* Personalnummer auffüllen */
-/*
-UPDATE Traeger SET PersNr = RIGHT(N'00000000' + Traeger.PersNr, 8)
-FROM Traeger
-JOIN Vsa ON Traeger.VsaID = Vsa.ID
-WHERE Vsa.RentomatID = 36
-  AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8);
 */
