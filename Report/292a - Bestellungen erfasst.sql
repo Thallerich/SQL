@@ -6,7 +6,7 @@ SELECT CAST(BKo.Anlage_ AS date) AS Anlagedatum,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
   ArtGroe.Groesse,
-  Abc.Abc AS [ABC-Klasse],
+  Abc.AbcBez$LAN$ AS [ABC-Klasse],
   BPo.Menge AS [bestellte Menge],
   BPo.Einzelpreis,
   Standort.Bez AS Lagerstandort,
@@ -16,7 +16,7 @@ JOIN BKo ON BPo.BKoID = BKo.ID
 JOIN Lief ON BKo.LiefID = Lief.ID
 JOIN ArtGroe ON BPo.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
-JOIN Abc ON ArtGroe.AbcID = Abc.ID
+JOIN Abc ON Artikel.AbcID = Abc.ID
 JOIN Standort ON BKo.LagerID = Standort.ID
 JOIN BKoArt ON BKo.BKoArtID = BKoArt.ID
 WHERE BKo.Status = N'A'
