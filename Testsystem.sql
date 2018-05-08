@@ -98,9 +98,13 @@ BEGIN TRANSACTION;
     WHERE [Parameter] = N'URL_WS_TAGSYS';
     
   UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest\advantex\data\EDI\EDI\'
+    SET [ValueMemo] = N'\\srvatenadvtest\advantex\data\EDI\EDI_Test\'
     WHERE [Parameter] = N'PATH_EOFFICE';
-    
+  
+  UPDATE Settings
+    SET [ValueMemo] = N'\\srvatenadvtest\advantex\data\EDI\BMD_Test\'
+    WHERE [Parameter] = N'PATH_BMD';
+
   UPDATE Rentomat 
     SET ExportFile1 = N'\\srvatenadvtest\AdvanTex\Data\Export\'
     WHERE Rentomat.Interface <> 'Unimat';
