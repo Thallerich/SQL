@@ -46,7 +46,7 @@ SELECT KdNr, Debitor, SGF, RechNr AS Rechnungsnummer, RechDat AS Rechnungsdatum,
 FROM (
   SELECT ISNULL(Waschlohn.KdNr, LMenge.KdNr) AS KdNr, ISNULL(Waschlohn.Debitor, LMenge.Debitor) AS Debitor, ISNULL(Waschlohn.SGF, LMenge.SGF) AS SGF, Waschlohn.RechNr, Waschlohn.RechDat, Waschlohn.Produktbereich, ISNULL(Waschlohn.ArtikelNr, LMenge.ArtikelNr) AS ArtikelNr, ISNULL(Waschlohn.Artikelbezeichnung, LMenge.ArtikelBez) AS Artikelbezeichnung, ISNULL(Waschlohn.VerrechMenge, 0) AS VerrechMenge, ISNULL(Waschlohn.EPreis, LMenge.EPreis) AS EPreis, ISNULL(Waschlohn.UmsatzNetto, 0) AS UmsatzNetto, Waschlohn.Erlöskonto, Waschlohn.Kostenträger AS [Kostenträger FIBU-Übergabe], ISNULL(LMenge.Liefermenge, 0) AS Liefermenge, ISNULL(LMenge.Produzent, Standort.SuchCode) AS Produzent, CAST(ISNULL(LMenge.FibuNr, Standort.FibuNr) AS nchar(3)) + RTRIM(Waschlohn.KsSt) AS [Kostenträger Produzent], Waschlohn.Differenz
   FROM #Waschlohn AS Waschlohn
-  FULL OUTER JOIN #LMenge AS LMenge ON LMenge.VsaID = Waschlohn.VsaID AND LMenge.KdArtiID = Waschlohn.KdArtiID AND LMenge.BereichID = Waschlohn.BereichID AND Waschlohn.Differenz = 0
+  FULL OUTER JOIN #LMenge AS LMenge ON LMenge.VsaID = Waschlohn.VsaID AND LMenge.KdArtiID = Waschlohn.KdArtiID AND LMenge.BereichID = Waschlohn.BereichID AND LMenge.EPreis = Waschlohn.EPreis AND Waschlohn.Differenz = 0
   LEFT OUTER JOIN Vsa WITH (NOLOCK) ON Waschlohn.VsaID = Vsa.ID
   LEFT OUTER JOIN StandBer WITH (NOLOCK) ON Vsa.StandKonID = StandBer.StandKonID AND StandBer.BereichID = Waschlohn.BereichID
   LEFT OUTER JOIN Standort WITH (NOLOCK) ON StandBer.ProduktionID = Standort.ID
