@@ -4,7 +4,7 @@ DECLARE @DatumBis date = CAST(N'2018-04-30' AS date);
 
 DROP TABLE IF EXISTS #Waschlohn;
 
-SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3)) + RechPo.KsSt AS Kostenträger, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID
+SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, RTRIM(CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3))) + RechPo.KsSt AS Kostenträger, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID
 INTO #Waschlohn
 FROM FibuDet WITH (NOLOCK)
 JOIN Bereich WITH (NOLOCK) ON FibuDet.BereichID = Bereich.ID
@@ -22,7 +22,7 @@ WHERE FibuDet.FibuExpID IN (
     AND RechKo.FirmaID = @FirmaID
   AND KdGf.KurzBez <> N'ÖS'
 )
-GROUP BY Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3)) + RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID;
+GROUP BY Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, RTRIM(CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3))) + RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID;
 
 DROP TABLE IF EXISTS #LMenge;
 
