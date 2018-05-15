@@ -8,7 +8,7 @@ AS (
   JOIN Standort ON LagerArt.LagerID = Standort.ID
   GROUP BY Standort.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Standort.ID, Artikel.ID, ArtGroe.ID
 )
-SELECT KdGf.KurzBez AS SGF, Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger AS [Trägernummer], COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N'') AS [Trägername], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Status.StatusBez$LAN$ AS Teilestatus, COUNT(DISTINCT Teile.ID) AS Menge, BKo.BestNr AS Bestellnummer, BKo.Datum AS Bestelldatum, MAX(LiefAbPo.Termin) AS [Liefertermin Lieferant], Lagerbestand.BestandNeu AS [Lagerbestand Neuware], Lagerbestand.BestandGebraucht AS [Lagerbestand Gebrauchtware], Lagerbestand.Lager AS Lagerstandort
+SELECT KdGf.KurzBez AS SGF, Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Mitarbei.Name AS Kundenservice, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger AS [Trägernummer], COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N'') AS [Trägername], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Status.StatusBez$LAN$ AS Teilestatus, COUNT(DISTINCT Teile.ID) AS Menge, BKo.BestNr AS Bestellnummer, BKo.Datum AS Bestelldatum, MAX(LiefAbPo.Termin) AS [Liefertermin Lieferant], Lagerbestand.BestandNeu AS [Lagerbestand Neuware], Lagerbestand.BestandGebraucht AS [Lagerbestand Gebrauchtware], Lagerbestand.Lager AS Lagerstandort
 FROM Teile
 JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
@@ -18,6 +18,8 @@ JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
 JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
 JOIN Status ON Teile.Status = Status.Status AND Status.Tabelle = N'TEILE'
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
@@ -28,5 +30,5 @@ LEFT OUTER JOIN LiefAbPo ON LiefAbPo.BPoID = BPo.ID
 LEFT OUTER JOIN Lagerbestand ON ArtGroe.ID = Lagerbestand.ArtGroeID AND StandBer.LagerID = Lagerbestand.LagerID
 WHERE Teile.Status IN (N'E', N'G', N'I') -- nur Teile die bestellt wurden oder bestätigt (Auftragsbestätigung vom Lieferanten) wurden
   AND KdGf.ID IN ($1$)
-GROUP BY KdGf.KurzBez, Holding.Holding, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Traeger.Traeger, COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N''), Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Status.StatusBez, BKo.BestNr, BKo.Datum, Lagerbestand.BestandNeu, Lagerbestand.BestandGebraucht, LagerBestand.Lager
+GROUP BY KdGf.KurzBez, Holding.Holding, Kunden.KdNr, Kunden.SuchCode, Mitarbei.Name, Vsa.VsaNr, Vsa.Bez, Traeger.Traeger, COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N''), Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Status.StatusBez, BKo.BestNr, BKo.Datum, Lagerbestand.BestandNeu, Lagerbestand.BestandGebraucht, LagerBestand.Lager
 ORDER BY SGF, KdNr, [Trägername], ArtikelNr, Teilestatus;
