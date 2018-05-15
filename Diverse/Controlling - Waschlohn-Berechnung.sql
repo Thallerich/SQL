@@ -23,7 +23,7 @@ WHERE FibuDet.FibuExpID IN (
   FROM RechKo
   WHERE RechKo.RechDat BETWEEN @DatumVon AND @DatumBis
     AND RechKo.FirmaID = @FirmaID
-  AND KdGf.KurzBez <> N'ÖS'
+  AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB')
 )
 GROUP BY Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3)), RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID;
 
@@ -41,7 +41,7 @@ JOIN KdGf WITH (NOLOCK) ON Kunden.KdGfID = KdGf.ID
 WHERE LsKo.Datum BETWEEN @DatumVon AND @DatumBis
   AND Kunden.FirmaID = @FirmaID
   AND Artikel.ID > 0
-  AND KdGf.KurzBez <> N'ÖS'
+  AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB')
 GROUP BY LsKo.VsaID, LsPo.KdArtiID, KdBer.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID, Bereich.BereichBez, Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, Artikel.ArtikelNr, Artikel.ArtikelBez, Standort.SuchCode, Standort.FibuNr, CAST(IIF(@FirmaID = 5001, 93, KdGf.FibuNr) AS nchar(3));
 
 SELECT ISNULL(Waschlohn.KdNr, LMenge.KdNr) AS KdNr, ISNULL(Waschlohn.Debitor, LMenge.Debitor) AS Debitor, ISNULL(Waschlohn.SGF, LMenge.SGF) AS SGF, Waschlohn.RechNr, Waschlohn.RechDat, ISNULL(Waschlohn.Produktbereich, LMenge.Produktbereich) AS Produktbereich, ISNULL(Waschlohn.ArtikelNr, LMenge.ArtikelNr) AS ArtikelNr, ISNULL(Waschlohn.Artikelbezeichnung, LMenge.ArtikelBez) AS Artikelbezeichnung, ISNULL(Waschlohn.VerrechMenge, 0) AS VerrechMenge, Waschlohn.EPreis, ISNULL(Waschlohn.UmsatzNetto, 0) AS UmsatzNetto, Waschlohn.Erlöskonto, ISNULL(Waschlohn.FibuNrVertrieb, LMenge.FibuNrVertrieb) AS FibuNrVertrieb, Waschlohn.KostenträgerVertrieb, ISNULL(LMenge.Liefermenge, 0) AS Liefermenge, ISNULL(LMenge.Produzent, Standort.SuchCode) AS Produzent, CAST(ISNULL(LMenge.FibuNr, Standort.FibuNr) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNr, RTRIM(Waschlohn.KsSt) AS Kostenträger, Waschlohn.Differenz, ISNULL(Waschlohn.BereichID, LMenge.BereichID) AS BereichID, ISNULL(Waschlohn.KdGfID, LMenge.KdGfID) AS KdGfID, ISNULL(Waschlohn.MwStID, LMenge.MwStID) AS MwStID, ISNULL(Waschlohn.ArtGruID, LMenge.ArtGruID) AS ArtGruID
