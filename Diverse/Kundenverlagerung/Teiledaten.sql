@@ -1,6 +1,6 @@
 SELECT Teile.Barcode,
   Teile.RentomatChip,
-  CAST(IIF(LagerArt.DauerBarcode = 0 AND Teile.Status < N'N', 1, 0) AS bit) AS Dummybarcode, --bekommt das Teil später einen Dauerbarcode?
+  CAST(IIF(LagerArt.DauerBarcode = 0 AND Teile.Status < N'N', 1, 0) AS bit) AS Dummybarcode, --bekommt das Teil spï¿½ter einen Dauerbarcode?
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
   ArtGroe.Groesse,
@@ -14,7 +14,7 @@ SELECT Teile.Barcode,
   [Status].StatusBez AS [Status],
   IIF(Teile.AusdienstDat IS NOT NULL, Teile.AusdRestw, Teile.RestwertInfo) AS Restwert,
   LiefArt.LiefArt AS AuslieferartKZ,
-  LiefArt.LiefArtBez AS Auslieferart,
+  LiefArt.LiefartBez AS Auslieferart,
   Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
   NULL AS Abteilung,
@@ -27,6 +27,7 @@ SELECT Teile.Barcode,
   Traeger.Vorname,
   Standort.SuchCode AS [internProdBetrieb],
   HStandort.SuchCode AS ProdBetrieb
+INTO WozTeile_20180516
 FROM [ATENADVANTEX01.WOZABAL.INT\ADVANTEX].Wozabal.dbo.Teile
 JOIN [ATENADVANTEX01.WOZABAL.INT\ADVANTEX].Wozabal.dbo.TraeArti ON Teile.TraeArtiID = TraeArti.ID
 JOIN [ATENADVANTEX01.WOZABAL.INT\ADVANTEX].Wozabal.dbo.KdArti ON TraeArti.KdArtiID = KdArti.ID
@@ -46,3 +47,23 @@ JOIN [ATENADVANTEX01.WOZABAL.INT\ADVANTEX].Wozabal.dbo.LagerArt ON Teile.LagerAr
 WHERE Traeger.Altenheim = 0
   AND Firma.SuchCode <> N'STX'
   AND Teile.[Status] NOT IN (N'5', N'X', N'XM', N'Y');
+
+GO
+
+ALTER TABLE WozTeile_20180516
+  ADD BarcodeOhneNull varchar(33);
+
+GO
+
+UPDATE WozTeile_20180516
+  SET BarcodeOhneNull = SUBSTRING(Barcode, PATINDEX('%[^0]%', Barcode), 33)
+WHERE BarcodeOhneNull IS NULL;
+
+GO
+
+CREATE CLUSTERED INDEX CI_Barcode ON WozTeile_20180516 (Barcode);
+CREATE INDEX I_BarcodeOhneNull ON WozTeile_20180516 (BarcodeOhneNull);
+CREATE INDEX I_RentomatChip ON WozTeile_20180516 (RentomatChip);
+CREATE INDEX I_Status ON WozTeile_20180516 (Status);
+
+GO
