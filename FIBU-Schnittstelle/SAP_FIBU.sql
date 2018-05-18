@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 14.05.2018, Version 1.1                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 18.05.2018, Version 1.2                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -29,7 +29,27 @@ DECLARE @i int = 0;
 DECLARE @output TABLE ([Order] int, exportline nvarchar(max));
 
 DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
-  SELECT Export.OrderByAutoInc, Export.KopfPos, Export.Art, Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung, CAST(CAST(IIF(Kunden.FirmaID = 5001, 93, KdGf.FibuNr) AS int) AS nchar(3)) AS KdGfFibuNr, IIF(Kunden.FirmaID = 5001, 1260, 1250) AS Buchungskreis
+  SELECT Export.OrderByAutoInc, Export.KopfPos,
+    Belegart =
+      CASE
+        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'R' THEN N'AU'
+        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'R' THEN N'AR'
+        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'G' THEN N'GA'
+        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'G' THEN N'GU'
+      END,
+    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
+    KdGfFibuNr = 
+      CASE Kunden.FirmaID
+        WHEN 5001 THEN CAST(93 AS nchar(3))  --Umlauft
+        WHEN 5260 THEN CAST(90 AS nchar(3))  --Salesianer
+        ELSE CAST(KdGf.FibuNr AS nchar(3))   --Wozabal Miettex
+      END,
+    Buchungskreis = 
+      CASE Kunden.FirmaID 
+        WHEN 5001 THEN 1260                  --Umlauft
+        WHEN 5260 THEN 1200                  --Salesianer
+        ELSE 1250                            --Wozabal Miettex
+      END
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
@@ -76,7 +96,7 @@ BEGIN
         N'/         ' +                                                     --fk_kursf
         CAST(@BelegNr AS nchar(10)) +                                       --fk_belnr
         N'/       ' +                                                       --fk_wwert
-        IIF(@Art = N'R', N'AR', N'GU') + CAST(@BelegNr AS nchar(14)) +      --fk_xblnr
+        @Art + CAST(@BelegNr AS nchar(14)) +                                --fk_xblnr
         N'/               ' +                                               --fk_bvorg
         N'/                        ' +                                      --fk_bktxt
         N'    ' +                                                           --fk_pargb
