@@ -9,7 +9,7 @@
 
 DECLARE @OrderByAutoInc int;
 DECLARE @KopfPos nchar(1);
-DECLARE @Art nchar(1);
+DECLARE @Art nchar(2);
 DECLARE @Belegdat date;
 DECLARE @WaeCode nchar(4);
 DECLARE @BelegNr int;
@@ -88,7 +88,7 @@ BEGIN
       N'1' +                                                                --fk_stype
         N'FB01                ' +                                           --fk_tcode
         FORMAT(@Belegdat, 'ddMMyyyy', 'de-AT') +                            --fk_bldat
-        IIF(@Art = N'R', N'AR', N'GU') +                                    --fk_blart
+        @Art +                                                              --fk_blart
         CAST(@Buchungskreis AS nchar(4)) +                                  --fk_bukrs
         FORMAT(@Belegdat, 'ddMMyyyy', 'de-AT') +                            --fk_budat
         N'/ ' +                                                             --fk_monat
