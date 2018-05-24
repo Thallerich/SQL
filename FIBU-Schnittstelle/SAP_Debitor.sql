@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.0                       **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.1                       **
 ** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
 **                                                                                                                            **
 *******************************************************************************************************************************/
@@ -25,8 +25,8 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS MasterAccountNumber,
   KdGf.KurzBez AS MarketSegmentCode,
   KdGf.KurzBez AS MarketSegmentDesc,
-  IIF(DE.Firma = N'51', N'SÜD', N'WEST') AS SalesAreaCode,
-  IIF(DE.Firma = N'51', N'SÜD', N'WEST') AS SalesAreaDesc,
+  IIF(DE.Firma = N'51' OR (DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU'), N'SÜD', N'WEST') AS SalesAreaCode,
+  IIF(DE.Firma = N'51' OR (DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU'), N'SÜD', N'WEST') AS SalesAreaDesc,
   DE.Strasse AS MailAddress,
   NULL AS MailAddress2,
   DE.PLZ AS MailZipcode,
