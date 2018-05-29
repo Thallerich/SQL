@@ -18,8 +18,15 @@ FROM #TmpTblAnzLs400 AnzLs, (
 		AND LsPo.LsKoID = LsKo.ID
 		AND LsKo.VsaID = Vsa.ID
 		AND LsKo.Datum BETWEEN $1$ AND $2$
-		AND AnfKo.LiefBerechArt = N'X'                                     -- ohne Liefergebühr
 		AND AnfKo.Sonderfahrt = $TRUE$
+		AND NOT EXISTS (
+			SELECT Pos.*
+			FROM LsPo AS Pos
+			JOIN KdArti ON Pos.KdArtiID = KdArti.ID
+			JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+			WHERE Pos.LsKoID = LsKo.ID
+				AND Artikel.ArtikelNr = N'A00001'
+		)
 	GROUP BY Vsa.VsaNr
 ) a
 WHERE AnzLs.VsaNr = a.VsaNr;
@@ -32,17 +39,17 @@ FROM #TmpTblAnzLs400 AnzLs, (
 		AND LsPo.LsKoID = LsKo.ID
 		AND LsKo.VsaID = Vsa.ID
 		AND LsKo.Datum BETWEEN $1$ AND $2$
-		AND (AnfKo.LiefBerechArt <> N'X' OR AnfKo.LiefBerechArt IS NULL )  -- mit Liefergebühr
 		AND AnfKo.Sonderfahrt = $TRUE$
+		AND EXISTS (
+			SELECT Pos.*
+			FROM LsPo AS Pos
+			JOIN KdArti ON Pos.KdArtiID = KdArti.ID
+			JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+			WHERE Pos.LsKoID = LsKo.ID
+				AND Artikel.ArtikelNr = N'A00001'
+		)
 	GROUP BY Vsa.VsaNr
 ) a
 WHERE AnzLs.VsaNr = a.VsaNr;
   
 SELECT * FROM #TmpTblAnzLs400;
-
-SELECT Vsa.VsaNr, AnfKo.*
-FROM AnfKo
-JOIN Vsa ON AnfKo.VsaID = Vsa.ID
-WHERE Vsa.VsaNr = 1208
-	AND AnfKo.Lieferdatum >= N'2018-04-01'
-	AND AnfKo.Sonderfahrt = 1;
