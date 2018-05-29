@@ -21,13 +21,19 @@ FROM #TmpTblAnzLs400a AnzLs, (
 		AND LsPo.LsKoID = LsKo.ID
 		AND LsKo.Datum BETWEEN $1$ AND $2$
 		AND AnfKo.Sonderfahrt = 1
-		AND NOT EXISTS (
-			SELECT Pos.*
-			FROM LsPo AS Pos
-			JOIN KdArti ON Pos.KdArtiID = KdArti.ID
-			JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-			WHERE Pos.LsKoID = LsKo.ID
-				AND Artikel.ArtikelNr = N'A00001'
+		AND (
+			(
+				NOT EXISTS (
+					SELECT Pos.*
+					FROM LsPo AS Pos
+					JOIN KdArti ON Pos.KdArtiID = KdArti.ID
+					JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+					WHERE Pos.LsKoID = LsKo.ID
+						AND Artikel.ArtikelNr = N'A00001'
+				)
+				AND AnfKo.LiefBerechArt <> N'A'
+			)
+			OR AnfKo.LiefBerechArt IS NULL
 		)
 	GROUP BY LsPo.AbteilID, LsPo.KdArtiID
 ) a
@@ -50,6 +56,7 @@ FROM #TmpTblAnzLs400a AnzLs, (
 			WHERE Pos.LsKoID = LsKo.ID
 				AND Artikel.ArtikelNr = N'A00001'
 		)
+		AND AnfKo.LiefBerechArt = N'A'
 	GROUP BY LsPo.AbteilID, LsPo.KdArtiID
 ) a
 WHERE AnzLs.AbteilID = a.AbteilID
