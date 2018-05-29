@@ -162,12 +162,16 @@ SELECT DE.Debitor AS CustomerNumber,
 FROM #DebitorExport DE
 LEFT OUTER JOIN KdGf ON DE.GfBez = KdGf.Bez
 LEFT OUTER JOIN Kunden ON DE.KundenID = Kunden.ID
+LEFT OUTER JOIN Firma ON Kunden.FirmaID = Firma.ID
 LEFT OUTER JOIN Standort ON Kunden.StandortID = Standort.ID
 LEFT OUTER JOIN Holding ON Kunden.HoldingID = Holding.ID
 LEFT OUTER JOIN SektPLZ ON Kunden.Land = SektPLZ.Land AND Kunden.PLZ = SektPLZ.PLZ
 LEFT OUTER JOIN Sektor ON SektPLZ.SektorID = Sektor.ID
-WHERE ((LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
-  OR (LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28')))
+WHERE (
+    (Firma.SuchCode <> N'SAL' AND LEN(DE.Debitor) = 7 AND LEFT(DE.Debitor, 2) IN (N'23', N'24', N'25', N'27', N'28'))
+    OR (Firma.SuchCode <> N'SAL' AND LEN(DE.Debitor) = 9 AND LEFT(DE.Debitor, 2) IN (N'27', N'28'))
+    OR Firma.SuchCode = N'SAL'
+  )
   AND KdGf.Status = N'A'
   AND KdGf.FibuNr <> 0
   AND Kunden.StandortID > 0;
