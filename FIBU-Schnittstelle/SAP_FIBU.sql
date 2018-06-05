@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 04.06.2018, Version 1.3                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 18.05.2018, Version 1.2                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -32,10 +32,10 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   SELECT Export.OrderByAutoInc, Export.KopfPos,
     Belegart =
       CASE
-        WHEN Kunden.FirmaID = 5260 AND Export.BruttoWert >= 0 THEN N'AU'
-        WHEN Kunden.FirmaID <> 5260 AND Export.BruttoWert >= 0 THEN N'AR'
-        WHEN Kunden.FirmaID = 5260 AND Export.BruttoWert < 0 THEN N'GA'
-        WHEN Kunden.FirmaID <> 5260 AND Export.BruttoWert < 0 THEN N'GU'
+        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'R' THEN N'AU'
+        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'R' THEN N'AR'
+        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'G' THEN N'GA'
+        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'G' THEN N'GU'
       END,
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
     KdGfFibuNr = 
