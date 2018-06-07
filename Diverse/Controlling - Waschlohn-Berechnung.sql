@@ -167,13 +167,20 @@ GROUP BY KdNr, Debitor, SGF, RechNr, RechDat, Produktbereich, ArtikelNr, Artikel
 --* Debug: Netto-Summe Waschlohn - muss mit Netto-Summe Rechnungen übereinstimmen!
 --SELECT FORMAT(SUM(UmsatzNetto), N'C', N'de-AT') FROM #ResultWLohnUmsatz;
 
---* Auswertung für AUVA-Weiterverrechnung KLU:
+--* Auswertung für Ascendum- und AUVA-Weiterverrechnung KLU:
 /*
 SELECT WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb AS [KTr WM], N'93' + WLU.Kostenträger AS [KTr USMK], FORMAT(SUM(WLU.UmsatzNetto), N'C', N'de-AT') AS Umsatz
 FROM #ResultWLohnUmsatz AS WLU
 JOIN Kunden ON WLU.KdNr = Kunden.KdNr
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 WHERE Holding.Holding = N'AUVA'
+  AND WLU.Produzent = N'UKLU'
+GROUP BY WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb, N'93' + WLU.Kostenträger;
+
+SELECT WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb AS [KTr WM], N'93' + WLU.Kostenträger AS [KTr USMK], FORMAT(SUM(WLU.UmsatzNetto), N'C', N'de-AT') AS Umsatz
+FROM #ResultWLohnUmsatz AS WLU
+JOIN Kunden ON WLU.KdNr = Kunden.KdNr
+WHERE Kunden.KdNr = 30970
   AND WLU.Produzent = N'UKLU'
 GROUP BY WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb, N'93' + WLU.Kostenträger;
 
