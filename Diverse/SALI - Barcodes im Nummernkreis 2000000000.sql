@@ -18,11 +18,14 @@ JOIN Status ON Teile.Status = Status.Status AND Status.Tabelle = N'TEILE'
 WHERE Teile.Status NOT IN (N'L', N'LM', N'M', N'N', N'O', N'Q', N'S', N'T', N'U', N'W')
   AND Teile.Barcode LIKE N'2_________';
 
-SELECT Teile.*
---UPDATE Teile SET Barcode = RTRIM(Barcode) + N'*SAL'
+/* #### erledigt 08.06.2018 ####
+UPDATE Teile SET Barcode = RTRIM(Barcode) + N'*SAL'
 FROM Teile
-WHERE Teile.Status NOT IN (N'L', N'LM', N'M', N'N', N'O', N'Q', N'S', N'T', N'U', N'W')
+WHERE Teile.Status NOT IN (N'L', N'LM', N'M', N'N', N'O', N'Q', N'S', N'T', N'U', N'W', N'X')
   AND Teile.Barcode LIKE N'2_________';
+*/
+
+-- TODO: Teile mit Status X extra behandeln - Lagerteile!
 
 SELECT TeileLag.*
 FROM TeileLag
