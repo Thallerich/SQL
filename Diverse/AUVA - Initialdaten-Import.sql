@@ -1,26 +1,43 @@
-/* ## Alter Collation of imported data to match AdvanTex tables ## */
-/*
-ALTER TABLE __auvainitial ALTER COLUMN MifareID nchar(10) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Kartennummer nchar(8) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Status nchar(7) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Typ nchar(7) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Vorname nvarchar(30) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Nachname nvarchar(30) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Titel nvarchar(20) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN TitelN nvarchar(20) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Standort nchar(2) COLLATE Latin1_General_CS_AS
-ALTER TABLE __auvainitial ALTER COLUMN Kostenstelle nchar(6) COLLATE Latin1_General_CS_AS
-*/
+-- DROP TABLE #auvainitial;
 
--- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM __auvainitial WHERE Standort IS NULL;
+/* ## Import file to table ## */
+DECLARE @Filename nvarchar(100) = N'Initialdaten.csv';
+DECLARE @ImportSQL nvarchar(200) = N'BULK INSERT #auvainitial FROM N''D:\AdvanTex\Temp\' + @Filename + '''WITH (CODEPAGE = ''65001'', FIELDTERMINATOR = N'';'', ROWTERMINATOR = N''\n'');';
+
+IF object_id('tempdb..#auvainitial') IS NULL
+BEGIN
+  CREATE TABLE #auvainitial (
+    LfdNr int,
+    MifareID nchar(10) COLLATE Latin1_General_CS_AS,
+    Kartennummer nchar(8) COLLATE Latin1_General_CS_AS NOT NULL,
+    [Status] nchar(7) COLLATE Latin1_General_CS_AS NOT NULL,
+    Typ nchar(7) COLLATE Latin1_General_CS_AS NOT NULL,
+    Vorname nvarchar(30) COLLATE Latin1_General_CS_AS,
+    Nachname nvarchar(30) COLLATE Latin1_General_CS_AS,
+    Titel nvarchar(20) COLLATE Latin1_General_CS_AS,
+    TitelN nvarchar(20) COLLATE Latin1_General_CS_AS,
+    Standort nchar(2) COLLATE Latin1_General_CS_AS NOT NULL,
+    Kostenstelle nchar(6) COLLATE Latin1_General_CS_AS NOT NULL
+  );
+
+  EXEC(@ImportSQL);
+END;
+
+-- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM #auvainitial WHERE Standort IS NULL;
 
 DROP TABLE IF EXISTS #TmpImport;
 
 SELECT x.MifareID AS Kartennummer, x.Kartennummer AS PersNr, x.Status, x.Typ AS Kartentyp, x.Vorname, x.Nachname, x.Titel, x.TitelN, x.Standort, x.Kostenstelle, Rentomat.ID AS RentomatID
 INTO #TmpImport
-FROM __auvainitial x
-JOIN Rentomat ON Rentomat.SchrankNr LIKE '%' + x.Standort + '%'
-  AND Rentomat.ID = 36; 
+FROM #auvainitial x
+JOIN Rentomat ON Rentomat.SchrankNr LIKE '%' + x.Standort + '%';
+
+SELECT Traeger.PersNr AS Kartennummer, Traeger.Vorname, Traeger.Nachname, Traeger.RentomatKarte AS [MifareID Wozabal], x.Kartennummer AS [MifareID Initialdaten], x.Kartentyp, x.Standort
+FROM Traeger, Vsa, #TmpImport x
+WHERE Traeger.VsaID = Vsa.ID
+  AND Vsa.RentomatID = x.RentomatID
+  AND Traeger.PersNr = x.PersNr
+  AND Traeger.RentomatKarte <> x.Kartennummer;
 
 /* PersNr auffüllen */
 UPDATE Traeger SET PersNr = RIGHT(N'00000000' + Traeger.PersNr, 8)
