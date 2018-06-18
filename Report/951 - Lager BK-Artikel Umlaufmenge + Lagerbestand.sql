@@ -21,7 +21,7 @@ FROM #TmpResult AS R, (
   SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
   FROM Bestand, LagerArt
   WHERE Bestand.LagerArtID = LagerArt.ID
-    AND LagerArt.LagerID = $1$
+    AND LagerArt.LagerID IN ($1$)
     AND LagerArt.Neuwertig = $TRUE$
   GROUP BY Bestand.ArtGroeID
 ) AS x
@@ -32,7 +32,7 @@ FROM #TmpResult AS R, (
   SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
   FROM Bestand, LagerArt
   WHERE Bestand.LagerArtID = LagerArt.ID
-    AND LagerArt.LagerID = $1$
+    AND LagerArt.LagerID IN ($1$)
     AND LagerArt.Neuwertig = $FALSE$
   GROUP BY Bestand.ArtGroeID
 ) AS x
