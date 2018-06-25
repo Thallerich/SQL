@@ -1,3 +1,10 @@
+IF object_id('tempdb..#TmpVB') IS NOT NULL
+BEGIN
+  DROP TABLE #TmpVB;
+END;
+
+GO
+
 WITH OffeneAnf AS (
   SELECT AnfKo.VsaID, AnfPo.KdArtiID, (AnfPo.Angefordert - AnfPo.Geliefert) AS LiefOffen
   FROM AnfPo
@@ -8,7 +15,8 @@ WITH OffeneAnf AS (
     AND AnfKo.LsKoID < 0
     AND AnfKo.Status < N'L'
 )
-SELECT Vsa.VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, VsaAnf.Bestand AS [Vertragsbestand aktuell], VsaAnf.BestandIst AS [Ist-Bestand aktuell], CAST(SUM(ISNULL(OffeneAnf.LiefOffen, 0)) AS int) AS [Offene angeforderte Menge]
+SELECT Vsa.VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, VsaAnf.Bestand AS [Vertragsbestand aktuell], VsaAnf.BestandIst AS [Ist-Bestand aktuell], CAST(SUM(ISNULL(OffeneAnf.LiefOffen, 0)) AS int) AS [Offene angeforderte Menge], VsaAnf.ID AS VsaAnfID
+INTO #TmpVB
 FROM VsaAnf
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
@@ -22,5 +30,16 @@ WHERE EXISTS (
     AND OPTeile.VsaID = Vsa.ID
     AND OPTeile.ArtikelID = Artikel.ID
   )
-GROUP BY Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, Vsaanf.Bestand, VsaAnf.BestandIst
-ORDER BY Vsa.VsaNr, Artikel.ArtikelNr;
+GROUP BY Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, Vsaanf.Bestand, VsaAnf.BestandIst, VsaAnf.ID;
+
+GO
+
+UPDATE VsaAnf SET VsaAnf.Bestand = VB.[Ist-Bestand aktuell] + VB.[Offene angeforderte Menge]
+FROM VsaAnf
+JOIN #TmpVB AS VB ON VsaAnf.ID = VB.VsaAnfID;
+
+GO
+
+SELECT VsaNr, Vsa, ArtikelNr, Artikelbezeichnung, [Vertragsbestand aktuell] AS [Vertragsbestand alt], [Ist-Bestand aktuell], [Offene angeforderte Menge], [Ist-Bestand aktuell] + [Offene angeforderte Menge] AS [Vertragsbestand neu]
+FROM #TmpVB
+ORDER BY VsaNr, ArtikelNr;
