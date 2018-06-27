@@ -1,13 +1,14 @@
 DROP TABLE IF EXISTS #TmpArtiList;
 
-SELECT Artikel.ID AS ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelNr2 AS [BMD-Nr.], Artikel.SuchCode AS [Artikel-Stichwort], Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Bereich.BereichBez$LAN$ AS Bereich, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, Artikel.PackMenge, Me.MeBez$LAN$ AS Mengeneinheit, Status.StatusBez AS Artikelstatus, Artikel.Anlage_ AS Artikelanlage, ISNULL(Mitarbei.UserName, N'(unbekannt)') AS Anlagebenutzer, 0 AS [Liefermenge letzte 6 Monate]
+SELECT Artikel.ID AS ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelNr2 AS [BMD-Nr.], Artikel.SuchCode AS [Artikel-Stichwort], Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ABC.ABC AS [ABC-Klasse], ABC.ABCBez AS [ABC-Klasse Bezeichnung], Bereich.BereichBez$LAN$ AS Bereich, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, Artikel.PackMenge, Me.MeBez$LAN$ AS Mengeneinheit, Status.StatusBez AS Artikelstatus, Artikel.Anlage_ AS Artikelanlage, ISNULL(Mitarbei.UserName, N'(unbekannt)') AS Anlagebenutzer, 0 AS [Liefermenge letzte 6 Monate]
 INTO #TmpArtiList
-FROM Bereich, ArtGru, Me, (SELECT Status.Status, Status.StatusBez$LAN$ AS StatusBez FROM Status WHERE Status.Tabelle = 'ARTIKEL') AS Status, Artikel
+FROM Bereich, ArtGru, Me, (SELECT Status.Status, Status.StatusBez$LAN$ AS StatusBez FROM Status WHERE Status.Tabelle = 'ARTIKEL') AS Status, ABC, Artikel
 LEFT OUTER JOIN Mitarbei ON Artikel.AnlageUserID_ = Mitarbei.ID
 WHERE Artikel.BereichID = Bereich.ID
   AND Artikel.ArtGruID = ArtGru.ID
   AND Artikel.Status = Status.Status
   AND Artikel.MeID = Me.ID
+  AND Artikel.AbcID = ABC.ID
   AND Bereich.ID IN ($1$)
   AND ArtGru.ID IN ($2$)
 ORDER BY Bereich, Artikelgruppe, Artikel.ArtikelNr;
