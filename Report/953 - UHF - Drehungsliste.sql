@@ -20,4 +20,4 @@ JOIN Bereich ON Artikel.BereichID = Bereich.ID
 WHERE Kunden.ID = $1$
   AND OPTeile.Status IN (N'Q', N'W')
   AND OPTeile.LastActionsID IN (102, 116)
-GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.SuchCode, Vsa.Bez, Artikel.ArtikelBez$LAN$;
+GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.SuchCode, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$;
