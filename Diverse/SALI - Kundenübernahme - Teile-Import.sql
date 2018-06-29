@@ -89,7 +89,7 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID AND ArtGroe.Groesse = ImportData
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID AND Artikel.ArtikelNr = ImportData.Artikel COLLATE Latin1_General_CS_AS;
 
 -- AH Ferlach - KdNr 2529571
--- 1728 Datensätze
+-- 1675 Datensätze
 INSERT INTO Teile (Barcode, [Status], VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Entnommen, EinsatzGrund, PatchDatum, Erstwoche, ErstDatum, Indienst, IndienstDat, RuecklaufG, Kostenlos, AlterInfo, AltenheimModus, AnlageUserID_, UserID_)
 SELECT ImportData.Barcode,
   N'Q' AS [Status],
@@ -113,7 +113,7 @@ SELECT ImportData.Barcode,
   (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'STHA') AS UserID_
 FROM __AHFerlach AS ImportData
 JOIN Kunden ON ImportData.KdNr = Kunden.KdNr
-JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = 1
+JOIN Vsa ON Vsa.KundenID = Kunden.ID
 JOIN Traeger ON Traeger.VsaID = Vsa.ID AND CAST(Traeger.Traeger AS int) = ImportData.TraegerNr
 JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID AND ArtGroe.Groesse = ImportData.Groesse COLLATE Latin1_General_CS_AS
