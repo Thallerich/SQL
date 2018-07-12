@@ -1,4 +1,35 @@
-DECLARE @KdNr int = 30972;
+DECLARE @KdNr int = 30578;
+
+DECLARE @KdNrABS int =  2330578;
+
+DECLARE @Traeger TABLE (
+  ID int,
+  VsaID int,
+  Traeger int,
+  Vorname nvarchar(20),
+  Nachname nvarchar(25),
+  PersNr nvarchar(10),
+  Geschlecht nchar(1),
+  Indienst nchar(7),
+  IndienstDat date,
+  Ausdienst nchar(7),
+  AusdienstDat date,
+  RentoArtID int,
+  RentoCodID int,
+  RentomatKredit int,
+  Namenschild1 nvarchar(40),
+  Namenschild2 nvarchar(40),
+  Namenschild3 nvarchar(40)
+);
+
+INSERT INTO @Traeger
+SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+WHERE Kunden.KdNr = @KdNr
+  AND Traeger.Altenheim = 0
+  AND Traeger.Status IN (N'A', N'P', N'K');
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Export-Script to transfer the wearers of a customer from AdvanTex to ABS                                                  ++ */
@@ -13,11 +44,11 @@ DECLARE @KdNr int = 30972;
 
 /* ++ wearer.csv ++ */
 SELECT
-  Kunden.KdNr AS CUSTOMERNUMBER,
-  RTRIM(Traeger.Traeger) AS WEARERNUMBER,
+  @KdNrABS AS CUSTOMERNUMBER,
+  Traeger.Traeger AS WEARERNUMBER,
   N'' AS WEAREREMPLOYMENTNUMBER,
-  IIF(Traeger.Vorname IS NULL, N'', RTRIM(Traeger.Vorname) + N' ') + ISNULL(RTRIM(Traeger.Nachname), N'') AS FULLNAME,
-  ISNULL(RTRIM(Traeger.Nachname), N'') AS SEARCHNAME,
+  IIF(Traeger.Vorname IS NULL, N'', RTRIM(REPLACE(Traeger.Vorname, N',', N' ')) + N' ') + ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'') AS FULLNAME,
+  ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'') AS SEARCHNAME,
   N'' AS EMBLEMNAME,
   ISNULL(RTRIM(Traeger.PersNr), N'') AS CUSTOMEREMPLOYEENUMBER,
   IIF(Traeger.Geschlecht = N'M', N'M', N'F') AS SEX,
@@ -39,33 +70,31 @@ SELECT
   N'' AS PRICE,
   Vsa.VsaNr AS DEPARTMENTNUMBER,
   N'' AS LOCKERSORTADDRESS,
-  ISNULL(RTRIM(Traeger.Vorname), N'') AS FIRSTNAME,
+  ISNULL(RTRIM(REPLACE(Traeger.Vorname, N',', N' ')), N'') AS FIRSTNAME,
   N'' AS EMPLOYMENTFLAGCODE,
   N'' AS EMPLOYMENTFLAGDESCRIPTION,
   N'' AS DELIVERYPOINTNUMBER,
   N'' AS DELIVERYPOINTDESCRIPTION,
-  ISNULL(RTRIM(Traeger.Namenschild1), N'') AS EMBROIDERYLETTERINGLINE1,
-  ISNULL(RTRIM(Traeger.Namenschild2), N'') AS EMBROIDERYLETTERINGLINE2,
-  ISNULL(RTRIM(Traeger.Namenschild3), N'') AS EMBROIDERYLETTERINGLINE3,
+  ISNULL(RTRIM(REPLACE(Traeger.Namenschild1, N',', N' ')), N'') AS EMBROIDERYLETTERINGLINE1,
+  ISNULL(RTRIM(REPLACE(Traeger.Namenschild2, N',', N' ')), N'') AS EMBROIDERYLETTERINGLINE2,
+  ISNULL(RTRIM(REPLACE(Traeger.Namenschild3, N',', N' ')), N'') AS EMBROIDERYLETTERINGLINE3,
   N'' AS LOCKERSORTGROUPNUMBER,
   N'' AS LOCKERSORTGROUPDESCR,
   N'' AS EXTERNALLOCKERBANK,
   N'' AS EXTERNALLOCKER,
   N'' AS CONSUMPTIONPOINTNUMBER,
   N'' AS KEYCOMBINATION
-FROM Traeger
+FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN RentoArt ON Traeger.RentoArtID = RentoArt.ID
 JOIN RentoCod ON Traeger.RentoCodID = RentoCod.ID
-WHERE Kunden.KdNr = @KdNr
-  AND Traeger.Altenheim = 0
-  AND Traeger.Status IN (N'A', N'P', N'K');
+ORDER BY WEARERNUMBER ASC;
 
 /* ++ wearinv.csv ++ */
 SELECT
-  Kunden.KdNr AS CUSTOMERNUMBER,
-  ISNULL(RTRIM(Traeger.Traeger), N'') AS WEARERNUMBER,
+  @KdNrABS AS CUSTOMERNUMBER,
+  Traeger.Traeger AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
   RTRIM(Artikel.ArtikelNr) AS PRODUCTCODE,
   RTRIM(ArtGroe.Groesse) AS SIZECODE,
@@ -102,7 +131,7 @@ SELECT
   N'' AS PHASEIN_PRODUCTCODE,
   N'' AS PHASEIN_SIZECODE,
   N'' AS PHASEIN_DATEACTIVE_WIL
-FROM Traeger
+FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN RentoArt ON Traeger.RentoArtID = RentoArt.ID
@@ -110,10 +139,8 @@ JOIN RentoCod ON Traeger.RentoCodID = RentoCod.ID
 JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
-WHERE Kunden.KdNr = @KdNr
-  AND Traeger.Altenheim = 0
-  AND Traeger.Status IN (N'A', N'P', N'K')
-  AND TraeArti.Menge > 0;
+WHERE TraeArti.Menge > 0
+ORDER BY WEARERNUMBER, PRODUCTCODE;
 
 /* ++ uniqueitem.csv ++ */
 SELECT
@@ -123,8 +150,8 @@ SELECT
   ISNULL(RTRIM(Teile.RentomatChip), N'') AS SECONDARYID,
   20 AS [STATUS],
   20 AS STAY,
-  Kunden.KdNr AS CUSTOMERNUMBER,
-  ISNULL(RTRIM(Traeger.Traeger), N'') AS WEARERNUMBER,
+  @KdNrABS AS CUSTOMERNUMBER,
+  Traeger.Traeger AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
   RTRIM(Artikel.ArtikelNr) AS PRODUCTCODE,
   RTRIM(ArtGroe.Groesse) AS SIZECODE,
@@ -172,7 +199,7 @@ SELECT
   N'' AS LEASEWEEKS,
   N'' AS RESIDUALVALUEAMOUNT,
   N'' AS REPLACEMENTPRICE
-FROM Traeger
+FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN RentoArt ON Traeger.RentoArtID = RentoArt.ID
@@ -182,8 +209,6 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Teile ON Teile.TraeArtiID = TraeArti.ID
 JOIN Wae ON Kunden.WaeID = Wae.ID
-WHERE Kunden.KdNr = @KdNr
-  AND Traeger.Altenheim = 0
-  AND Traeger.Status IN (N'A', N'P', N'K')
-  AND TraeArti.Menge > 0
-  AND Teile.Status = N'Q';
+WHERE TraeArti.Menge > 0
+  AND Teile.Status = N'Q'
+ORDER BY WEARERNUMBER, PRODUCTCODE;
