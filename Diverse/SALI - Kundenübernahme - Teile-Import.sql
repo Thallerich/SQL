@@ -118,3 +118,9 @@ JOIN Traeger ON Traeger.VsaID = Vsa.ID AND CAST(Traeger.Traeger AS int) = Import
 JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID AND ArtGroe.Groesse = ImportData.Groesse COLLATE Latin1_General_CS_AS
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID AND Artikel.ArtikelNr = ImportData.Artikel COLLATE Latin1_General_CS_AS;
+
+-- Hinweise anlegen
+INSERT INTO Hinweis (TeileID, Aktiv, StatusSDC, Hinweis, BisWoche, Anzahl, HinwTextID, EingabeDatum, EingabeMitarbeiID)
+SELECT Teile.ID AS TeileID, CAST(1 AS bit) AS Aktiv, CAST(N'A' AS nchar(1)) AS StatusSDC, N'<o> ' + RTRIM(LHS.Singaltext) as Hinweis, N'2099/52' AS BisWoche, -1 AS HinwTextID, 1 AS Anzahl, LHS.[Startdatum Signal] AS EingabeDatum, (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'STHA') AS EingabeMitarbeiID
+FROM __LHSignale AS LHS
+JOIN Teile ON LHS.Barcode COLLATE Latin1_General_CS_AS = Teile.Barcode;
