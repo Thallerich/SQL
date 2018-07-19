@@ -49,7 +49,7 @@ BEGIN
     SELECT Scans.ID AS ScanID, Scans.[DateTime] AS Eingangsscan, Scans.EinAusDat AS Abholung
     FROM Scans
     WHERE Scans.TeileID = @TeileID
-      AND Scans.DateTime > = N'2018-01-01 00:00:00'
+      AND Scans.DateTime > = @DateSelection
       AND Scans.Menge = 1
     ORDER BY Scans.ID ASC;
 
