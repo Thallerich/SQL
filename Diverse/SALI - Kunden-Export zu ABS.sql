@@ -38,6 +38,7 @@ WHERE Kunden.KdNr = @KdNr
 /* ++   wearinv.csv                                                                                                             ++ */
 /* ++   uniqueitem.csv                                                                                                          ++ */
 /* ++ ATTENTION: csv-file has to end with ;\r\n - needs to be done manually after export!                                       ++ */
+/* ++   No headers!                                                                                                             ++ */
 /* ++                                                                                                                           ++ */
 /* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -53,8 +54,8 @@ SELECT
   ISNULL(RTRIM(Traeger.PersNr), N'') AS CUSTOMEREMPLOYEENUMBER,
   IIF(Traeger.Geschlecht = N'M', N'M', N'F') AS SEX,
   IIF(RentoArt.Code = N'P', N'Y', N'N') AS DUMMYFORPOOL,
-  Traeger.IndienstDat AS DATEACTIVE,
-  ISNULL(Traeger.AusdienstDat, N'2099-12-31') AS DATEINACTIVE,
+  FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US') AS DATEACTIVE,
+  FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US') AS DATEINACTIVE,
   N'' AS REMARK,
   ISNULL(RentoCod.Funktionscode, N'') AS WEARERFUNCTIONCODE,
   IIF(RentoCod.ID < 0, N'', RentoCod.Bez) AS WEARERFUNCTIONDESCRIPTION,
@@ -112,8 +113,8 @@ SELECT
   TraeArti.Menge AS CIRCINVENTORY,
   ROUND(TraeArti.Menge / 2, 0, 1) AS CHANGESPERWEEK,
   N'' AS SPECIALQUALITYGRADE,
-  Traeger.IndienstDat AS STARTDATE,
-  ISNULL(Traeger.AusdienstDat, N'2099-12-31') AS ENDDATE,
+  FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US') AS STARTDATE,
+  FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US') AS ENDDATE,
   N'' AS SWINGSUITSTATUS,
   N'' AS MAXFREEOFCHARGE,
   N'' AS WEARERINVENTORYPRICE,
@@ -166,15 +167,15 @@ SELECT
   N'' AS RELATEDCUSTOMERNUMBER,
   N'' AS DELIVERYFROMSTOCK,
   0 AS STARTRENTFROM,
-  CAST(Teile.Eingang1 AS datetime) AS LASTINSCANDATE,
-  CAST(Teile.Ausgang1 AS datetime) AS LASTOUTSCANDATE,
+  FORMAT(CAST(Teile.Eingang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTINSCANDATE,
+  FORMAT(CAST(Teile.Ausgang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTOUTSCANDATE,
   (SELECT MAX(Scans.DateTime) FROM Scans WHERE Scans.TeileID = Teile.ID) AS LASTSCANDATE,
   N'' AS STATUSCHANGEDATE,
   N'' AS STAYCHANGEDATE,
   N'' AS PURCHASEDATE,
   IIF(Teile.IndienstDat = Teile.ErstDatum, 1, 2) AS NUMBEROFISSUES,
-  Teile.ErstDatum AS FIRSTISSUEDATE,
-  Teile.IndienstDat AS LASTISSUEDATE,
+  FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US') AS FIRSTISSUEDATE,
+  FORMAT(Teile.IndienstDat, N'dd/MM/yyyy', N'en-US') AS LASTISSUEDATE,
   N'' AS ENDDATEFULLRENT,
   N'' AS DAYSINCIRCPREVISSUE,
   N'' AS DAYSINSTOCKPREVIOUS,
