@@ -5,9 +5,15 @@ WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSI
 
 -- ######## Step 2 ################################
 
-ALTER DATABASE Wozabal_Test
-  SET SINGLE_USER
-WITH ROLLBACK IMMEDIATE;
+DECLARE @TestExists bit = 0;
+
+IF db_id(N'Wozabal_Test') IS NOT NULL
+  SET @TestExists = 1;
+
+IF @TestExists = 1
+  ALTER DATABASE Wozabal_Test
+    SET SINGLE_USER
+  WITH ROLLBACK IMMEDIATE;
 
 RESTORE DATABASE Wozabal_Test
 FROM DISK = N'\\ATENVCENTER01\advbackup\Wozabal.bak'
@@ -15,9 +21,10 @@ WITH RECOVERY, REPLACE,
   MOVE N'Wozabal' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test.mdf',
   MOVE N'Wozabal_Log' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test_Log.mdf';
 
-ALTER DATABASE Wozabal_Test
-  SET MULTI_USER
-WITH ROLLBACK AFTER 60 SECONDS;
+IF @TestExists = 1
+  ALTER DATABASE Wozabal_Test
+    SET MULTI_USER
+  WITH ROLLBACK AFTER 60 SECONDS;
 
 -- ######## Step 3 ################################
 
