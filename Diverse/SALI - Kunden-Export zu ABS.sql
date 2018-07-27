@@ -1,6 +1,19 @@
-DECLARE @KdNr int = 30578;
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Export-Script to transfer the wearers of a customer from AdvanTex to ABS                                                  ++ */
+/* ++ Save the three SELECTs as seperate .csv-files named (in order):                                                           ++ */
+/* ++   wearer.csv                                                                                                              ++ */
+/* ++   wearinv.csv                                                                                                             ++ */
+/* ++   uniqueitem.csv                                                                                                          ++ */
+/* ++ ATTENTION: csv-file has to end with ;\r\n - needs to be done manually after export!                                       ++ */
+/* ++   No headers!                                                                                                             ++ */
+/* ++                                                                                                                           ++ */
+/* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNrABS int =  2330578;
+--DECLARE @KdNr int = 30578;
+DECLARE @KdNr int = 31056;
+--DECLARE @KdNrABS int =  2330578;
+DECLARE @KdNrABS int =  214059;
 
 DECLARE @Traeger TABLE (
   ID int,
@@ -30,18 +43,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.KdNr = @KdNr
   AND Traeger.Altenheim = 0
   AND Traeger.Status IN (N'A', N'P', N'K');
-
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Export-Script to transfer the wearers of a customer from AdvanTex to ABS                                                  ++ */
-/* ++ Save the three SELECTs as seperate .csv-files named (in order):                                                           ++ */
-/* ++   wearer.csv                                                                                                              ++ */
-/* ++   wearinv.csv                                                                                                             ++ */
-/* ++   uniqueitem.csv                                                                                                          ++ */
-/* ++ ATTENTION: csv-file has to end with ;\r\n - needs to be done manually after export!                                       ++ */
-/* ++   No headers!                                                                                                             ++ */
-/* ++                                                                                                                           ++ */
-/* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 /* ++ wearer.csv ++ */
 SELECT
