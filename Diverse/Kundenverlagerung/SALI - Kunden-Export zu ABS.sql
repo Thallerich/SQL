@@ -14,6 +14,8 @@ DECLARE @KdNr int = 31056;
 --DECLARE @KdNrABS int =  2330578;
 DECLARE @KdNrABS int =  214059;
 
+DECLARE @Betrieb nchar(4) = N'';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+
 DECLARE @Traeger TABLE (
   ID int,
   VsaID int,
@@ -147,7 +149,7 @@ ORDER BY WEARERNUMBER, PRODUCTCODE;
 
 /* ++ uniqueitem.csv ++ */
 SELECT
-  N'' AS BUSINESSUNIT,
+  @Betrieb AS BUSINESSUNIT,
   RTRIM(Teile.Barcode) AS PRIMARYID,
   1 AS IDCODESEQUENCENUMBER,
   ISNULL(RTRIM(Teile.RentomatChip), N'') AS SECONDARYID,
