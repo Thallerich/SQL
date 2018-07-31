@@ -4,8 +4,7 @@
 /* ++   wearer.csv                                                                                                              ++ */
 /* ++   wearinv.csv                                                                                                             ++ */
 /* ++   uniqueitem.csv                                                                                                          ++ */
-/* ++ ATTENTION: csv-file has to end with ;\r\n - needs to be done manually after export!                                       ++ */
-/* ++   No headers!                                                                                                             ++ */
+/* ++ ATTENTION: No headers!                                                                                                    ++ */
 /* ++                                                                                                                           ++ */
 /* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -85,7 +84,8 @@ SELECT
   N'' AS EXTERNALLOCKERBANK,
   N'' AS EXTERNALLOCKER,
   N'' AS CONSUMPTIONPOINTNUMBER,
-  N'' AS KEYCOMBINATION
+  N'' AS KEYCOMBINATION,
+  N'' AS EOL
 FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -98,7 +98,7 @@ SELECT
   @KdNrABS AS CUSTOMERNUMBER,
   Traeger.Traeger AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  RTRIM(Artikel.ArtikelNr) AS PRODUCTCODE,
+  RTRIM(Artikel.ArtikelNr2) AS PRODUCTCODE,
   RTRIM(ArtGroe.Groesse) AS SIZECODE,
   RTRIM(ArtGroe.Groesse) AS SIZEDESCRIPTION,
   N'' AS FINISHINGMETHODCODE,
@@ -132,7 +132,8 @@ SELECT
   N'' AS WIC_MAXEMPLOYERAMOUNT,
   N'' AS PHASEIN_PRODUCTCODE,
   N'' AS PHASEIN_SIZECODE,
-  N'' AS PHASEIN_DATEACTIVE_WIL
+  N'' AS PHASEIN_DATEACTIVE_WIL,
+  N'' AS EOL
 FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -155,7 +156,7 @@ SELECT
   @KdNrABS AS CUSTOMERNUMBER,
   Traeger.Traeger AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  RTRIM(Artikel.ArtikelNr) AS PRODUCTCODE,
+  RTRIM(Artikel.ArtikelNr2) AS PRODUCTCODE,
   RTRIM(ArtGroe.Groesse) AS SIZECODE,
   N'' AS FINISHINGMETHODCODE,
   N'' AS GARMENTSEQUENCENUMBER,
@@ -165,15 +166,16 @@ SELECT
   Teile.RuecklaufK AS WASHESTHISISSUE,
   Teile.AnzRepair AS REPAIRSTHISISSUE,
   0 AS REWASHESTHISISSUE,
+  N'N' AS CUSTOMEROWNED,
   N'' AS RELATEDCUSTOMERNUMBER,
   N'' AS DELIVERYFROMSTOCK,
   0 AS STARTRENTFROM,
   FORMAT(CAST(Teile.Eingang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTINSCANDATE,
   FORMAT(CAST(Teile.Ausgang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTOUTSCANDATE,
-  (SELECT MAX(Scans.DateTime) FROM Scans WHERE Scans.TeileID = Teile.ID) AS LASTSCANDATE,
+  (SELECT FORMAT(MAX(Scans.DateTime), N'dd/MM/yyyy hh:mm:ss', N'en-US') FROM Scans WHERE Scans.TeileID = Teile.ID) AS LASTSCANDATE,
   N'' AS STATUSCHANGEDATE,
   N'' AS STAYCHANGEDATE,
-  N'' AS PURCHASEDATE,
+  FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US') AS PURCHASEDATE,
   IIF(Teile.IndienstDat = Teile.ErstDatum, 1, 2) AS NUMBEROFISSUES,
   FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US') AS FIRSTISSUEDATE,
   FORMAT(Teile.IndienstDat, N'dd/MM/yyyy', N'en-US') AS LASTISSUEDATE,
@@ -185,7 +187,7 @@ SELECT
   RTRIM(Wae.IsoCode) AS CURRENCYCODE,
   N'' AS QUALITYGRADECODE,
   N'' AS FREEEXTRAGARMENTS,
-  N'' AS ENDDATEFREEEXTRA,
+  N'31/12/2099' AS ENDDATEFREEEXTRA,
   N'' AS MODIFICATIONCODE1,
   N'' AS MODIFICATIONDESCRIPTION1,
   N'' AS MODIFICATIONCODE2,
@@ -200,7 +202,8 @@ SELECT
   N'' AS REMARK,
   N'' AS LEASEWEEKS,
   N'' AS RESIDUALVALUEAMOUNT,
-  N'' AS REPLACEMENTPRICE
+  N'' AS REPLACEMENTPRICE,
+  N'' AS EOL
 FROM @Traeger AS Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
