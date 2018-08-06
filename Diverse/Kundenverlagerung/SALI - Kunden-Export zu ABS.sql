@@ -10,11 +10,12 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 --DECLARE @KdNr int = 30578;
-DECLARE @KdNr int = 31056;
+DECLARE @KdNr int = 30785;
 --DECLARE @KdNrABS int =  2330578;
-DECLARE @KdNrABS int =  214059;
+DECLARE @KdNrABS int =  10001246;
 
-DECLARE @Betrieb nchar(4) = N'';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'SA22';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
   ID int,
@@ -187,7 +188,7 @@ SELECT
   N'' AS SUPPLIERNUMBER,
   N'' AS PURCHASEPRICE,
   RTRIM(Wae.IsoCode) AS CURRENCYCODE,
-  N'' AS QUALITYGRADECODE,
+  @QualKlass AS QUALITYGRADECODE,
   N'' AS FREEEXTRAGARMENTS,
   N'31/12/2099' AS ENDDATEFREEEXTRA,
   N'' AS MODIFICATIONCODE1,
