@@ -4,9 +4,9 @@ DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 GO
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'WM');
-DECLARE @DatumVon date = CAST(N'2018-06-01' AS date);
-DECLARE @DatumBis date = CAST(N'2018-06-30' AS date);
+DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SAL');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer
+DECLARE @DatumVon date = CAST(N'2018-07-01' AS date);
+DECLARE @DatumBis date = CAST(N'2018-07-31' AS date);
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
 
 --* Debug: Netto-Summe der Rechnungen
