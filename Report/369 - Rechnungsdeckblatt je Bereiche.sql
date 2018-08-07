@@ -1,9 +1,10 @@
 --KopfFuss:
-SELECT NettoWert AS EURSumme, MWStBetrag AS MWST, BruttoWert AS Brutto, Kunden.UStIdNr, KdNr, Kunden.Name1, Kunden.Name2, Kunden.Name3, Kunden.Strasse, Kunden.PLZ, Kunden.Ort, RechKo.RechDat, RechKo.RechNr, RechKo.VonDatum, RechKo.BisDatum, RechKo.FaelligDat, (DATEPART(month, RechKo.FaelligDat)-1) AS Monat, CASE RechKo.Art WHEN 'R' THEN 'Rechnung' ELSE 'Gutschrift' END AS Art, ZahlZiel.ZahlZielBez$LAN$ AS ZahlZielBez, RechKo.MwStSatz
-FROM Kunden, RechKo, ZahlZiel
-WHERE Kunden.ZahlZielID = ZahlZiel.ID
-	AND RechKo.KundenID = Kunden.ID
-	AND RechKo.ID = $ID$;
+SELECT NettoWert AS EURSumme, MWStBetrag AS MWST, BruttoWert AS Brutto, Kunden.UStIdNr, KdNr, RechKo.Name1, RechKo.Name2, RechKo.Name3, RechKo.Strasse, RechKo.Land, RechKo.PLZ, RechKo.Ort, RechKo.RechDat, RechKo.RechNr, RechKo.VonDatum, RechKo.BisDatum, RechKo.FaelligDat, (DATEPART(month, RechKo.FaelligDat)-1) AS Monat, CASE RechKo.Art WHEN 'R' THEN 'Rechnung' ELSE 'Gutschrift' END AS Art, ZahlZiel.ZahlZielBez$LAN$ AS ZahlZielBez, RechKo.MwStSatz, Wae.Format AS FormatString, Kunden.ID AS KundenID
+FROM RechKo
+JOIN Kunden ON RechKo.KundenID = Kunden.ID
+JOIN ZahlZiel ON RechKo.ZahlZielID = ZahlZiel.ID
+JOIN WAE ON RechKo.WaeID = Wae.ID
+WHERE RechKo.ID = $ID$;
 
 --Kostenstellen:
 DROP TABLE IF EXISTS #Final;
