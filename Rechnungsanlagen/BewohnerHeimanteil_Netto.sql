@@ -55,7 +55,7 @@ JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 LEFT OUTER JOIN BewKdAr ON BewKdAr.BewAbrID = BewAbr.ID AND BewKdAr.KdArtiID = KdArti.ID
 WHERE RechKo.ID = $RECHKOID$
-  AND Bereich.Altenheim = 1;
+  AND Bereich.Bereich = N'CT';
 
 SELECT LPS.Jahr,
   LPS.Monat,
