@@ -10,9 +10,9 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 --DECLARE @KdNr int = 30578;
-DECLARE @KdNr int = 30785;
+DECLARE @KdNr int = 30627;
 --DECLARE @KdNrABS int =  2330578;
-DECLARE @KdNrABS int =  10001246;
+DECLARE @KdNrABS int =  10001245;
 
 DECLARE @Betrieb nchar(4) = N'SA22';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
@@ -49,19 +49,19 @@ WHERE Kunden.KdNr = @KdNr
 /* ++ wearer.csv ++ */
 SELECT
   @KdNrABS AS CUSTOMERNUMBER,
-  Traeger.Traeger AS WEARERNUMBER,
+  ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   N'' AS WEAREREMPLOYMENTNUMBER,
-  IIF(Traeger.Vorname IS NULL, N'', RTRIM(REPLACE(Traeger.Vorname, N',', N' ')) + N' ') + ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'') AS FULLNAME,
+  RTRIM(IIF(Traeger.Vorname IS NULL, N'', RTRIM(REPLACE(Traeger.Vorname, N',', N' ')) + N' ') + ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'')) AS FULLNAME,
   ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'') AS SEARCHNAME,
   N'' AS EMBLEMNAME,
   ISNULL(RTRIM(Traeger.PersNr), N'') AS CUSTOMEREMPLOYEENUMBER,
   IIF(Traeger.Geschlecht = N'M', N'M', N'F') AS SEX,
   IIF(RentoArt.Code = N'P', N'Y', N'N') AS DUMMYFORPOOL,
-  FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US') AS DATEACTIVE,
+  ISNULL(FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US'), N'') AS DATEACTIVE,
   FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US') AS DATEINACTIVE,
   N'' AS REMARK,
   ISNULL(RentoCod.Funktionscode, N'') AS WEARERFUNCTIONCODE,
-  IIF(RentoCod.ID < 0, N'', RentoCod.Bez) AS WEARERFUNCTIONDESCRIPTION,
+  IIF(RentoCod.ID < 0, N'', ISNULL(RentoCod.Bez, N'')) AS WEARERFUNCTIONDESCRIPTION,
   N'' AS FLAGCODE,
   N'' AS FLAGDESCRIPTION,
   N'' AS LOCKERBANK,
@@ -99,11 +99,11 @@ ORDER BY WEARERNUMBER ASC;
 /* ++ wearinv.csv ++ */
 SELECT
   @KdNrABS AS CUSTOMERNUMBER,
-  Traeger.Traeger AS WEARERNUMBER,
+  ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  RTRIM(Artikel.ArtikelNr2) AS PRODUCTCODE,
-  RTRIM(ArtGroe.Groesse) AS SIZECODE,
-  RTRIM(ArtGroe.Groesse) AS SIZEDESCRIPTION,
+  ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
+  ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
+  ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZEDESCRIPTION,
   N'' AS FINISHINGMETHODCODE,
   N'' AS FINISHINGMETHODDESCRIPTION,
   N'' AS MODIFICATIONCODE1,
@@ -117,7 +117,7 @@ SELECT
   TraeArti.Menge AS CIRCINVENTORY,
   ROUND(TraeArti.Menge / 2, 0, 1) AS CHANGESPERWEEK,
   N'' AS SPECIALQUALITYGRADE,
-  FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US') AS STARTDATE,
+  ISNULL(FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US'), N'') AS STARTDATE,
   FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US') AS ENDDATE,
   N'' AS SWINGSUITSTATUS,
   N'' AS MAXFREEOFCHARGE,
@@ -157,10 +157,10 @@ SELECT
   20 AS [STATUS],
   20 AS STAY,
   @KdNrABS AS CUSTOMERNUMBER,
-  Traeger.Traeger AS WEARERNUMBER,
+  ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  RTRIM(Artikel.ArtikelNr2) AS PRODUCTCODE,
-  RTRIM(ArtGroe.Groesse) AS SIZECODE,
+  ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
+  ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
   N'' AS FINISHINGMETHODCODE,
   N'' AS GARMENTSEQUENCENUMBER,
   Teile.RuecklaufG AS WASHESTOTAL,
@@ -173,21 +173,21 @@ SELECT
   N'' AS RELATEDCUSTOMERNUMBER,
   N'' AS DELIVERYFROMSTOCK,
   0 AS STARTRENTFROM,
-  FORMAT(CAST(Teile.Eingang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTINSCANDATE,
-  FORMAT(CAST(Teile.Ausgang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US') AS LASTOUTSCANDATE,
-  (SELECT FORMAT(MAX(Scans.DateTime), N'dd/MM/yyyy hh:mm:ss', N'en-US') FROM Scans WHERE Scans.TeileID = Teile.ID) AS LASTSCANDATE,
+  ISNULL(FORMAT(CAST(Teile.Eingang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US'), N'') AS LASTINSCANDATE,
+  ISNULL(FORMAT(CAST(Teile.Ausgang1 AS datetime), N'dd/MM/yyyy hh:mm:ss', N'en-US'), N'') AS LASTOUTSCANDATE,
+  (SELECT ISNULL(FORMAT(MAX(Scans.DateTime), N'dd/MM/yyyy hh:mm:ss', N'en-US'), N'') FROM Scans WHERE Scans.TeileID = Teile.ID) AS LASTSCANDATE,
   N'' AS STATUSCHANGEDATE,
   N'' AS STAYCHANGEDATE,
-  FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US') AS PURCHASEDATE,
+  ISNULL(FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US'), N'') AS PURCHASEDATE,
   IIF(Teile.IndienstDat = Teile.ErstDatum, 1, 2) AS NUMBEROFISSUES,
-  FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US') AS FIRSTISSUEDATE,
-  FORMAT(Teile.IndienstDat, N'dd/MM/yyyy', N'en-US') AS LASTISSUEDATE,
+  ISNULL(FORMAT(Teile.ErstDatum, N'dd/MM/yyyy', N'en-US'), N'') AS FIRSTISSUEDATE,
+  ISNULL(FORMAT(Teile.IndienstDat, N'dd/MM/yyyy', N'en-US'), N'') AS LASTISSUEDATE,
   N'' AS ENDDATEFULLRENT,
   N'' AS DAYSINCIRCPREVISSUE,
   N'' AS DAYSINSTOCKPREVIOUS,
   N'' AS SUPPLIERNUMBER,
   N'' AS PURCHASEPRICE,
-  RTRIM(Wae.IsoCode) AS CURRENCYCODE,
+  ISNULL(RTRIM(Wae.IsoCode), N'') AS CURRENCYCODE,
   @QualKlass AS QUALITYGRADECODE,
   N'' AS FREEEXTRAGARMENTS,
   N'31/12/2099' AS ENDDATEFREEEXTRA,
@@ -218,5 +218,5 @@ JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Teile ON Teile.TraeArtiID = TraeArti.ID
 JOIN Wae ON Kunden.WaeID = Wae.ID
 WHERE TraeArti.Menge > 0
-  AND Teile.Status = N'Q'
+  AND Teile.Status BETWEEN N'M' AND N'Q'
 ORDER BY WEARERNUMBER, PRODUCTCODE;
