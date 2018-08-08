@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.1                       **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.2                       **
 ** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
 **                                                                                                                            **
 *******************************************************************************************************************************/
@@ -25,8 +25,22 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS MasterAccountNumber,
   KdGf.KurzBez AS MarketSegmentCode,
   KdGf.KurzBez AS MarketSegmentDesc,
-  IIF(DE.Firma = N'51' OR (DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU'), N'SÜD', N'WEST') AS SalesAreaCode,
-  IIF(DE.Firma = N'51' OR (DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU'), N'SÜD', N'WEST') AS SalesAreaDesc,
+  SalesAreaCode = 
+    CASE
+      WHEN DE.Firma = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'71' THEN N'CZ'
+      WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
+      ELSE N'WEST'
+    END,
+  SalesAreaDesc = 
+    CASE
+      WHEN DE.Firma = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'71' THEN N'CZ'
+      WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
+      ELSE N'WEST'
+    END,
   DE.Strasse AS MailAddress,
   NULL AS MailAddress2,
   DE.PLZ AS MailZipcode,
