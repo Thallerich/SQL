@@ -4,15 +4,12 @@ DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 GO
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'WOMI');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer
+DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'UKLU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer
 DECLARE @DatumVon date = CAST(N'2018-07-01' AS date);
 DECLARE @DatumBis date = CAST(N'2018-07-31' AS date);
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
 
---* Debug: Netto-Summe der Rechnungen
---SELECT FORMAT(SUM(NettoWert), N'C', N'de-AT') FROM RechKo WHERE RechKo.RechDat BETWEEN @DatumVon AND @DatumBis AND FirmaID = @FirmaID AND RechKo.FibuExpID > 0;
-
-SELECT FibuDet.ID AS FibuDetID, Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNrVertrieb, RechPo.KsSt AS KostenträgerVertrieb, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID, CAST(0 AS bit) AS IsLeasing, CAST(0 AS bit) AS IsStueck, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit) AS IsBerufsgruppe
+SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNrVertrieb, RechPo.KsSt AS KostenträgerVertrieb, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID, CAST(0 AS bit) AS IsLeasing, CAST(0 AS bit) AS IsStueck, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit) AS IsBerufsgruppe
 INTO #Waschlohn
 FROM FibuDet WITH (NOLOCK)
 JOIN Bereich WITH (NOLOCK) ON FibuDet.BereichID = Bereich.ID
@@ -30,7 +27,7 @@ WHERE FibuDet.FibuExpID IN (
       AND RechKo.FirmaID = @FirmaID
   )
   AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB')
-GROUP BY FibuDet.ID, Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, RechKo.RechNr, RechKo.RechDat, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS, RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit);
+GROUP BY Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS, RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit);
 
 UPDATE WL SET IsLeasing = 1
 FROM #Waschlohn AS WL
@@ -95,13 +92,13 @@ LEFT OUTER JOIN StandBer WITH (NOLOCK) ON Vsa.StandKonID = StandBer.StandKonID A
 LEFT OUTER JOIN Standort WITH (NOLOCK) ON StandBer.ProduktionID = Standort.ID
 GROUP BY ISNULL(Waschlohn.KdNr, LieferMenge.KdNr), ISNULL(Waschlohn.Debitor, LieferMenge.Debitor), ISNULL(Waschlohn.SGF, LieferMenge.SGF), ISNULL(Waschlohn.Produktbereich, LieferMenge.Produktbereich), ISNULL(Waschlohn.ArtikelNr, LieferMenge.ArtikelNr), ISNULL(Waschlohn.Artikelbezeichnung, LieferMenge.ArtikelBez), Waschlohn.Erlöskonto, ISNULL(Waschlohn.FibuNrVertrieb, LieferMenge.FibuNrVertrieb), Waschlohn.KostenträgerVertrieb, ISNULL(LieferMenge.Produzent, Standort.SuchCode), CAST(ISNULL(LieferMenge.FibuNr, Standort.FibuNr) AS nchar(3)) COLLATE Latin1_General_CS_AS, RTRIM(Waschlohn.KsSt), Waschlohn.Differenz, ISNULL(Waschlohn.BereichID, LieferMenge.BereichID), ISNULL(Waschlohn.KdGfID, LieferMenge.KdGfID), ISNULL(Waschlohn.MwStID, LieferMenge.MwStID), ISNULL(Waschlohn.ArtGruID, LieferMenge.ArtGruID);
 
-SELECT Waschlohn.KdNr, Waschlohn.Debitor, Waschlohn.SGF, Waschlohn.RechNr, Waschlohn.RechDat, Waschlohn.Produktbereich, Waschlohn.ArtikelNr, Waschlohn.Artikelbezeichnung, SUM(ISNULL(Waschlohn.VerrechMenge, 0)) AS VerrechMenge, SUM(ISNULL(Waschlohn.UmsatzNetto, 0)) AS UmsatzNetto, Waschlohn.Erlöskonto, Waschlohn.FibuNrVertrieb, Waschlohn.KostenträgerVertrieb, Standort.SuchCode AS Produzent, CAST(Standort.FibuNr AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNr, RTRIM(Waschlohn.KsSt) AS Kostenträger, Waschlohn.Differenz, Waschlohn.BereichID, Waschlohn.KdGfID, Waschlohn.MwStID, Waschlohn.ArtGruID, MAX(CAST(Waschlohn.IsLeasing AS tinyint)) AS IsLeasing, MAX(CAST(Waschlohn.IsStueck AS tinyint)) AS IsStueck, MAX(CAST(Waschlohn.IsBerufsgruppe AS tinyint)) AS IsBerufsgruppe
+SELECT Waschlohn.KdNr, Waschlohn.Debitor, Waschlohn.SGF, Waschlohn.Produktbereich, Waschlohn.ArtikelNr, Waschlohn.Artikelbezeichnung, SUM(ISNULL(Waschlohn.VerrechMenge, 0)) AS VerrechMenge, SUM(ISNULL(Waschlohn.UmsatzNetto, 0)) AS UmsatzNetto, Waschlohn.Erlöskonto, Waschlohn.FibuNrVertrieb, Waschlohn.KostenträgerVertrieb, Standort.SuchCode AS Produzent, CAST(Standort.FibuNr AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNr, RTRIM(Waschlohn.KsSt) AS Kostenträger, Waschlohn.Differenz, Waschlohn.BereichID, Waschlohn.KdGfID, Waschlohn.MwStID, Waschlohn.ArtGruID, MAX(CAST(Waschlohn.IsLeasing AS tinyint)) AS IsLeasing, MAX(CAST(Waschlohn.IsStueck AS tinyint)) AS IsStueck, MAX(CAST(Waschlohn.IsBerufsgruppe AS tinyint)) AS IsBerufsgruppe
 INTO #ResultWLohnUmsatz
 FROM #Waschlohn AS Waschlohn
 LEFT OUTER JOIN Vsa WITH (NOLOCK) ON Waschlohn.VsaID = Vsa.ID
 LEFT OUTER JOIN StandBer WITH (NOLOCK) ON Vsa.StandKonID = StandBer.StandKonID AND StandBer.BereichID = Waschlohn.BereichID
 LEFT OUTER JOIN Standort WITH (NOLOCK) ON StandBer.ProduktionID = Standort.ID
-GROUP BY Waschlohn.KdNr, Waschlohn.Debitor, Waschlohn.SGF, Waschlohn.RechNr, Waschlohn.RechDat, Waschlohn.Produktbereich, Waschlohn.ArtikelNr, Waschlohn.Artikelbezeichnung, Waschlohn.Erlöskonto, Waschlohn.FibuNrVertrieb, Waschlohn.KostenträgerVertrieb, Standort.SuchCode, CAST(Standort.FibuNr AS nchar(3)) COLLATE Latin1_General_CS_AS, RTRIM(Waschlohn.KsSt), Waschlohn.Differenz, Waschlohn.BereichID, Waschlohn.KdGfID, Waschlohn.MwStID, Waschlohn.ArtGruID;
+GROUP BY Waschlohn.KdNr, Waschlohn.Debitor, Waschlohn.SGF, Waschlohn.Produktbereich, Waschlohn.ArtikelNr, Waschlohn.Artikelbezeichnung, Waschlohn.Erlöskonto, Waschlohn.FibuNrVertrieb, Waschlohn.KostenträgerVertrieb, Standort.SuchCode, CAST(Standort.FibuNr AS nchar(3)) COLLATE Latin1_General_CS_AS, RTRIM(Waschlohn.KsSt), Waschlohn.Differenz, Waschlohn.BereichID, Waschlohn.KdGfID, Waschlohn.MwStID, Waschlohn.ArtGruID;
 
 UPDATE ResultWLohnUmsatz SET Kostenträger = KontoLogik.AbwKostenstelle
 FROM #ResultWLohnUmsatz AS ResultWLohnUmsatz
@@ -135,7 +132,7 @@ WHERE ResultWLohnStueck.Kostenträger IS NULL;
 UPDATE #ResultWLohnStueck SET KostenträgerVertrieb = Kostenträger
 WHERE KostenträgerVertrieb IS NULL;
 
-SELECT KdNr, Debitor, SGF AS Vertrieb, RechNr AS Rechnungsnummer, RechDat AS Rechnungsdatum, Produktbereich, ArtikelNr, Artikelbezeichnung, SUM(VerrechMenge) AS [verrechnete Menge], SUM(UmsatzNetto) AS UmsatzNetto, Erlöskonto, RTRIM(FibuNrVertrieb) + KostenträgerVertrieb [Kostenträger Vertrieb], Produzent, RTRIM(FibuNr) + Kostenträger AS [Kostenträger Produzent], Verrechnungsart = 
+SELECT KdNr, Debitor, SGF AS Vertrieb, Produktbereich, ArtikelNr, Artikelbezeichnung, SUM(VerrechMenge) AS [verrechnete Menge], SUM(UmsatzNetto) AS UmsatzNetto, Erlöskonto, RTRIM(FibuNrVertrieb) + KostenträgerVertrieb [Kostenträger Vertrieb], Produzent, RTRIM(FibuNr) + Kostenträger AS [Kostenträger Produzent], Verrechnungsart = 
   CASE
     WHEN IsLeasing = 1 AND IsStueck = 0 THEN N'Pauschal'
     WHEN IsStueck = 1  AND IsLeasing = 0 THEN N'Stück'
@@ -144,7 +141,7 @@ SELECT KdNr, Debitor, SGF AS Vertrieb, RechNr AS Rechnungsnummer, RechDat AS Rec
     ELSE N'(unbekannt)'
   END
 FROM #ResultWLohnUmsatz AS WaschlohnDaten
-GROUP BY KdNr, Debitor, SGF, RechNr, RechDat, Produktbereich, ArtikelNr, Artikelbezeichnung, Erlöskonto, RTRIM(FibuNrVertrieb) + KostenträgerVertrieb, Produzent, RTRIM(FibuNr) + Kostenträger,
+GROUP BY KdNr, Debitor, SGF, Produktbereich, ArtikelNr, Artikelbezeichnung, Erlöskonto, RTRIM(FibuNrVertrieb) + KostenträgerVertrieb, Produzent, RTRIM(FibuNr) + Kostenträger,
   CASE
     WHEN IsLeasing = 1 AND IsStueck = 0 THEN N'Pauschal'
     WHEN IsStueck = 1  AND IsLeasing = 0 THEN N'Stück'
