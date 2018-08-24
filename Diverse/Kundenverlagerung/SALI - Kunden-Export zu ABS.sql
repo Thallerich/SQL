@@ -7,14 +7,13 @@
 /* ++ ATTENTION: No headers!                                                                                                    ++ */
 /* ++                                                                                                                           ++ */
 /* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
+/* ++ Version 3.0 - 2018-08-24                                                                                                  ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
---DECLARE @KdNr int = 30578;
-DECLARE @KdNr int = 30627;
---DECLARE @KdNrABS int =  2330578;
-DECLARE @KdNrABS int =  10001245;
+DECLARE @KdNr int = 30363;
+DECLARE @KdNrABS int =  90000000;
 
-DECLARE @Betrieb nchar(4) = N'SA22';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'SA00';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
@@ -34,11 +33,12 @@ DECLARE @Traeger TABLE (
   RentomatKredit int,
   Namenschild1 nvarchar(40),
   Namenschild2 nvarchar(40),
-  Namenschild3 nvarchar(40)
+  Namenschild3 nvarchar(40),
+  Emblem bit
 );
 
 INSERT INTO @Traeger
-SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3
+SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -53,7 +53,18 @@ SELECT
   N'' AS WEAREREMPLOYMENTNUMBER,
   RTRIM(IIF(Traeger.Vorname IS NULL, N'', RTRIM(REPLACE(Traeger.Vorname, N',', N' ')) + N' ') + ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'')) AS FULLNAME,
   ISNULL(RTRIM(REPLACE(Traeger.Nachname, N',', N' ')), N'') AS SEARCHNAME,
-  N'' AS EMBLEMNAME,
+  EMBLEMNAME =
+    CASE WHEN Traeger.Emblem = 1
+    THEN (
+      SELECT TOP 1 ISNULL(RTRIM(Artikel.ArtikelBez), N'')
+      FROM TraeArti
+      JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+      JOIN KdArti AS EmbKdArti ON KdArti.EmbKdArtiID = EmbKdArti.ID
+      JOIN Artikel ON EmbKdArti.ArtikelID = Artikel.ID
+      WHERE TraeArti.TraegerID = Traeger.ID
+    )
+    ELSE N''
+    END,
   ISNULL(RTRIM(Traeger.PersNr), N'') AS CUSTOMEREMPLOYEENUMBER,
   IIF(Traeger.Geschlecht = N'M', N'M', N'F') AS SEX,
   IIF(RentoArt.Code = N'P', N'Y', N'N') AS DUMMYFORPOOL,
@@ -104,7 +115,7 @@ SELECT
   ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZEDESCRIPTION,
-  N'' AS FINISHINGMETHODCODE,
+  N'GEF-A' AS FINISHINGMETHODCODE,
   N'' AS FINISHINGMETHODDESCRIPTION,
   N'' AS MODIFICATIONCODE1,
   N'' AS MODIFICATIONDESCRIPTION1,
@@ -161,7 +172,7 @@ SELECT
   1 AS WEAREREMPLOYMENTNUMBER,
   ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
-  N'' AS FINISHINGMETHODCODE,
+  N'GEF-A' AS FINISHINGMETHODCODE,
   N'' AS GARMENTSEQUENCENUMBER,
   Teile.RuecklaufG AS WASHESTOTAL,
   Teile.AnzRepairG AS REPAIRTOTAL,
