@@ -15,7 +15,7 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS LegacyCustomerNumber,
   IIF(LEN(DE.AnsprechTelefon) > 15, NULL, DE.AnsprechTelefon) AS PhoneNo,
   IIF(LEN(DE.AnsprechTelefax) > 15, NULL, DE.AnsprechTelefax) AS FaxNo,
-  AnsprecheMail AS EMail,
+  REPLACE(AnsprecheMail, N';', N',') AS EMail,
   FORMAT(DE.KundeSeit, N'dd/MM/yyyy') AS DateActive,
   NULL AS DateInactive,
   N'Y' AS Active,
@@ -28,7 +28,7 @@ SELECT DE.Debitor AS CustomerNumber,
   SalesAreaCode = 
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'71' THEN N'CZ'
+      WHEN DE.Firma = N'71' AND DE.Land = N'CZ' THEN N'CZ'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
@@ -36,7 +36,7 @@ SELECT DE.Debitor AS CustomerNumber,
   SalesAreaDesc = 
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'71' THEN N'CZ'
+      WHEN DE.Firma = N'71' AND DE.Land = N'CZ' THEN N'CZ'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
