@@ -21,11 +21,9 @@ DECLARE @ImportTable TABLE (
   Groesse nvarchar(10) COLLATE Latin1_General_CS_AS,
   MaxBestand int,
   Barcode nvarchar(33) COLLATE Latin1_General_CS_AS,
-  Verbleib nvarchar(100) COLLATE Latin1_General_CS_AS,
   Eingang1 date,
   Ausgang1 date,
   IndienstDat date,
-  Qualitaet nchar(1) COLLATE Latin1_General_CS_AS,
   Waschzyklen int,
   AlterMonate int
 );
@@ -42,11 +40,9 @@ SET @XLSXImportSQL = N'SELECT CAST(KDNR as int) AS KdNr, ' +
   N'CAST(Größe AS nvarchar(10)) AS Groesse, ' +
   N'CAST(Maxbest AS int) AS MaxBestand, ' +
   N'CAST(Barcode AS nvarchar(33)) AS Barcode, ' +
-  N'CAST(Verbleib AS nvarchar(100)) AS Verbleib, ' +
   N'CONVERT(date, [Letzte Einscannung], 104) AS Eingang1, ' +
   N'CONVERT(date, [Letzte Ausscannung], 104) AS Ausgang1, ' +
   N'CONVERT(date, [Letztes Einsatzdatu], 104) AS IndienstDat, ' +
-  N'CAST(Qualität AS nchar(1)) AS Qualitaet, ' +
   N'CAST(Waschzyklen AS int) AS Waschzyklen, ' +
   N'CAST([Alter in Monate] AS int) AS AlterMonate ' +
   N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [Teiledaten$]);';
