@@ -37,7 +37,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Kunden.FirmaID = 5260 AND Export.Art = N'G' THEN N'GA'
         WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'G' THEN N'GU'
       END,
-    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, Export.Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
+    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, IIF(Export.Steuerschl = N'6Z' AND Export.Art = N'G', N'6O', Export.Steuerschl) AS Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
     KdGfFibuNr = 
       CASE Kunden.FirmaID
         WHEN 5001 THEN CAST(93 AS nchar(3))  --Umlauft
