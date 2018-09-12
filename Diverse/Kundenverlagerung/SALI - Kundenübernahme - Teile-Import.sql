@@ -10,6 +10,7 @@ DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
   KdNr int,
+  Vsa int,
   Schrank nchar(1),
   Fach nchar(3),
   TraegerNr int,
@@ -29,6 +30,7 @@ DECLARE @ImportTable TABLE (
 );
 
 SET @XLSXImportSQL = N'SELECT CAST(KDNR as int) AS KdNr, ' +
+  N'CAST(Abt AS int) AS Vsa, ' +
   N'CAST(Schrank AS nchar(1)) AS Schrank, ' +
   N'CAST(Fach AS nchar(3)) AS Fach, ' + 
   N'CAST(TRNR AS int) AS TraegerNr, ' + 
@@ -73,7 +75,7 @@ SELECT ImportTable.Barcode,
   (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'STHA') AS UserID_
 FROM @ImportTable AS ImportTable
 JOIN Kunden ON ImportTable.KdNr = Kunden.KdNr
-JOIN Vsa ON Vsa.KundenID = Kunden.ID
+JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = ImportTable.Vsa
 JOIN Traeger ON Traeger.VsaID = Vsa.ID AND CAST(Traeger.Traeger AS int) = ImportTable.TraegerNr
 JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID AND ArtGroe.Groesse = ImportTable.Groesse
