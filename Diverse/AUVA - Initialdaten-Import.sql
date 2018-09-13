@@ -50,9 +50,9 @@ UPDATE Traeger SET Traeger.Status = 'I', Traeger.RentomatKarte = NULL
 WHERE Traeger.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport))
   AND Traeger.RentoArtID IN (1, 2);
 
-UPDATE Traeger SET Traeger.RentomatKarte = i.I_Kartennummer, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.RentomatKarte = i.I_Kartennummer, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.VormalsNr = i.I_Kartentyp
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
   FROM Traeger, Vsa, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -60,9 +60,9 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.Vorname = LEFT(i.I_Vorname, 20), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.Vorname = LEFT(i.I_Vorname, 20), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.VormalsNr = i.I_Kartentyp
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
   FROM Traeger, Vsa, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -71,9 +71,9 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.Titel = i.I_Titel, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.Titel = i.I_Titel, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.VormalsNr = i.I_Kartentyp
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
   FROM Traeger, Vsa, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -82,9 +82,9 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.Nachname = LEFT(i.I_Nachname, 25), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.Nachname = LEFT(i.I_Nachname, 25), Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.VormalsNr = i.I_Kartentyp
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + IIF(x.TitelN IS NULL, N'', ', ') + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + IIF(x.TitelN IS NULL, N'', ', ') + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
   FROM Traeger, Vsa, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -93,9 +93,9 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
-UPDATE Traeger SET Traeger.AbteilID = i.I_AbteilID, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A'
+UPDATE Traeger SET Traeger.AbteilID = i.I_AbteilID, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.VormalsNr = i.I_Kartentyp
 FROM Traeger, (
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + ', ' + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, Abteil.ID AS I_AbteilID
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, RTRIM(x.Nachname) + ', ' + ISNULL(x.TitelN, '') AS I_Nachname, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, Abteil.ID AS I_AbteilID, x.Kartentyp AS I_Kartentyp
   FROM Traeger, Vsa, Abteil, #TmpImport x
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
@@ -137,18 +137,11 @@ WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
   AND Traeger.RentomatKarte IS NOT NULL
   AND Traeger.Update_ > N'2018-09-13 09:30:00';
 
-/*
--- Query für Ergebnis-Rückmeldung --
-
-SELECT Traeger.ID, Traeger.RentomatKarte AS MifareID, Traeger.PersNr AS Kartennummer, Status.StatusBez AS Status, Traeger.VormalsNr AS Kartentyp, Traeger.Vorname, Traeger.Nachname, Traeger.Titel, Abteil.Abteilung AS Kostenstelle, Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Update_
+-- Query für Ergebnis-Rückmeldung
+SELECT Traeger.ID, ISNULL(Traeger.RentomatKarte, N'') AS MifareID, Traeger.PersNr AS Kartennummer, Status.StatusBez AS Status, ISNULL(Traeger.VormalsNr, N'') AS Kartentyp, ISNULL(Traeger.Vorname, N'') AS Vorname, ISNULL(Traeger.Nachname, N'') AS Nachname, ISNULL(Traeger.Titel, N'') AS Titel, ISNULL(Abteil.Abteilung, N'') AS Kostenstelle, Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Update_ AS [letztes Datensatz-Update]
 FROM Traeger, Vsa, Kunden, Abteil, (SELECT Status.Status, Status.StatusBez FROM Status WHERE Status.Tabelle = 'TRAEGER') AS Status
 WHERE Traeger.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
   AND Traeger.AbteilID = Abteil.ID
   AND Traeger.Status = Status.Status
-  AND Traeger.PersNr IN (N'00109093');
-
-SELECT * FROM #TmpImport WHERE Nachname LIKE N'GRILL%'
-
---------------------------------------
-*/
+  AND Traeger.PersNr IN (N'00113814');
