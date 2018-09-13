@@ -1,7 +1,7 @@
 -- DROP TABLE #auvainitial;
 
 /* ## Import file to table ## */
-DECLARE @Filename nvarchar(100) = N'Initialdaten.csv';
+DECLARE @Filename nvarchar(100) = N'Initialdaten_UO.csv';
 DECLARE @ImportSQL nvarchar(200) = N'BULK INSERT #auvainitial FROM N''D:\AdvanTex\Temp\' + @Filename + '''WITH (CODEPAGE = ''65001'', FIELDTERMINATOR = N'';'', ROWTERMINATOR = N''\n'');';
 
 IF object_id('tempdb..#auvainitial') IS NULL
@@ -45,7 +45,6 @@ FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 WHERE Vsa.RentomatID IN (SELECT DISTINCT RentomatID FROM #TmpImport)
   AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8);
-
 
 UPDATE Traeger SET Traeger.Status = 'I', Traeger.RentomatKarte = NULL
 WHERE Traeger.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport))
@@ -118,6 +117,26 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
+-- Noch nicht im AdvanTex vorhandene Träger wieder in .csv-File exportieren und über Schnittstelle importieren, damit diese angelegt werden
+SELECT ROW_NUMBER() OVER (ORDER BY ImportData.PersNr) AS LfdNr, ImportData.Kartennummer AS MifareID, ImportData.PersNr AS Kartennummer, ImportData.Status, ImportData.Kartentyp AS Typ, ImportData.Vorname, ImportData.Nachname, ImportData.Titel, ImportData.TitelN, ImportData.Standort, ImportData.Kostenstelle
+FROM #TmpImport ImportData
+WHERE NOT EXISTS (
+  SELECT Traeger.ID
+  FROM Traeger
+  JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  WHERE Vsa.RentomatID = ImportData.RentomatID
+    AND Traeger.PersNr = ImportData.PersNr
+);
+
+-- Check ob alle Datensätze verarbeitet wurden
+SELECT Traeger.*
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
+  AND Traeger.Status = N'A'
+  AND Traeger.RentomatKarte IS NOT NULL
+  AND Traeger.Update_ > N'2018-09-13 09:30:00';
+
 /*
 -- Query für Ergebnis-Rückmeldung --
 
@@ -132,28 +151,4 @@ WHERE Traeger.VsaID = Vsa.ID
 SELECT * FROM #TmpImport WHERE Nachname LIKE N'GRILL%'
 
 --------------------------------------
-*/
-
-/*
--- Deaktivieren der nicht in den Initialdaten enthaltenen Kartennummer
-
-BEGIN TRANSACTION;
-
-DISABLE TRIGGER LastModified_TRAEGER_UPDATE ON Wozabal.dbo.TRAEGER;
-
-UPDATE TRAEGER SET Status = 'I', RentomatKarte = NULL WHERE ID IN (
-  SELECT Traeger.ID
-  FROM Traeger, Vsa, Rentomat
-  WHERE Traeger.VsaID = Vsa.ID
-    AND Vsa.RentomatID = Rentomat.ID
-    AND Rentomat.SchrankNr IS NOT NULL
-    AND Traeger.RentoArtID IN (1, 2)
-    AND Traeger.Update_ < N'2018-04-27 08:00:00'
-);
-
-ENABLE TRIGGER LastModified_TRAEGER_UPDATE ON Wozabal.dbo.TRAEGER;
-
-COMMIT;
-
----------------------------------------------
 */
