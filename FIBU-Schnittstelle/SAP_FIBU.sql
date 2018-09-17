@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 12.09.2018, Version 1.3                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 17.09.2018, Version 1.4                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -39,9 +39,10 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
       END,
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, IIF(Export.Steuerschl = N'6Z' AND Export.Art = N'G', N'6O', Export.Steuerschl) AS Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
     KdGfFibuNr = 
-      CASE Kunden.FirmaID
-        WHEN 5001 THEN CAST(93 AS nchar(3))  --Umlauft
-        WHEN 5260 THEN CAST(90 AS nchar(3))  --Salesianer
+      CASE
+        WHEN Kunden.FirmaID = 5001 THEN CAST(93 AS nchar(3))  --Umlauft
+        WHEN Kunden.FirmaID = 5260 AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
+        WHEN Kunden.FirmaID = 5260 AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
         ELSE CAST(KdGf.FibuNr AS nchar(3))   --Wozabal Miettex
       END,
     Buchungskreis = 
@@ -56,6 +57,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   JOIN Wae ON RechKo.WaeID = Wae.ID
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+  JOIN Standort ON Kunden.StandortID = Standort.ID
   WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
 
