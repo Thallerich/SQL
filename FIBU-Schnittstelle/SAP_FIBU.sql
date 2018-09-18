@@ -51,7 +51,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
-      CASE SuchCode 
+      CASE Firma.SuchCode 
         WHEN N'UKLU' THEN 1260
         WHEN N'SAL' THEN 1200
         WHEN N'WOMI' THEN 1250
