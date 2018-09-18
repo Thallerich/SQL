@@ -48,6 +48,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
         WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
         WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
+        WHEN Firma.SuchCode = N'BUDW' THEN CAST(895 AS nchar(3))
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
