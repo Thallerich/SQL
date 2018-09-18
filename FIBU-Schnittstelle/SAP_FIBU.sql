@@ -32,24 +32,31 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   SELECT Export.OrderByAutoInc, Export.KopfPos,
     Belegart =
       CASE
-        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'R' THEN N'AU'
-        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'R' THEN N'AR'
-        WHEN Kunden.FirmaID = 5260 AND Export.Art = N'G' THEN N'GA'
-        WHEN Kunden.FirmaID <> 5260 AND Export.Art = N'G' THEN N'GU'
+        WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'R' THEN N'AU'
+        WHEN Firma.SuchCode = N'BUDW' AND Export.Art = N'R' THEN N'VF'
+        WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
+        WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
+        WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'G' THEN N'GA'
+        WHEN Firma.SuchCode = N'BUDW' AND Export.Art = N'G' THEN N'VS'
+        WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
+        WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
+        ELSE N'XX'
       END,
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, IIF(Export.Steuerschl = N'6Z' AND Export.Art = N'G', N'6O', Export.Steuerschl) AS Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
     KdGfFibuNr = 
       CASE
-        WHEN Kunden.FirmaID = 5001 THEN CAST(93 AS nchar(3))  --Umlauft
-        WHEN Kunden.FirmaID = 5260 AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
-        WHEN Kunden.FirmaID = 5260 AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
-        ELSE CAST(KdGf.FibuNr AS nchar(3))   --Wozabal Miettex
+        WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
+        WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
+        WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
+        ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
-      CASE Kunden.FirmaID 
-        WHEN 5001 THEN 1260                  --Umlauft
-        WHEN 5260 THEN 1200                  --Salesianer
-        ELSE 1250                            --Wozabal Miettex
+      CASE SuchCode 
+        WHEN N'UKLU' THEN 1260
+        WHEN N'SAL' THEN 1200
+        WHEN N'WOMI' THEN 1250
+        WHEN N'BUDW' THEN 1900
+        ELSE 1250
       END
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
@@ -58,6 +65,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
+  JOIN Firma ON Kunden.FirmaID = Firma.ID
   WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
 
