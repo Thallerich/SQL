@@ -5,7 +5,7 @@
 /* ++ Author: Stefan Thaller - 2018-08-29                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-25_249204_Laborgemeinschaft.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-25_249205_Dr Bettelheim.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
 DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
@@ -36,7 +36,7 @@ DECLARE @DoubleParts TABLE (
 );
 
 SET @XLSXImportSQL = N'SELECT CAST(KDNR as int) AS KdNr, ' +
-  N'CAST(Abt AS int) AS Vsa, ' +
+  N'CAST([Abt#] AS int) AS Vsa, ' +
   N'CAST(Schrank AS nchar(1)) AS Schrank, ' +
   N'CAST(Fach AS nchar(3)) AS Fach, ' + 
   N'CAST(TRNR AS int) AS TraegerNr, ' + 
