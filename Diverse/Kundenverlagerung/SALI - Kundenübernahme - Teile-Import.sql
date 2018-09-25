@@ -5,7 +5,7 @@
 /* ++ Author: Stefan Thaller - 2018-08-29                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-12_31172_Hubers Landhendl_VSA Produktion.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-25_249204_Laborgemeinschaft.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
 DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
@@ -85,7 +85,7 @@ WHERE Barcode IN (
   WHERE DoubleParts.Teilstatus NOT IN (N'Y', N'L', N'LM')
 );
 
-INSERT INTO Teile (Barcode, [Status], VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Entnommen, EinsatzGrund, PatchDatum, Erstwoche, ErstDatum, Indienst, IndienstDat, RuecklaufG, Kostenlos, AlterInfo, AltenheimModus, AnlageUserID_, UserID_)
+INSERT INTO Teile (Barcode, [Status], VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Eingang1, Ausgang1, Entnommen, EinsatzGrund, PatchDatum, Erstwoche, ErstDatum, Indienst, IndienstDat, RuecklaufG, Kostenlos, AlterInfo, AltenheimModus, AnlageUserID_, UserID_)
 SELECT ImportTable.Barcode,
   N'Q' AS [Status],
   Vsa.ID AS VsaID,
@@ -93,6 +93,8 @@ SELECT ImportTable.Barcode,
   TraeArti.ID AS TraeArtiID,
   TraeArti.KdArtiID, Artikel.ID AS ArtikelID,
   ArtGroe.ID AS ArtGroeID,
+  ImportTable.Eingang1,
+  ImportTable.Ausgang1,
   CAST(1 AS bit) AS Entnommen,
   N'3' AS EinsatzGrund,
   CAST(GETDATE() AS date) AS PatchDatum,
