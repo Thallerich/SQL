@@ -5,7 +5,7 @@
 /* ++ Author: Stefan Thaller - 2018-08-29                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-25_249205_Dr Bettelheim.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-27_31171_Buchenbergheim Waidhofen.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
 DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
