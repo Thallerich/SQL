@@ -28,7 +28,7 @@ SELECT DE.Debitor AS CustomerNumber,
   SalesAreaCode = 
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'BUDW' AND DE.Land = N'CZ' THEN N'CZ'
+      WHEN DE.Firma = N'SMBU' AND DE.Land = N'CZ' THEN N'CZ'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
@@ -36,7 +36,7 @@ SELECT DE.Debitor AS CustomerNumber,
   SalesAreaDesc = 
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'BUDW' AND DE.Land = N'CZ' THEN N'CZ'
+      WHEN DE.Firma = N'SMBU' AND DE.Land = N'CZ' THEN N'CZ'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
