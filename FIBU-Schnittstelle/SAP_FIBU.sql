@@ -33,11 +33,11 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     Belegart =
       CASE
         WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'R' THEN N'AU'
-        WHEN Firma.SuchCode = N'BUDW' AND Export.Art = N'R' THEN N'VF'
+        WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'R' THEN N'VF'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'G' THEN N'GA'
-        WHEN Firma.SuchCode = N'BUDW' AND Export.Art = N'G' THEN N'VS'
+        WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'G' THEN N'VS'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         ELSE N'XX'
@@ -48,7 +48,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
         WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
         WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
-        WHEN Firma.SuchCode = N'BUDW' THEN CAST(895 AS nchar(3))
+        WHEN Firma.SuchCode = N'SMBU' THEN CAST(895 AS nchar(3))
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
@@ -56,7 +56,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN N'UKLU' THEN 1260
         WHEN N'SAL' THEN 1200
         WHEN N'WOMI' THEN 1250
-        WHEN N'BUDW' THEN 1900
+        WHEN N'SMBU' THEN 1900
         ELSE 1250
       END
   FROM #bookingexport AS Export
