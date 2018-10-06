@@ -42,7 +42,15 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         ELSE N'XX'
       END,
-    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, IIF(Export.Steuerschl = N'6Z' AND Export.Art = N'G', N'6O', Export.Steuerschl) AS Steuerschl, Export.Debitor, Export.Gegenkonto, Export.Kostenstelle, Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
+    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert, IIF(Export.Steuerschl = N'6Z' AND Export.Art = N'G', N'6O', Export.Steuerschl) AS Steuerschl, Export.Debitor, Export.Gegenkonto,
+    Kostenstelle = 
+      CASE
+        WHEN Export.Gegenkonto = N'808900' AND KdGf.KurzBez = N'JOB' THEN N'1400'
+        WHEN Export.Gegenkonto = N'808900' AND KdGf.KurzBez = N'MED' THEN N'2400'
+        WHEN Export.Gegenkonto = N'808900' AND KdGf.KurzBez = N'GAST' THEN N'1310'
+        ELSE Export.Kostenstelle
+      END,
+    Export.ZahlZiel, IIF(RechKo.BasisRechKoID > 0 AND RechKo.Art = N'G', CAST(BasisRechKo.RechNr AS nchar(10)), NULL) AS BasisRechnung,
     KdGfFibuNr = 
       CASE
         WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
