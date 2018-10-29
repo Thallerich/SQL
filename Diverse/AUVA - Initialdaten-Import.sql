@@ -1,7 +1,7 @@
 -- DROP TABLE #auvainitial;
 
 /* ## Import file to table ## */
-DECLARE @Filename nvarchar(100) = N'Initialdaten_UO.csv';
+DECLARE @Filename nvarchar(100) = N'Initialdaten_UG.csv';
 DECLARE @ImportSQL nvarchar(200) = N'BULK INSERT #auvainitial FROM N''D:\AdvanTex\Temp\' + @Filename + '''WITH (CODEPAGE = ''65001'', FIELDTERMINATOR = N'';'', ROWTERMINATOR = N''\n'');';
 
 IF object_id('tempdb..#auvainitial') IS NULL
@@ -23,6 +23,7 @@ BEGIN
   EXEC(@ImportSQL);
 END;
 
+SELECT * FROM #auvainitial;
 -- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM #auvainitial WHERE Standort IS NULL;
 
 DROP TABLE IF EXISTS #TmpImport;
@@ -118,14 +119,14 @@ FROM Traeger, (
 WHERE i.TraegerID = Traeger.ID;
 
 -- Noch nicht im AdvanTex vorhandene Träger wieder in .csv-File exportieren und über Schnittstelle importieren, damit diese angelegt werden
-SELECT ROW_NUMBER() OVER (ORDER BY ImportData.PersNr) AS LfdNr, ImportData.Kartennummer AS MifareID, ImportData.PersNr AS Kartennummer, ImportData.Status, ImportData.Kartentyp AS Typ, ImportData.Vorname, ImportData.Nachname, ImportData.Titel, ImportData.TitelN, ImportData.Standort, ImportData.Kostenstelle
+SELECT ROW_NUMBER() OVER (ORDER BY ImportData.PersNr) AS LfdNr, RTRIM(ImportData.Kartennummer) AS MifareID, ImportData.PersNr AS Kartennummer, RTRIM(ImportData.Status) AS Status, RTRIM(ImportData.Kartentyp) AS Typ, RTRIM(ISNULL(ImportData.Vorname, N'')) AS Vorname, RTRIM(ISNULL(ImportData.Nachname, N'')) AS Nachname, RTRIM(ISNULL(ImportData.Titel, N'')) AS Titel, RTRIM(ISNULL(ImportData.TitelN, N'')) AS TitelN, ImportData.Standort, ImportData.Kostenstelle
 FROM #TmpImport ImportData
 WHERE NOT EXISTS (
   SELECT Traeger.ID
   FROM Traeger
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
   WHERE Vsa.RentomatID = ImportData.RentomatID
-    AND Traeger.PersNr = ImportData.PersNr
+    AND Traeger.PersNr = ImportData.PersNr 
 );
 
 -- Check ob alle Datensätze verarbeitet wurden
