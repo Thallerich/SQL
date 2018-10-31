@@ -2,7 +2,7 @@
 /* ++ Import von Teilen zu Trägerartikeln                                                                                       ++ */
 /* ++ für Kundenübernahmen von Salesianer Miettex                                                                               ++ */
 /* ++                                                                                                                           ++ */
-/* ++ Author: Stefan Thaller - 2018-08-29                                                                                       ++ */
+/* ++ Author: Stefan Thaller - 2018-10-31                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-09-27_31171_Buchenbergheim Waidhofen.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
@@ -11,8 +11,8 @@ DECLARE @XLSXImportSQL nvarchar(max);
 DECLARE @ImportTable TABLE (
   KdNr int,
   Vsa int,
-  Schrank nchar(1),
-  Fach nchar(3),
+  Schrank nchar(1) COLLATE Latin1_General_CS_AS,
+  Fach nchar(3) COLLATE Latin1_General_CS_AS,
   TraegerNr int,
   Vorname nvarchar(20) COLLATE Latin1_General_CS_AS,
   Nachname nvarchar(25) COLLATE Latin1_General_CS_AS,
