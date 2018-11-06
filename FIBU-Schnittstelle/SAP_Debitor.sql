@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 10.04.2018, Version 1.3                       **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 06.11.2018, Version 1.4                       **
 ** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
 **                                                                                                                            **
 *******************************************************************************************************************************/
@@ -45,7 +45,12 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS MailAddress2,
   DE.PLZ AS MailZipcode,
   DE.Ort AS MailCity,
-  IIF(DE.Land = N'IT', N'I', ISNULL(Sektor.Sektor, DE.Land)) AS MailCounty,                         -- Für DE / AT: Bundesland über Sektor ermitteln; alle anderen Länder: Länderkennzeichen übergeben
+  MailCounty =                                                                                      -- Für DE / AT: Bundesland über Sektor ermitteln; alle anderen Länder: Länderkennzeichen übergeben
+    CASE DE.Land
+      WHEN N'IT' THEN N'I'
+      WHEN N'BE' THEN N''
+      ELSE ISNULL(Sektor.Sektor, DE.Land)
+    END,
   NULL AS MailState,
   DE.Land AS Country,
   DE.Waehrung AS Currency,
