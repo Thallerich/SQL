@@ -4,9 +4,9 @@ DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 GO
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SMBU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer; SMBU: Budweis
-DECLARE @DatumVon date = CAST(N'2018-09-01' AS date);
-DECLARE @DatumBis date = CAST(N'2018-09-30' AS date);
+DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'UKLU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer; SMBU: Budweis
+DECLARE @DatumVon date = CAST(N'2018-10-01' AS date);
+DECLARE @DatumBis date = CAST(N'2018-10-31' AS date);
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
 
 SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNrVertrieb, RechPo.KsSt AS KostenträgerVertrieb, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID, CAST(0 AS bit) AS IsLeasing, CAST(0 AS bit) AS IsStueck, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit) AS IsBerufsgruppe, Wae.IsoCode AS Waehrung
