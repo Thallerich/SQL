@@ -45,9 +45,9 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', ROUND(Export.Bruttowert, 0), Export.Bruttowert) AS Bruttowert,
     Steuerschl =
       CASE
-        WHEN Export.Steuerschl = N'6Z' AND Export.Art = N'G' THEN N'60'
-        WHEN Export.Steuerschl = N'A6' THEN N'33'
-        ELSE Export.Steuerschl
+        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' THEN N'60'
+        WHEN MwSt.Steuerschl = N'A6' THEN N'33'
+        ELSE MwSt.Steuerschl
       END,
     Export.Debitor, Export.Gegenkonto, 
     Kostenstelle =
@@ -82,6 +82,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
   JOIN Firma ON Kunden.FirmaID = Firma.ID
+  JOIN MwSt ON RechKo.MwStID = MwSt.ID
   WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
 
