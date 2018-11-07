@@ -42,10 +42,10 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         ELSE N'XX'
       END,
-    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', ROUND(Export.Bruttowert, 0), Export.Bruttowert) AS Bruttowert,
+    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', Export.Bruttowert, Export.Bruttowert) AS Bruttowert,
     Steuerschl =
       CASE
-        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' THEN N'60'
+        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' THEN N'6O'
         WHEN MwSt.Steuerschl = N'A6' THEN N'33'
         ELSE MwSt.Steuerschl
       END,
@@ -156,7 +156,7 @@ BEGIN
         N'/         ' +                                                           --fb_dummy
         N'/' +                                                                    --fb_newum
         N'/   ' +                                                                 --fb_newbk
-        CAST(FORMAT(ABS(@Bruttowert), 'F2', 'de-AT') AS nchar(16)) +              --fb_wrbtr
+        CAST(FORMAT(ABS(IIF(@WaeCode = N'CZK', ROUND(@Bruttowert, 0), @Bruttowert)), 'F2', 'de-AT') AS nchar(16)) +    --fb_wrbtr
         N'/               ' +                                                     --fb_dmbtr
         N'/               ' +                                                     --fb_wmwst
         N'/               ' +                                                     --fb_mwsts
@@ -464,7 +464,7 @@ BEGIN
         N'/       ' +                                                                                 --fb_valut
         N'/       ' +                                                                                 --fb_zfbdt
         N'/ ' +                                                                                       --fb_zinkz
-        LEFT(ISNULL(@Debitor, CAST(N'' AS nchar(24))), 18) +                                                                          --fb_zuor
+        LEFT(ISNULL(@Debitor, CAST(N'' AS nchar(24))), 18) +                                          --fb_zuor
         N'/  ' +                                                                                      --fb_fkont
         N'/' +                                                                                        --fb_xaabg
         N'+                                                 ' +                                       --fb_sgtxt
@@ -544,7 +544,7 @@ BEGIN
         N'/         ' +                                                                               --fb_pstl2
         N'/' +                                                                                        --fb_spras
         N'/' +                                                                                        --fb_xinve
-        CAST(ISNULL(@Gegenkonto, N'') AS nchar(17)) +                                                              --fb_newko
+        CAST(ISNULL(@Gegenkonto, N'') AS nchar(17)) +                                                 --fb_newko
         N'/  ' +                                                                                      --fb_newbw
         N'/                ' +                                                                        --fb_knrze
         N'/         ' +                                                                               --fb_hkont
