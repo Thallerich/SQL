@@ -312,5 +312,5 @@ JOIN @ImportTable2 AS ABSArtikel ON ABSArtikel.ArtikelNr = Artikel.ArtikelNr
 LEFT OUTER JOIN TraeMass ON TraeMass.TraeArtiID = TraeArti.ID AND TraeMass.MassOrtID = 1
 LEFT OUTER JOIN @ImportTable3 AS ABSGroe ON ABSGroe.ABSArtikelNr = ABSArtikel.ABSArtikelNr AND ABSGroe.GroeFalsch = ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')
 WHERE TraeArti.Menge > 0
-  AND Teile.Status BETWEEN N'M' AND N'Q'
+  AND Teile.Status = N'Q'
 ORDER BY WEARERNUMBER, PRODUCTCODE;

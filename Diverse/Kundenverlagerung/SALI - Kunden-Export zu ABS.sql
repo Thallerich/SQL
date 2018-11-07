@@ -229,5 +229,5 @@ JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Teile ON Teile.TraeArtiID = TraeArti.ID
 JOIN Wae ON Kunden.WaeID = Wae.ID
 WHERE TraeArti.Menge > 0
-  AND Teile.Status BETWEEN N'M' AND N'Q'
+  AND Teile.Status = N'Q'
 ORDER BY WEARERNUMBER, PRODUCTCODE;
