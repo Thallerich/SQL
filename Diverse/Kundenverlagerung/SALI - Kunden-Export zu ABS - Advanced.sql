@@ -199,10 +199,10 @@ SELECT
   N'' AS MODIFICATIONDESCRIPTION2,
   N'' AS MODIFICATIONCODE3,
   N'' AS MODIFICATIONDESCRIPTION3,
-  TraeArti.Menge AS MAXINVENTORY,
+  SUM(TraeArti.Menge) AS MAXINVENTORY,
   0 AS FREEOFCHARGEQTY,
-  TraeArti.Menge AS CIRCINVENTORY,
-  ROUND(TraeArti.Menge / 2, 0, 1) AS CHANGESPERWEEK,
+  SUM(TraeArti.Menge) AS CIRCINVENTORY,
+  ROUND(SUM(TraeArti.Menge) / 2, 0, 1) AS CHANGESPERWEEK,
   N'' AS SPECIALQUALITYGRADE,
   ISNULL(FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US'), N'') AS STARTDATE,
   FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US') AS ENDDATE,
@@ -236,6 +236,7 @@ JOIN @ImportTable2 AS ABSArtikel ON ABSArtikel.ArtikelNr = Artikel.ArtikelNr
 LEFT OUTER JOIN TraeMass ON TraeMass.TraeArtiID = TraeArti.ID AND TraeMass.MassOrtID = 1
 LEFT OUTER JOIN @ImportTable3 AS ABSGroe ON ABSGroe.ABSArtikelNr = ABSArtikel.ABSArtikelNr AND ABSGroe.GroeFalsch = ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')
 WHERE TraeArti.Menge > 0
+GROUP BY ISNULL(Traeger.Traeger, N''), ISNULL(RTRIM(ABSArtikel.ABSArtikelNr), N''), IIF(ABSGroe.GroeKorrekt IS NOT NULL, RTRIM(ABSGroe.GroeKorrekt), ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')), IIF(ABSGroe.GroeKorrekt IS NOT NULL, RTRIM(ABSGroe.GroeKorrekt), ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')), ISNULL(FORMAT(Traeger.IndienstDat, N'dd/MM/yyyy', N'en-US'), N''), FORMAT(ISNULL(Traeger.AusdienstDat, N'2099-12-31'), N'dd/MM/yyyy', N'en-US')  
 ORDER BY WEARERNUMBER, PRODUCTCODE;
 
 /* ++ uniqueitem.csv ++ */
