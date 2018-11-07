@@ -13,13 +13,15 @@
 DECLARE @KdNr int = 6052;
 DECLARE @KdNrABS int =  10003881;
 
-DECLARE @Betrieb nchar(4) = N'SA00';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'SA22';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\6052_FischerBrot.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\6052_FischerBrot.xlsx'; 
 DECLARE @XLSXImportSQL nvarchar(max);
-DECLARE @ImportFile2 nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\6052_FischerBrot_Artikelliste.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile2 nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\6052_FischerBrot_Artikelliste.xlsx';
 DECLARE @XLSXImportSQL2 nvarchar(max);
+DECLARE @ImportFile3 nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\6052_FischerBrot_Groessen.xlsx';
+DECLARE @XLSXImportSQL3 nvarchar(max);
 
 DECLARE @Traeger TABLE (
   ID int,
@@ -67,6 +69,12 @@ DECLARE @ImportTable2 TABLE (
   ABSArtikelNr nchar(15) COLLATE Latin1_General_CS_AS
 );
 
+DECLARE @ImportTable3 TABLE (
+  ABSArtikelNr nchar(15) COLLATE Latin1_General_CS_AS,
+  GroeFalsch nchar(20) COLLATE Latin1_General_CS_AS,
+  GroeKorrekt nchar(20) COLLATE Latin1_General_CS_AS
+)
+
 SET @XLSXImportSQL = N'SELECT CAST(Status as nchar(1)) AS [Status], ' +
   N'CAST(Träger AS int) AS Träger, ' +
   N'CAST(PersNr AS nchar(10)) AS PersNr, ' +
@@ -85,15 +93,23 @@ SET @XLSXImportSQL = N'SELECT CAST(Status as nchar(1)) AS [Status], ' +
   N'CAST(Kostenstelle AS nvarchar(100)) AS Kostenstelle ' +
   N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [ABS$]);';
 
-SET @XLSXImportSQL2 = N'SELECT CAST(ArtNr AS nchar(15)) AS ArtikelNr, ' +
+SET @XLSXImportSQL2 = N'SELECT DISTINCT CAST(ArtNr AS nchar(15)) AS ArtikelNr, ' +
   N'CAST(ABSArtNr AS nchar(15)) AS ABSArtikelNr ' +
   N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile2+''', [Preisliste$]);';
+
+SET @XLSXImportSQL3 = N'SELECT DISTINCT CAST(Produkt AS nchar(15)) AS ABSArtikelNr, ' +
+  N'CAST(GroeFalsch AS nchar(20)) AS GroeFalsch, ' +
+  N'CAST(GroeKorrekt AS nchar(20)) AS GroeKorrekt ' +
+  N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile3+''', [ABSGroe$]);';
 
 INSERT INTO @ImportTable
 EXEC sp_executesql @XLSXImportSQL;
 
 INSERT INTO @ImportTable2
 EXEC sp_executesql @XLSXImportSQL2;
+
+INSERT INTO @ImportTable3
+EXEC sp_executesql @XLSXImportSQL3;
 
 INSERT INTO @Traeger
 SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Traeger AS TNAdv, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem
@@ -134,7 +150,7 @@ SELECT
   IIF(RentoCod.ID < 0, N'', ISNULL(RentoCod.Bez, N'')) AS WEARERFUNCTIONDESCRIPTION,
   N'' AS FLAGCODE,
   N'' AS FLAGDESCRIPTION,
-  RTRIM(CAST(ISNULL(ABSData.Fach, N'') AS nchar(6))) AS LOCKERBANK,
+  RTRIM(ISNULL(CAST(ABSData.Fach AS nchar(6)), N'')) AS LOCKERBANK,
   RTRIM(ISNULL(ABSData.Schrank, N'')) AS LOCKER,
   N'' AS GARMENTDISPENSERCODE,
   N'' AS GARMENTDISPENSERDESC,
@@ -169,12 +185,13 @@ ORDER BY WEARERNUMBER ASC;
 
 /* ++ wearinv.csv ++ */
 SELECT
+  TraeArti.ID AS TraeArtiID,
   @KdNrABS AS CUSTOMERNUMBER,
   ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
   ISNULL(RTRIM(ABSArtikel.ABSArtikelNr), N'') AS PRODUCTCODE,
-  ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + CAST(TraeMass.Mass AS nchar(3)), IIF(ArtGroe.Beinlaenge > 0, N'/' + CAST(ArtGroe.Beinlaenge AS nchar(3)), N'')), N'') AS SIZECODE,
-  ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + CAST(TraeMass.Mass AS nchar(3)), IIF(ArtGroe.Beinlaenge > 0, N'/' + CAST(ArtGroe.Beinlaenge AS nchar(3)), N'')), N'') AS SIZEDESCRIPTION,
+  IIF(ABSGroe.GroeKorrekt IS NOT NULL, RTRIM(ABSGroe.GroeKorrekt), ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')) AS SIZECODE,
+  IIF(ABSGroe.GroeKorrekt IS NOT NULL, RTRIM(ABSGroe.GroeKorrekt), ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')) AS SIZEDESCRIPTION,
   N'GEF-A' AS FINISHINGMETHODCODE,
   N'' AS FINISHINGMETHODDESCRIPTION,
   N'' AS MODIFICATIONCODE1,
@@ -218,6 +235,7 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN @ImportTable2 AS ABSArtikel ON ABSArtikel.ArtikelNr = Artikel.ArtikelNr
 LEFT OUTER JOIN TraeMass ON TraeMass.TraeArtiID = TraeArti.ID AND TraeMass.MassOrtID = 1
+LEFT OUTER JOIN @ImportTable3 AS ABSGroe ON ABSGroe.ABSArtikelNr = ABSArtikel.ABSArtikelNr AND ABSGroe.GroeFalsch = ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')
 WHERE TraeArti.Menge > 0
 ORDER BY WEARERNUMBER, PRODUCTCODE;
 
@@ -233,7 +251,7 @@ SELECT
   ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
   ISNULL(RTRIM(ABSArtikel.ABSArtikelNr), N'') AS PRODUCTCODE,
-  ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + CAST(TraeMass.Mass AS nchar(3)), IIF(ArtGroe.Beinlaenge > 0, N'/' + CAST(ArtGroe.Beinlaenge AS nchar(3)), N'')), N'') AS SIZECODE,
+  IIF(ABSGroe.GroeKorrekt IS NOT NULL, RTRIM(ABSGroe.GroeKorrekt), ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')) AS SIZECODE,
   N'GEF-A' AS FINISHINGMETHODCODE,
   N'' AS GARMENTSEQUENCENUMBER,
   Teile.RuecklaufG AS WASHESTOTAL,
@@ -292,6 +310,7 @@ JOIN Teile ON Teile.TraeArtiID = TraeArti.ID
 JOIN Wae ON Kunden.WaeID = Wae.ID
 JOIN @ImportTable2 AS ABSArtikel ON ABSArtikel.ArtikelNr = Artikel.ArtikelNr
 LEFT OUTER JOIN TraeMass ON TraeMass.TraeArtiID = TraeArti.ID AND TraeMass.MassOrtID = 1
+LEFT OUTER JOIN @ImportTable3 AS ABSGroe ON ABSGroe.ABSArtikelNr = ABSArtikel.ABSArtikelNr AND ABSGroe.GroeFalsch = ISNULL(RTRIM(ArtGroe.Groesse) + ISNULL(N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(TraeMass.Mass AS nchar(3))), 3), IIF(ArtGroe.Beinlaenge > 0, N'/' + RIGHT(RTRIM(REPLICATE(N'0', 3) + CAST(ArtGroe.Beinlaenge AS nchar(3))), 3), N'')), N'')
 WHERE TraeArti.Menge > 0
   AND Teile.Status BETWEEN N'M' AND N'Q'
 ORDER BY WEARERNUMBER, PRODUCTCODE;
