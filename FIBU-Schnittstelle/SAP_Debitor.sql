@@ -48,7 +48,6 @@ SELECT DE.Debitor AS CustomerNumber,
   MailCounty =                                                                                      -- Für DE / AT: Bundesland über Sektor ermitteln; alle anderen Länder: Länderkennzeichen übergeben
     CASE DE.Land
       WHEN N'IT' THEN N'I'
-      WHEN N'BE' THEN N''
       ELSE ISNULL(Sektor.Sektor, DE.Land)
     END,
   NULL AS MailState,
