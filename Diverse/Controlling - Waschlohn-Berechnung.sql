@@ -28,6 +28,7 @@ WHERE FibuDet.FibuExpID IN (
       AND RechKo.FirmaID = @FirmaID
   )
   AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB')
+  AND RechKo.FirmaID = @FirmaID
 GROUP BY Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez, Bereich.BereichBez, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr), Artikel.ArtikelBez, FibuDet.EPreis, Konten.Konto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS, RechPo.KsSt, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID, Kunden.MwStID, Artikel.ArtGruID, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit), Wae.IsoCode;
 
 UPDATE WL SET IsLeasing = 1
