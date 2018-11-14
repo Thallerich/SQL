@@ -81,7 +81,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
-  JOIN Firma ON Kunden.FirmaID = Firma.ID
+  JOIN Firma ON RechKo.FirmaID = Firma.ID
   JOIN MwSt ON RechKo.MwStID = MwSt.ID
   WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
