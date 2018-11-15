@@ -1,7 +1,7 @@
 -- DROP TABLE #auvainitial;
 
 /* ## Import file to table ## */
-DECLARE @Filename nvarchar(100) = N'Initialdaten_UG.csv';
+DECLARE @Filename nvarchar(100) = N'inituk.csv';
 DECLARE @ImportSQL nvarchar(200) = N'BULK INSERT #auvainitial FROM N''D:\AdvanTex\Temp\' + @Filename + '''WITH (CODEPAGE = ''65001'', FIELDTERMINATOR = N'';'', ROWTERMINATOR = N''\n'');';
 
 IF object_id('tempdb..#auvainitial') IS NULL
@@ -146,3 +146,15 @@ WHERE Traeger.VsaID = Vsa.ID
   AND Traeger.AbteilID = Abteil.ID
   AND Traeger.Status = Status.Status
   AND Traeger.PersNr IN (N'00113814');
+
+-- Auswertung aktive Träger DCS
+ SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, RentoArt.Bez AS Funktionscode, COUNT(Traeger.ID) AS [Anzahl Mitarbeiter]
+  FROM Traeger
+  JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Kunden oN Vsa.KundenID = Kunden.ID
+  JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
+  JOIN RentoArt ON Traeger.RentoArtID = RentoArt.ID
+  WHERE Rentomat.SchrankNr LIKE N'%UK%'
+    AND Traeger.Status = N'A'
+    AND Traeger.RentomatKarte IS NOT NULL
+  GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, RentoArt.Bez;
