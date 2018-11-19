@@ -148,13 +148,13 @@ WHERE Traeger.VsaID = Vsa.ID
   AND Traeger.PersNr IN (N'00113814');
 
 -- Auswertung aktive Träger DCS
- SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, RentoArt.Bez AS Funktionscode, COUNT(Traeger.ID) AS [Anzahl Mitarbeiter]
-  FROM Traeger
-  JOIN Vsa ON Traeger.VsaID = Vsa.ID
-  JOIN Kunden oN Vsa.KundenID = Kunden.ID
-  JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
-  JOIN RentoArt ON Traeger.RentoArtID = RentoArt.ID
-  WHERE Rentomat.SchrankNr LIKE N'%UK%'
-    AND Traeger.Status = N'A'
-    AND Traeger.RentomatKarte IS NOT NULL
-  GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, RentoArt.Bez;
+SELECT Kunden.KdNr, RTRIM(Kunden.SuchCode) AS Kunde, ISNULL(RTRIM(Traeger.RentomatKarte), N'') AS MifareID, RTRIM(Traeger.PersNr) AS Kartennummer, [Status].StatusBez AS [Status], ISNULL(RTRIM(Traeger.VormalsNr), N'') AS Kartentyp, ISNULL(RTRIM(Traeger.Vorname), N'') AS Vorname, ISNULL(RTRIM(Traeger.Nachname), N'') AS Nachname, ISNULL(RTRIM(Traeger.Titel), N'') AS Titel, ISNULL(RTRIM(Abteil.Abteilung), N'') AS Kostenstelle, IIF(Traeger.RentoArtID < 0, 0, 1) AS Bekleidungsprofil
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden oN Vsa.KundenID = Kunden.ID
+JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
+JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
+JOIN Abteil ON Traeger.AbteilID = Abteil.ID
+WHERE Rentomat.SchrankNr LIKE N'%UK%'
+  AND Traeger.Status = N'A'
+  AND Traeger.RentomatKarte IS NOT NULL;
