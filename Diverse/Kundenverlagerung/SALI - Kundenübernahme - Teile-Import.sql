@@ -5,7 +5,7 @@
 /* ++ Author: Stefan Thaller - 2018-10-31                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-11-02_10002292_Wolfmair.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01\AdvanTex\Temp\2018-11-22_11100_APH Linz Keferfeld.xlsx';  -- Pfad zum Excel-File mit den Teile-Daten. Muss für den SQL-Server-Prozess zugreifbar sein, daher am Besten unter \\atenadvantex01\advantex\temp\ ablegen.
 DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
@@ -102,7 +102,7 @@ SELECT ImportTable.Barcode,
   ISNULL(DATEADD(month, ImportTable.AlterMonate * -1, CAST(GETDATE() AS date)), N'1980-01-01') AS ErstDatum,
   (SELECT Week.Woche FROM Week WHERE ISNULL(ImportTable.IndienstDat, N'1980-01-01') BETWEEN Week.VonDat AND Week.BisDat) AS Indienst,
   ISNULL(ImportTable.IndienstDat, N'1980-01-01') AS IndienstDat,
-  ImportTable.Waschzyklen AS RuecklaufG,
+  ISNULL(ImportTable.Waschzyklen, 0) AS RuecklaufG,
   CAST(0 AS bit) AS Kostenlos,
   DATEDIFF(week, ISNULL(DATEADD(month, ImportTable.AlterMonate * -1, CAST(GETDATE() AS date)), N'1980-01-01'), GETDATE()) AS AlterInfo,
   CAST(0 AS int) AS AltenheimModus,
