@@ -118,15 +118,17 @@ FROM Traeger, (
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
--- Noch nicht im AdvanTex vorhandene Träger wieder in .csv-File exportieren und über Schnittstelle importieren, damit diese angelegt werden
+-- Noch nicht im AdvanTex vorhandene Träger oder Träger mit falscher Kostenstelle wieder in .csv-File exportieren und über Schnittstelle importieren, damit diese angelegt werden
 SELECT ROW_NUMBER() OVER (ORDER BY ImportData.PersNr) AS LfdNr, RTRIM(ImportData.Kartennummer) AS MifareID, ImportData.PersNr AS Kartennummer, RTRIM(ImportData.Status) AS Status, RTRIM(ImportData.Kartentyp) AS Typ, RTRIM(ISNULL(ImportData.Vorname, N'')) AS Vorname, RTRIM(ISNULL(ImportData.Nachname, N'')) AS Nachname, RTRIM(ISNULL(ImportData.Titel, N'')) AS Titel, RTRIM(ISNULL(ImportData.TitelN, N'')) AS TitelN, ImportData.Standort, ImportData.Kostenstelle
 FROM #TmpImport ImportData
 WHERE NOT EXISTS (
   SELECT Traeger.ID
   FROM Traeger
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Abteil ON Vsa.AbteilID = Abteil.ID
   WHERE Vsa.RentomatID = ImportData.RentomatID
     AND Traeger.PersNr = ImportData.PersNr 
+    AND Abteil.Abteilung = ImportData.Kostenstelle
 );
 
 -- Check ob alle Datensätze verarbeitet wurden
