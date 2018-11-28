@@ -1,7 +1,7 @@
 -- DROP TABLE #auvainitial;
 
 /* ## Import file to table ## */
-DECLARE @Filename nvarchar(100) = N'inituk.csv';
+DECLARE @Filename nvarchar(100) = N'initrt.csv';
 DECLARE @ImportSQL nvarchar(200) = N'BULK INSERT #auvainitial FROM N''D:\AdvanTex\Temp\' + @Filename + '''WITH (CODEPAGE = ''65001'', FIELDTERMINATOR = N'';'', ROWTERMINATOR = N''\n'');';
 
 IF object_id('tempdb..#auvainitial') IS NULL
@@ -45,7 +45,8 @@ UPDATE Traeger SET PersNr = RIGHT(N'00000000' + Traeger.PersNr, 8)
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 WHERE Vsa.RentomatID IN (SELECT DISTINCT RentomatID FROM #TmpImport)
-  AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8);
+  AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8)
+  AND Traeger.PersNr IS NOT NULL;
 
 UPDATE Traeger SET Traeger.Status = 'I', Traeger.RentomatKarte = NULL
 WHERE Traeger.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport))
@@ -140,6 +141,14 @@ WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
   AND Traeger.RentomatKarte IS NOT NULL
   AND Traeger.Update_ > N'2018-09-13 09:30:00';
 
+SELECT Traeger.RentomatKarte
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
+  AND Traeger.Status = N'I'
+  AND Traeger.Update_ > N'2018-11-28 09:00:00'
+  AND Traeger.UserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE UserName = N'STHA');
+
 -- Query für Ergebnis-Rückmeldung
 SELECT Traeger.ID, ISNULL(Traeger.RentomatKarte, N'') AS MifareID, Traeger.PersNr AS Kartennummer, Status.StatusBez AS Status, ISNULL(Traeger.VormalsNr, N'') AS Kartentyp, ISNULL(Traeger.Vorname, N'') AS Vorname, ISNULL(Traeger.Nachname, N'') AS Nachname, ISNULL(Traeger.Titel, N'') AS Titel, ISNULL(Abteil.Abteilung, N'') AS Kostenstelle, Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Update_ AS [letztes Datensatz-Update]
 FROM Traeger, Vsa, Kunden, Abteil, (SELECT Status.Status, Status.StatusBez FROM Status WHERE Status.Tabelle = 'TRAEGER') AS Status
@@ -150,13 +159,14 @@ WHERE Traeger.VsaID = Vsa.ID
   AND Traeger.PersNr IN (N'00113814');
 
 -- Auswertung aktive Träger DCS
-SELECT Kunden.KdNr, RTRIM(Kunden.SuchCode) AS Kunde, ISNULL(RTRIM(Traeger.RentomatKarte), N'') AS MifareID, RTRIM(Traeger.PersNr) AS Kartennummer, [Status].StatusBez AS [Status], ISNULL(RTRIM(Traeger.VormalsNr), N'') AS Kartentyp, ISNULL(RTRIM(Traeger.Vorname), N'') AS Vorname, ISNULL(RTRIM(Traeger.Nachname), N'') AS Nachname, ISNULL(RTRIM(Traeger.Titel), N'') AS Titel, ISNULL(RTRIM(Abteil.Abteilung), N'') AS Kostenstelle, IIF(Traeger.RentoArtID < 0, 0, 1) AS Bekleidungsprofil
+SELECT Kunden.KdNr, RTRIM(Kunden.SuchCode) AS Kunde, ISNULL(RTRIM(Traeger.RentomatKarte), N'') AS MifareID, RTRIM(Traeger.PersNr) AS Kartennummer, [Status].StatusBez AS [Status], ISNULL(RTRIM(Traeger.VormalsNr), N'') AS Kartentyp, ISNULL(RTRIM(Traeger.Vorname), N'') AS Vorname, ISNULL(RTRIM(Traeger.Nachname), N'') AS Nachname, ISNULL(RTRIM(Traeger.Titel), N'') AS Titel, ISNULL(RTRIM(Abteil.Abteilung), N'') AS Kostenstelle, IIF(Traeger.RentoArtID < 0, 0, 1) AS Bekleidungsprofil, Traeger.Anlage_
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden oN Vsa.KundenID = Kunden.ID
 JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
 JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-WHERE Rentomat.SchrankNr LIKE N'%UK%'
+WHERE Rentomat.SchrankNr LIKE N'%RT%'
   AND Traeger.Status = N'A'
-  AND Traeger.RentomatKarte IS NOT NULL;
+  AND Traeger.RentomatKarte IS NOT NULL
+  AND Traeger.PersNr = N'82000005';
