@@ -168,5 +168,4 @@ JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 WHERE Rentomat.SchrankNr LIKE N'%RT%'
   AND Traeger.Status = N'A'
-  AND Traeger.RentomatKarte IS NOT NULL
-  AND Traeger.PersNr = N'82000005';
+  AND Traeger.RentomatKarte IS NOT NULL;
