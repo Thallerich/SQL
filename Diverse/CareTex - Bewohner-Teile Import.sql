@@ -1,3 +1,15 @@
+-- Alter Table Collation after Import
+/*
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Kunde nvarchar(50) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN VSA nvarchar(50) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Nachname nvarchar(25) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Vorname nvarchar(20) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Zimmernummer nvarchar(10) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Artikelnummer nvarchar(15) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Artikelbezeichnung nvarchar(60) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __Bewohnerteile2 ALTER COLUMN Barcode nvarchar(33) COLLATE Latin1_General_CS_AS;
+*/
+
 DROP TABLE IF EXISTS #BTImport;
 
 -- 188.960 Teile zu importieren - 2.514 vorhandenen = 186 446 importiert
@@ -5,7 +17,7 @@ SELECT BT.Barcode, Vsa.ID AS VsaID, Traeger.ID AS TraegerID, ArtGroe.ID AS ArtGr
 INTO #BTImport
 FROM (
   SELECT Barcode, MAX(TrägerID) AS TraegerID, Artikelnummer, Artikelbezeichnung
-  FROM Wozabal.dbo.__Bewohnerteile
+  FROM Wozabal.dbo.__Bewohnerteile2
   GROUP BY Barcode, Artikelnummer, Artikelbezeichnung
 ) AS BT
 JOIN Traeger ON BT.TraegerID = Traeger.ID
