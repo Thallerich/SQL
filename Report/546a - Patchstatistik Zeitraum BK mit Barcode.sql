@@ -1,4 +1,4 @@
-SELECT Firma.Bez, KdGF.Bez AS SGF, Kunden.KdNr, Kunden.Name1 AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, AnzGebr, AnzNeu, WertNeu, AnzNeuNeukunde, WertNeuNeukunde, Mitarbei.Nachname AS Betreuer, y.Barcode, y.EinsatzGrund
+SELECT Firma.Bez, KdGF.KdGfBez$LAN$ AS SGF, Kunden.KdNr, Kunden.Name1 AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, y.AnzGebr, y.AnzNeu, y.WertNeu, y.AnzNeuNeukunde, y.WertNeuNeukunde, Mitarbei.Nachname AS Betreuer, y.Barcode, y.EinsatzGrund
 FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
   SELECT KundenID, ArtikelID, x.Barcode, x.EinsatzGrund,
     IIF(Neukunde = 1, IIf(Neu = 1, Anzahl, 0), 0) AnzNeuNeukunde,
@@ -27,4 +27,4 @@ WHERE y.KundenID = Kunden.ID
   AND KdBer.BetreuerID = Mitarbei.ID
   AND KdBer.KundenID = Kunden.ID
   AND KdBer.BereichID = 100
-ORDER BY Firma.Bez, KdGf.Bez, Kunden.Name1;
+ORDER BY Firma.Bez, SGF, Kunde;
