@@ -1,4 +1,4 @@
-SELECT AnfKo.LieferDatum, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode AS Kunde, VSA.SuchCode AS VsaNr, VSA.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, AnfPo.Angefordert, AnfPo.Geliefert, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz, round(IIF(AnfPo.Angefordert <> 0, 100 / AnfPo.Angefordert * AnfPo.Geliefert, null), 0) AS Lieferquote, ServType.Bez AS Expedition
+SELECT AnfKo.LieferDatum, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode AS Kunde, VSA.SuchCode AS VsaNr, VSA.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, AnfPo.Angefordert, AnfPo.Geliefert, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz, round(IIF(AnfPo.Angefordert <> 0, 100 / AnfPo.Angefordert * AnfPo.Geliefert, null), 0) AS Lieferquote, ServType.ServTypeBez$LAN$ AS Expedition
 FROM AnfPo, AnfKo, VSA, Kunden, KdArti, Artikel, ServType, KdGf
 WHERE (
      ($4$ = 0 AND $5$ = 0 AND AnfPo.Geliefert - AnfPo.Angefordert < 0)

@@ -1,9 +1,5 @@
-BEGIN TRY
-  DROP TABLE #TmpOPEtiKo;
-  DROP TABLE #TmpFinal;
-END TRY
-BEGIN CATCH
-END CATCH;
+DROP TABLE IF EXISTS #TmpOPEtiKo;
+DROP TABLE IF EXISTS #TmpFinal;
 
 SELECT OPEtiKo.VsaID, OPEtiKo.ArtikelID, OPEtiKo.Status, COUNT(DISTINCT OPEtiKo.EtiNr) AS AnzEtiketten
 INTO #TmpOPEtiKo
@@ -13,7 +9,7 @@ WHERE OPEtiKo.Status BETWEEN 'D' AND 'P'
   AND OPEtiKo.VsaID > 0
 GROUP BY OPEtiKo.VsaID, OPEtiKo.ArtikelID, OPEtiKo.Status;
 
-SELECT AnfKo.Status, Status.StatusBez, AnfKo.LieferDatum, KdGf.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, VSA.SuchCode AS VsaNr, VSA.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfPo.Angefordert, 0 AS Gedruckt, 0 AS [Beim Packen], 0 AS Gepackt, 0 AS Steril, 0 AS Unsteril, AnfPo.Geliefert, ServType.Bez AS Expedition, Vsa.ID AS VsaID, Artikel.ID AS ArtikelID
+SELECT AnfKo.Status, Status.StatusBez, AnfKo.LieferDatum, KdGf.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, VSA.SuchCode AS VsaNr, VSA.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfPo.Angefordert, 0 AS Gedruckt, 0 AS [Beim Packen], 0 AS Gepackt, 0 AS Steril, 0 AS Unsteril, AnfPo.Geliefert, ServType.ServTypeBez$LAN$ AS Expedition, Vsa.ID AS VsaID, Artikel.ID AS ArtikelID
 INTO #TmpFinal
 FROM AnfPo, AnfKo, VSA, Kunden, KdArti, Artikel, ServType, KdGf, (SELECT Status.Status, Status.StatusBez$LAN$ AS StatusBez FROM Status WHERE Status.Tabelle = 'ANFKO') AS Status
 WHERE (($4$ = 1 AND AnfPo.Angefordert = AnfPo.Geliefert) OR ($4$ = 0 AND AnfPo.Angefordert <> AnfPo.Geliefert))
