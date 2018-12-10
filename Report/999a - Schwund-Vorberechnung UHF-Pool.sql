@@ -1,44 +1,30 @@
 -- ##################################################################################################
 -- Pipeline Kundendaten:
-SELECT Kunden.KdNr, Kunden.SuchCode, MwSt.Bez AS MwStBez, MwSt.MwStSatz, MwSt.MwStFaktor
+SELECT Kunden.KdNr, Kunden.SuchCode, MwSt.MwStBez$LAN$ AS MwStBez, MwSt.MwStSatz, MwSt.MwStFaktor
 FROM Kunden, MwSt
 WHERE Kunden.MwStID = MwSt.ID
   AND Kunden.ID = $ID$;
 
 -- ##################################################################################################
 -- Pipeline Schwund:
-DECLARE @AddCondition nvarchar(49) = N'OPTeile.ID IN (SELECT ID FROM #TmpSchwundTeile)';
 DECLARE @RwConfigID integer = (SELECT RwPoolTeileConfigID FROM Kunden WHERE ID = $ID$);
+DECLARE @Awoche nchar(7) = (SELECT CAST(DATEPART(year, GETDATE()) AS nchar(4)) + N'/' + IIF(DATEPART(week, GETDATE()) < 10, N'0' + CAST(DATEPART(week, GETDATE()) AS nchar(1)), CAST(DATEPART(week, GETDATE()) AS nchar(2))) AS Woche);
 DECLARE @RwArt integer = 1;
-DECLARE @SetAusdRestwert bit = 0;
 DECLARE @von datetime = $1$;
 DECLARE @bis datetime = DATEADD(day, 1, $2$);
 
-DROP TABLE IF EXISTS #TmpSchwundTeile;
-
 IF @RwConfigID < 0 BEGIN
   RAISERROR(N'Keine Pool-Restwertkonfiguration beim Kunden hinterlegt!', 16, 1);
-  END ELSE BEGIN
-  -- Schwundteile ermitteln
-  SELECT OPTeile.ID
-  INTO #TmpSchwundTeile
-  FROM OPTeile, Vsa, Kunden, RwConfig, RwConfPo
-  WHERE OPTeile.Status = 'W'
-    AND OPTeile.RechPoID = -1
-    AND Kunden.RwPoolTeileConfigID = RwConfig.ID
-    AND RwConfPo.RwConfigID = RwConfig.ID
-    AND RwConfPo.RwArtID = 1
-    AND OPTeile.VsaID = Vsa.ID
-    AND Vsa.KundenID = Kunden.ID
-    AND (RWConfig.RWFakIVSA = 1 OR Vsa.Status = 'A')
-    AND Kunden.ID = $ID$;
-
-  -- Restwerte aktualisieren
-
-  EXECUTE procOPTeileCalculateRestWerte @AddCondition, @RwConfigID, @RwArt, @SetAusdRestwert;
-
+END ELSE BEGIN
   SELECT Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Abteil.Abteilung AS KsStNr, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, COUNT(OPTeile.ID) AS Menge, OPTeile.RestwertInfo AS EPreis, COUNT(OPTeile.ID) * OPTeile.RestwertInfo AS GPreis
-  FROM OPTeile, Vsa, Kunden, Artikel, Abteil, Bereich
+  FROM OPTeile
+  JOIN Vsa ON OPTeile.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
+  JOIN ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
+  JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+  JOIN Abteil ON Vsa.AbteilID = Abteil.ID
+  JOIN Bereich ON Artikel.BereichID = Bereich.ID
+  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Awoche, @RwArt)
   WHERE OPTeile.VsaID = Vsa.ID
     AND Artikel.BereichID = Bereich.ID
     AND Vsa.KundenID = Kunden.ID
