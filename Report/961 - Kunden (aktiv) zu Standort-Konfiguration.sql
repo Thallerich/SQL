@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez$LAN$ AS Kundenstatus, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS VSA, VsaStatus.StatusBez$LAN$ AS [VSA-Status], StandKon.Bez AS [Standort-Konfiguration]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez$LAN$ AS Kundenstatus, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS VSA, VsaStatus.StatusBez$LAN$ AS [VSA-Status], StandKon.StandKonBez$LAN$ AS [Standort-Konfiguration]
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID

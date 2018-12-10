@@ -1,9 +1,6 @@
-IF object_id('tempdb..#TmpLsKontrolle888b') IS NOT NULL
-BEGIN
-  DROP TABLE #TmpLsKontrolle888b;
-END
+DROP TABLE IF EXISTS #TmpLsKontrolle888b;
 
-SELECT StandKon.Bez AS Standortkonfiguration, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(char(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, AnfKo.Sonderfahrt, 0 AS Liefermenge, 0 AS AnzahlChips, AnfPo.KdArtiID, AnfKo.LsKoID, AnfPo.ID AS AnfPoID
+SELECT StandKon.StandKonBez$LAN$ AS Standortkonfiguration, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(char(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, AnfKo.Sonderfahrt, 0 AS Liefermenge, 0 AS AnzahlChips, AnfPo.KdArtiID, AnfKo.LsKoID, AnfPo.ID AS AnfPoID
 INTO #TmpLsKontrolle888b
 FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, Artikel, StandKon
 WHERE AnfPo.AnfKoID = AnfKo.ID
