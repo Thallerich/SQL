@@ -178,8 +178,8 @@ SELECT DE.Debitor AS CustomerNumber,
   NULL AS Zahlweg,
   NULL AS UIDNummer
 FROM #DebitorExport DE
-LEFT OUTER JOIN KdGf ON DE.GfBez = KdGf.Bez
 LEFT OUTER JOIN Kunden ON DE.KundenID = Kunden.ID
+LEFT OUTER JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 LEFT OUTER JOIN Firma ON Kunden.FirmaID = Firma.ID
 LEFT OUTER JOIN Standort ON Kunden.StandortID = Standort.ID
 LEFT OUTER JOIN Holding ON Kunden.HoldingID = Holding.ID
