@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 06.11.2018, Version 1.4                       **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 11.12.2018, Version 1.5                       **
 ** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
 **                                                                                                                            **
 *******************************************************************************************************************************/
