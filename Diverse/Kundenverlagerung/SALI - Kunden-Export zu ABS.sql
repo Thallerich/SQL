@@ -36,11 +36,11 @@ DECLARE @Traeger TABLE (
   Namenschild3 nvarchar(40),
   Emblem bit,
   Schrank nvarchar(4),
-  Fach int
+  Fach nchar(4)
 );
 
 INSERT INTO @Traeger
-SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem, Schrank.SchrankNr, TraeFach.Fach
+SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem, Schrank.SchrankNr, CAST(TraeFach.Fach AS nchar(4)) AS Fach
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -80,7 +80,7 @@ SELECT
   N'' AS FLAGCODE,
   N'' AS FLAGDESCRIPTION,
   ISNULL(RTRIM(Traeger.Schrank), N'') AS LOCKERBANK,
-  ISNULL(Traeger.Fach, N'') AS LOCKER,
+  ISNULL(RTRIM(Traeger.Fach), N'') AS LOCKER,
   N'' AS GARMENTDISPENSERCODE,
   N'' AS GARMENTDISPENSERDESC,
   Traeger.RentomatKredit AS DISPENSECREDIT,
