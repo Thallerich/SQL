@@ -10,10 +10,10 @@
 /* ++ Version 3.0 - 2018-08-24                                                                                                  ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNr int = 30363;
-DECLARE @KdNrABS int =  90000000;
+DECLARE @KdNr int = 2523075;
+DECLARE @KdNrABS int =  10003869;
 
-DECLARE @Betrieb nchar(4) = N'SA00';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'GRAZ';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
@@ -34,14 +34,18 @@ DECLARE @Traeger TABLE (
   Namenschild1 nvarchar(40),
   Namenschild2 nvarchar(40),
   Namenschild3 nvarchar(40),
-  Emblem bit
+  Emblem bit,
+  Schrank nvarchar(4),
+  Fach int
 );
 
 INSERT INTO @Traeger
-SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem
+SELECT Traeger.ID, Traeger.VsaID, ROW_NUMBER() OVER (ORDER BY Traeger.ID) AS Traeger, Traeger.Vorname, Traeger.Nachname, Traeger.PersNr, Traeger.Geschlecht, Traeger.Indienst, Traeger.IndienstDat, Traeger.Ausdienst, Traeger.AusdienstDat, Traeger.RentoArtID, Traeger.RentoCodID, Traeger.RentomatKredit, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.Emblem, Schrank.SchrankNr, TraeFach.Fach
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+LEFT OUTER JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
+LEFT OUTER JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
 WHERE Kunden.KdNr = @KdNr
   AND Traeger.Altenheim = 0
   AND Traeger.Status IN (N'A', N'P', N'K');
@@ -75,8 +79,8 @@ SELECT
   IIF(RentoCod.ID < 0, N'', ISNULL(RentoCod.Bez, N'')) AS WEARERFUNCTIONDESCRIPTION,
   N'' AS FLAGCODE,
   N'' AS FLAGDESCRIPTION,
-  N'' AS LOCKERBANK,
-  N'' AS LOCKER,
+  ISNULL(RTRIM(Traeger.Schrank), N'') AS LOCKERBANK,
+  ISNULL(Traeger.Fach, N'') AS LOCKER,
   N'' AS GARMENTDISPENSERCODE,
   N'' AS GARMENTDISPENSERDESC,
   Traeger.RentomatKredit AS DISPENSECREDIT,
