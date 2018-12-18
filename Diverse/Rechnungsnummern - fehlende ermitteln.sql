@@ -41,4 +41,6 @@ FROM @RechKo AS r
 JOIN Wozabal.dbo.RechKo ON r.RechNr = RechKo.RechNr
 WHERE RechKo.FibuExpID > 0;
 
-SELECT * FROM @RechKo;
+SELECT Firma.SuchCode AS Firma, r.RechNr, r.used, r.exported
+FROM @RechKo AS r
+JOIN Firma ON r.FirmaID = Firma.ID;
