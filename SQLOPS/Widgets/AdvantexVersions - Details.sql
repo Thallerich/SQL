@@ -4,4 +4,4 @@ LEFT OUTER JOIN Mitarbei m ON m.ID = s.MitarbeiID
 LEFT OUTER JOIN ArbPlatz alm ON alm.ID = s.ArbPlatzID 
 WHERE s.Mandant = DB_NAME()
   AND s.LastHeartbeat > DateAdd(Minute, -20, GETDATE())
-ORDER BY Version ASC;
+ORDER BY Version ASC, AdvanTexUser ASC;
