@@ -10,10 +10,10 @@
 /* ++ Version 3.0 - 2018-08-24                                                                                                  ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNr int = 2523075;
-DECLARE @KdNrABS int =  10003869;
+DECLARE @KdNr int = 30189;
+DECLARE @KdNrABS int =  10004048;
 
-DECLARE @Betrieb nchar(4) = N'GRAZ';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'KRAM';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
@@ -116,7 +116,7 @@ SELECT
   @KdNrABS AS CUSTOMERNUMBER,
   ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
+  ISNULL(RTRIM(Artikel.ArtikelNr2), RTRIM(Artikel.ArtikelNr)) AS PRODUCTCODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZEDESCRIPTION,
   N'GEF-A' AS FINISHINGMETHODCODE,
@@ -174,7 +174,7 @@ SELECT
   @KdNrABS AS CUSTOMERNUMBER,
   ISNULL(Traeger.Traeger, N'') AS WEARERNUMBER,
   1 AS WEAREREMPLOYMENTNUMBER,
-  ISNULL(RTRIM(Artikel.ArtikelNr2), N'') AS PRODUCTCODE,
+  ISNULL(RTRIM(Artikel.ArtikelNr2), RTRIM(Artikel.ArtikelNr)) AS PRODUCTCODE,
   ISNULL(RTRIM(ArtGroe.Groesse), N'') AS SIZECODE,
   N'GEF-A' AS FINISHINGMETHODCODE,
   N'' AS GARMENTSEQUENCENUMBER,
