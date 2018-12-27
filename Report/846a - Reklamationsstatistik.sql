@@ -12,4 +12,4 @@ WHERE Kunden.ID = Vsa.KundenID
   AND LsKo.ProduktionID = Standort.ID
   AND Standort.ID IN ($6$)
 GROUP BY Standort.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdArti.WaschPreis, Kunden.KdNr, Kunden.SuchCode
-HAVING SUM(IIF(LsPo.LsKoGruID IN ($3$) OR OR LsKo.LsKoGruID IN ($3$), ABS(LsPo.Menge), 0)) > 0;
+HAVING SUM(IIF(LsPo.LsKoGruID IN ($3$) OR LsKo.LsKoGruID IN ($3$), ABS(LsPo.Menge), 0)) > 0;
