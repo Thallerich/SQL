@@ -2,12 +2,24 @@ DROP TABLE IF EXISTS #Waschlohn;
 DROP TABLE IF EXISTS #LieferMenge;
 DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
-GO
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SAL');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer; SMBU: Budweis
-DECLARE @DatumVon date = CAST(N'2018-11-01' AS date);
-DECLARE @DatumBis date = CAST(N'2018-11-30' AS date);
+DECLARE @FirmaID int = $1$; --(SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SMBU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer; SMBU: Budweis
+DECLARE @DatumVon date = $2$; --CAST(N'2018-12-01' AS date);
+DECLARE @DatumBis date = $3$; --CAST(N'2018-12-31' AS date);
+DECLARE @FibuPeriode nchar(7) = (SELECT CAST(DATEPART(year, @DatumBis) AS nchar(4)) + N'-' + IIF(DATEPART(month, @DatumBis) < 10, N'0', N'') + CAST(DATEPART(month, @DatumBis) AS nchar(2)));
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
+DECLARE @MonatAbgeschlossen bit = (SELECT IIF(FiBuPeriode = @FibuPeriode, 1, 0) FROM Firma WHERE Firma.ID = @FirmaID);
+DECLARE @ErrorMsg nvarchar(100);
+
+IF @MonatAbgeschlossen = 0 BEGIN
+  SET @ErrorMsg = N'Der Monat ' + @FibuPeriode + N' wurde für die gewählte Firma noch nicht abgeschlossen!';
+  THROW 51000, @ErrorMsg, 1;
+END;
+
+IF @FirmaID < 0 BEGIN
+  SET @ErrorMsg = N'Bite eine Firma auswählen!';
+  THROW 51500, @ErrorMsg, 1;
+END;
 
 SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNrVertrieb, RechPo.KsSt AS KostenträgerVertrieb, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID, CAST(0 AS bit) AS IsLeasing, CAST(0 AS bit) AS IsStueck, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit) AS IsBerufsgruppe, Wae.IsoCode AS Waehrung
 INTO #Waschlohn
