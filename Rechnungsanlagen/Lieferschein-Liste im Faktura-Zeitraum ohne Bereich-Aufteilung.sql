@@ -3,7 +3,7 @@ DECLARE @MinDate date = (
   FROM LsKo
   JOIN LsPo ON LsPo.LsKoID = LsKo.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
-  WHERE RechPo.RechKoID = $RECHKOID$
+  WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
 );
 
 DECLARE @MaxDate date = (
@@ -11,7 +11,7 @@ DECLARE @MaxDate date = (
   FROM LsKo
   JOIN LsPo ON LsPo.LsKoID = LsKo.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
-  WHERE RechPo.RechKoID = $RECHKOID$
+  WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
 );
 
 DECLARE @LsKdData TABLE (
@@ -35,7 +35,7 @@ CREATE TABLE #LsDataRKoAnlag3062 (
 );
 
 INSERT INTO @LsKdData
-SELECT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr
+SELECT DISTINCT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
@@ -49,7 +49,7 @@ WHERE LsKo.ID IN (
     AND LsPo.AbteilID IN (
       SELECT DISTINCT RechPo.AbteilID
       FROM RechPo
-      WHERE RechPo.RechKoID = $RECHKOID$
+      WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
     )
 );
 
