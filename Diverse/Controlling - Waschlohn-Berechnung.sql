@@ -11,14 +11,14 @@ DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Setti
 DECLARE @MonatAbgeschlossen bit = (SELECT IIF(FiBuPeriode > @FibuPeriode, 1, 0) FROM Firma WHERE Firma.ID = @FirmaID);
 DECLARE @ErrorMsg nvarchar(100);
 
-IF @MonatAbgeschlossen = 0 BEGIN
-  SET @ErrorMsg = N'Der Monat ' + @FibuPeriode + N' wurde für die gewählte Firma noch nicht abgeschlossen!';
-  THROW 51000, @ErrorMsg, 1;
-END;
-
 IF @FirmaID < 0 BEGIN
   SET @ErrorMsg = N'Bite eine Firma auswählen!';
   THROW 51500, @ErrorMsg, 1;
+END;
+
+IF @MonatAbgeschlossen = 0 BEGIN
+  SET @ErrorMsg = N'Der Monat ' + @FibuPeriode + N' wurde für die gewählte Firma noch nicht abgeschlossen!';
+  THROW 51000, @ErrorMsg, 1;
 END;
 
 SELECT Kunden.KdNr, Kunden.Debitor, KdGf.KurzBez AS SGF, Bereich.BereichBez AS Produktbereich, IIF(Artikel.ID < 0, N'', Artikel.ArtikelNr) AS ArtikelNr, ISNULL(Artikel.ArtikelBez, N'') AS Artikelbezeichnung, SUM(FibuDet.Menge) AS VerrechMenge, FibuDet.EPreis, SUM(FibuDet.GPreis) AS UmsatzNetto, Konten.Konto AS Erlöskonto, CAST(IIF(@FirmaID = 5001, 93, IIF(@FirmaID = 5260, 90, KdGf.FibuNr)) AS nchar(3)) COLLATE Latin1_General_CS_AS AS FibuNrVertrieb, RechPo.KsSt AS KostenträgerVertrieb, RechPo.KsSt, FibuDet.Differenz, FibuDet.VsaID, FibuDet.KdArtiID, FibuDet.BereichID, KdGf.ID AS KdGfID, Kunden.MWstID, Artikel.ArtGruID, CAST(0 AS bit) AS IsLeasing, CAST(0 AS bit) AS IsStueck, CAST(IIF(Artikel.ID = @BerufsgruppeID, 1, 0) AS bit) AS IsBerufsgruppe, Wae.IsoCode AS Waehrung
