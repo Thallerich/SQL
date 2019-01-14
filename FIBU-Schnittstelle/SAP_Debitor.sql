@@ -187,4 +187,5 @@ LEFT OUTER JOIN SektPLZ ON Kunden.Land = SektPLZ.Land AND Kunden.PLZ = SektPLZ.P
 LEFT OUTER JOIN Sektor ON SektPLZ.SektorID = Sektor.ID
 WHERE KdGf.Status = N'A'
   AND KdGf.FibuNr <> 0
-  AND Kunden.StandortID > 0;
+  AND Kunden.StandortID > 0
+  AND ((Firma.SuchCode = N'SAL' AND LEFT(CAST(Kunden.Debitor AS nchar(10)), 1) = N'4' AND LEN(CAST(Kunden.Debitor AS nchar(10))) = 8) OR (Firma.SuchCode <> N'SAL'));
