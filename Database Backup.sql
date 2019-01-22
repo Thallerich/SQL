@@ -136,7 +136,7 @@ BEGIN TRANSACTION;
     WHERE [Parameter] = N'PATH_BMD';
     
   UPDATE Rentomat 
-    SET ExportFile1 = N'\\ATENADVANTEX01.wozabal.int\AdvanTex\Data\Export\Testmandant\'
+    SET ExportFile1 = N'\\ATENADVANTEX01.wozabal.int\AdvanTex\Data\Export\Test\'
     WHERE Rentomat.Interface <> 'Unimat';
 
   UPDATE Rentomat 
