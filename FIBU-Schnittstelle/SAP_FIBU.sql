@@ -45,8 +45,8 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', Export.Bruttowert, Export.Bruttowert) AS Bruttowert,
     Steuerschl =
       CASE
-        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' THEN N'6O'
-        WHEN MwSt.Steuerschl = N'A6' THEN N'33'
+        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMBU' THEN N'6O'
+        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMBU' THEN N'33'
         ELSE MwSt.Steuerschl
       END,
     Export.Debitor, Export.Gegenkonto, 
