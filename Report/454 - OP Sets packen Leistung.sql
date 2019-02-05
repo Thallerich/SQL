@@ -17,14 +17,13 @@ FROM (
     AND Bereich.Bereich <> 'RR'
     AND OPEtiKo.ProduktionID IN ($2$)
     AND Mitarbei.UserName <> '120239'
-    AND Mitarbei.StandortID IN (-1, 2)
   GROUP BY MItarbei.UserName, Mitarbei.Name
 ) a
 
 UNION
 
 -- Gesamtsumme aller Mitarbeiter
-SELECT 'Z_Gesamt' AS Mitarbeiter, '' AS Name, Datum, SUM(Anzahl) AS Anzahl, SUM(ROUND(Sekunden/3600,2)) AS Stunden, ROUND ((SUM(Anzahl) / SUM(Sekunden/3600)),2) AS DurchsSetProStunde, ROUND ((SUM(Sekunden) / SUM(Anzahl))/60, 2) AS DurchsMinutenProSet
+SELECT 'ZZZ_Gesamt' AS Mitarbeiter, '' AS Name, Datum, SUM(Anzahl) AS Anzahl, SUM(ROUND(Sekunden/3600,2)) AS Stunden, ROUND ((SUM(Anzahl) / SUM(Sekunden/3600)),2) AS DurchsSetProStunde, ROUND ((SUM(Sekunden) / SUM(Anzahl))/60, 2) AS DurchsMinutenProSet
 FROM (
   SELECT $1$ AS Datum, Mitarbei.UserName AS Mitarbeiter, Mitarbei.Name, COUNT(OPEtiKo.ID) AS Anzahl,
     CONVERT(float, DATEDIFF(minute, MIN(OPEtiKo.PackZeitpunkt), MAX(OPEtiKo.PackZeitpunkt))) AS Minuten,
@@ -37,7 +36,6 @@ FROM (
     AND Bereich.Bereich <> 'RR'
     AND OPEtiKo.ProduktionID IN ($2$)
     AND Mitarbei.UserName <> '120239'
-    AND Mitarbei.StandortID IN (-1, 2)
   GROUP BY Mitarbei.UserName, Mitarbei.Name
 ) a
 GROUP BY Datum;
