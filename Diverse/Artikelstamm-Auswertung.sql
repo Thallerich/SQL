@@ -14,7 +14,7 @@ HadKundenbestandBK AS (
   WHERE DATEDIFF(month, Teile.AusdienstDat, GETDATE()) <= 12
 ),
 WasShipped AS (
-  SELECT DISTINCT KdArti.ArtikelID, LsPo.ArtGroeID, CAST(1 AS bit) AS WasShipped12Months
+  SELECT DISTINCT KdArti.ArtikelID, LsPo.ArtGroeID, SUM(LsPo.Menge) AS Menge, CAST(1 AS bit) AS WasShipped12Months
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
@@ -24,9 +24,10 @@ WasShipped AS (
       FROM OPSets
       WHERE OPSets.ArtikelID = KdArti.ArtikelID
     )
+  GROUP BY KdArti.ArtikelID, LsPo.ArtGroeID
 ),
 WasShippedSet AS (
-  SELECT DISTINCT OPSets.Artikel1ID AS ArtikelID, CAST(1 AS bit) AS WasShippedSet12Months
+  SELECT DISTINCT OPSets.Artikel1ID AS ArtikelID, SUM(LsPo.Menge * OPSets.Menge) AS Menge, CAST(1 AS bit) AS WasShippedSet12Months
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
@@ -37,10 +38,11 @@ WasShippedSet AS (
       FROM OPSets AS SiSSet
       WHERE SiSSet.ArtikelID = OPSets.Artikel1ID
     )
+  GROUP BY OPSets.Artikel1ID
   
   UNION ALL
 
-  SELECT OPSets.Artikel1ID AS ArtikelID, CAST(1 AS bit) AS WasShippedSet12Months
+  SELECT OPSets.Artikel1ID AS ArtikelID, CAST(0 AS numeric(38,4)) AS Menge, CAST(1 AS bit) AS WasShippedSet12Months
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
@@ -64,23 +66,24 @@ SELECT Artikel.ArtikelNr,
   Abc.ABC AS [ABC-Klasse],
   Artikel.StueckGewicht AS [Stückgewicht (kg/Stück)],
   ProdHier.ProdHierBez AS Produkthierarchie,
-  IIF(LiefGroe.ID < 0 OR LiefGroe.ID IS NULL, LiefArtikel.SuchCode, LiefGroe.SuchCode) AS [aktueller Lieferant],
-  IIF(LiefTageGroe.ID < 0 OR LiefTageGroe.ID IS NULL, LiefTageArtikel.LiefTageBez, LiefTageGroe.LiefTageBez) AS Lieferzeiten,
+  /*IIF(LiefGroe.ID < 0 OR LiefGroe.ID IS NULL, LiefArtikel.SuchCode, LiefGroe.SuchCode) AS [aktueller Lieferant],
+  IIF(LiefTageGroe.ID < 0 OR LiefTageGroe.ID IS NULL, LiefTageArtikel.LiefTageBez, LiefTageGroe.LiefTageBez) AS Lieferzeiten,*/
   Artikel.BestNr AS Bestellnummer,
   Artikel.EkPreis AS [EK-Preis],
-  ArtGroe.Groesse AS [Größe],
+  /*ArtGroe.Groesse AS [Größe],
   [Qualität] = 
     CASE LagerArt.Neuwertig
       WHEN 1 THEN N'Neuware'
       WHEN 0 THEN N'Gebrauchtware'
       ELSE NULL
     END,
-  Standort.Bez AS [Lager-Standort],
+  Standort.Bez AS [Lager-Standort],*/
   SUM(ISNULL(Bestand.Bestand, 0)) AS Lagerbestand,
-  SUM(ISNULL(Bestand.Umlauf, 0)) AS [Kundenstand (nur Bekleidung)],
+  ISNULL((SELECT SUM(AG.Umlauf) FROM ArtGroe AS AG WHERE Artikel.ID = AG.ArtikelID), 0) AS [Kundenstand (nur Bekleidung)],
   SUM(ISNULL(Bestand.EntnahmeJahr, 0)) AS [Lagerabgang letzte 12 Monate],
-  ISNULL(HadBestand.Bestand12Monate, CAST(0 AS bit)) AS [War Bestand in den letzten 12 Monaten vorhanden?],
-  CAST(IIF(HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1, 1, 0) AS bit) AS [War beim Kunden im Bestand in den letzten 12 Monaten?]
+  SUM(ISNULL(WasShipped.Menge, ISNULL(WasShippedSet.WasShippedSet12Months, 0))) AS [Liefermenge letzte 12 Monate],
+  CAST(MAX(CAST(ISNULL(HadBestand.Bestand12Monate, CAST(0 AS bit)) AS int)) AS bit) AS [War Bestand in den letzten 12 Monaten vorhanden?],
+  CAST(MAX(CAST(IIF(HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1, 1, 0) AS int)) AS bit) AS [War beim Kunden im Bestand in den letzten 12 Monaten?]
 FROM Artikel
 LEFT OUTER JOIN ArtGroe ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Farbe ON Artikel.FarbeID = Farbe.ID
@@ -108,5 +111,6 @@ LEFT OUTER JOIN WasShipped ON WasShipped.ArtikelID = Artikel.ID AND IIF(WasShipp
 LEFT OUTER JOIN WasShippedSet ON WasShippedSet.ArtikelID = Artikel.ID
 WHERE Artikel.ID > 0
   AND Artikel.ArtiTypeID = 1
-  AND (Bestand.Bestand <> 0 OR Bestand.Umlauf <> 0 OR Bestand.EntnahmeJahr <> 0 OR HadBestand.Bestand12Monate = 1 OR HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1)
-GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez, Artikel.SuchCode2, Artikel.ArtikelNr2, Farbe.FarbeBez, Farbe2.FarbeBez, ArtMust.ArtMustBez, ArtKoll.ArtKollBez, ArtMisch.ArtMischBez, Bereich.BereichBez, ArtGru.ArtGruBez, ProdGru.ProdGruBez, WaschPrg.Bez, LiefArt.LiefArtBez, Abc.ABC, Artikel.StueckGewicht, ProdHier.ProdHierBez, IIF(LiefGroe.ID < 0 OR LiefGroe.ID IS NULL, LiefArtikel.SuchCode, LiefGroe.SuchCode), IIF(LiefTageGroe.ID < 0 OR LiefTageGroe.ID IS NULL, LiefTageArtikel.LiefTageBez, LiefTageGroe.LiefTageBez), Artikel.BestNr, Artikel.EKPreis, ArtGroe.Groesse, CASE LagerArt.Neuwertig WHEN 1 THEN N'Neuware' WHEN 0 THEN N'Gebrauchtware' ELSE NULL END, Standort.Bez, ISNULL(HadBestand.Bestand12Monate, CAST(0 AS bit)), CAST(IIF(HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1, 1, 0) AS bit);
+  AND LagerArt.IstAnfLager = 0
+  -- AND (Bestand.Bestand <> 0 OR Bestand.Umlauf <> 0 OR Bestand.EntnahmeJahr <> 0 OR HadBestand.Bestand12Monate = 1 OR HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1)
+GROUP BY Artikel.ID, Artikel.ArtikelNr, Artikel.ArtikelBez, Artikel.SuchCode2, Artikel.ArtikelNr2, Farbe.FarbeBez, Farbe2.FarbeBez, ArtMust.ArtMustBez, ArtKoll.ArtKollBez, ArtMisch.ArtMischBez, Bereich.BereichBez, ArtGru.ArtGruBez, ProdGru.ProdGruBez, WaschPrg.Bez, LiefArt.LiefArtBez, Abc.ABC, Artikel.StueckGewicht, ProdHier.ProdHierBez, /*IIF(LiefGroe.ID < 0 OR LiefGroe.ID IS NULL, LiefArtikel.SuchCode, LiefGroe.SuchCode), IIF(LiefTageGroe.ID < 0 OR LiefTageGroe.ID IS NULL, LiefTageArtikel.LiefTageBez, LiefTageGroe.LiefTageBez),*/ Artikel.BestNr, Artikel.EKPreis/*, ArtGroe.Groesse, CASE LagerArt.Neuwertig WHEN 1 THEN N'Neuware' WHEN 0 THEN N'Gebrauchtware' ELSE NULL END, Standort.Bez, ISNULL(HadBestand.Bestand12Monate, CAST(0 AS bit)), CAST(IIF(HadKundenbestandBK.Kunde12Monate = 1 OR WasShipped.WasShipped12Months = 1 OR WasShippedSet.WasShippedSet12Months = 1, 1, 0) AS bit)*/;
