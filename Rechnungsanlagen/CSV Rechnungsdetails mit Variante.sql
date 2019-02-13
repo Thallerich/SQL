@@ -1,44 +1,10 @@
-SELECT rechko.RechNr,
-  rechko.RechDat,
-  kunden.KdNr,
-  Kunden.Name1,
-  Kunden.Name2,
-  abteil.abteilung KoSt,
-  abteil.bez Kostenstelle,
-  artikel.ArtikelNr,
-  artikel.Artikelbez$LAN$ Bezeichnung,
-  kdarti.Variante AS V,
-  kdarti.VariantBez AS Variante,
-  RpoType.RpoTypeBez$LAN$ Typ,
-  SUM(rechpo.Menge1 + rechpo.Menge2 + rechpo.Menge3 + rechpo.Menge4 + rechpo.Menge5 + rechpo.Menge6) AS Menge,
-  rechpo.EPreis StckPr,
-  SUM(rechpo.GPreis) PosPr,
-  RechKo.RechNr AS BelegNr,
-  RechKo.RechDat AS BelegDat
-FROM kdarti,
-  artikel,
-  rechko,
-  rechpo,
-  abteil,
-  kunden,
-  rpotype
-WHERE rechpo.rechkoid = rechko.id
-  AND rpotype.id = rechpo.rpotypeID
-  AND kdarti.id = rechpo.kdartiid
-  AND artikel.id = kdarti.artikelid
-  AND abteil.id = rechpo.abteilid
-  AND kunden.id = rechko.kundenid
-  AND rechko.id = $RECHKOID$
-GROUP BY rechko.RechNr,
-  rechko.RechDat,
-  kunden.KdNr,
-  Kunden.Name1,
-  Kunden.Name2,
-  abteil.abteilung,
-  abteil.bez,
-  artikel.ArtikelNr,
-  artikel.Artikelbez$LAN$,
-  kdarti.Variante,
-  kdarti.VariantBez,
-  RpoType.RpoTypeBez$LAN$,
-  rechpo.EPreis;
+SELECT RechKo.RechNr AS BelegNr, RechKo.RechDat AS Belegdatum, Kunden.KdNr, Kunden.Name1, Kunden.Name2, Abteil.Abteilung AS KsSt, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, KdArti.Referenz AS Warengruppe, RPoType.RPoTypeBez$LAN$ AS Typ, SUM(RechPo.Menge) AS Menge, RechPo.EPreis AS [Einzelpreis], SUM(RechPo.GPreis) AS Positionssumme
+FROM RechPo
+JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+JOIN RPoType ON RechPo.RPoTypeID = RPoType.ID
+JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Abteil ON RechPo.AbteilID = Abteil.ID
+JOIN Kunden ON RechKo.KundenID = Kunden.ID
+WHERE RechKo.ID = $RECHKOID$
+GROUP BY RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.Name1, Kunden.Name2, Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdArti.Variante, KdArti.VariantBez, KdArti.Referenz, RPoType.RPoTypeBez$LAN$, RechPo.EPreis;
