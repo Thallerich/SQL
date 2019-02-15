@@ -1,7 +1,23 @@
 -- ######## Step 1 ################################
 BACKUP DATABASE Wozabal
 TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
-WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'AdvanTex-Backup', NAME = N'Full Backup of the AdvanTex-Database'
+WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'AdvanTex-Backup', NAME = N'Full Backup of the AdvanTex-Database';
+
+BACKUP DATABASE dbsystem
+TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\dbsystem_ATENADVANTEX01.bak'
+WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'dbsystem-Backup', NAME = N'Full Backup of the dbsystem-Database'
+
+BACKUP DATABASE [master]
+TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\master_ATENADVANTEX01.bak'
+WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'master-Backup', NAME = N'Full Backup of the master-Database';
+
+BACKUP DATABASE [model]
+TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\model_ATENADVANTEX01.bak'
+WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'model-Backup', NAME = N'Full Backup of the model-Database';
+
+BACKUP DATABASE [msdb]
+TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\msdb_ATENADVANTEX01.bak'
+WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'msdb-Backup', NAME = N'Full Backup of the msdb-Database';
 
 -- ######## Step 2 ################################
 
