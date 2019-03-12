@@ -24,7 +24,8 @@ UPDATE ResultSet SET ResultSet.Bestand = LagerBew.BestandNeu, ResultSet.Letzte_B
 FROM LagerBew, #TmpBestandStichtag BestandStichtag, #TmpResultSet ResultSet
 WHERE ResultSet.BestandID = BestandStichtag.BestandID
   AND LagerBew.BestandID = BestandStichtag.BestandID
-  AND LagerBew.Zeitpunkt = BestandStichtag.Zeitpunkt;
+  AND LagerBew.Zeitpunkt = BestandStichtag.Zeitpunkt
+  AND LagerBew.ID = (SELECT MAX(ID) FROM LagerBew AS LB WHERE LB.BestandID = BestandStichtag.BestandID AND LB.Zeitpunkt = BestandStichtag.Zeitpunkt);
 
 WITH CTE_Kundenstand AS (
   SELECT Artikel.ID AS ArtikelID, Standort.ID AS LagerID, COUNT(Teile.ID) AS AnzahlTeileKunden
