@@ -24,6 +24,6 @@ FROM OPTeile, (
   WHERE OPTeile.Status = N'R'
     AND OPTeile.LastErsatzFuerKdArtiID < 0
     AND Kunden.KdNr IN (2301, 9013, 6071, 7240, 11050, 20000, 24045, 19090)
-    AND Vsa.StandKonID = (SELECT StandKon.ID FROM StandKon WHERE StandKon.Bez = N'Produktion GP Enns')
+    AND Vsa.StandKonID = (SELECT StandKon.ID FROM StandKon WHERE StandKon.StandKonBez = N'Produktion GP Enns')
 ) AS x
 WHERE OPTeile.ID = x.ID;
