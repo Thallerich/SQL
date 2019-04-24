@@ -145,6 +145,9 @@ BEGIN TRANSACTION;
     SET VersandPath = N'\\srvatenadvtest.wozabal.int\AdvanTex\Export\Rechnungen_Testmandant\'
     WHERE VersandPath IS NOT NULL;
 
+  DELETE
+  FROM dbsystem.dbo.Sessions;
+
 COMMIT;
 
 ALTER DATABASE [Wozabal] SET NEW_BROKER WITH ROLLBACK IMMEDIATE;
