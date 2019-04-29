@@ -11,5 +11,8 @@ JOIN Mitarbei AS CreateMitarbei ON Teile.AnlageUserID_ = CreateMitarbei.ID
 JOIN Mitarbei AS UpdateMitarbei ON Teile.UserID_ = UpdateMitarbei.ID
 WHERE Teile.Anlage_ > CAST(N'01.04.2013 00:00:00' AS datetime)
   AND Artikel.BereichID = 100
+  AND Kunden.Status = N'A'
+  AND Vsa.Status = N'A'
+  AND Traeger.Status <> N'I'
   AND Status.ID IN ($2$)
   AND Kunden.KdGfID IN ($1$);
