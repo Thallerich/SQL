@@ -15,4 +15,5 @@ WHERE Teile.Anlage_ > CAST(N'01.04.2013 00:00:00' AS datetime)
   AND Vsa.Status = N'A'
   AND Traeger.Status <> N'I'
   AND Status.ID IN ($2$)
-  AND Kunden.KdGfID IN ($1$);
+  AND Kunden.KdGfID IN ($1$)
+  AND Kunden.StandortID IN ($3$);
