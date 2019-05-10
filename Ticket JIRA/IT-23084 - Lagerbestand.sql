@@ -48,7 +48,7 @@ WITH CTE_Kundenstand AS (
   GROUP BY Artikel.ID, Standort.ID
 ),
 CTE_Lagerbewegung AS (
-  SELECT Artikel.ID AS ArtikelID, Standort.ID AS LagerID, SUM(IIF(LagerBew.Differenz > 0, LagerBew.Differenz, 0)) AS Zugang, SUM(IIF(LagerBew.Differenz < 0, LagerBew.Differenz, 0)) AS Abgang
+  SELECT Artikel.ID AS ArtikelID, Standort.ID AS LagerID, SUM(IIF(LagerBew.Differenz > 0 AND LagerArt.Neuwertig = 1, LagerBew.Differenz, 0)) AS Zugang_Neu, SUM(IIF(LagerBew.Differenz > 0 AND LagerArt.Neuwertig = 0, LagerBew.Differenz, 0)) AS Zugang_Gebr, SUM(IIF(LagerBew.Differenz < 0 AND LagerArt.Neuwertig = 1, LagerBew.Differenz, 0)) AS Abgang_Neu, SUM(IIF(LagerBew.Differenz < 0 AND LagerArt.Neuwertig = 0, LagerBew.Differenz, 0)) AS Abgang_Gebr
   FROM LagerBew
   JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
@@ -61,13 +61,13 @@ CTE_Lagerbewegung AS (
     AND LagerBew.Zeitpunkt < @Stichtag
   GROUP BY Artikel.ID, Standort.ID
 )
-SELECT ArtikelNr, Artikelbezeichnung, [Lagerbestand Gesamt], [Bestand Neuware], [Bestand Gebrauchtware], Zugang, Abgang, [Teile bei Kunden], EKPreis, EKPreis * [Bestand Neuware] AS [Neuware Gesamt], Lagerstandort
+SELECT ArtikelNr, Artikelbezeichnung, [Lagerbestand Gesamt], [Bestand Neuware], [Bestand Gebrauchtware], Zugang_Neu AS [Zugang Neuware], Zugang_Gebr AS [Zugang Gebraucht], Abgang_Neu AS [Abgang Neuware], Abgang_Gebr AS [Abgang Gebraucht], [Teile bei Kunden], EKPreis, EKPreis * [Bestand Neuware] AS [Neuware Gesamt], Lagerstandort
 FROM (
-  SELECT BestandResult.ArtikelNr, BestandResult.Artikelbezeichnung, SUM(ISNULL(BestandResult.Bestand, 0)) AS [Lagerbestand Gesamt], SUM(IIF(ISNULL(BestandResult.Neuware, 0) = 1, ISNULL(BestandResult.Bestand, 0), 0)) AS [Bestand Neuware], SUM(IIF(ISNULL(BestandResult.Neuware, 0) = 0, ISNULL(BestandResult.Bestand, 0), 0)) AS [Bestand Gebrauchtware], CTE_Lagerbewegung.Zugang, CTE_Lagerbewegung.Abgang, ISNULL(CTE_Kundenstand.AnzahlTeileKunden, 0) AS [Teile bei Kunden], BestandResult.EKPreis, BestandResult.LagerStandort AS Lagerstandort
+  SELECT BestandResult.ArtikelNr, BestandResult.Artikelbezeichnung, SUM(ISNULL(BestandResult.Bestand, 0)) AS [Lagerbestand Gesamt], SUM(IIF(ISNULL(BestandResult.Neuware, 0) = 1, ISNULL(BestandResult.Bestand, 0), 0)) AS [Bestand Neuware], SUM(IIF(ISNULL(BestandResult.Neuware, 0) = 0, ISNULL(BestandResult.Bestand, 0), 0)) AS [Bestand Gebrauchtware], CTE_Lagerbewegung.Zugang_Neu, CTE_Lagerbewegung.Zugang_Gebr, CTE_Lagerbewegung.Abgang_Neu, CTE_Lagerbewegung.Abgang_Gebr, ISNULL(CTE_Kundenstand.AnzahlTeileKunden, 0) AS [Teile bei Kunden], BestandResult.EKPreis, BestandResult.LagerStandort AS Lagerstandort
   FROM #TmpResultSet AS BestandResult
   LEFT OUTER JOIN CTE_Kundenstand ON BestandResult.ArtikelID = CTE_Kundenstand.ArtikelID AND BestandResult.LagerID = CTE_Kundenstand.LagerID
   LEFT OUTER JOIN CTE_Lagerbewegung ON BestandResult.ArtikelID = CTE_Lagerbewegung.ArtikelID AND BestandResult.LagerID = CTE_Lagerbewegung.LagerID
   WHERE (BestandResult.Bestand > 0 OR CTE_Kundenstand.AnzahlTeileKunden > 0)
-  GROUP BY BestandResult.ArtikelNr, BestandResult.Artikelbezeichnung, CTE_Lagerbewegung.Zugang, CTE_Lagerbewegung.Abgang, BestandResult.EKPreis, BestandResult.LagerStandort, CTE_Kundenstand.AnzahlTeileKunden
+  GROUP BY BestandResult.ArtikelNr, BestandResult.Artikelbezeichnung, CTE_Lagerbewegung.Zugang_Neu, CTE_Lagerbewegung.Zugang_Gebr, CTE_Lagerbewegung.Abgang_Neu, CTE_Lagerbewegung.Abgang_Gebr, BestandResult.EKPreis, BestandResult.LagerStandort, CTE_Kundenstand.AnzahlTeileKunden
 ) AS x
 ORDER BY ArtikelNr, Lagerstandort;
