@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 06.11.2018, Version 2.0                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 15.05.2019, Version 2.1                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -32,11 +32,11 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   SELECT Export.OrderByAutoInc, Export.KopfPos,
     Belegart =
       CASE
-        WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'R' THEN N'AU'
+        WHEN Firma.SuchCode = N'SMW' AND Export.Art = N'R' THEN N'AU'
         WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'R' THEN N'VF'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
-        WHEN Firma.SuchCode = N'SAL' AND Export.Art = N'G' THEN N'GA'
+        WHEN Firma.SuchCode = N'SMW' AND Export.Art = N'G' THEN N'GA'
         WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'G' THEN N'VS'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
@@ -61,15 +61,15 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     KdGfFibuNr = 
       CASE
         WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
-        WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
-        WHEN Firma.SuchCode = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
+        WHEN Firma.SuchCode = N'SMW' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
+        WHEN Firma.SuchCode = N'SMW' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
         WHEN Firma.SuchCode = N'SMBU' THEN CAST(895 AS nchar(3))
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
       CASE Firma.SuchCode 
         WHEN N'UKLU' THEN 1260
-        WHEN N'SAL' THEN 1200
+        WHEN N'SMW' THEN 1200
         WHEN N'WOMI' THEN 1250
         WHEN N'SMBU' THEN 1900
         ELSE 1250
