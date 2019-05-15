@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 13.05.2019, Version 1.6                       **
+** Debitoren-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 15.05.2019, Version 1.7                       **
 ** laut Schnittstellenbeschreibung: Debitorenüberleitung.docx                                                                 **
 **                                                                                                                            **
 *******************************************************************************************************************************/
@@ -29,16 +29,16 @@ SELECT DE.Debitor AS CustomerNumber,
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SMBU' AND DE.Land = N'CZ' THEN N'CZ'
-      WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
+      WHEN DE.Firma = N'SMW' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'SMW' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
     END,
   SalesAreaDesc = 
     CASE
       WHEN DE.Firma = N'UKLU' THEN N'SÜD'
       WHEN DE.Firma = N'SMBU' AND DE.Land = N'CZ' THEN N'CZ'
-      WHEN DE.Firma = N'SAL' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
-      WHEN DE.Firma = N'SAL' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
+      WHEN DE.Firma = N'SMW' AND Standort.SuchCode = N'UKLU' THEN N'SÜD'
+      WHEN DE.Firma = N'SMW' AND Standort.SuchCode <> N'UKLU' THEN N'WEST'
       ELSE N'WEST'
     END,
   DE.Strasse AS MailAddress,
@@ -188,5 +188,5 @@ LEFT OUTER JOIN Sektor ON SektPLZ.SektorID = Sektor.ID
 WHERE KdGf.Status = N'A'
   AND KdGf.FibuNr <> 0
   AND Kunden.StandortID > 0
-  AND ((Firma.SuchCode = N'SAL' AND LEFT(CAST(Kunden.Debitor AS nchar(10)), 1) = N'4' AND LEN(CAST(Kunden.Debitor AS nchar(10))) = 8) OR (Firma.SuchCode <> N'SAL'))
+  AND ((Firma.SuchCode = N'SMW' AND LEFT(CAST(Kunden.Debitor AS nchar(10)), 1) = N'4' AND LEN(CAST(Kunden.Debitor AS nchar(10))) = 8) OR (Firma.SuchCode <> N'SMW'))
   AND DE.Debitor NOT IN (N'210400', N'210460', N'210470', N'210471', N'210472', N'210473', N'210475', N'210477', N'210479', N'210480', N'210483', N'210486', N'210495', N'210500', N'210501', N'210502', N'210703', N'210781', N'210970', N'213661', N'213972', N'213973', N'213978', N'213984', N'214180', N'214300', N'214400', N'292599', N'10000900', N'10001455', N'10003169', N'10003197', N'10003198', N'10003199', N'10003200', N'10003219', N'10003281', N'10003299', N'10003467', N'10003629');
