@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS #LieferMenge;
 DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SMBU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SAL: Salesianer; SMBU: Budweis
+DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SMBU');  --WOMI: Wozabal Miettex; UKLU: Umlauft; SMW: Salesianer; SMBU: Budweis
 DECLARE @DatumVon date = CAST(N'2019-04-01' AS date);
 DECLARE @DatumBis date = CAST(N'2019-04-30' AS date);
 DECLARE @FibuPeriode nchar(7) = (SELECT CAST(DATEPART(year, @DatumBis) AS nchar(4)) + N'-' + IIF(DATEPART(month, @DatumBis) < 10, N'0', N'') + CAST(DATEPART(month, @DatumBis) AS nchar(2)));
