@@ -10,10 +10,10 @@
 /* ++ Version 3.0 - 2018-08-24                                                                                                  ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNr int = 30189;
-DECLARE @KdNrABS int =  10004048;
+DECLARE @KdNr int = 30988;
+DECLARE @KdNrABS int =  10004353;
 
-DECLARE @Betrieb nchar(4) = N'KRAM';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'SMS';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
@@ -165,7 +165,7 @@ ORDER BY WEARERNUMBER, PRODUCTCODE;
 
 /* ++ uniqueitem.csv ++ */
 SELECT
-  @Betrieb AS BUSINESSUNIT,
+  RTRIM(@Betrieb) AS BUSINESSUNIT,
   RTRIM(Teile.Barcode) AS PRIMARYID,
   1 AS IDCODESEQUENCENUMBER,
   ISNULL(RTRIM(Teile.RentomatChip), N'') AS SECONDARYID,
