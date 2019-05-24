@@ -19,7 +19,7 @@ SET @XLSXImportSQL = N'SELECT CAST(BC as nvarchar(33)) AS Barcode, ' +
 INSERT INTO @ImportTable
 EXEC sp_executesql @XLSXImportSQL;
 
-SELECT * FROM @ImportTable ORDER BY Signalcode ASC;
+--SELECT * FROM @ImportTable ORDER BY Signalcode ASC;
 
 -- Signalcode 101, 105 -> Auf Rückgabe stellen
 
