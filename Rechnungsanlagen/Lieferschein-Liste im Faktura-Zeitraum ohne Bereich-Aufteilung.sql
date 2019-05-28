@@ -1,9 +1,11 @@
+DECLARE @RechKoID int = $RECHKOID$;
+
 DECLARE @MinDate date = (
   SELECT MIN(LsKo.Datum) AS MinDate
   FROM LsKo
   JOIN LsPo ON LsPo.LsKoID = LsKo.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
-  WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
+  WHERE RechPo.RechKoID = @RechKoID
 );
 
 DECLARE @MaxDate date = (
@@ -11,7 +13,7 @@ DECLARE @MaxDate date = (
   FROM LsKo
   JOIN LsPo ON LsPo.LsKoID = LsKo.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
-  WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
+  WHERE RechPo.RechKoID = @RechKoID
 );
 
 DECLARE @LsKdData TABLE (
@@ -20,7 +22,8 @@ DECLARE @LsKdData TABLE (
   AbteilID int,
   KsSt nvarchar(15),
   KsStBez nvarchar(80),
-  LsNr int
+  LsNr int,
+  LsDatum date
 );
 
 DROP TABLE IF EXISTS #LsDataRKoAnlag3062;
@@ -35,7 +38,7 @@ CREATE TABLE #LsDataRKoAnlag3062 (
 );
 
 INSERT INTO @LsKdData
-SELECT DISTINCT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr
+SELECT DISTINCT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr, LsKo.Datum AS LsDatum
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
@@ -49,7 +52,7 @@ WHERE LsKo.ID IN (
     AND LsPo.AbteilID IN (
       SELECT DISTINCT RechPo.AbteilID
       FROM RechPo
-      WHERE RechPo.RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 10014004)
+      WHERE RechPo.RechKoID = @RechKoID
     )
 );
 
@@ -57,6 +60,6 @@ INSERT INTO #LsDataRKoAnlag3062 (KundenID, KdNr, AbteilID, KsSt, KsStBez)
 SELECT DISTINCT KundenID, KdNr, AbteilID, KsSt, KsStBez
 FROM @LsKdData;
 
-UPDATE #LsDataRKoAnlag3062 SET LsNrs = (SELECT (STUFF((SELECT RTRIM(N', ' + CAST(LsNr AS char)) FROM @LsKdData AS x WHERE x.AbteilID = #LsDataRKoAnlag3062.AbteilID ORDER BY LsNr FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 2, '')));
+UPDATE #LsDataRKoAnlag3062 SET LsNrs = (SELECT (STUFF((SELECT N', ' + RTRIM(CAST(LsNr AS char)) + N': ' + FORMAT(LsDatum, 'd', 'de-at') FROM @LsKdData AS x WHERE x.AbteilID = #LsDataRKoAnlag3062.AbteilID ORDER BY LsNr FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 2, '')));
 
 SELECT * FROM #LsDataRKoAnlag3062 ORDER BY KsSt ASC;
