@@ -16,6 +16,21 @@ DECLARE @MaxDate date = (
   WHERE RechPo.RechKoID = @RechKoID
 );
 
+DECLARE @MinLeasDate date = (
+  SELECT RechKo.VonDatum
+  FROM RechKo
+  WHERE RechKo.ID = @RechKoID
+);
+
+DECLARE @MaxLeasDate date = (
+  SELECT RechKo.BisDatum
+  FROM RechKo
+  WHERE RechKo.ID = @RechKoID
+);
+
+IF (@MinDate IS NULL OR @MinDate > @MinLeasDate) SET @MinDate = @MinLeasDate;
+IF (@MaxDate IS NULL OR @MaxDate < @MaxLeasDate) SET @MaxDate = @MaxLeasDate;
+
 DECLARE @LsKdData TABLE (
   KundenID int,
   KdNr int,
