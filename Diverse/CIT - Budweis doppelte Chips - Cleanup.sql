@@ -14,16 +14,16 @@ DECLARE @ImportTableShipped TABLE (
 );
 
 SET @XLSXImportSQL = N'SELECT CAST(ArtikelID AS int) AS ArtikelID, ' +
-  N'CAST(Hex AS nvarchar(33)) AS Hexcode ' +
+  N'CAST(HexCode AS nvarchar(33)) AS Hexcode ' +
   N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [double$]);';
 
 INSERT INTO @ImportTableDouble
 EXEC sp_executesql @XLSXImportSQL;
 
-SET @XLSXImportSQL = N'SELECT CAST(Packzettel AS nvarchar(20)) AS AuftragsNr, ' +
-  N'CAST(Kommissionierdatum AS datetime) AS Kommissionierdatum, ' +
-  N'CAST(Hexcode AS nvarchar(33)) AS Hexcode, ' +
-  N'CAST(Kunde AS nvarchar(20)) AS Kunde ' +
+SET @XLSXImportSQL = N'SELECT CAST(PackingNumber AS nvarchar(20)) AS AuftragsNr, ' +
+  N'CAST(ConsignmentTime AS datetime) AS Kommissionierdatum, ' +
+  N'CAST(Sgtin96HexCode AS nvarchar(33)) AS Hexcode, ' +
+  N'CAST(Headword AS nvarchar(20)) AS Kunde ' +
   N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [shipped$]);';
 
 INSERT INTO @ImportTableShipped
@@ -49,7 +49,8 @@ WHERE OPTeile.ArtikelID <> DoubleChip.ArtikelID;
  WHERE OPTeile.Code IN (SELECT Hexcode FROM @ImportTableDouble);
   */
 
-SELECT OPTeile.ID AS OPTeileID, OPTeile.Status, OPTeile.Code, OPTeile.WegDatum, Kunden.KdNr AS AdvKdNr, Vsa.VsaNr AS AdvVsaNr, Kunden.SuchCode AS AdvKunde, ImportTableShipped.Kunde AS CITKundeListe, ImportTableShipped.AuftragsNr AS Packzettel, CITKunden.KdNr AS CITKdNr, CITKunden.SuchCode AS CITKunde, CITVsa.VsaNr AS CITVsaNr, OPTeile.WegGrundID
+--SELECT OPTeile.ID AS OPTeileID, OPTeile.Status, OPTeile.Code, OPTeile.WegDatum, Kunden.KdNr AS AdvKdNr, Vsa.VsaNr AS AdvVsaNr, Kunden.SuchCode AS AdvKunde, ImportTableShipped.Kunde AS CITKundeListe, ImportTableShipped.AuftragsNr AS Packzettel, CITKunden.KdNr AS CITKdNr, CITKunden.SuchCode AS CITKunde, CITVsa.VsaNr AS CITVsaNr, OPTeile.WegGrundID
+SELECT COUNT(DISTINCT OPTeile.ID) AS AnzRestore
 FROM OPTeile
 JOIN Vsa ON OPTeile.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -58,4 +59,23 @@ LEFT OUTER JOIN AnfKo ON ImportTableShipped.AuftragsNr = AnfKo.AuftragsNr
 LEFT OUTER JOIN Vsa AS CITVsa ON AnfKo.VsaID = CITVsa.ID
 LEFT OUTER JOIN Kunden AS CITKunden ON CITVsa.KundenID = CITKunden.ID
 WHERE OPTeile.Status = N'Z'
-  AND OPTeile.WegDatum BETWEEN N'2019-05-27' AND N'2019-05-28';
+  AND OPTeile.WegDatum BETWEEN N'2019-05-27' AND N'2019-05-28'
+  AND AnfKo.ID IS NOT NULL
+  AND AnfKo.LsKoID > 0;
+
+SELECT COUNT(DISTINCT OPTeile.ID) AS AnzRestore
+FROM OPTeile
+JOIN Vsa ON OPTeile.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN @ImportTableShipped AS ImportTableShipped ON OPTeile.Code = ImportTableShipped.Hexcode
+LEFT OUTER JOIN AnfKo ON ImportTableShipped.AuftragsNr = AnfKo.AuftragsNr
+LEFT OUTER JOIN Vsa AS CITVsa ON AnfKo.VsaID = CITVsa.ID
+LEFT OUTER JOIN Kunden AS CITKunden ON CITVsa.KundenID = CITKunden.ID
+WHERE AnfKo.ID IS NOT NULL
+  AND AnfKo.LsKoID > 0;
+
+SELECT COUNT(DISTINCT OPTeile.ID) AS AnzNeuCodiert
+FROM OPTeile
+WHERE OPTeile.Code IN (SELECT Hexcode FROM @ImportTableDouble)
+  AND OPTeile.Status = N'Z'
+  AND OPTeile.WegGrundID = 110;
