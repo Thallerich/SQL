@@ -4,16 +4,17 @@
 /* ++   wearer.csv                                                                                                              ++ */
 /* ++   wearinv.csv                                                                                                             ++ */
 /* ++   uniqueitem.csv                                                                                                          ++ */
+/* ++   scanhist.csv                                                                                                            ++ */
 /* ++ ATTENTION: No headers!                                                                                                    ++ */
 /* ++                                                                                                                           ++ */
-/* ++ Author: Stefan Thaller - 2018-06-21                                                                                       ++ */
-/* ++ Version 3.0 - 2018-08-24                                                                                                  ++ */
+/* ++ Author: Stefan Thaller                                                                                                    ++ */
+/* ++ Version 4.0 - 2019-06-12                                                                                                  ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNr int = 30988;
-DECLARE @KdNrABS int =  10004353;
+DECLARE @KdNr int = 30665;
+DECLARE @KdNrABS int =  10004075;
 
-DECLARE @Betrieb nchar(4) = N'SMS';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
+DECLARE @Betrieb nchar(4) = N'SAWR';  --Betriebscode des zukünftig für den Kunden zuständigen Betriebs
 DECLARE @QualKlass nchar(1) = N'G'; -- Qualitätsklasse; Standardwert, da in AdvanTex so nicht vorhanden
 
 DECLARE @Traeger TABLE (
@@ -235,3 +236,21 @@ JOIN Wae ON Kunden.WaeID = Wae.ID
 WHERE TraeArti.Menge > 0
   AND Teile.Status = N'Q'
 ORDER BY WEARERNUMBER, PRODUCTCODE;
+
+/* ++ scanhist.csv ++ */
+SELECT
+  FORMAT(Scans.DateTime, N'dd/MM/yyyy hh:mm:ss', N'en-US') AS SCANDATETIME,
+  RTRIM(@Betrieb) AS BUSINESSUNIT,
+  RTRIM(Teile.Barcode) AS PRIMARYID,
+  1 AS IDCODESEQUENCENUMBER,
+  IIF(Scans.Menge < 0, 2, 1) AS IN_OUT_SCAN,
+  N'' AS SCANSTATION,
+  N'' AS DELIVERYNOTENUMBER
+FROM @Traeger AS Traeger
+JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID
+JOIN Teile ON Teile.TraeArtiID = TraeArti.ID
+JOIN Scans ON Scans.TeileID = Teile.ID
+WHERE TraeArti.Menge > 0
+  AND Teile.Status = N'Q'
+  AND Scans.Menge <> 0
+ORDER BY SCANDATETIME;
