@@ -17,3 +17,10 @@ WHERE ID IN (SELECT ID FROM BewTeile)
     FROM Teile AS x
     WHERE x.Barcode = RIGHT(Teile.Barcode, 8)
   );
+
+SELECT DISTINCT Patchen.ID, Patchen.PatchenBez
+FROM Patchen
+JOIN PatchArt ON Patchen.ID = PatchArt.BewPatchenID
+JOIN Kunden ON PatchArt.ID = Kunden.PatchArtID
+JOIN Vsa ON Kunden.ID = Vsa.KundenID
+WHERE Vsa.StandKonID = 59;
