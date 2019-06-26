@@ -6,7 +6,7 @@ SELECT MAX(Scans.DateTime) AS "Letzter Scan", (
     ORDER BY Scans.DateTime DESC
   ) AS "Letztes Ziel", a.*
 FROM (
-  SELECT Teile.ID AS ID, Kunden.KdNr, Kunden.Name2, Kunden.Name3, Kunden.Name1 AS Kunde, RIGHT(RTRIM(Teile.Barcode), 10) AS Seriennummer, Artikel.ArtikelBez$LAN$ AS Artikel, Teile.Status, Teile.Eingang1, Teile.Ausgang1, ISNULL(RTRIM(Traeger.Nachname), '') + ' ' + ISNULL(RTRIM(Traeger.Vorname), '') AS Träger, Traeger.PersNr AS ZimmerNr, VSA.SuchCode, VSA.Bez AS Bez, VSA.Name1 AS Vsa, VSA.Name2 AS VSA2, VSA.Name3 AS VSA3, (SELECT TOP 1 Fach FROM ScanFach WHERE ScanFach.VsaID = Vsa.ID AND ScanFach.TraegerID = Traeger.ID) AS Fach
+  SELECT Teile.ID AS ID, Kunden.KdNr, Kunden.Name2, Kunden.Name3, Kunden.Name1 AS Kunde, Teile.Barcode AS Seriennummer, Artikel.ArtikelBez$LAN$ AS Artikel, Teile.Status, Teile.Eingang1, Teile.Ausgang1, ISNULL(RTRIM(Traeger.Nachname), '') + ' ' + ISNULL(RTRIM(Traeger.Vorname), '') AS Träger, Traeger.PersNr AS ZimmerNr, VSA.SuchCode, VSA.Bez AS Bez, VSA.Name1 AS Vsa, VSA.Name2 AS VSA2, VSA.Name3 AS VSA3, (SELECT TOP 1 Fach FROM ScanFach WHERE ScanFach.VsaID = Vsa.ID AND ScanFach.TraegerID = Traeger.ID) AS Fach
   FROM Teile, Traeger, VSA, Kunden, Artikel
   WHERE Teile.TraegerID = Traeger.ID
     AND Traeger.VSAID = VSA.ID
