@@ -16,7 +16,7 @@ DECLARE @bis datetime = DATEADD(day, 1, $2$);
 IF @RwConfigID < 0 BEGIN
   RAISERROR(N'Keine Pool-Restwertkonfiguration beim Kunden hinterlegt!', 16, 1);
 END ELSE BEGIN
-  SELECT Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Abteil.Abteilung AS KsStNr, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, COUNT(OPTeile.ID) AS Menge, OPTeile.RestwertInfo AS EPreis, COUNT(OPTeile.ID) * OPTeile.RestwertInfo AS GPreis, @@ERROR AS Fehler
+  SELECT Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Abteil.Abteilung AS KsStNr, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, COUNT(OPTeile.ID) AS Menge, RWAkt.RestwertInfo AS EPreis, COUNT(OPTeile.ID) * RWAkt.RestwertInfo AS GPreis, @@ERROR AS Fehler
   FROM OPTeile
   JOIN Vsa ON OPTeile.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -24,12 +24,12 @@ END ELSE BEGIN
   JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
   JOIN Abteil ON Vsa.AbteilID = Abteil.ID
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
-  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Awoche, @RwArt)
+  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Awoche, @RwArt) AS RWAkt
   WHERE Kunden.ID = $ID$
     AND Bereich.Bereich <> N'EW'
     AND (OPTeile.Status = N'W' OR (OPTeile.Status IN (N'A', N'Q') AND OPTeile.LastActionsID = 102)) -- Schwundteile oder Teile aktuell beim Kunden
     AND OPTeile.RechPoID = -1
     AND OPTeile.LastScanToKunde BETWEEN @von AND @bis
-  GROUP BY Vsa.SuchCode, Vsa.Bez, Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, OPTeile.RestwertInfo
+  GROUP BY Vsa.SuchCode, Vsa.Bez, Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, RWAkt.RestwertInfo
   ORDER BY KsStNr, Artikel.ArtikelNr, EPreis;
 END;
