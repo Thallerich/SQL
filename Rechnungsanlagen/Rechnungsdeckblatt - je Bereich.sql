@@ -36,7 +36,7 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich LIKE 'SH%')
+    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'FW', N'FW2', N'SHC'))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -46,7 +46,7 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich LIKE 'EW%')
+    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'EWT', N'EWB', N'LW'))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;

@@ -19,7 +19,7 @@ WHERE LsKontrolle.KdArtiID = KdArti.ID
   AND KdArti.ArtikelID = Artikel.ID;
 
 DELETE FROM #TmpLsKontrolle888e
-WHERE KdBerID IN (SELECT KdBer.ID FROM KdBer, Bereich WHERE KdBer.BereichID = Bereich.ID AND Bereich.Bereich = N'EW');
+WHERE KdBerID IN (SELECT KdBer.ID FROM KdBer, Bereich WHERE KdBer.BereichID = Bereich.ID AND Bereich.Bereich = N'LW');
 
 DELETE FROM #TmpLsKontrolle888e
 WHERE ArtikelID <= 0;

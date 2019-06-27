@@ -68,7 +68,7 @@ JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 LEFT OUTER JOIN BewKdAr ON BewKdAr.BewAbrID = BewAbr.ID AND BewKdAr.KdArtiID = KdArti.ID
 WHERE RechKo.ID = $RECHKOID$
-  AND Bereich.Bereich = N'CT';
+  AND Bereich.Bereich = N'PWS';
 
 SELECT LPS.Jahr,
   LPS.Monat,
