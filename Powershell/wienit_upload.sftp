@@ -1,0 +1,5 @@
+open -hostkey="*" sftp://wit_print:sox37NOr}maS@ssh.wienit.at/
+cd /salesianer/receive/PDF_AdvanTex/
+lcd \\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\zip\
+put *.zip
+exit
