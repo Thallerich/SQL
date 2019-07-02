@@ -27,6 +27,7 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
+    AND RechPo.ArtGruID <> (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe = N'BG1')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -36,7 +37,7 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'FW', N'FW2', N'SHC'))
+    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'FW', N'FWL', N'SHC'))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -46,7 +47,7 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'EWT', N'EWB', N'LW'))
+    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'LW')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -66,7 +67,7 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'OP')
+    AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'ST')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -86,7 +87,8 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BG')
+    AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
+    AND RechPo.ArtGruID = (SELECT ID FROM ArtGru WHERE ArtGru.Gruppe = N'BG1')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;

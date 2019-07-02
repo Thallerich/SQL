@@ -14,7 +14,7 @@ WHERE VsaAnf.VsaID = Vsa.ID
   AND Artikel.ArtGruID = ArtGru.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BetreuerID = Betreuer.ID
-  AND Artikel.BereichID = (SELECT ID FROM Bereich WHERE Bereich = N'OP')
+  AND Artikel.BereichID = (SELECT ID FROM Bereich WHERE Bereich = N'ST')
   AND ArtGru.ID NOT IN (SELECT ID FROM ArtGru WHERE ArtGruBez = N'Instrumente')
   AND Artikel.ID NOT IN (
     SELECT OPSets.ArtikelID

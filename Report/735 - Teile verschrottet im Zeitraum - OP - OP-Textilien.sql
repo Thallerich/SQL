@@ -8,5 +8,5 @@ WHERE OPTeile.VsaID = Vsa.ID
   AND OPTeile.WegGrundID = WegGrund.ID
   AND OPTeile.WegGrundID IN ($3$)
   AND OPTeile.WegDatum BETWEEN $1$ AND $2$
-  AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'OP')
+  AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'ST')
 ORDER BY Artikel.ArtikelBez$LAN$, OPTeile.WegDatum ASC;
