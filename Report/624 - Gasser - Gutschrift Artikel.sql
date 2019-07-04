@@ -12,7 +12,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdBer.BereichID = Bereich.ID
   AND Kunden.SichtbarID = 51
   AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
-  AND Bereich.Bereich IN ('SH', 'IK', 'TW', 'EW', 'EWB')
+  AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
   AND Kunden.KdNr NOT IN (30974)
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Bereich.Bereich, Bereich.BereichBez$LAN$, Kdarti.Variante
@@ -30,7 +30,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdBer.BereichID = Bereich.ID
   AND Kunden.SichtbarID = 51
   AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
-  AND Bereich.Bereich IN ('SH', 'IK', 'TW', 'EW', 'EWB')
+  AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
   AND Kunden.KdNr IN (30974)
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Bereich.Bereich, Bereich.BereichBez$LAN$, Kdarti.Variante

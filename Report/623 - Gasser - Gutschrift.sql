@@ -17,7 +17,7 @@ WHERE LsDaten.KdArtiID = KdArti.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND LsDaten.ZahlZielID = ZahlZiel.ID
-  AND Bereich.Bereich IN ('SH', 'IK', 'TW', 'EW', 'EWB')
+  AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsDaten.Kostenlos = 0
 GROUP BY LsDaten.KdNr, LsDaten.SuchCode, Bereich.Bereich, IIF(Kdarti.Variante = 'G', CONCAT(RTRIM(Bereich.BereichBez$LAN$),' 15%'), IIF(KdArti.Variante = 'Z', CONCAT(RTRIM(Bereich.BereichBez$LAN$), ' 100%'), RTRIM(Bereich.BereichBez$LAN$))), Kdarti.Variante, LsDaten._ManRabatt + KdBer.RabattWasch + ZahlZiel.Skonto * 1.2
 
@@ -39,7 +39,7 @@ WHERE LsDaten.KdArtiID = KdArti.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND LsDaten.ZahlZielID = ZahlZiel.ID
-  AND Bereich.Bereich IN ('SH', 'IK', 'TW', 'EW', 'EWB')
+  AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsDaten.Kostenlos = 0
 GROUP BY LsDaten.KdNr, LsDaten.SuchCode, Bereich.Bereich, IIF(Kdarti.Variante = 'G', CONCAT(RTRIM(Bereich.BereichBez$LAN$),' 15%'), IIF(KdArti.Variante = 'Z', CONCAT(RTRIM(Bereich.BereichBez$LAN$), ' 100%'), RTRIM(Bereich.BereichBez$LAN$))), Kdarti.Variante, LsDaten._ManRabatt + KdBer.RabattWasch + ZahlZiel.Skonto * 1.2
 
