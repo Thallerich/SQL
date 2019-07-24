@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 15.05.2019, Version 2.1                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 24.07.2019, Version 3.0                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -32,12 +32,12 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   SELECT Export.OrderByAutoInc, Export.KopfPos,
     Belegart =
       CASE
-        WHEN Firma.SuchCode = N'SMW' AND Export.Art = N'R' THEN N'AU'
-        WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'R' THEN N'VF'
+        WHEN Firma.SuchCode = N'FA14' AND Export.Art = N'R' THEN N'AU'
+        WHEN Firma.SuchCode = N'SMP' AND Export.Art = N'R' THEN N'VF'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
-        WHEN Firma.SuchCode = N'SMW' AND Export.Art = N'G' THEN N'GA'
-        WHEN Firma.SuchCode = N'SMBU' AND Export.Art = N'G' THEN N'VS'
+        WHEN Firma.SuchCode = N'FA14' AND Export.Art = N'G' THEN N'GA'
+        WHEN Firma.SuchCode = N'SMP' AND Export.Art = N'G' THEN N'VS'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         ELSE N'XX'
@@ -45,8 +45,8 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', Export.Bruttowert, Export.Bruttowert) AS Bruttowert,
     Steuerschl =
       CASE
-        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMBU' THEN N'6O'
-        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMBU' THEN N'33'
+        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMP' THEN N'6O'
+        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMP' THEN N'33'
         ELSE MwSt.Steuerschl
       END,
     Export.Debitor, Export.Gegenkonto, 
@@ -61,17 +61,17 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     KdGfFibuNr = 
       CASE
         WHEN Firma.SuchCode = N'UKLU' THEN CAST(93 AS nchar(3))
-        WHEN Firma.SuchCode = N'SMW' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
-        WHEN Firma.SuchCode = N'SMW' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
-        WHEN Firma.SuchCode = N'SMBU' THEN CAST(895 AS nchar(3))
+        WHEN Firma.SuchCode = N'FA14' AND Standort.SuchCode = N'UKLU' THEN CAST(90 AS nchar(3))  --Salesianer SÜD
+        WHEN Firma.SuchCode = N'FA14' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
+        WHEN Firma.SuchCode = N'SMP' THEN CAST(895 AS nchar(3))
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
       CASE Firma.SuchCode 
         WHEN N'UKLU' THEN 1260
-        WHEN N'SMW' THEN 1200
+        WHEN N'FA14' THEN 1200
         WHEN N'WOMI' THEN 1250
-        WHEN N'SMBU' THEN 1900
+        WHEN N'SMP' THEN 1900
         ELSE 1250
       END
   FROM #bookingexport AS Export
