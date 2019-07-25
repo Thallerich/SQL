@@ -1,6 +1,6 @@
 DECLARE @KdNr AS TABLE (KdNr int);
 
-INSERT INTO @KdNr VALUES (31207), (24045), (11050), (20000), (6071), (7240), (9013), (23041), (23042), (23032);
+INSERT INTO @KdNr VALUES (31207), (24045), (11050), (20000), (6071), (7240), (9013), (23041), (23042), (23032), (23037);
 
 DROP TABLE IF EXISTS #TmpSchwundAuto;
 DROP TABLE IF EXISTS #TmpVsaAnf;
@@ -21,6 +21,7 @@ WHERE ID IN (
   SELECT OPTeileID FROM #TmpSchwundAuto
 );
 
+/*
 SELECT VsaAnf.ID, VsaAnf.Status, (VsaAnf.Bestand - Schwund.Schwundmenge) - ((VsaAnf.Bestand - Schwund.Schwundmenge) % Artikel.Packmenge) + IIF((VsaAnf.Bestand - Schwund.Schwundmenge) % Artikel.Packmenge = 0, 0, Artikel.Packmenge) AS Bestand, VsaAnf.BestandIst - Schwund.Schwundmenge AS BestandIst
 INTO #TmpVsaAnf
 FROM VsaAnf, KdArti, Artikel, Vsa, Kunden, (
@@ -39,6 +40,7 @@ WHERE VsaAnf.KdArtiID = KdArti.ID
 UPDATE VsaAnf SET VsaAnf.BestandIst = VA.BestandIst
 FROM VsaAnf, #TmpVsaAnf AS VA
 WHERE VsaAnf.ID = VA.ID;
+*/
 
 DROP TABLE IF EXISTS #TmpSchwundAuto;
 DROP TABLE IF EXISTS #TmpVsaAnf;
