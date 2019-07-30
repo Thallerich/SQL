@@ -6,4 +6,7 @@ WHERE KdArti.Vorlaeufig = $TRUE$
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.ServiceID = ServiceMa.ID
   AND Kunden.KdGfID IN ($1$) 
+  AND Kunden.AdrArtID = 1
+  AND KdArti.Status <> N'I'
+  AND Kunden.Status <> N'I'
 ORDER BY Kunden.KdNr, Artikel.ArtikelNr, KdArti.Variante;
