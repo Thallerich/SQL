@@ -1,13 +1,17 @@
-BEGIN TRY
-  DROP TABLE #TmpTraeArch;
-END TRY
-BEGIN CATCH
-END CATCH;
+DROP TABLE IF EXISTS #TmpTraeArch;
+
+DECLARE @MasterWochenID int = (SELECT Rechko.MasterWochenID FROM RechKo WHERE RechKo.ID = $RECHKOID$);
+DECLARE @RKoBisDatum date = (SELECT RechKo.BisDatum FROM RechKo WHERE RechKo.ID = $RECHKOID$);
+
+IF @MasterWochenID <= 0
+BEGIN
+  SET @MasterWochenID = (SELECT Wochen.ID FROM Wochen WHERE Wochen.Woche = (SELECT Week.Woche FROM Week WHERE @RKoBisDatum BETWEEN Week.VonDat AND Week.BisDat))
+END;
 
 SELECT TraeArch.*
 INTO #TmpTraeArch
 FROM TraeArch
-WHERE TraeArch.WochenID = (SELECT RechKo.MasterWochenID FROM RechKo WHERE RechKo.ID = $RECHKOID$ AND RechKo.MasterWochenID > 0);
+WHERE TraeArch.WochenID = @MasterWochenID;
 
 SELECT Wochen.Woche, Traeger.Nachname, Traeger.Vorname, TraeArch.Menge, ArtGroe.Groesse, (
   SELECT TOP 1 SchrankNr
