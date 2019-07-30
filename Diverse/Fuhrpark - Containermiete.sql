@@ -16,3 +16,14 @@ WHERE ContHist.Zeitpunkt > CT.Ausgang
   --AND CAST(ContHist.Zeitpunkt AS DATE) < CAST('2019-04-01' AS DATE)
   AND ContHist.STATUS = 'e'
 ORDER BY KdNr, VsaNr, Kostenstelle, Container, [Abgeladen bei VSA];
+
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VSA, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Wochen.Woche AS Kalenderwoche, Artikel.ArtikelBez AS Artikelbezeichnung, AbtKdArW.EPreis AS Einzelpreis, AbtKdArW.Menge
+FROM AbtKdArW
+JOIN Kdarti ON AbtKdArW.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Abteil ON AbtKdArW.AbteilID = Abteil.ID
+JOIN Kunden oN Abteil.KundenID = Kunden.ID
+JOIN Vsa ON AbtKdArW.VsaID = Vsa.ID
+JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
+WHERE Artikel.ArtikelNr = N'CONTMIET'
+ORDER BY KdNr, VsaNr, Kostenstelle, Kalenderwoche;
