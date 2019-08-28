@@ -36,7 +36,7 @@ UPDATE Teile SET Teile.Status = N'U' WHERE Teile.Barcode IN (
 -- Alle anderen Codes -> Hinweistext anlegen
 
 INSERT INTO Hinweis (TeileID, Aktiv, Hinweis, BisWoche, Anzahl, EingabeDatum, EingabeMitarbeiID)
-SELECT Teile.ID AS TeileID, 1 AS Aktiv, N'<o> ' + RTRIM(IIF(i.Signaltext = N'', i.Signalbez, i.Signaltext)) AS Hinweis, N'2099-52' AS BisWoche, 1 AS Anzahl, i.Signalstartdatum AS Eingabedatum, (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'STHA') AS EingabeMitarbeiID
+SELECT Teile.ID AS TeileID, 1 AS Aktiv, N'<o> ' + RTRIM(IIF(i.Signaltext = N'', i.Signalbez, i.Signaltext)) AS Hinweis, N'2099-52' AS BisWoche, 1 AS Anzahl, i.Signalstartdatum AS Eingabedatum, (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'THALST') AS EingabeMitarbeiID
 FROM @ImportTable AS i
 JOIN Teile ON i.Barcode = Teile.Barcode
 WHERE i.Signalcode NOT IN (101, 105, 107);
