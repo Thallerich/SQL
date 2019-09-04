@@ -39,3 +39,11 @@ WHERE NOT EXISTS (
   FROM ArtGroe
   WHERE ArtGroe.ArtikelID = Artikel.ID AND ArtGroe.Groesse = SalArtikel.Groesse
 );
+
+INSERT INTO ArtiSich (ArtikelID, SichtbarID)
+SELECT Artikel.ID AS ArtikelID, -2 AS SichtbarID
+FROM Artikel
+WHERE Artikel.ArtikelNr IN (
+  SELECT DISTINCT ArtikelNr
+  FROM @SalArtikel
+);
