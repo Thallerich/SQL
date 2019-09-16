@@ -11,9 +11,9 @@ WITH PatchTeile AS (
     AND Teile.KaufwareModus <> 2
   GROUP BY Teile.VsaID, Teile.ArtGroeID, LagerArt.ID, LagerArt.LagerID, IIF(LagerArt.Neuwertig = 1 OR Teile.ErstWoche = Teile.Indienst, 1, 0), IIF(Teile.EinsatzGrund IN ('1', '2'), 1, 0)
 )
-SELECT y.Lagerstandort, Firma.Bez AS Firma, KdGF.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, y.SuchCode AS VsaStichwort, y.VsaBez AS VsaBezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, y.AnzGebr, y.AnzNeu, y.WertNeu, y.AnzNeuNeukunde, y.WertNeuNeukunde, Mitarbei.Nachname AS Betreuer
-FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
-  SELECT Vsa.KundenID, ArtGroe.ArtikelID, Vsa.SuchCode, Vsa.Bez AS VsaBez, Standort.Bez AS Lagerstandort,
+SELECT y.Lagerstandort, Firma.Bez AS Firma, KdGF.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, y.SuchCode AS VsaStichwort, y.VsaBez AS VsaBezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, y.AnzGebr, y.AnzNeu, y.WertNeu, y.AnzNeuNeukunde, y.WertNeuNeukunde, Mitarbei.Nachname AS Betreuer, Produktion.Bez AS Produktionsstandort
+FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, StandBer, Standort AS Produktion, (
+  SELECT Vsa.StandKonID, Vsa.KundenID, ArtGroe.ArtikelID, Vsa.SuchCode, Vsa.Bez AS VsaBez, Standort.Bez AS Lagerstandort,
     SUM(IIF(Neukunde = 1 AND Neu = 1, Anzahl, 0)) AnzNeuNeukunde,
     SUM(IIF(Neukunde = 0 AND Neu = 1, Anzahl, 0)) AnzNeu,
     SUM(IIF(Neu = 0, Anzahl, 0)) AnzGebr,
@@ -23,7 +23,7 @@ FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
   WHERE PatchTeile.ArtGroeID = ArtGroe.ID
     AND PatchTeile.VsaID = Vsa.ID
     AND PatchTeile.LagerID = Standort.ID
-  GROUP BY Vsa.KundenID, ArtGroe.ArtikelID, Vsa.SuchCode, Vsa.Bez, Standort.Bez
+  GROUP BY Vsa.StandKonID, Vsa.KundenID, ArtGroe.ArtikelID, Vsa.SuchCode, Vsa.Bez, Standort.Bez
 ) AS y
 WHERE y.KundenID = Kunden.ID
   AND y.ArtikelID = Artikel.ID
@@ -33,4 +33,7 @@ WHERE y.KundenID = Kunden.ID
   AND KdBer.KundenID = Kunden.ID
   AND KdBer.BereichID = 100
   AND Kunden.FirmaID = Firma.ID
+  AND y.StandKonID = StandBer.StandKonID
+  AND StandBer.BereichID = 100
+  AND StandBer.ProduktionID = Produktion.ID
 ORDER BY Firma, SGF, Kunden.KdNr;
