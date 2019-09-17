@@ -31,6 +31,15 @@ BEGIN
   SET @RwBerechnungsVar = (SELECT RwBerechnungsVar FROM RwConfig WHERE ID = @RwConfigID);
   SET @ArtiMaxWaschNull = 0;
 
+  IF @RwConfigID < 0 BEGIN
+    SET @ErrorCount = @ErrorCount + 1;
+
+    INSERT INTO @ErrorMessages
+    SELECT N'Kunde ohne Pool-Restwertkonfiguration: ' + RTRIM(CAST(Kunden.KdNr AS nchar(10))) + N' - ' + RTRIM(Kunden.SuchCode) AS ErrorMessage
+    FROM Kunden
+    WHERE Kunden.ID = @KundenID;
+  END;
+
   IF @RwBerechnungsVar = 2
   BEGIN
     SET @ArtiMaxWaschNull = (
@@ -80,9 +89,9 @@ END
 ELSE
 BEGIN
 
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, OPTeile.Code AS Chipcode, [Status].StatusBez$LAN$ AS [Status des Teils], REPLACE(Actions.ActionsBez$LAN$, N'OP ', N'') AS [Letzte Aktion], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Bereich.BereichBez$LAN$ AS Produktbereich, OPTeile.LastScanTime AS [Letzter Scan-Zeitpunkt], OPTeile.LastScanToKunde AS [Letzter Auslese-Zeitpunkt], CAST(IIF(OPTeile.RechPoID > 0 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil bereits Schwundverrechnet?], CAST(IIF(OPTeile.RechPoID < -1 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil für Schwundverrechnung gesperrt?], OPTeile.EKGrundAkt AS EKPreis, IIF(OPTeile.WegDatum IS NOT NULL, OPTeile.AusDRestwert, OPTeile.RestwertInfo) AS Restwert
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, OPTeile.Code AS Chipcode, [Status].StatusBez$LAN$ AS [Status des Teils], REPLACE(Actions.ActionsBez$LAN$, N'OP ', N'') AS [Letzte Aktion], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Bereich.BereichBez$LAN$ AS Produktbereich, OPTeile.LastScanTime AS [Letzter Scan-Zeitpunkt], OPTeile.LastScanToKunde AS [Letzter Auslese-Zeitpunkt], CAST(IIF(OPTeile.RechPoID > 0 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil bereits Schwundverrechnet?], CAST(IIF(OPTeile.RechPoID < -1 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil für Schwundverrechnung gesperrt?], OPTeile.EKGrundAkt AS EKPreis, OPRW.RestwertInfo AS Restwert
   FROM OPTeile
-  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Woche, @RwArt)
+  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Woche, @RwArt) AS OPRW
   JOIN Vsa ON OPTeile.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
