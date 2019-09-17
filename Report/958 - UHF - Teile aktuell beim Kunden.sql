@@ -4,17 +4,12 @@ DECLARE @ErrorMessages TABLE (
 
 DECLARE @ErrorCount int = 0;
 
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Zuerst Restwerte aktualisieren                                                                                            ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-DECLARE @AddCondition nvarchar(49) = N'OPTeile.ID IN (SELECT ID FROM #TmpSchwundTeile)';
 DECLARE @RwConfigID integer;
 DECLARE @RwArt integer = 1;
-DECLARE @SetAusdRestwert bit = 0;
 DECLARE @KundenID int;
 DECLARE @RwBerechnungsVar int;
 DECLARE @ArtiMaxWaschNull int;
+DECLARE @Woche nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat)
 
 DECLARE curHoldingKunden CURSOR FOR
   SELECT Kunden.ID
@@ -68,38 +63,6 @@ BEGIN
     END;
   END;
 
-  DROP TABLE IF EXISTS #TmpSchwundTeile;
-
-  IF @RwConfigID < 0 BEGIN
-    SET @ErrorCount = @ErrorCount + 1;
-
-    INSERT INTO @ErrorMessages
-    SELECT N'Kunde ohne Pool-Restwertkonfiguration: ' + RTRIM(CAST(Kunden.KdNr AS nchar(10))) + N' - ' + RTRIM(Kunden.SuchCode) AS ErrorMessage
-    FROM Kunden
-    WHERE Kunden.ID = @KundenID;
-
-  END ELSE BEGIN
-    IF @ArtiMaxWaschNull = 0
-    BEGIN
-      -- Schwundteile ermitteln
-      SELECT OPTeile.ID
-      INTO #TmpSchwundTeile
-      FROM OPTeile, Vsa, Kunden, RwConfig, RwConfPo
-      WHERE OPTeile.Status IN (N'Q', N'W')
-        AND OPTeile.RechPoID = -1
-        AND Kunden.RwPoolTeileConfigID = RwConfig.ID
-        AND RwConfPo.RwConfigID = RwConfig.ID
-        AND RwConfPo.RwArtID = 1
-        AND OPTeile.VsaID = Vsa.ID
-        AND Vsa.KundenID = Kunden.ID
-        AND (RWConfig.RWFakIVSA = 1 OR Vsa.Status = 'A')
-        AND Kunden.ID = @KundenID;
-
-      -- Restwerte aktualisieren
-      EXECUTE procOPTeileCalculateRestWerte @AddCondition, @RwConfigID, @RwArt, @SetAusdRestwert;
-    END;
-  END;
-
   FETCH NEXT FROM curHoldingKunden INTO @KundenID;
 END;
 
@@ -119,6 +82,7 @@ BEGIN
 
   SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, OPTeile.Code AS Chipcode, [Status].StatusBez$LAN$ AS [Status des Teils], REPLACE(Actions.ActionsBez$LAN$, N'OP ', N'') AS [Letzte Aktion], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Bereich.BereichBez$LAN$ AS Produktbereich, OPTeile.LastScanTime AS [Letzter Scan-Zeitpunkt], OPTeile.LastScanToKunde AS [Letzter Auslese-Zeitpunkt], CAST(IIF(OPTeile.RechPoID > 0 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil bereits Schwundverrechnet?], CAST(IIF(OPTeile.RechPoID < -1 AND [Status].[Status] = N'W', 1, 0) AS bit) AS [Teil für Schwundverrechnung gesperrt?], OPTeile.EKGrundAkt AS EKPreis, IIF(OPTeile.WegDatum IS NOT NULL, OPTeile.AusDRestwert, OPTeile.RestwertInfo) AS Restwert
   FROM OPTeile
+  CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Woche, @RwArt)
   JOIN Vsa ON OPTeile.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
