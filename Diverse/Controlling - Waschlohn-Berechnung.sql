@@ -3,9 +3,9 @@ DROP TABLE IF EXISTS #LieferMenge;
 DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 
-DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'WOMI');  --WOMI: Wozabal Miettex; UKLU: Umlauft; FA14: Salesianer; SMP: Budweis
-DECLARE @DatumVon date = CAST(N'2019-07-01' AS date);
-DECLARE @DatumBis date = CAST(N'2019-07-31' AS date);
+DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'FA14');  --WOMI: Wozabal Miettex; UKLU: Umlauft; FA14: Salesianer; SMP: Budweis
+DECLARE @DatumVon date = CAST(N'2019-09-01' AS date);
+DECLARE @DatumBis date = CAST(N'2019-09-30' AS date);
 DECLARE @FibuPeriode nchar(7) = (SELECT CAST(DATEPART(year, @DatumBis) AS nchar(4)) + N'-' + IIF(DATEPART(month, @DatumBis) < 10, N'0', N'') + CAST(DATEPART(month, @DatumBis) AS nchar(2)));
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
 DECLARE @MonatAbgeschlossen bit = (SELECT IIF(FiBuPeriode > @FibuPeriode, 1, 0) FROM Firma WHERE Firma.ID = @FirmaID);
@@ -73,6 +73,7 @@ JOIN (
         AND RechKo.FirmaID = @FirmaID
       )
     AND RPoType.StatistikGruppe = N'Leasing'
+    AND RechPo.EPreis <> 0
 ) AS x ON WL.Differenz = x.Differenz AND WL.VsaID = x.VsaID AND WL.KdArtiID = x.KdArtiID AND WL.BereichID = x.BereichID;
 
 UPDATE WL SET IsStueck = 1
