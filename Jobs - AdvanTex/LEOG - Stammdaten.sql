@@ -6,7 +6,7 @@ DECLARE @KundenID int;
 DECLARE Tourdaten CURSOR LOCAL FAST_FORWARD FOR
   SELECT Kunden.ID
   FROM Kunden
-  WHERE Kunden.StandortID = @StandortID
+  WHERE Kunden.StandortID = (SELECT ID FROM Standort WHERE SuchCode = N'LEOG') --@StandortID
     AND Kunden.Status = N'A';
 
 DROP TABLE IF EXISTS #VsaTourLief;
@@ -24,7 +24,7 @@ WHILE @@FETCH_STATUS = 0
 BEGIN
   INSERT INTO #VsaTourLief
   SELECT VsaTourID, LiefVsaTourID
-  FROM dbo.funcViewVsaTour(@KundenID, -1, @BereichID, CAST(GETDATE() AS date), 1)
+  FROM dbo.funcViewVsaTour(@KundenID, -1, 0, CAST(GETDATE() AS date), 1)
 
   FETCH NEXT FROM Tourdaten INTO @KundenID;
 END;
@@ -122,7 +122,7 @@ SELECT
   Samstagstour.LiefTour AS [Tourenbeschreibung Samstag],
   Sonntagstour.LiefTour AS [Tourenbeschreibung Sonntag],
   NULL AS Transportartikel,
-  NULL AS Fahrerbemerkung,
+  FBText.Memo AS Fahrerbemerkung,
   Vsa.VsaNr,
   Bereich.Bereich AS Aktivität,
   Vsa.ID AS VsaID,
@@ -212,6 +212,7 @@ LEFT OUTER JOIN (
 ) AS Sonntagstour ON Sonntagstour.VsaID = Vsa.ID AND Sonntagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN VsaTexte AS PZText ON PZText.KundenID = Kunden.ID AND (PZText.VsaID = Vsa.ID OR PZText.VsaID = -1) AND PZText.TextArtID = 5 AND CAST(GETDATE() AS date) BETWEEN PZText.VonDatum AND PZText.BisDatum
 LEFT OUTER JOIN VsaTexte AS LSText ON LSText.KundenID = Kunden.ID AND (LSText.VsaID = Vsa.ID OR LSText.VsaID = -1) AND LSText.TextArtID = 2 AND CAST(GETDATE() AS date) BETWEEN LSText.VonDatum AND LSText.BisDatum
+LEFT OUTER JOIN VsaTexte AS FBText ON FBText.KundenID = Kunden.ID AND (FBText.VsaID = Vsa.ID OR FBText.VsaID = -1) AND FBText.TextArtID = 20 AND CAST(GETDATE() AS date) BETWEEN FBText.VonDatum AND FBText.BisDatum
 /*WHERE Vsa.StandKonID IN (
   SELECT DISTINCT StandBer.StandKonID
   FROM StandBer
