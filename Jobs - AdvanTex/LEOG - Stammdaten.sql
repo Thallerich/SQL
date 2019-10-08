@@ -114,15 +114,16 @@ SELECT
       WHEN 7 THEN N'SO'
       ELSE NULL
     END,
-  Montagstour.LiefTour AS [Tourenbeschreibung Montag],
-  Dienstagstour.LiefTour AS [Tourenbeschreibung Dienstag],
-  Mittwochstour.LiefTour AS [Tourenbeschreibung Mittwoch],
-  Donnerstagstour.LiefTour AS [Tourenbeschreibung Donnerstag],
-  Freitagstour.LiefTour AS [Tourenbeschreibung Freitag],
-  Samstagstour.LiefTour AS [Tourenbeschreibung Samstag],
-  Sonntagstour.LiefTour AS [Tourenbeschreibung Sonntag],
+  Montagstour.LiefTourenBez AS [Tourenbeschreibung Montag],
+  Dienstagstour.LiefTourenBez AS [Tourenbeschreibung Dienstag],
+  Mittwochstour.LiefTourenBez AS [Tourenbeschreibung Mittwoch],
+  Donnerstagstour.LiefTourenBez AS [Tourenbeschreibung Donnerstag],
+  Freitagstour.LiefTourenBez AS [Tourenbeschreibung Freitag],
+  Samstagstour.LiefTourenBez AS [Tourenbeschreibung Samstag],
+  Sonntagstour.LiefTourenBez AS [Tourenbeschreibung Sonntag],
   NULL AS Transportartikel,
   FBText.Memo AS Fahrerbemerkung,
+  NULL AS Abteilung,
   Vsa.VsaNr,
   Bereich.Bereich AS Aktivität,
   Vsa.ID AS VsaID,
@@ -133,13 +134,13 @@ SELECT
   IIF(Freitagstour.Tour IS NOT NULL, N'FR', NULL) AS Freitag,
   IIF(Samstagstour.Tour IS NOT NULL, N'SA', NULL) AS Smastag,
   IIF(Sonntagstour.Tour IS NOT NULL, N'SO', NULL) AS Sonntag,
-  Montagstour.Tour AS [Tourenbeschreibung Montag],
-  Dienstagstour.Tour AS [Tourenbeschreibung Dienstag],
-  Mittwochstour.Tour AS [Tourenbeschreibung Mittwoch],
-  Donnerstagstour.Tour AS [Tourenbeschreibung Donnerstag],
-  Freitagstour.Tour AS [Tourenbeschreibung Freitag],
-  Samstagstour.Tour AS [Tourenbeschreibung Samstag],
-  Sonntagstour.Tour AS [Tourenbeschreibung Sonntag],
+  Montagstour.TourenBez AS [Tourenbeschreibung Montag],
+  Dienstagstour.TourenBez AS [Tourenbeschreibung Dienstag],
+  Mittwochstour.TourenBez AS [Tourenbeschreibung Mittwoch],
+  Donnerstagstour.TourenBez AS [Tourenbeschreibung Donnerstag],
+  Freitagstour.TourenBez AS [Tourenbeschreibung Freitag],
+  Samstagstour.TourenBez AS [Tourenbeschreibung Samstag],
+  Sonntagstour.TourenBez AS [Tourenbeschreibung Sonntag],
   PZText.Memo AS Packzettelbemerkung,
   LSText.Memo AS Lieferscheinbemerkung
 FROM Vsa
@@ -148,7 +149,7 @@ JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
 JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -157,7 +158,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 1 --Montag
 ) AS Montagstour ON Montagstour.VsaID = Vsa.ID AND Montagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -166,7 +167,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 2 --Dienstag
 ) AS Dienstagstour ON Dienstagstour.VsaID = Vsa.ID AND Dienstagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -175,7 +176,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 3 --Mittwoch
 ) AS Mittwochstour ON Mittwochstour.VsaID = Vsa.ID AND Mittwochstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -184,7 +185,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 4 --Donnerstag
 ) AS Donnerstagstour ON Donnerstagstour.VsaID = Vsa.ID AND Donnerstagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -193,7 +194,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 5 --Freitag
 ) AS Freitagstour ON Freitagstour.VsaID = Vsa.ID AND Freitagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -202,7 +203,7 @@ LEFT OUTER JOIN (
   WHERE Touren.Wochentag = 6 --Samstag
 ) AS Samstagstour ON Samstagstour.VsaID = Vsa.ID AND Samstagstour.KdBerID = KdBer.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
