@@ -92,7 +92,7 @@ SELECT
       WHEN 7 THEN N'SO'
       ELSE NULL
     END,
-  Smastag =
+  Samstag =
    CASE Samstagstour.LiefWochentag
       WHEN 1 THEN N'MO'
       WHEN 2 THEN N'DI'
@@ -126,7 +126,7 @@ SELECT
   NULL AS Abteilung,
   Vsa.VsaNr,
   Bereich.Bereich AS Aktivität,
-  Vsa.ID AS VsaID,
+  Vsa.ID AS VerteilstellenID,
   IIF(Montagstour.Tour IS NOT NULL, N'MO', NULL) AS Montag,
   IIF(Dienstagstour.Tour IS NOT NULL, N'DI', NULL) AS Dienstag,
   IIF(Mittwochstour.Tour IS NOT NULL, N'MI', NULL) AS Mittwoch,
