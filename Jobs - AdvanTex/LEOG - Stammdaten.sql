@@ -6,7 +6,7 @@ DECLARE @KundenID int;
 DECLARE Tourdaten CURSOR LOCAL FAST_FORWARD FOR
   SELECT Kunden.ID
   FROM Kunden
-  WHERE Kunden.StandortID = (SELECT ID FROM Standort WHERE SuchCode = N'LEOG') --@StandortID
+  WHERE Kunden.StandortID = @StandortID
     AND Kunden.Status = N'A';
 
 DROP TABLE IF EXISTS #VsaTourLief;
