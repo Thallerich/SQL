@@ -14,7 +14,7 @@ WHERE OPTeile.VsaID = Vsa.ID
   AND Kunden.KdNr IN (SELECT KdNr FROM @KdNr)
   AND OPTeile.Status = 'Q'
   AND OPTeile.LastActionsID = 102
-  AND DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) > 90;
+  AND DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) > 180;
 
 UPDATE OPTeile SET Status = 'W', LastActionsID = 116
 WHERE ID IN (
