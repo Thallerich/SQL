@@ -36,7 +36,7 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $ID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
-    AND RechPo.ArtGruID <> (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe = N'BG1')
+    AND RechPo.ArtGruID <> (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe = N'BGP')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -97,7 +97,7 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $ID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
-    AND RechPo.ArtGruID = (SELECT ID FROM ArtGru WHERE ArtGru.Gruppe = N'BG1')
+    AND RechPo.ArtGruID = (SELECT ID FROM ArtGru WHERE ArtGru.Gruppe = N'BGP')
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
