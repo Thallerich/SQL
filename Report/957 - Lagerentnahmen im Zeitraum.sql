@@ -13,7 +13,7 @@ WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND LagerArt.LagerID = Standort.ID
   AND LagerBew.BestandID = Bestand.ID
   AND LagerBew.LgBewCodID = LgBewCod.ID
-  AND LgBewCod.Code = 'BUCH' --nur Entnahmen
+  AND LgBewCod.IstEntnahme = 1
   AND Standort.ID IN ($3$)
   AND LagerBew.Zeitpunkt BETWEEN @von AND @bis
 GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, ArtGroe.Groesse, Lief.LiefNr, Lief.SuchCode, Standort.Bez, LagerArt.LagerArtBez$LAN$, CONVERT(char(4), DATEPART(year, LagerBew.Zeitpunkt)) + '/' + IIF(DATEPART(week, LagerBew.Zeitpunkt) < 10, '0' + CONVERT(char(1), DATEPART(week, LagerBew.Zeitpunkt)), CONVERT(char(2), DATEPART(week, LagerBew.Zeitpunkt)))

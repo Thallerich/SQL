@@ -11,7 +11,7 @@ SELECT LagerBew.BestandID, SUM(ABS(LagerBew.Differenz)) AS Entnahme
 INTO #TempLagerBew
 FROM LagerBew, LgBewCod
 WHERE LagerBew.LgBewCodID = LgBewCod.ID
-  AND (LgBewCod.Code = 'BUCH' OR LgBewCod.Code = 'DELB')
+  AND LgBewCod.IstEntnahme = 1
   AND LagerBew.Differenz < 0
   AND LagerBew.Zeitpunkt BETWEEN @Zvon AND @Zbis
 GROUP BY LagerBew.BestandID;
