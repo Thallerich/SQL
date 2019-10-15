@@ -187,6 +187,10 @@ BEGIN TRANSACTION;
     SET VersandPath = N'\\ATENADVANTEX01.wozabal.int\AdvanTex\Export\Rechnungen_Testmandant\'
     WHERE VersandPath IS NOT NULL;
 
+  UPDATE Settings
+    SET ValueMemo = N'3048'
+    WHERE Parameter = N'FAHRER_APP_PORT';
+
 COMMIT;
 
 DBCC SHRINKFILE (Wozabal_Log);
