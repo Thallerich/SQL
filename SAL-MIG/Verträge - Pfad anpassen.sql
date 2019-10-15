@@ -1,0 +1,1 @@
+UPDATE Document SET ExternalFileName = REPLACE(ExternalFileName, N'U:\', N'\\sal.co.at\daten\custcon\') WHERE ExternalFileName LIKE N'U:\%'
