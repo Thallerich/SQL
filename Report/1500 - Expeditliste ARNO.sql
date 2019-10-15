@@ -9,4 +9,11 @@ JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
 JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
 WHERE StandBer.ExpeditionID = $1$
   AND Touren.Wochentag = @Wochentag
+  AND EXISTS (
+    SELECT AnfKo.*
+    FROM AnfKo
+    WHERE AnfKo.VsaID = Vsa.ID
+      AND AnfKo.TourenID = Touren.ID
+      AND AnfKo.Lieferdatum = $2$
+  )
 ORDER BY Touren.Tour, Kunden.KdNr, VsaBez;
