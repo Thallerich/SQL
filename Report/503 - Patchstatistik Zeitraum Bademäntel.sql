@@ -16,7 +16,7 @@ WHERE y.KundenID = Kunden.ID
   AND Kunden.FirmaID = Firma.ID
   AND y.ArtikelID = Artikel.ID
   AND KdGF.ID = Kunden.KdGfID
-  AND Artikel.BereichID = 102
+  AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
   AND KdBer.BetreuerID = Mitarbei.ID
   AND KdBer.KundenID = Kunden.ID 
   AND KdBer.BereichID = Artikel.BereichID

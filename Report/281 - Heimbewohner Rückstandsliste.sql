@@ -16,7 +16,6 @@ FROM (
     AND (Teile.Eingang1 > Teile.Ausgang1 OR Teile.Ausgang1 IS NULL)
     AND Teile.Status IN ('Q', 'M', 'N')
     AND Teile.ArtikelID = Artikel.ID
-    AND Artikel.BereichID <> 2696
     AND Teile.AltenheimModus = 1
   ) a, Scans
 WHERE a.TeileID = Scans.TeileID
