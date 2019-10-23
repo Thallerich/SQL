@@ -1,6 +1,5 @@
 $src = "\\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\AdvantexPDF\"
 $conv = "\\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\GSPDF\"
-$procpdf = "\\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\AdvantexPDF\processed\"
 $proczip = "\\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\zip\"
 $ftpdone = "\\atenadvantex01.wozabal.int\AdvanTex\Data\Export\WienIT\zip\sent\"
 
@@ -10,7 +9,7 @@ $7zpath = "'C:\Program Files\7-Zip\7z.exe'"
 Get-ChildItem -Path "$($src)*.pdf" | ForEach-Object {
     $filename = $_.Name
     Invoke-Expression("& $($gspath) -sDEVICE=pdfwrite -dCompatibilityLevel=`"1.4`" -o `"$($conv)$($filename)`" `"$($src)$($filename)`"")
-    Move-Item -Path "$($src)$($filename)" -Destination "$($procpdf)$($filename)" -Force
+    Remove-Item -Path "$($src)$($filename)"
 }
 
 If(Test-Path -Path ("$($src)*.txt")) {
@@ -34,7 +33,7 @@ Start-Sleep -Seconds 5  ## Wait 5 Seconds before running again
 Get-ChildItem -Path "$($src)\EuP\*.pdf" | ForEach-Object {
     $filename = $_.Name
     Invoke-Expression("& $($gspath) -sDEVICE=pdfwrite -dCompatibilityLevel=`"1.4`" -o `"$($conv)$($filename)`" `"$($src)\EuP\$($filename)`"")
-    Move-Item -Path "$($src)\EuP\$($filename)" -Destination "$($procpdf)\EuP\$($filename)" -Force
+    Remove-Item -Path "$($src)\EuP\$($filename)"
 }
 
 If(Test-Path -Path ("$($src)\EuP\*.txt")) {
