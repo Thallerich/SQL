@@ -121,7 +121,7 @@ SELECT
   Freitagstour.LiefTourenBez AS [Tourenbeschreibung Freitag],
   Samstagstour.LiefTourenBez AS [Tourenbeschreibung Samstag],
   Sonntagstour.LiefTourenBez AS [Tourenbeschreibung Sonntag],
-  NULL AS Transportartikel,
+  LiefArt.LiefArtBez AS Transportartikel,
   FBText.Memo AS Fahrerbemerkung,
   NULL AS Abteilung,
   Vsa.VsaNr,
@@ -148,6 +148,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
 JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
+JOIN LiefArt ON Vsa.LiefArtID = LiefArt.ID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
   FROM VsaTour
