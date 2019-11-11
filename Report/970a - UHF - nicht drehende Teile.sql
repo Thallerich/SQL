@@ -1,5 +1,6 @@
 DECLARE @RwArt integer = 1;
 DECLARE @Woche nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @filter datetime = CAST(CAST($1$ AS nchar(10))+ N' 00:00:00' AS datetime);
 
 SELECT Kunden.ID AS KundenID, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, OPTeile.Code, OPTeile.Code2, OPTeile.LastScanToKunde AS [letzter Ausgangsscan], OPTeile.Erstwoche, OPRW.RestwertInfo AS Restwert
 FROM OPTeile
@@ -13,4 +14,5 @@ WHERE Kunden.ID = $ID$
   AND Artikel.EAN IS NOT NULL
   AND LENGTH(OPTeile.Code) = 24
   AND Artikel.BereichID <> 104
+  AND OPTeile.LastScanToKunde > @filter
 ORDER BY Kunden.KdNr, Vsa.VsaNr, Artikel.ArtikelNr;
