@@ -39,13 +39,13 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE Artikel.ArtikelNr = N'N006000';
 
 -- Check for missing NS-KdArti
-SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode FROM @KdArti AS KdArti JOIN Kunden ON KdArti.KundenID = Kunden.ID WHERE KdArti.NsNeuID < 0;
+-- SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode FROM @KdArti AS KdArti JOIN Kunden ON KdArti.KundenID = Kunden.ID WHERE KdArti.NsNeuID < 0;
 
-/* UPDATE Traeger SET Traeger.Namenschild1 = T.Namenschild1_Neu, Traeger.Namenschild2 = NULL, Traeger.Namenschild3 = NULL, Traeger.Namenschild4 = NULL
+UPDATE Traeger SET Traeger.Namenschild1 = T.Namenschild1_Neu, Traeger.Namenschild2 = NULL, Traeger.Namenschild3 = NULL, Traeger.Namenschild4 = NULL
 FROM Traeger
 JOIN @Traeger AS T ON T.TraegerID = Traeger.ID;
 
 UPDATE KdArti SET KdArti.NsKdArtiID = NsArti.NsNeuID
 FROM KdArti
 JOIN @KdArti AS NsArti ON NsArti.KdArtiID = KdArti.ID
-WHERE NsArti.NsNeuID > 0; */
+WHERE NsArti.NsNeuID > 0;
