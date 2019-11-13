@@ -1,0 +1,1 @@
+DELETE FROM VsaTexte WHERE REPLACE(REPLACE(Memo, CHAR(10), ''), CHAR(13), '') = '';
