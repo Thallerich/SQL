@@ -3,11 +3,12 @@ DECLARE @BereichID int = (SELECT ID FROM Bereich WHERE Bereich = N'FW');
 
 DECLARE @KundenID int;
 
+DECLARE @Kunden TABLE (
+  KundenID int
+);
+
 DECLARE Tourdaten CURSOR LOCAL FAST_FORWARD FOR
-  SELECT Kunden.ID
-  FROM Kunden
-  WHERE Kunden.StandortID = @StandortID
-    AND Kunden.Status = N'A';
+  SELECT KundenID FROM @Kunden;
 
 DROP TABLE IF EXISTS #VsaTourLief;
 
@@ -15,6 +16,18 @@ CREATE TABLE #VsaTourLief (
   VsaTourID int,
   LiefVsaTourID int
 );
+
+INSERT INTO @Kunden
+SELECT DISTINCT Kunden.ID
+FROM VsaTour
+JOIN Vsa ON VsaTour.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Touren ON VsaTour.TourenID = Touren.ID
+JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
+WHERE Touren.ExpeditionID = @StandortID
+  AND KdBer.BereichID = @BereichID
+  AND Vsa.Status = N'A'
+  AND Kunden.Status = N'A';
 
 OPEN Tourdaten;
 
@@ -122,7 +135,15 @@ SELECT
   Samstagstour.LiefTourenBez AS [Tourenbeschreibung Samstag],
   Sonntagstour.LiefTourenBez AS [Tourenbeschreibung Sonntag],
   LiefArt.LiefArtBez AS Transportartikel,
-  FBText.Memo AS Fahrerbemerkung,
+  Fahrerbemerkung = (
+    SELECT FBText.Memo + N'  '
+    FROM VsaTexte AS FBText 
+    WHERE FBText.KundenID = Kunden.ID 
+      AND (FBText.VsaID = Vsa.ID OR FBText.VsaID = -1) 
+      AND FBText.TextArtID = 20 
+      AND CAST(GETDATE() AS date) BETWEEN FBText.VonDatum AND FBText.BisDatum
+    FOR XML PATH('')
+  ),
   NULL AS Abteilung,
   Vsa.VsaNr,
   Bereich.Bereich AS Aktivität,
@@ -141,8 +162,24 @@ SELECT
   Freitagstour.TourenBez AS [Tourenbeschreibung Freitag],
   Samstagstour.TourenBez AS [Tourenbeschreibung Samstag],
   Sonntagstour.TourenBez AS [Tourenbeschreibung Sonntag],
-  PZText.Memo AS Packzettelbemerkung,
-  LSText.Memo AS Lieferscheinbemerkung
+  Packzettelbemerkung = (
+    SELECT PZText.Memo + N'  '
+    FROM VsaTexte AS PZText
+    WHERE PZText.KundenID = Kunden.ID
+      AND (PZText.VsaID = Vsa.ID OR PZText.VsaID = -1)
+      AND PZText.TextArtID = 5
+      AND CAST(GETDATE() AS date) BETWEEN PZText.VonDatum AND PZText.BisDatum
+    FOR XML PATH('')
+  ),
+  Lieferscheinbemerkung = (
+    SELECT LSText.Memo + N'  '
+    FROM VsaTexte AS LSText
+    WHERE LSText.KundenID = Kunden.ID
+      AND (LSText.VsaID = Vsa.ID OR LSText.VsaID = -1)
+      AND LSText.TextArtID = 2
+      AND CAST(GETDATE() AS date) BETWEEN LSText.VonDatum AND LSText.BisDatum
+    FOR XML PATH('')
+  )
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
@@ -212,17 +249,11 @@ LEFT OUTER JOIN (
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 7 --Sonntag
 ) AS Sonntagstour ON Sonntagstour.VsaID = Vsa.ID AND Sonntagstour.KdBerID = KdBer.ID
-LEFT OUTER JOIN VsaTexte AS PZText ON PZText.KundenID = Kunden.ID AND (PZText.VsaID = Vsa.ID OR PZText.VsaID = -1) AND PZText.TextArtID = 5 AND CAST(GETDATE() AS date) BETWEEN PZText.VonDatum AND PZText.BisDatum
-LEFT OUTER JOIN VsaTexte AS LSText ON LSText.KundenID = Kunden.ID AND (LSText.VsaID = Vsa.ID OR LSText.VsaID = -1) AND LSText.TextArtID = 2 AND CAST(GETDATE() AS date) BETWEEN LSText.VonDatum AND LSText.BisDatum
-LEFT OUTER JOIN VsaTexte AS FBText ON FBText.KundenID = Kunden.ID AND (FBText.VsaID = Vsa.ID OR FBText.VsaID = -1) AND FBText.TextArtID = 20 AND CAST(GETDATE() AS date) BETWEEN FBText.VonDatum AND FBText.BisDatum
-/*WHERE Vsa.StandKonID IN (
+/* WHERE Vsa.StandKonID IN (
   SELECT DISTINCT StandBer.StandKonID
   FROM StandBer
-  JOIN Standort ON StandBer.ProduktionID = Standort.ID
-  WHERE Standort.SuchCode = @Produktion
-)*/
-WHERE Kunden.StandortID = @StandortID
-  AND Vsa.Status = N'A'
-  AND Kunden.Status = N'A'
+  WHERE StandBer.ProduktionID = @StandortID
+) */
+WHERE Kunden.ID IN (SELECT KundenID FROM @Kunden)
   AND Bereich.ID = @BereichID
 ORDER BY Kundennummer ASC;
