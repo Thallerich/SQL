@@ -1,12 +1,12 @@
 DECLARE @StandortID int = (SELECT ID FROM Standort WHERE SuchCode = N'LEOG');
 DECLARE @BereichID int = (SELECT ID FROM Bereich WHERE Bereich = N'FW');
 
-DECLARE @Kunden TABLE (
-  KundenID int
+DECLARE @Vsa TABLE (
+  VsaID int
 );
 
-INSERT INTO @Kunden
-SELECT DISTINCT Kunden.ID
+INSERT INTO @Vsa
+SELECT DISTINCT VsaID
 FROM VsaTour
 JOIN Vsa ON VsaTour.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -26,7 +26,7 @@ FROM (
   JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-  WHERE Kunden.ID IN (SELECT KundenID FROM @Kunden)
+  WHERE Vsa.ID IN (SELECT VsaID FROM @Vsa)
     AND KdBer.BereichID = @BereichID
     AND VsaAnf.Status = N'A'
 ) AS ArtiData
