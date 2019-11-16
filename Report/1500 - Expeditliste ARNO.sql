@@ -15,5 +15,6 @@ WHERE StandBer.ExpeditionID = $1$
     WHERE AnfKo.VsaID = Vsa.ID
       AND AnfKo.TourenID = Touren.ID
       AND AnfKo.Lieferdatum = $2$
+      AND AnfKo.LsKoID < 0            -- VSAs, für die der Packzettel bereits abgeschlossen wurde, ausblenden
   )
 ORDER BY Touren.Tour, Kunden.KdNr, VsaBez;
