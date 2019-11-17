@@ -1,5 +1,4 @@
 DECLARE @StandortID int = (SELECT ID FROM Standort WHERE SuchCode = N'LEOG');
-DECLARE @BereichID int = (SELECT ID FROM Bereich WHERE Bereich = N'FW');
 
 DECLARE @Vsa TABLE (
   VsaID int
@@ -13,7 +12,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Touren ON VsaTour.TourenID = Touren.ID
 JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
 WHERE Touren.ExpeditionID = @StandortID
-  AND KdBer.BereichID = @BereichID
+  AND KdBer.BereichID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
   AND Vsa.Status = N'A'
   AND Kunden.Status = N'A';
 
@@ -27,7 +26,7 @@ FROM (
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   WHERE Vsa.ID IN (SELECT VsaID FROM @Vsa)
-    AND KdBer.BereichID = @BereichID
+    AND KdBer.BereichID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
     AND VsaAnf.Status = N'A'
 ) AS ArtiData
 PIVOT (
