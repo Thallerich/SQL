@@ -127,13 +127,83 @@ SELECT DISTINCT
       WHEN 7 THEN N'SO'
       ELSE NULL
     END,
-  Montagstour.LiefTourenBez AS [Tourenbeschreibung Montag],
-  Dienstagstour.LiefTourenBez AS [Tourenbeschreibung Dienstag],
-  Mittwochstour.LiefTourenBez AS [Tourenbeschreibung Mittwoch],
-  Donnerstagstour.LiefTourenBez AS [Tourenbeschreibung Donnerstag],
-  Freitagstour.LiefTourenBez AS [Tourenbeschreibung Freitag],
-  Samstagstour.LiefTourenBez AS [Tourenbeschreibung Samstag],
-  Sonntagstour.LiefTourenBez AS [Tourenbeschreibung Sonntag],
+  [Tourenbeschreibung Montag] = 
+    CASE LEFT(Montagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Montagstour.LiefTour), 3)
+      ELSE Montagstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Dienstag] = 
+    CASE LEFT(Dienstagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Dienstagstour.LiefTour), 3)
+      ELSE Dienstagstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Mittwoch] = 
+    CASE LEFT(Mittwochstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Mittwochstour.LiefTour), 3)
+      ELSE Mittwochstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Donnerstag] = 
+    CASE LEFT(Donnerstagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Donnerstagstour.LiefTour), 3)
+      ELSE Donnerstagstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Freitag] = 
+    CASE LEFT(Freitagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Freitagstour.LiefTour), 3)
+      ELSE Freitagstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Samstag] = 
+    CASE LEFT(Samstagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Samstagstour.LiefTour), 3)
+      ELSE Samstagstour.LiefTourenBez
+    END,
+  [Tourenbeschreibung Sonntag] = 
+    CASE LEFT(Sonntagstour.LiefTour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Sonntagstour.LiefTour), 3)
+      ELSE Sonntagstour.LiefTourenBez
+    END,
   LiefArt.LiefArtBez AS Transportartikel,
   Fahrerbemerkung = (
     SELECT FBText.Memo + N'  '
@@ -155,13 +225,83 @@ SELECT DISTINCT
   IIF(Freitagstour.Tour IS NOT NULL, N'FR', NULL) AS Freitag_1,
   IIF(Samstagstour.Tour IS NOT NULL, N'SA', NULL) AS Smastag_1,
   IIF(Sonntagstour.Tour IS NOT NULL, N'SO', NULL) AS Sonntag_1,
-  Montagstour.TourenBez AS [Tourenbeschreibung Montag_1],
-  Dienstagstour.TourenBez AS [Tourenbeschreibung Dienstag_1],
-  Mittwochstour.TourenBez AS [Tourenbeschreibung Mittwoch_1],
-  Donnerstagstour.TourenBez AS [Tourenbeschreibung Donnerstag_1],
-  Freitagstour.TourenBez AS [Tourenbeschreibung Freitag_1],
-  Samstagstour.TourenBez AS [Tourenbeschreibung Samstag_1],
-  Sonntagstour.TourenBez AS [Tourenbeschreibung Sonntag_1],
+  [Tourenbeschreibung Montag_1] = 
+    CASE LEFT(Montagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Montagstour.Tour), 3)
+      ELSE Montagstour.TourenBez
+    END,
+  [Tourenbeschreibung Dienstag_1] = 
+    CASE LEFT(Dienstagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Dienstagstour.Tour), 3)
+      ELSE Dienstagstour.TourenBez
+    END,
+  [Tourenbeschreibung Mittwoch_1] = 
+    CASE LEFT(Mittwochstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Mittwochstour.Tour), 3)
+      ELSE Mittwochstour.TourenBez
+    END,
+  [Tourenbeschreibung Donnerstag_1] = 
+    CASE LEFT(Donnerstagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Donnerstagstour.Tour), 3)
+      ELSE Donnerstagstour.TourenBez
+    END,
+  [Tourenbeschreibung Freitag_1] = 
+    CASE LEFT(Freitagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Freitagstour.Tour), 3)
+      ELSE Freitagstour.TourenBez
+    END,
+  [Tourenbeschreibung Samstag_1] = 
+    CASE LEFT(Samstagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Samstagstour.Tour), 3)
+      ELSE Samstagstour.TourenBez
+    END,
+  [Tourenbeschreibung Sonntag_1] = 
+    CASE LEFT(Sonntagstour.Tour, 1)
+      WHEN N'1' THEN N'A ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'2' THEN N'B ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'3' THEN N'C ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'4' THEN N'D ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'5' THEN N'E ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'6' THEN N'F ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      WHEN N'7' THEN N'G ' + RIGHT(RTRIM(Sonntagstour.Tour), 3)
+      ELSE Sonntagstour.TourenBez
+    END,
   Packzettelbemerkung = (
     SELECT PZText.Memo + N'  '
     FROM VsaTexte AS PZText
