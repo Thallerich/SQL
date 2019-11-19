@@ -1,25 +1,14 @@
-TRY
-  DROP TABLE #TmpTeileHinw;
-CATCH ALL END;
-
-SELECT Teile.ID
-INTO #TmpTeileHinw
-FROM Teile, Vsa, Kunden, ViewArtikel Artikel, ArtGroe, Status, Traeger
-WHERE Teile.VsaID = Vsa.ID
-  AND Vsa.KundenID = Kunden.ID
-  AND Teile.ArtikelID = Artikel.ID
-  AND Artikel.LanguageID = $LANGUAGE$
-  AND Teile.ArtGroeID = ArtGroe.ID
-  AND Teile.Status = Status.Status
-  AND Status.Tabelle = 'TEILE'
-  AND Teile.TraegerID = Traeger.ID
-  AND Kunden.FirmaID = 5001             -- Firma Umlauft
-  AND Teile.PatchDatum = '30.08.2013'   -- Patchdatum der Teile
-  AND Teile.AltenheimModus = 0;         -- Nur BK
-  
-INSERT INTO Hinweis
-SELECT GetNextID('HINWEIS') AS ID, TH.ID AS TeileID, TRUE AS Aktiv, 'A' AS StatusSDC, 'Druckfehler bei Patch -  Schrank Kontrolle' AS Hinweis, '2099/52' AS BisWoche, 1 AS Anzahl, -1 AS HinwTNextID, CURDATE() AS EingabeDatum, 'STHA' AS EingabeUser, CONVERT(NULL, SQL_TIMESTAMP) AS BestaetDatum, '' AS BestaetUser, FALSE AS AufLS, FALSE AS Patchen, TRUE AS Wichtig, FALSE AS AbTeilAktiv, -1 AS SdcDevID, -1 AS SdcHinwID, -1 AS MinSdcProdID, NOW() AS Anlage_, NOW() AS Update_, 'STHA' AS User_, 'STHA' AS AnlageUser_
-FROM #TmpTeileHinw TH;
-
-UPDATE Teile SET HasHinweis = TRUE
-WHERE ID IN (SELECT ID FROM #TmpTeileHinw);
+INSERT INTO Hinweis (TeileID, Aktiv, StatusSDC, Hinweis, BisWoche, Anzahl, HinwTextID, EingabeDatum, EingabeMitarbeiID, Wichtig)
+SELECT Teile.ID AS TeileID, CAST(1 AS bit) AS Aktiv, N'A' AS StatusSDC, N'<o> Magazinstange: Namensschild ändern!' AS Hinweis, N'2099/52' AS BisWoche, 1 AS Anzahl, 172 AS HinwTextID, CAST(GETDATE() AS date) AS EingabeDatum, (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'THALST') AS EingabeMitarbeID, CAST(1 AS bit) AS Wichtig
+FROM Teile
+JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
+JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti AS NsKdArti ON KdArti.NsKdArtiID = NsKdArti.ID
+JOIN Artikel AS NsArtikel ON NsKdArti.ArtikelID = NsArtikel.ID
+WHERE Kunden.KdNr IN (7077, 7080, 7081, 7083, 7090, 7110, 7130, 7135, 7139, 7140, 7150, 7156, 7160, 7161, 7162, 7170, 7180)
+  AND NsArtikel.ArtikelNr = N'N006000'
+  AND Teile.Status BETWEEN N'M' AND N'Q'
+  AND Traeger.NS = 1;
