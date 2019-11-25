@@ -10,6 +10,10 @@ BEGIN TRANSACTION;
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP';
     
   UPDATE Settings
+    SET [ValueMemo] = N'http://SRVATENADVTEST.wozabal.int/webportal_20/upload/index_http.php'
+    WHERE [Parameter] = N'INTERNET_IMPORT_PHP_HTTP';
+    
+  UPDATE Settings
     SET [ValueMemo] = N'http://srvatenadvtest.wozabal.int/webportal_20/upload/update.php'
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP2';
     
