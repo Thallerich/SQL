@@ -334,6 +334,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 1 --Montag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Montagstour ON Montagstour.VsaID = Vsa.ID AND Montagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -343,6 +344,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 2 --Dienstag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Dienstagstour ON Dienstagstour.VsaID = Vsa.ID AND Dienstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -352,6 +354,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 3 --Mittwoch
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Mittwochstour ON Mittwochstour.VsaID = Vsa.ID AND Mittwochstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -361,6 +364,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 4 --Donnerstag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Donnerstagstour ON Donnerstagstour.VsaID = Vsa.ID AND Donnerstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -370,6 +374,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 5 --Freitag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Freitagstour ON Freitagstour.VsaID = Vsa.ID AND Freitagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -379,6 +384,7 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 6 --Samstag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Samstagstour ON Samstagstour.VsaID = Vsa.ID AND Samstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
@@ -388,12 +394,8 @@ LEFT OUTER JOIN (
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 7 --Sonntag
+    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Sonntagstour ON Sonntagstour.VsaID = Vsa.ID AND Sonntagstour.KdBerID = VsaBer.KdBerID
-/* WHERE Vsa.StandKonID IN (
-  SELECT DISTINCT StandBer.StandKonID
-  FROM StandBer
-  WHERE StandBer.ProduktionID = @StandortID
-) */
 WHERE Kunden.ID IN (SELECT KundenID FROM @Kunden)
   AND Bereich.ID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
   AND (
