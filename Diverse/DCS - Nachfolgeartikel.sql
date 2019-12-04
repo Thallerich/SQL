@@ -29,19 +29,15 @@ JOIN NeuArtikel ON NeuArtikel.Alt = Artikel.ArtikelNr AND NeuArtikel.KundenID = 
 JOIN @ErsatzMap AS ErsatzMap ON ErsatzMap.Alt = Artikel.ArtikelNr
 WHERE Rentomat.Interface = N'DCSvoll';
 
-INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, Menge)
-SELECT TraeArti.VsaID, TraeArti.TraegerID, NeuArtGroe.ID AS ArtGroeID, KdMap.NeuKdArtiID, 0 AS Menge
+--SELECT TraeArti.VsaID, TraeArti.TraegerID, NeuArtGroe.ID AS ArtGroeID, KdMap.NeuKdArtiID, 0 AS Menge
+UPDATE TraeArti SET TraeArti.KdArtiID = KdMap.NeuKdArtiID, TraeArti.ArtGroeID = NeuArtGroe.ID
 FROM TraeArti
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN @KdMap AS KdMap ON KdMap.KundenID = Vsa.KundenID AND KdMap.RentomatID = Vsa.RentomatID AND TraeArti.KdArtiID = KdMap.AltKdArtiID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN ArtGroe AS NeuArtGroe ON NeuArtGroe.ArtikelID = KdMap.NeuArtikelID AND NeuArtGroe.Groesse = ArtGroe.Groesse
-WHERE Traeger.RentoArtID = (
-    SELECT RentoArt.ID
-    FROM RentoArt
-    WHERE RentoArt.Code = N'P'
-  )
+WHERE Traeger.RentoArtID > 0
   AND NOT EXISTS (
     SELECT TA.*
     FROM TraeArti AS TA
@@ -50,8 +46,8 @@ WHERE Traeger.RentoArtID = (
       AND TA.TraegerID = TraeArti.TraegerID
   );
 
-INSERT INTO KdAusArt (KdAusstaID, KdArtiID, Pos, Menge)
-SELECT DISTINCT KdAusArt.KdAusstaID, KdMap.NeuKdArtiID, Pos = (SELECT MAX(KAA.Pos) FROM KdAusArt AS KAA WHERE KAA.KdAusstaID = KdAussta.ID) + 10 * DENSE_RANK() OVER (PARTITION BY KdAusArt.KdAusstaID ORDER BY KdAusArt.Pos), KdAusArt.Menge
+--SELECT DISTINCT KdAusArt.KdAusstaID, KdMap.NeuKdArtiID, Pos = (SELECT MAX(KAA.Pos) FROM KdAusArt AS KAA WHERE KAA.KdAusstaID = KdAussta.ID) + 10 * DENSE_RANK() OVER (PARTITION BY KdAusArt.KdAusstaID ORDER BY KdAusArt.Pos), KdAusArt.Menge
+UPDATE KdAusArt SET KdAusArt.KdArtiID = KdMap.NeuKdArtiID
 FROM KdAusArt
 JOIN KdAussta ON KdAusArt.KdAusstaID = KdAussta.ID
 JOIN @KdMap AS KdMap ON KdAussta.KundenID = KdMap.KundenID AND KdAusArt.KdArtiID = KdMap.AltKdArtiID
