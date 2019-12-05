@@ -25,7 +25,8 @@ WHERE Teile.TraegerID = Traeger.ID
   AND Vsa.Status = VsaStatus.Status
   AND Kunden.Status = Kundenstatus.Status
   AND KdGf.ID IN ($1$)  -- Geschäftsfeld
+  AND Kunden.ID IN ($2$) -- Kunden abhängig von Geschäftsfeld
   AND Teile.Status = 'W'  -- Rückgabe-Teile
-  AND Teile.AbmeldDat >= $2$  -- Datum der Abmeldung
+  AND Teile.AbmeldDat >= $3$  -- Datum der Abmeldung
   AND Teile.Einzug IS NULL -- noch nicht in Produktion eingelesen
 ORDER BY SGF, KdNr, VsaNr, Traeger.Nachname, Artikel.ArtikelNr, Größe;
