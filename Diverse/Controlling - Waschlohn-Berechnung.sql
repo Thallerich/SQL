@@ -256,14 +256,14 @@ GROUP BY WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb,
 */
 
 -- Neu für AUVA / Ascendum nach SAP-Schnittstelle für Rechnungen
-SELECT Konten.Konto AS Erlöskonto, Kostenträger = 
+SELECT Konten.Konto AS Erlöskonto, [KTr WOMI] = 
     CASE RechKo.FirmaID
       WHEN 5001 THEN N'93 ' + RechPo.KsSt
       WHEN 5260 THEN N'90 ' + RechPo.KsSt
       WHEN 5256 THEN N'895' + RechPo.KsSt
-      ELSE KdGf.FibuNr + RechPo.KsSt
+      ELSE CAST(KdGf.FibuNr AS nchar(3)) + RechPo.KsSt
     END,
-  FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz
+  N'93 ' + RechPo.KsSt AS [KTr USMK], FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz
 FROM RechPo
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
@@ -281,18 +281,18 @@ GROUP BY Konten.Konto,
     WHEN 5001 THEN N'93 ' + RechPo.KsSt
     WHEN 5260 THEN N'90 ' + RechPo.KsSt
     WHEN 5256 THEN N'895' + RechPo.KsSt
-    ELSE KdGf.FibuNr + RechPo.KsSt
+    ELSE CAST(KdGf.FibuNr AS nchar(3)) + RechPo.KsSt
   END,
-  RechPo.KsSt;
+  N'93 ' + RechPo.KsSt;
 
-SELECT Konten.Konto AS Erlöskonto, Kostenträger = 
+SELECT Konten.Konto AS Erlöskonto, [KTr WOMI] = 
     CASE RechKo.FirmaID
       WHEN 5001 THEN N'93 ' + RechPo.KsSt
       WHEN 5260 THEN N'90 ' + RechPo.KsSt
       WHEN 5256 THEN N'895' + RechPo.KsSt
-      ELSE KdGf.FibuNr + RechPo.KsSt
+      ELSE CAST(KdGf.FibuNr AS nchar(3)) + RechPo.KsSt
     END,
-  FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz
+  N'93 ' + RechPo.KsSt AS [KTr UMSK], FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz, KdGf.FibuNr, RechPo.KsSt
 FROM RechPo
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
@@ -310,6 +310,6 @@ GROUP BY Konten.Konto,
     WHEN 5001 THEN N'93 ' + RechPo.KsSt
     WHEN 5260 THEN N'90 ' + RechPo.KsSt
     WHEN 5256 THEN N'895' + RechPo.KsSt
-    ELSE KdGf.FibuNr + RechPo.KsSt
+    ELSE CAST(KdGf.FibuNr AS nchar(3)) + RechPo.KsSt
   END,
-  RechPo.KsSt;
+  N'93 ' + RechPo.KsSt, KdGf.FibuNr, RechPo.KsSt;
