@@ -270,8 +270,12 @@ JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Konten ON RechPo.KontenID = Konten.ID
+JOIN Vsa ON RechPo.VsaID = Vsa.ID
+JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = RechPo.BereichID
+JOIN Standort ON StandBer.ProduktionID = Standort.ID
 WHERE Holding.Holding = N'AUVA'
   AND RechKo.RechDat BETWEEN N'2019-11-01' AND N'2019-11-30'
+  AND Standort.SuchCode = N'UKLU'
 GROUP BY Konten.Konto,
   CASE RechKo.FirmaID
     WHEN 5001 THEN N'93 ' + RechPo.KsSt
@@ -295,8 +299,12 @@ JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Konten ON RechPo.KontenID = Konten.ID
+JOIN Vsa ON RechPo.VsaID = Vsa.ID
+JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = RechPo.BereichID
+JOIN Standort ON StandBer.ProduktionID = Standort.ID
 WHERE Kunden.KdNr = 30970
   AND RechKo.RechDat BETWEEN N'2019-11-01' AND N'2019-11-30'
+  AND Standort.SuchCode = N'UKLU'
 GROUP BY Konten.Konto,
   CASE RechKo.FirmaID
     WHEN 5001 THEN N'93 ' + RechPo.KsSt
