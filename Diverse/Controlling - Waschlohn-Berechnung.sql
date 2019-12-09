@@ -254,3 +254,54 @@ WHERE Kunden.KdNr = 30970
 GROUP BY WLU.Erlöskonto, RTRIM(WLU.FibuNrVertrieb) + WLU.KostenträgerVertrieb, N'93' + WLU.Kostenträger;
 
 */
+
+-- Neu für AUVA / Ascendum nach SAP-Schnittstelle für Rechnungen
+SELECT Konten.Konto AS Erlöskonto, Kostenträger = 
+    CASE RechKo.FirmaID
+      WHEN 5001 THEN N'93 ' + RechPo.KsSt
+      WHEN 5260 THEN N'90 ' + RechPo.KsSt
+      WHEN 5256 THEN N'895' + RechPo.KsSt
+      ELSE KdGf.FibuNr + RechPo.KsSt
+    END,
+  FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz
+FROM RechPo
+JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+JOIN Kunden ON RechKo.KundenID = Kunden.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Konten ON RechPo.KontenID = Konten.ID
+WHERE Holding.Holding = N'AUVA'
+  AND RechKo.RechDat BETWEEN N'2019-11-01' AND N'2019-11-30'
+GROUP BY Konten.Konto,
+  CASE RechKo.FirmaID
+    WHEN 5001 THEN N'93 ' + RechPo.KsSt
+    WHEN 5260 THEN N'90 ' + RechPo.KsSt
+    WHEN 5256 THEN N'895' + RechPo.KsSt
+    ELSE KdGf.FibuNr + RechPo.KsSt
+  END,
+  RechPo.KsSt;
+
+SELECT Konten.Konto AS Erlöskonto, Kostenträger = 
+    CASE RechKo.FirmaID
+      WHEN 5001 THEN N'93 ' + RechPo.KsSt
+      WHEN 5260 THEN N'90 ' + RechPo.KsSt
+      WHEN 5256 THEN N'895' + RechPo.KsSt
+      ELSE KdGf.FibuNr + RechPo.KsSt
+    END,
+  FORMAT(SUM(RechPo.GPreis), N'C', N'de-AT') AS Umsatz
+FROM RechPo
+JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+JOIN Kunden ON RechKo.KundenID = Kunden.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Konten ON RechPo.KontenID = Konten.ID
+WHERE Kunden.KdNr = 30970
+  AND RechKo.RechDat BETWEEN N'2019-11-01' AND N'2019-11-30'
+GROUP BY Konten.Konto,
+  CASE RechKo.FirmaID
+    WHEN 5001 THEN N'93 ' + RechPo.KsSt
+    WHEN 5260 THEN N'90 ' + RechPo.KsSt
+    WHEN 5256 THEN N'895' + RechPo.KsSt
+    ELSE KdGf.FibuNr + RechPo.KsSt
+  END,
+  RechPo.KsSt;
