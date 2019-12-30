@@ -1,4 +1,4 @@
-SELECT N'|' + x.ArtikelNr + N'-' + x.Groesse + N'|' + Lagerstandort + N'|N|' + CAST(Bestand AS nvarchar(10)) + N'|' AS DataRow
+SELECT N'|' + x.ArtikelNr + IIF(x.Groesse = N'-', N'', N'-' + x.Groesse) + N'|' + Lagerstandort + N'|N|' + CAST(Bestand AS nvarchar(10)) + N'|' AS DataRow
 FROM (
   SELECT Bereich.Bereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Standort.SuchCode AS Lagerstandort, SUM(Bestand.Bestand) AS Bestand
   FROM Bestand
