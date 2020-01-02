@@ -1,3 +1,14 @@
+USE master;
+GO
+
+RESTORE DATABASE Wozabal
+FROM DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
+WITH RECOVERY, REPLACE, STATS = 5,
+  MOVE N'Wozabal' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal.mdf',
+  MOVE N'Wozabal_Log' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_log.ldf';
+
+GO
+
 BEGIN TRANSACTION;
   USE Wozabal;
 
@@ -155,3 +166,5 @@ BEGIN TRANSACTION;
 COMMIT;
 
 ALTER DATABASE [Wozabal] SET NEW_BROKER WITH ROLLBACK IMMEDIATE;
+
+DBCC SHRINKFILE (Wozabal_Log);
