@@ -9,7 +9,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Standort AS Hauptstandort ON Kunden.StandortID = Hauptstandort.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
-JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = KdBer.ID
+JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = KdBer.BereichID
 JOIN Standort AS Expedition ON StandBer.ExpeditionID = Expedition.ID
 JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 WHERE RechKo.RechDat BETWEEN $2$ AND $3$
