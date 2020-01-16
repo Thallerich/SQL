@@ -34,6 +34,8 @@ JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID
 JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
 JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
 WHERE Kunden.HoldingID IN ($1$)
+  AND Kunden.ID IN ($2$)
+  AND Vsa.ID IN ($3$)
   AND Teile.Status BETWEEN N'Q' AND N'W'
   AND Teile.Einzug IS NULL
 GROUP BY Kunden.KdNr,
