@@ -165,7 +165,7 @@ END ELSE BEGIN
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
-  SELECT KdNr, Kunde, VsaNr, VsaStatus, VsaStichwort, Vsa, Produktbereich, ArtikelNr, Artikelbezeichnung, Durchschnittsliefermenge, Vertragsbestand, SchwundZeitraum, SchwundAlt, BereitsSchwundmarkiertZeitraum, BereitsSchwundmarkiertAlt, BereitsSchwundmarkiertNeu, SchwundGesperrt AS SchwundVerrechnungGesperrt, SchwundZeitraum + BereitsSchwundmarkiertZeitraum AS SchwundVerrechnen, RestwertSchwundZeitraum + RestwertBereitsSchwund AS RestwertVerrechnen, EKPreis AS [EK aktuell], EKPreis * SchwundZeitraum AS Wiederbeschaffungswert
+  SELECT KdNr, Kunde, VsaNr, VsaStatus, VsaStichwort, Vsa, Produktbereich, ArtikelNr, Artikelbezeichnung, Durchschnittsliefermenge, Vertragsbestand, SchwundZeitraum, SchwundAlt, BereitsSchwundmarkiertZeitraum, BereitsSchwundmarkiertAlt, BereitsSchwundmarkiertNeu, SchwundGesperrt AS SchwundVerrechnungGesperrt, SchwundZeitraum + BereitsSchwundmarkiertZeitraum AS SchwundVerrechnen, RestwertSchwundZeitraum + RestwertBereitsSchwund AS RestwertVerrechnen, EKPreis AS [EK aktuell], EKPreis * (SchwundZeitraum + BereitsSchwundmarkiertZeitraum) AS Wiederbeschaffungswert
   FROM #TmpSchwund
   WHERE Vertragsbestand > 0
     OR SchwundZeitraum > 0
