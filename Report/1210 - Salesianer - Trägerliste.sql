@@ -38,8 +38,8 @@ JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID
-JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
-JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
+LEFT OUTER JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
+LEFT OUTER JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
 JOIN Teilestatus ON Teile.Status = Teilestatus.Status
 WHERE Kunden.HoldingID IN ($1$)
   AND Kunden.ID IN ($2$)
