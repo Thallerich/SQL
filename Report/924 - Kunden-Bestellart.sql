@@ -11,11 +11,7 @@ WHERE EXISTS (
     WHERE StandBer.StandKonID = StandKon.ID
       AND StandBer.ProduktionID = @ProduktionID
   )
-  AND EXISTS (
-    SELECT ZrSchabK.*
-    FROM ZrSchabK
-    WHERE ZrSchabK.VsaID = Vsa.ID
-  )
+  AND (Vsa.ZRSchabK1ID > 0 OR Vsa.ZRSchabK2ID > 0)
   AND EXISTS (
     SELECT VsaAnf.*
     FROM VsaAnf
@@ -39,11 +35,8 @@ WHERE EXISTS (
     WHERE StandBer.StandKonID = StandKon.ID
       AND StandBer.ProduktionID = @ProduktionID
   )
-  AND NOT EXISTS (
-    SELECT ZrSchabK.*
-    FROM ZrSchabK
-    WHERE ZrSchabK.VsaID = Vsa.ID
-  )
+  AND Vsa.ZRSchabK1ID < 0
+  AND Vsa.ZRSchabK2ID < 0
   AND EXISTS (
     SELECT VsaAnf.*
     FROM VsaAnf
