@@ -3,12 +3,13 @@ WITH Teilestatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'TEILE')
 )
-SELECT Teile.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Teilestatus.[StatusBez] AS [Status des Teils], CAST(Teile.Anlage_ AS date) AS Erfassungsdatum, IIF(Teile.PatchDatum < N'2000-01-01', NULL, Teile.PatchDatum) AS Patchdatum, IIF(Teile.IndienstDat < N'2000-01-01', NULL, Teile.IndienstDat) AS Indienststellungsdatum
+SELECT Teile.Barcode, Traeger.Traeger, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Teilestatus.[StatusBez] AS [Status des Teils], CAST(Teile.Anlage_ AS date) AS Erfassungsdatum, IIF(Teile.PatchDatum < N'2000-01-01', NULL, Teile.PatchDatum) AS Patchdatum, IIF(Teile.IndienstDat < N'2000-01-01', NULL, Teile.IndienstDat) AS Indienststellungsdatum
 FROM Teile
 JOIN Vsa ON Teile.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+JOIN Traeger ON Teile.TraegerID = Traeger.ID
 JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
 WHERE Kunden.KdNr = 30480
   AND Teile.Status BETWEEN N'E' AND N'W'
