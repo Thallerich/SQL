@@ -6,7 +6,7 @@ SET @ArtiIDAlt = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'203
 SET @ArtiIDNeu = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'202504000026');
 SET @KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.Kdnr = 11804);
 
---INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID)
+-- (VsaID, TraegerID, ArtGroeID, KdArtiID)
 SELECT Vsa.ID AS VsaID, Traeger.ID AS TraegerID, 
   (SELECT Groesse.ID FROM ArtGroe AS Groesse WHERE Groesse.ArtikelID = @ArtiIDNeu AND Groesse.Groesse = ArtGroe.Groesse) AS ArtGroeID,
   (SELECT KdArti.ID FROM KdArti WHERE KdArti.KundenID = @KundenID AND KdArti.ArtikelID = @ArtiIDNeu) AS KdArtiID
