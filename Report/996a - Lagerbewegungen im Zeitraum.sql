@@ -4,7 +4,6 @@ DECLARE @Ende DATE;
 set @Beginn = $1$;
 set @Ende = $2$;
 
-
 DROP TABLE IF EXISTS #TmpLagerbewegung;
 
 SELECT
@@ -28,7 +27,7 @@ FROM Bestand, ArtGroe, Artikel, LagerArt
 WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND ArtGroe.ArtikelID = Artikel.ID
   AND Bestand.LagerArtID = LagerArt.ID
-  AND LagerArt.LagerID = $3$
+  AND LagerArt.LagerID IN ($3$)
   AND LagerArt.Neuwertig = 1;
 
 UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeZugang, MengeAbgang = x.MengeAbgang
