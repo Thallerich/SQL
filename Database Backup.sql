@@ -195,6 +195,10 @@ BEGIN TRANSACTION;
     SET ValueMemo = N'3048'
     WHERE Parameter = N'FAHRER_APP_PORT';
 
+  UPDATE SdcDev
+    SET ConnectPath = N'http://10.10.201.148:50400/XISOAPAdapter/MessageServlet'
+    WHERE Bez = N'SAP';
+
 COMMIT;
 
 DBCC SHRINKFILE (Wozabal_Log);
