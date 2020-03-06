@@ -319,7 +319,8 @@ SELECT DISTINCT
       AND LSText.TextArtID = 2
       AND CAST(GETDATE() AS date) BETWEEN LSText.VonDatum AND LSText.BisDatum
     FOR XML PATH('')
-  )
+  ),
+  Folge = COALESCE(Montagstour.Folge, Dienstagstour.Folge, Mittwochstour.Folge, Donnerstagstour.Folge, Freitagstour.Folge, Samstagstour.Folge, Sonntagstour.Folge)
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
@@ -327,7 +328,7 @@ JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN LiefArt ON Vsa.LiefArtID = LiefArt.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -337,7 +338,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Montagstour ON Montagstour.VsaID = Vsa.ID AND Montagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -347,7 +348,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Dienstagstour ON Dienstagstour.VsaID = Vsa.ID AND Dienstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -357,7 +358,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Mittwochstour ON Mittwochstour.VsaID = Vsa.ID AND Mittwochstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -367,7 +368,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Donnerstagstour ON Donnerstagstour.VsaID = Vsa.ID AND Donnerstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -377,7 +378,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Freitagstour ON Freitagstour.VsaID = Vsa.ID AND Freitagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
@@ -387,7 +388,7 @@ LEFT OUTER JOIN (
     AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 ) AS Samstagstour ON Samstagstour.VsaID = Vsa.ID AND Samstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
