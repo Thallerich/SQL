@@ -4,9 +4,7 @@ DECLARE @MASwitch TABLE (
 );
 
 INSERT INTO @MASwitch
-SELECT Mitarbei.ID AS MitarbeiID_Alt, (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.Name = N'Tiric, Nihad') AS MitarbeiID_Neu
-FROM Mitarbei
-WHERE Mitarbei.Name IN (N'Pirker, Stefan', N'Leitner, Roman');
+SELECT 9013900 AS MitarbeiID_Alt, 9014305 AS MitarbeiID_Neu;
 
 UPDATE KdBer SET KdBer.ServiceID = MASwitch.MitarbeiID_Neu
 FROM KdBer
