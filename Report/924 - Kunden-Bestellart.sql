@@ -1,6 +1,6 @@
 DECLARE @ProduktionID int = $1$;
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], N'Zählkunde' AS Bestellart
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], AnfArt.AnfArtBez AS [Anforderungsart VSA], N'Zählkunde' AS Bestellart
 FROM Vsa
 JOIN AnfArt ON Vsa.AnfArtID = AnfArt.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -24,7 +24,7 @@ WHERE EXISTS (
 
 UNION ALL
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], N'Bestellkunde' AS Bestellart
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], AnfArt.AnfArtBez AS [Anforderungsart VSA], N'Bestellkunde' AS Bestellart
 FROM Vsa
 JOIN AnfArt ON Vsa.AnfArtID = AnfArt.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
