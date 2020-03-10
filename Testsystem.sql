@@ -1,11 +1,26 @@
 USE master;
 GO
 
+DECLARE @TestExists bit = 0;
+
+IF db_id(N'Wozabal') IS NOT NULL
+  SET @TestExists = 1;
+
+IF @TestExists = 1
+  ALTER DATABASE Wozabal_Test
+    SET SINGLE_USER
+  WITH ROLLBACK IMMEDIATE;
+
 RESTORE DATABASE Wozabal
 FROM DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
 WITH RECOVERY, REPLACE, STATS = 5,
   MOVE N'Wozabal' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal.mdf',
   MOVE N'Wozabal_Log' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_log.ldf';
+
+IF @TestExists = 1
+  ALTER DATABASE Wozabal_Test
+    SET MULTI_USER
+  WITH ROLLBACK AFTER 60 SECONDS;
 
 GO
 
