@@ -1,5 +1,5 @@
 USE master;
-GO
+GOGO
 
 DECLARE @TestExists bit = 0;
 
