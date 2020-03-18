@@ -14,5 +14,5 @@ JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Artikelstatus ON Artikel.Status = Artikelstatus.Status
 WHERE Standort.ID = $1$
-  AND Bestand.Bestand != 0
+  AND BestOrt.Bestand != 0
   AND (($2$ = 1 AND Lagerart.Neuwertig = 1) OR ($2$ = 0));
