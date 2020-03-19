@@ -7,7 +7,7 @@ IF db_id(N'Wozabal') IS NOT NULL
   SET @TestExists = 1;
 
 IF @TestExists = 1
-  ALTER DATABASE Wozabal_Test
+  ALTER DATABASE Wozabal
     SET SINGLE_USER
   WITH ROLLBACK IMMEDIATE;
 
@@ -18,7 +18,7 @@ WITH RECOVERY, REPLACE, STATS = 5,
   MOVE N'Wozabal_Log' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_log.ldf';
 
 IF @TestExists = 1
-  ALTER DATABASE Wozabal_Test
+  ALTER DATABASE Wozabal
     SET MULTI_USER
   WITH ROLLBACK AFTER 60 SECONDS;
 
