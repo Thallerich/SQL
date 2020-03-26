@@ -19,6 +19,10 @@ DECLARE @KdBerInserted TABLE (
   BetreuerID int
 );
 
+DECLARE @KdArtiDeactivated TABLE (
+  KdArtiID int
+);
+
 DECLARE @ZUSArtikelID int = (SELECT ID FROM Artikel WHERE ArtikelNr = N'ZUS');
 DECLARE @ZUSBereichID int = (SELECT BereichID FROM Artikel WHERE ArtikelNr = N'ZUS');
 DECLARE @BereichID int = (SELECT ID FROM Bereich WHERE Bereich = N'EV');
@@ -66,7 +70,7 @@ WHERE (UPPER(Artikel.ArtikelBez) LIKE N'%ZUSTELL%' OR UPPER(Artikel.ArtikelBez) 
 /* ++ Vertrag für mehrere Bereiche gültig machen, falls kein anderer Vertrag für den Bereich EV möglich ist                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-/* SELECT Vertrag.*
+SELECT Vertrag.*
 FROM Vertrag
 WHERE Vertrag.KundenID IN (SELECT DISTINCT KundenID FROM @ZUS)
   AND Vertrag.Status = N'A'
@@ -76,7 +80,7 @@ WHERE Vertrag.KundenID IN (SELECT DISTINCT KundenID FROM @ZUS)
     WHERE V.BereichID IN (-1, @BereichID)
       AND V.Status = N'A'
       AND V.KundenID = Vertrag.KundenID
-  ); */
+  );
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Kundenbereich EV (Eigenverbrauch) anlegen                                                                                 ++ */
@@ -180,6 +184,22 @@ WHERE KdBer.BereichID = @ZUSBereichID
     GROUP BY KundenID
     HAVING COUNT(KundenID) > 1
   );
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Alte Kundenartikel auf inaktiv stellen                                                                                    ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+UPDATE KdArti SET [Status] = N'I'
+OUTPUT inserted.ID AS KdArtiID
+INTO @KdArtiDeactivated
+FROM KdArti
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+WHERE KdArti.KundenID IN (SELECT DISTINCT KundenID FROM @ZUSInserted)
+  AND (UPPER(Artikel.ArtikelBez) LIKE N'%ZUSTELL%' OR UPPER(Artikel.ArtikelBez) LIKE N'%ANFAHR%' OR Artikel.ArtikelNr LIKE N'ZUS%')
+  AND Artikel.ArtikelNr != N'ZUS';
+
+UPDATE VsaAnf SET [Status] = N'I'
+WHERE VsaAnf.KdArtiID IN (SELECT KdArtiID FROM @KdArtiDeactivated);
 
 SELECT Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, ZUSInserted.WaschPreis AS Bearbeitungspreis
 FROM @ZUSInserted AS ZUSInserted
