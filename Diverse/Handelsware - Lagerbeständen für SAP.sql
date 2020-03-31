@@ -7,7 +7,7 @@ FROM (
   JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
   JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
-  WHERE LagerArt.LagerArt IN (N'SMSHFNU', N'MATTHFNU', N'LEOGHFNU', N'ARNOHFNU')
+  WHERE LagerArt.LagerArt IN (N'SMSHFNU', N'MATTHFNU', N'LEOGHFNU', N'ARNOHFNU', N'SCHIHFNU')
     AND Bereich.Bereich IN (N'HW', N'FR')
   GROUP BY Bereich.Bereich, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Standort.SuchCode
 ) AS x;
