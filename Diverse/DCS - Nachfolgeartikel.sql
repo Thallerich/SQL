@@ -11,7 +11,7 @@ DECLARE @KdMap TABLE (
   RentomatID int
 );
 
-DECLARE @KdNr int = 23046;
+DECLARE @KdNr int = 19080;
 
 INSERT INTO @ErsatzMap VALUES (N'2501037012', N'25010370121'), (N'2503003011', N'25030030111'), (N'2505000304', N'25050003041'), (N'2505000305', N'25050003051'), (N'2505004418', N'25050044181'), (N'2505004419', N'25050044191'), (N'2505004420', N'25050044201'), (N'2505069505', N'25050695051'), (N'2505501012', N'25055010121'), (N'2505512010', N'25055120101'), (N'2505512220', N'25055122201'), (N'3003448102', N'30034481021'), (N'3060605005', N'30606050051'), (N'3080101005', N'30801010051'), (N'3258100802', N'32581008021'), (N'3258101322', N'32581013221'), (N'3030101001', N'30301010011'), (N'3080101001', N'30801010011'), (N'3080101002', N'30801010021'), (N'2507026270', N'25070262701'), (N'3140103005', N'31401030051'), (N'2501037010', N'25010370101'), (N'2507001001', N'25070010011');
 
@@ -32,33 +32,6 @@ JOIN @ErsatzMap AS ErsatzMap ON ErsatzMap.Alt = Artikel.ArtikelNr
 WHERE Rentomat.Interface = N'DCSvoll'
   AND Kunden.KdNr = @KdNr;
 
-/* SELECT Kunden.KdNr, Kunden.SuchCode, ArtikelAlt.ArtikelNr, ArtikelAlt.ArtikelBez, ArtikelNeu.ArtikelNr, ArtikelNeu.ArtikelBez, KdArti.Umlauf
-FROM @KdMap AS KdMap
-JOIN Kunden ON KdMap.KundenID = Kunden.ID
-JOIN KdArti ON KdMap.AltKdArtiID = KdArti.ID
-JOIN Artikel AS ArtikelAlt ON KdArti.ArtikelID = ArtikelAlt.ID
-JOIN Artikel AS ArtikelNeu ON KdMap.NeuArtikelID = ArtikelNeu.ID
-WHERE KdArti.Umlauf > 0; */
-
-
---SELECT TraeArti.VsaID, TraeArti.TraegerID, NeuArtGroe.ID AS ArtGroeID, KdMap.NeuKdArtiID, 0 AS Menge
-/* UPDATE TraeArti SET TraeArti.KdArtiID = KdMap.NeuKdArtiID, TraeArti.ArtGroeID = NeuArtGroe.ID
-FROM TraeArti
-JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-JOIN Vsa ON Traeger.VsaID = Vsa.ID
-JOIN @KdMap AS KdMap ON KdMap.KundenID = Vsa.KundenID AND KdMap.RentomatID = Vsa.RentomatID AND TraeArti.KdArtiID = KdMap.AltKdArtiID
-JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-JOIN ArtGroe AS NeuArtGroe ON NeuArtGroe.ArtikelID = KdMap.NeuArtikelID AND NeuArtGroe.Groesse = ArtGroe.Groesse
-WHERE Traeger.RentoArtID > 0
-  AND NOT EXISTS (
-    SELECT TA.*
-    FROM TraeArti AS TA
-    WHERE TA.KdArtiID = KdMap.NeuKdArtiID
-      AND TA.ArtGroeID = NeuArtGroe.ID
-      AND TA.TraegerID = TraeArti.TraegerID
-  ); */
-
-
 --SELECT DISTINCT KdAusArt.KdAusstaID, KdMap.NeuKdArtiID, Pos = (SELECT MAX(KAA.Pos) FROM KdAusArt AS KAA WHERE KAA.KdAusstaID = KdAussta.ID) + 10 * DENSE_RANK() OVER (PARTITION BY KdAusArt.KdAusstaID ORDER BY KdAusArt.Pos), KdAusArt.Menge
 UPDATE KdAusArt SET KdAusArt.KdArtiID = KdMap.NeuKdArtiID
 FROM KdAusArt
@@ -71,6 +44,7 @@ WHERE NOT EXISTS (
     AND KA.KdArtiID = KdMap.NeuKdArtiID
 );
 
+/* 
 SELECT Artikel.ArtikelNr, Artikel.ArtikelBez
 FROM KdArti
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
@@ -81,7 +55,7 @@ WHERE Kunden.KdNr = 31065
     FROM Teile
     JOIN Vsa ON Teile.VsaID = Vsa.ID
     JOIN Traeger ON Teile.TraegerID = Traeger.ID
-    WHERE Vsa.RentomatID = 40
+    WHERE Vsa.RentomatID = 57
       AND Teile.Status = N'Q'
       AND Traeger.RentoArtID = 3
       AND Teile.KdArtiID = KdArti.ID
@@ -103,3 +77,4 @@ WHERE RentoCod.RentomatID = 40
 
 INSERT INTO KdAusArt (KdAusstaID, KdArtiID, Pos, Menge)
 VALUES (5375, 34891012, 340, 2);
+ */
