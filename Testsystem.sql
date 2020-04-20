@@ -175,6 +175,22 @@ BEGIN TRANSACTION;
     SET VersandPath = N'\\srvatenadvtest.wozabal.int\AdvanTex\Export\Rechnungen_Testmandant\'
     WHERE VersandPath IS NOT NULL;
 
+  UPDATE Settings
+    SET ValueMemo = N'10.10.200.195'
+    WHERE Parameter = N'ABS_HOSTNAME';
+
+  UPDATE Settings
+    SET ValueMemo = N'~./~5 z%#;#z~'
+    WHERE Parameter = N'ABS_PASSWORT';
+
+  UPDATE Settings
+    SET ValueMemo = N'ABST12C'
+    WHERE Parameter = N'ABS_SERVICE_NAME';
+
+  UPDATE Settings
+    SET ValueMemo = N'training01'
+    WHERE Parameter = N'ABS_USERNAME';
+
   DELETE
   FROM dbsystem.dbo.Sessions;
 
