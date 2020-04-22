@@ -44,3 +44,14 @@ WHERE ID IN (
 );
 
 GO
+
+DELETE FROM _SKLanguageImportTable
+WHERE ID IN (
+  SELECT _SKLanguageImportTable.ID
+  FROM _SKlanguageImportTable
+  JOIN LangTran ON LangTran.SourceText = _SKLanguageImportTable.SourceText
+  WHERE LangTran.LanguageID = 6
+    AND LangTran.TranslatedText = _SKLanguageImportTable.TranslatedText
+);
+
+GO
