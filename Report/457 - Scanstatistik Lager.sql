@@ -19,7 +19,8 @@ SELECT Mitarbei.UserName AS Mitarbeiter,  Mitarbei.Name,
   SUM(IIF(Scans.ZielNrID = 36, 1, 0)) AS "Teile Info",
   COUNT(Scans.ID) AS Total
 FROM #Scans457 AS Scans
-JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
+RIGHT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
 WHERE Mitarbei.MitarAbtID = 5111024  -- Mitarbeiter-Abteilung "Bekleidungsservice Lenzing"
+  AND Mitarbei.Status = N'A'
 GROUP BY Mitarbei.UserName, Mitarbei.Name
 ORDER BY Mitarbeiter ASC;
