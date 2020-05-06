@@ -28,7 +28,8 @@ WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND ArtGroe.ArtikelID = Artikel.ID
   AND Bestand.LagerArtID = LagerArt.ID
   AND LagerArt.LagerID IN ($3$)
-  AND LagerArt.Neuwertig = 1;
+  AND LagerArt.Neuwertig = 1
+  AND Artikel.ArtiTypeID = 1;  -- nur textile Artikel, keine Namenschilder, Embleme, ...
 
 UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeZugang, MengeAbgang = x.MengeAbgang
 FROM #TmpLagerbewegung AS Lagerbewegung, (
@@ -67,6 +68,12 @@ FROM #TmpLagerbewegung AS Lagerbewegung, (
 ) AS MaxID, LagerBew
 WHERE LagerBew.ID = MaxID.ID
   AND MaxID.BestandID = Lagerbewegung.BestandID;
+
+UPDATE Lagerbewegung SET Preis = ArtGroe.EKPreis, PreisVormonat = ArtGroe.EKPreis
+FROM #TmpLagerbewegung AS Lagerbewegung, ArtGroe
+WHERE Lagerbewegung.ArtGroeID = ArtGroe.ID
+  AND Lagerbewegung.Preis = 0
+  AND Lagerbewegung.PreisVormonat = 0;
 
 SELECT FORMAT(@Beginn, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, @Ende), 'd', 'de-at') AS Zeitraum, Lagerart, ArtikelNr, Artikelbezeichnung, Groesse, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn, MengeZugang, MengeAbgang, BestandEnde , (MengeZugang + MengeAbgang) * Preis AS [Wert Lagerbewegung], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Lagerbestand Zeitraum-Ende]
 FROM #TmpLagerbewegung
