@@ -8,5 +8,6 @@ FROM (
   JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
   WHERE LagerArt.Neuwertig = 1
+    AND Bestand.Bestand != 0
   GROUP BY Bereich.Bereich, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Standort.SuchCode
 ) AS x;
