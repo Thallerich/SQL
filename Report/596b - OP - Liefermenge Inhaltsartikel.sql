@@ -12,7 +12,7 @@ WITH OPSchrott AS (
     AND OPTeile.Status = N'Z'
   GROUP BY OPTeile.ArtikelID, StandBer.ProduktionID
 )
-SELECT Standort.Bez AS Produktion, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, SUM(CAST(LsPo.Menge AS int) * OPSets.Menge) AS Liefermenge, OPSchrott.SchrottMenge AS Schrottmenge
+SELECT Standort.Bez AS Produktion, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, SUM(CAST(LsPo.Menge AS int) * (OPSets.Menge / OPSetArtikel.Packmenge)) AS Liefermenge, OPSchrott.SchrottMenge AS Schrottmenge
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
@@ -20,6 +20,7 @@ JOIN OPSets ON OPSets.ArtikelID = KdArti.ArtikelID
 JOIN Artikel ON OPSets.Artikel1ID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN Standort ON LsPo.ProduktionID = Standort.ID
+JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
 LEFT OUTER JOIN OPSchrott ON OPSchrott.ArtikelID = Artikel.ID AND OPSchrott.ProduktionID = Standort.ID
 WHERE LsKo.Datum BETWEEN @von AND @bis
   AND LsPo.ProduktionID IN ($3$)
