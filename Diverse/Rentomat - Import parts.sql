@@ -191,8 +191,8 @@ CROSS JOIN (
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
   WHERE Traeger.ID = @TraegerID
 ) AS Traeger
-LEFT JOIN KdArti ON Importdaten.ArtikelID = KdArti.ArtikelID AND Traeger.KundenID = KdArti.KundenID AND KdArti.Variante = N'-'
-LEFT JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID AND TraeArti.KdArtiID = KdArti.ID AND TraeArti.ArtGroeID = Importdaten.ArtGroeID
+JOIN KdArti ON Importdaten.ArtikelID = KdArti.ArtikelID AND Traeger.KundenID = KdArti.KundenID AND KdArti.Variante = N'-'
+JOIN TraeArti ON TraeArti.TraegerID = Traeger.ID AND TraeArti.KdArtiID = KdArti.ID AND TraeArti.ArtGroeID = Importdaten.ArtGroeID
 WHERE NOT EXISTS (
   SELECT Teile.*
   FROM Teile
