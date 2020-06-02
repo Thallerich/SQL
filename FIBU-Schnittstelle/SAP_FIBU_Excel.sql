@@ -52,7 +52,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         ELSE N'XX'
       END,
-    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, IIF(Wae.IsoCode = N'CZK', Export.Bruttowert, Export.Bruttowert) AS Bruttowert,
+    Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert AS Bruttowert,
     Steuerschl =
       CASE
         WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' THEN N'6O'
@@ -87,7 +87,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   FROM #bookingexport AS Export
   JOIN RechKo ON Export.RechKoID = RechKo.ID
   JOIN RechKo AS BasisRechKo ON RechKo.BasisRechKoID = BasisRechKo.ID
-  JOIN Wae ON RechKo.WaeID = Wae.ID
+  JOIN Wae ON RechKo.RechWaeID = Wae.ID
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
