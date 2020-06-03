@@ -21,12 +21,7 @@ WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSI
 
 -- ######## Step 2 ################################
 
-DECLARE @TestExists bit = 0;
-
-IF db_id(N'Wozabal_Test') IS NOT NULL
-  SET @TestExists = 1;
-
-IF @TestExists = 1
+IF db_id(N'Wozabal_Test') IS NOT NULL AND DATABASEPROPERTYEX(N'Wozabal_Test', N'Status') = N'ONLINE'
   ALTER DATABASE Wozabal_Test
     SET SINGLE_USER
   WITH ROLLBACK IMMEDIATE;
@@ -37,7 +32,7 @@ WITH RECOVERY, REPLACE,
   MOVE N'Wozabal' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test.mdf',
   MOVE N'Wozabal_Log' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test_Log.mdf';
 
-IF @TestExists = 1
+IF (SELECT DATABASEPROPERTYEX(N'Wozabal_Test', 'UserAccess')) = N'SINGLE_USER'
   ALTER DATABASE Wozabal_Test
     SET MULTI_USER
   WITH ROLLBACK AFTER 60 SECONDS;
