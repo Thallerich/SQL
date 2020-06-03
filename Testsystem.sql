@@ -1,12 +1,7 @@
 USE master;
 GO
 
-DECLARE @TestExists bit = 0;
-
-IF db_id(N'Wozabal') IS NOT NULL
-  SET @TestExists = 1;
-
-IF @TestExists = 1
+IF db_id(N'Wozabal') IS NOT NULL AND DATABASEPROPERTYEX(N'Wozabal', N'Status') = N'ONLINE'
   ALTER DATABASE Wozabal
     SET SINGLE_USER
   WITH ROLLBACK IMMEDIATE;
@@ -17,7 +12,7 @@ WITH RECOVERY, REPLACE, STATS = 5,
   MOVE N'Wozabal' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal.mdf',
   MOVE N'Wozabal_Log' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_log.ldf';
 
-IF @TestExists = 1
+IF (SELECT DATABASEPROPERTYEX(N'Wozabal_Test', 'UserAccess')) = N'SINGLE_USER'
   ALTER DATABASE Wozabal
     SET MULTI_USER
   WITH ROLLBACK AFTER 60 SECONDS;
