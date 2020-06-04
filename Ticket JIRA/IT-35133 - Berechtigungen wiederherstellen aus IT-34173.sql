@@ -23,6 +23,15 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
   INSERT (WebUserID, FuncDecAmount) VALUES (source.WebUserID, source.FuncDecAmount);
 
+MERGE @WebUChanged AS WebUChanged
+USING (
+  SELECT ID AS WebUserID, FuncDecAmount
+  FROM __WebUserGraz
+) AS source (WebUserID, FuncDecAmount) ON source.WebUserID = WebUChanged.WebUserID
+WHEN MATCHED THEN
+  UPDATE SET FuncDecAmount = 1
+WHEN NOT MATCHED THEN
+  INSERT (WebUserID, FuncDecAmount) VALUES (source.WebUserID, source.FuncDecAmount);
 
 BEGIN TRANSACTION;
 
@@ -34,7 +43,7 @@ FROM WebUser
 JOIN Kunden ON WebUser.KundenID = Kunden.ID
 JOIN Standort ON Kunden.StandortID = Standort.ID
 JOIN @WebUChanged AS WebUChanged ON WebUser.ID = WebUChanged.WebUserID
-WHERE Standort.SuchCode = N'UKLU'
+WHERE Kunden.KdNr IN (30284, 30285, 30286, 30287, 5011, 30759, 3065, 6076, 30364, 30367, 30370, 30372, 30374, 30375, 30376, 7261, 26200, 19152, 250745, 30129)
   AND (Webuser.FuncDecAmount != WebUChanged.FuncDecAmount OR WebUser.FuncDeactivateW != WebUChanged.FuncDeactivateW);
 
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, WebUser.UserName
