@@ -42,7 +42,9 @@ GROUP BY Holding.Holding,
   Vsa.Bez,
   Vsa.GebaeudeBez,
   Abteil.Bez,
-  Wochen.Woche;
+  Wochen.Woche,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Detailed Data for Benchmark                                                                                               ++ */
