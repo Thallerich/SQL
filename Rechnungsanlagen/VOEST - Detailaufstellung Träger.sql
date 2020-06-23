@@ -100,6 +100,8 @@ JOIN (
     FROM RechKo
     WHERE RechKo.ID = @RechKoID
   )
+    AND Teile.Status BETWEEN N'Q' AND N'W'
+    AND Teile.Einzug IS NULL
   GROUP BY Teile.TraegerID, Teile.ArtikelID
 ) AS x ON x.TraegerID = VOESTRechnung.TraegerID AND x.ArtikelID = VOESTRechnung.ArtikelID;
 
