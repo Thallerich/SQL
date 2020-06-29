@@ -33,6 +33,7 @@ SELECT Artikel.ID AS ArtikelID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
+  KdArti.VariantBez AS Variante,
   MAX(TraeAbtKdArW.Menge) AS Maximalbestand,
   0 AS Waschzyklen,
   SUM(TraeAbtKdArW.Menge * TraeAbtKdArW.EPreis) AS Mietkosten,
@@ -69,6 +70,7 @@ GROUP BY Artikel.ID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
+  KdArti.VariantBez,
   KdArti.LeasingPreis,
   KdArti.WaschPreis;
 
@@ -120,6 +122,8 @@ JOIN (
   GROUP BY Teile.TraegerID, Teile.ArtikelID
 ) AS x ON x.TraegerID = VOESTRechnung.TraegerID AND x.ArtikelID = VOESTRechnung.ArtikelID;
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Maximalbestand, Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, DatumErstausgabe AS [Erste Ausgabe-Woche], offenBestellt AS [offene bestelle Wäscheteile] FROM #TmpVOESTRechnung;
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Maximalbestand, Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, DatumErstausgabe AS [Erste Ausgabe-Woche], offenBestellt AS [offene bestelle Wäscheteile]
+FROM #TmpVOESTRechnung
+WHERE Kostenstellenbezeichnung IN (N'107514', N'107513', N'107502', N'107515', N'107503', N'107501');
 
 GO
