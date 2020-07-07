@@ -16,7 +16,7 @@ FROM (
     AND (Teile.Eingang1 > Teile.Ausgang1 OR Teile.Ausgang1 IS NULL)
     AND Teile.Status IN ('Q', 'M', 'N')
     AND Teile.ArtikelID = Artikel.ID
-    AND Teile.AltenheimModus = 1
+    AND Teile.AltenheimModus != 0
   ) a, Scans
 WHERE a.TeileID = Scans.TeileID
   AND Scans.AnlageUserID_ <> (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'ADVSUP')
