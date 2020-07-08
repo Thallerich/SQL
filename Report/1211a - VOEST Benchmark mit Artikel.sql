@@ -50,6 +50,6 @@ GROUP BY Holding.Holding,
 /* ++ Detailed Data for Benchmark                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT VOESTBenchmark.*, VOESTBenchmark.[Teile gesamt] / VOESTBenchmark.[Träger gesamt] AS [Durchschnitt Teile pro Träger]
+SELECT VOESTBenchmark.*, ROUND(CAST(VOESTBenchmark.[Teile gesamt] AS float) / CAST(VOESTBenchmark.[Träger gesamt] AS float), 0) AS [Durchschnitt Teile pro Träger]
 FROM #TmpVOESTBenchmarkArtikel AS VOESTBenchmark
 ORDER BY Holding, KdNr, VsaNr, Woche;
