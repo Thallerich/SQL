@@ -4,7 +4,7 @@ GO
 DECLARE @RechKoID int = (SELECT ID FROM RechKo WHERE RechNr = 30034988);
 
 WITH TraeAbtKdArW AS (
-  SELECT TraeArti.TraegerID, TraeArti.KdArtiID, TraeArch.WochenID, SUM(TraeArch.Menge) AS Menge, AbtKdArW.RechPoID, AbtKdArW.EPreis
+  SELECT TraeArti.TraegerID, TraeArti.KdArtiID, TraeArch.WochenID, SUM(TraeArch.Menge) AS Menge, TraeArch.Kostenlos, AbtKdArW.RechPoID, AbtKdArW.EPreis, SUM(TraeArch.Menge) * AbtKdArW.EPreis AS GPreis
   FROM TraeArch
   JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
   JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
@@ -13,7 +13,7 @@ WITH TraeAbtKdArW AS (
     FROM RechPo
     WHERE RechPo.RechKoID = @RechKoID
   )
-  GROUP BY TraeArti.TraegerID, TraeArti.KdArtiID, TraeArch.WochenID, AbtKdArW.RechPoID, AbtKdArW.EPreis
+  GROUP BY TraeArti.TraegerID, TraeArti.KdArtiID, TraeArch.WochenID, TraeArch.Kostenlos, AbtKdArW.RechPoID, AbtKdArW.EPreis
 )
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
@@ -36,7 +36,7 @@ SELECT Artikel.ID AS ArtikelID,
   KdArti.VariantBez AS Variante,
   MAX(TraeAbtKdArW.Menge) AS Maximalbestand,
   0 AS Waschzyklen,
-  SUM(TraeAbtKdArW.Menge * TraeAbtKdArW.EPreis) AS Mietkosten,
+  SUM(TraeAbtKdArW.GPreis) AS Mietkosten,
   CAST(0 AS money) AS Waschkosten,
   CAST(0 AS money) AS Gesamt,
   CAST(NULL AS nchar(7)) AS DatumErstausgabe,
@@ -48,8 +48,8 @@ JOIN TraeAbtKdArW ON TraeAbtKdArW.RechPoID = RechPo.ID
 JOIN Traeger ON TraeAbtKdArW.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-JOIN KdArti ON TraeAbtKdArW.KdArtiID = KdArti.ID
+JOIN Abteil ON RechPo.AbteilID = Abteil.ID
+JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID = @RechKoID
 GROUP BY Artikel.ID,
@@ -70,9 +70,7 @@ GROUP BY Artikel.ID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
-  KdArti.VariantBez,
-  KdArti.LeasingPreis,
-  KdArti.WaschPreis;
+  KdArti.VariantBez;
 
 UPDATE VOESTRechnung SET Waschkosten = x.EPreis * x.Waschzyklen, Waschzyklen = x.Waschzyklen
 FROM #TmpVOESTRechnung AS VOESTRechnung
