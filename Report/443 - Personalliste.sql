@@ -29,12 +29,9 @@ ORDER BY Vsa.ID, Artikel.ArtikelNr, KdArti.Variante;
 -- ## Pipeline: Traeger
 -- ################################################################################################################################
 
-IF object_id('tempdb..#TempPersonalliste') IS NOT NULL
-BEGIN
-  DROP TABLE #TempPersonalliste;
-END
+DROP TABLE IF EXISTS #TempPersonalliste;
 
-SELECT Vsa.ID AS VsaID, Traeger.ID AS TraegerID, Wochen.Woche, RTRIM(Traeger.Nachname) AS Nachname, RTRIM(Traeger.Vorname) AS Vorname, TraeArch.Menge, ArtGroe.Groesse, (
+SELECT Vsa.ID AS VsaID, Traeger.ID AS TraegerID, Wochen.Woche, Traeger.Traeger AS TrägerNr, Traeger.PersNr, RTRIM(Traeger.Nachname) AS Nachname, RTRIM(Traeger.Vorname) AS Vorname, TraeArch.Menge, ArtGroe.Groesse, (
 	SELECT TOP 1 SchrankNr
 	FROM Schrank, TraeFach
 	WHERE TraeFach.SchrankID = Schrank.ID
@@ -59,10 +56,7 @@ WHERE Traeger.ID = TraeArti.TraegerID
 	AND Wochen.Woche = $1$
 ORDER BY Vsa.ID, Nachname, Vorname;
 
-IF object_id('tempdb..#TempAnzTraeger') IS NOT NULL
-BEGIN
-  DROP TABLE #TempAnzTraeger;
-END
+DROP TABLE IF EXISTS #TempAnzTraeger;
 
 SELECT COUNT(DISTINCT TraegerID) AS AnzTraeger, VsaID
 INTO #TempAnzTraeger
