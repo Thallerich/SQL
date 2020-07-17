@@ -1,15 +1,15 @@
 WITH Traegerstatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'TRAEGER')
 ),
 VsaStatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'VSA')
 ),
 Kundenstatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'KUNDEN')
 )
@@ -28,7 +28,7 @@ WHERE Teile.TraegerID = Traeger.ID
   AND KdGf.ID IN ($1$)  -- Geschäftsfeld
   AND Kunden.ID IN ($2$) -- Kunden abhängig von Geschäftsfeld
   AND Teile.Status = 'W'  -- Rückgabe-Teile
-  AND Teile.AbmeldDat >= $4$  -- Datum der Abmeldung
+  AND Teile.AbmeldDat BETWEEN $4$ AND $5$ -- Datum der Abmeldung
   AND Teile.Einzug IS NULL -- noch nicht in Produktion eingelesen
   AND Artikel.BereichID IN ($3$)
 ORDER BY SGF, KdNr, VsaNr, Traeger.Nachname, Artikel.ArtikelNr, Größe;
