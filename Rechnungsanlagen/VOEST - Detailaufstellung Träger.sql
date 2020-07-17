@@ -1,7 +1,6 @@
 DROP TABLE IF EXISTS #TmpVOESTRechnung;
-GO
 
-DECLARE @RechKoID int = (SELECT ID FROM RechKo WHERE RechNr = 30034988);
+DECLARE @RechKoID int = $RECHKOID$;
 
 WITH TraeAbtKdArW AS (
   SELECT TraeArti.TraegerID, TraeArti.KdArtiID, TraeArch.WochenID, SUM(TraeArch.Menge) AS Menge, TraeArch.Kostenlos, AbtKdArW.RechPoID, AbtKdArW.EPreis, SUM(TraeArch.Menge) * AbtKdArW.EPreis AS GPreis
@@ -32,7 +31,7 @@ SELECT Artikel.ID AS ArtikelID,
   Traeger.Nachname,
   Traeger.Vorname,
   Artikel.ArtikelNr,
-  Artikel.ArtikelBez,
+  Artikel.ArtikelBez$LAN$ AS ArtikelBez,
   KdArti.VariantBez AS Variante,
   MAX(TraeAbtKdArW.Menge) AS Maximalbestand,
   0 AS Waschzyklen,
@@ -121,7 +120,4 @@ JOIN (
 ) AS x ON x.TraegerID = VOESTRechnung.TraegerID AND x.ArtikelID = VOESTRechnung.ArtikelID;
 
 SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Maximalbestand, Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, DatumErstausgabe AS [Erste Ausgabe-Woche], offenBestellt AS [offene bestelle Wäscheteile]
-FROM #TmpVOESTRechnung
-WHERE Kostenstellenbezeichnung IN (N'107514', N'107513', N'107502', N'107515', N'107503', N'107501');
-
-GO
+FROM #TmpVOESTRechnung;
