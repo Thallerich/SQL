@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 20.08.2019, Version 5.1                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 17.07.2020, Version 6.0                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -37,11 +37,13 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'SMKR' AND Export.Art = N'R' THEN N'Z1'
+        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'R' THEN N'VF'
         WHEN Firma.SuchCode = N'FA14' AND Export.Art = N'G' THEN N'GA'
         WHEN Firma.SuchCode = N'SMP' AND Export.Art = N'G' THEN N'VS'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'SMKR' AND Export.Art = N'G' THEN N'Z2'
+        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'G' THEN N'VS'
         ELSE N'XX'
       END,
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert AS Bruttowert,
@@ -68,6 +70,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'FA14' AND Standort.SuchCode <> N'UKLU' THEN CAST(40 AS nchar(3))  --Salesianer WEST
         WHEN Firma.SuchCode = N'SMP' THEN CAST(895 AS nchar(3))
         WHEN Firma.SuchCode = N'SMKR' THEN CAST(770 AS nchar(3))
+        WHEN Firma.SuchCode = N'SMSK' THEN CAST(850 AS nchar(3))
         ELSE CAST(KdGf.FibuNr AS nchar(3))
       END,
     Buchungskreis = 
@@ -77,6 +80,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN N'WOMI' THEN 1250
         WHEN N'SMP' THEN 1900
         WHEN N'SMKR' THEN 1610
+        WHEN N'SMSK' THEN 1500
         ELSE 1250
       END
   FROM #bookingexport AS Export
