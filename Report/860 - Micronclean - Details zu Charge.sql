@@ -11,4 +11,5 @@ WHERE OPEtiPo.OPEtiKoID = OPEtiKo.ID
   AND Vsa.KundenID = Kunden.ID
   AND OPCharge.ChargeNr = $1$
   AND OPCharge.StandortID = 4535 -- Lenzing IG Micronclean
+  AND OPEtiPo.OPTeileID > 0
 ORDER BY Kunden.KdNr, VsaSuchCode, OPEtiKo.EtiNr;
