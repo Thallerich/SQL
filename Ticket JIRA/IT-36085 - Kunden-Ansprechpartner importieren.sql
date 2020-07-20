@@ -67,7 +67,6 @@ USING (
   FROM __KundenAnsprechpartner
   JOIN Kunden ON __KundenAnsprechpartner.KdNr = Kunden.KdNr
   LEFT JOIN Anrede ON __KundenAnsprechpartner.Anrede = Anrede.Anrede
-  WHERE __KundenAnsprechpartner.KdNr IN (1132, 10001828)
 ) AS ImportData (KundenID, ImportID, KdNr, Kunde, Anrede, Titel, Vorname, Nachname, Abteilung, Position, Rollen, eMail, Telefon, Mobil, SachbearID, ActionTaken, SerienAnrede)
 ON Sachbear.TableID = ImportData.KundenID AND Sachbear.TableName = N'KUNDEN' AND ISNULL(Sachbear.Name, N'') = ISNULL(ImportData.Nachname, N'') AND ISNULL(Sachbear.Vorname, N'') = ISNULL(ImportData.Vorname, N'')
 WHEN MATCHED THEN
