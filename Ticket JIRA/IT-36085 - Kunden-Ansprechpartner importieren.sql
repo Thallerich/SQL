@@ -63,12 +63,12 @@ DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
 MERGE INTO Sachbear
 USING (
-  SELECT Kunden.ID AS KundenID, __KundenAnsprechpartner.*, REPLACE(REPLACE(REPLACE(Anrede.SerienAnrede, N'[NACHNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Nachname), N'')), N'[VORNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Vorname), N'')), N'[TITEL]', ISNULL(RTRIM(__KundenAnsprechpartner.Titel), N''))
+  SELECT Kunden.ID AS KundenID, __KundenAnsprechpartner.*, LEFT(REPLACE(REPLACE(REPLACE(Anrede.SerienAnrede, N'[NACHNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Nachname), N'')), N'[VORNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Vorname), N'')), N'[TITEL]', ISNULL(RTRIM(__KundenAnsprechpartner.Titel), N'')), 40) AS SerienAnrede
   FROM __KundenAnsprechpartner
   JOIN Kunden ON __KundenAnsprechpartner.KdNr = Kunden.KdNr
   LEFT JOIN Anrede ON __KundenAnsprechpartner.Anrede = Anrede.Anrede
 ) AS ImportData (KundenID, ImportID, KdNr, Kunde, Anrede, Titel, Vorname, Nachname, Abteilung, Position, Rollen, eMail, Telefon, Mobil, SachbearID, ActionTaken, SerienAnrede)
-ON Sachbear.TableID = ImportData.KundenID AND Sachbear.TableName = N'KUNDEN' AND ISNULL(Sachbear.Name, N'') = ISNULL(ImportData.Nachname, N'') AND ISNULL(Sachbear.Vorname, N'') = ISNULL(ImportData.Vorname, N'')
+ON Sachbear.TableID = ImportData.KundenID AND Sachbear.TableName = N'KUNDEN' AND ISNULL(Sachbear.Name, N'') = ISNULL(ImportData.Nachname, N'') AND ISNULL(Sachbear.Vorname, N'') = ISNULL(ImportData.Vorname, N'') AND ISNULL(Sachbear.eMail, N'') = ISNULL(ImportData.eMail, N'') AND ISNULL(Sachbear.Abteilung, N'') = ISNULL(ImportData.Abteilung, N'')
 WHEN MATCHED THEN
   UPDATE SET Sachbear.AnzeigeName = ISNULL(ImportData.Nachname, N'') + ISNULL(N', ' + ImportData.Titel, N'') + ISNULL(N', ' + ImportData.Vorname, N''), Sachbear.Anrede = ImportData.Anrede, Sachbear.Titel = ImportData.Titel, Sachbear.Abteilung = ImportData.Abteilung, Sachbear.Position = ImportData.Position, Sachbear.Telefon = ImportData.Telefon, Sachbear.Mobil = ImportData.Mobil, Sachbear.eMail = ImportData.eMail, Sachbear.SerienAnrede = ImportData.SerienAnrede, Sachbear.UserID_ = @UserID
 WHEN NOT MATCHED THEN
