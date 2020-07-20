@@ -109,3 +109,7 @@ WHEN NOT MATCHED BY SOURCE THEN
   DELETE;
 
 GO
+
+DROP TABLE __KundenAnsprechpartner;
+
+GO
