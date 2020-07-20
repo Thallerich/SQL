@@ -56,24 +56,25 @@ DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ TODO:                                                                                                                     ++ */
-/* ++   - Delete existing which are not present in ImportData                                                                   ++ */
-/* ++   - Update / Insert SachRoll after MERGE                                                                                  ++ */
-/* ++   - Fill SerienAnrede in MERGE                                                                                            ++ */
+/* ++   - Delete existing which are not present in ImportData   ✔                                                               ++ */
+/* ++   - Update / Insert SachRoll after MERGE                  ✔                                                               ++ */
+/* ++   - Fill SerienAnrede in MERGE                            ✔                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 MERGE INTO Sachbear
 USING (
-  SELECT Kunden.ID AS KundenID, __KundenAnsprechpartner.*
+  SELECT Kunden.ID AS KundenID, __KundenAnsprechpartner.*, REPLACE(REPLACE(REPLACE(Anrede.SerienAnrede, N'[NACHNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Nachname), N'')), N'[VORNAME]', ISNULL(RTRIM(__KundenAnsprechpartner.Vorname), N'')), N'[TITEL]', ISNULL(RTRIM(__KundenAnsprechpartner.Titel), N''))
   FROM __KundenAnsprechpartner
   JOIN Kunden ON __KundenAnsprechpartner.KdNr = Kunden.KdNr
+  LEFT JOIN Anrede ON __KundenAnsprechpartner.Anrede = Anrede.Anrede
   WHERE __KundenAnsprechpartner.KdNr IN (1132, 10001828)
-) AS ImportData (KundenID, ImportID, KdNr, Kunde, Anrede, Titel, Vorname, Nachname, Abteilung, Position, Rollen, eMail, Telefon, Mobil, SachbearID, ActionTaken)
+) AS ImportData (KundenID, ImportID, KdNr, Kunde, Anrede, Titel, Vorname, Nachname, Abteilung, Position, Rollen, eMail, Telefon, Mobil, SachbearID, ActionTaken, SerienAnrede)
 ON Sachbear.TableID = ImportData.KundenID AND Sachbear.TableName = N'KUNDEN' AND ISNULL(Sachbear.Name, N'') = ISNULL(ImportData.Nachname, N'') AND ISNULL(Sachbear.Vorname, N'') = ISNULL(ImportData.Vorname, N'')
 WHEN MATCHED THEN
-  UPDATE SET Sachbear.Anrede = ImportData.Anrede, Sachbear.Titel = ImportData.Titel, Sachbear.Abteilung = ImportData.Abteilung, Sachbear.Position = ImportData.Position, Sachbear.eMail = ImportData.eMail, Sachbear.Telefon = ImportData.Telefon, Sachbear.Mobil = ImportData.Mobil, Sachbear.UserID_ = @UserID
+  UPDATE SET Sachbear.AnzeigeName = ISNULL(ImportData.Nachname, N'') + ISNULL(N', ' + ImportData.Titel, N'') + ISNULL(N', ' + ImportData.Vorname, N''), Sachbear.Anrede = ImportData.Anrede, Sachbear.Titel = ImportData.Titel, Sachbear.Abteilung = ImportData.Abteilung, Sachbear.Position = ImportData.Position, Sachbear.Telefon = ImportData.Telefon, Sachbear.Mobil = ImportData.Mobil, Sachbear.eMail = ImportData.eMail, Sachbear.SerienAnrede = ImportData.SerienAnrede, Sachbear.UserID_ = @UserID
 WHEN NOT MATCHED THEN
   INSERT (TableID, TableName, [Status], AnzeigeName, Anrede, Titel, Vorname, [Name], Abteilung, Position, Telefon, Mobil, eMail, SerienAnrede, Anlage_, AnlageUserID_, UserID_)
-    VALUES (ImportData.KundenID, N'KUNDEN', N'A', ISNULL(ImportData.Nachname, N'') + ISNULL(N', ' + ImportData.Titel, N'') + ISNULL(N', ' + ImportData.Vorname, N''), ImportData.Anrede, ImportData.Titel, ImportData.Vorname, ImportData.Nachname, ImportData.Abteilung, ImportData.Position, ImportData.Telefon, ImportData.Mobil, ImportData.eMail, N'', GETDATE(), @UserID, @UserID)
+    VALUES (ImportData.KundenID, N'KUNDEN', N'A', ISNULL(ImportData.Nachname, N'') + ISNULL(N', ' + ImportData.Titel, N'') + ISNULL(N', ' + ImportData.Vorname, N''), ImportData.Anrede, ImportData.Titel, ImportData.Vorname, ImportData.Nachname, ImportData.Abteilung, ImportData.Position, ImportData.Telefon, ImportData.Mobil, ImportData.eMail, ImportData.SerienAnrede, GETDATE(), @UserID, @UserID)
 OUTPUT ImportData.ImportID, inserted.ID AS SachbearID, $action AS ActionTaken
 INTO @MergeOutput;
 
@@ -81,6 +82,31 @@ UPDATE __KundenAnsprechpartner SET SachbearID = MergeOutput.SachbearID, ActionTa
 FROM __KundenAnsprechpartner
 JOIN @MergeOutput MergeOutput ON MergeOutput.ImportID = __KundenAnsprechpartner.ImportID;
 
-SELECT * FROM __KundenAnsprechpartner WHERE SachbearID IS NOT NULL;
+UPDATE Sachbear SET [Status] = N'I', UserID_ = @UserID
+FROM Sachbear
+JOIN Kunden ON Sachbear.TableID = Kunden.ID
+WHERE Sachbear.TableName = N'KUNDEN'
+  AND Sachbear.ID NOT IN (SELECT SachbearID FROM __KundenAnsprechpartner WHERE SachbearID IS NOT NULL)
+  AND Kunden.KdNr IN (SELECT KdNr FROM __KundenAnsprechpartner WHERE SachbearID IS NOT NULL)
+  AND Sachbear.Status = N'A';
+
+MERGE INTO SachRoll
+USING (
+  SELECT KdAExploded.SachbearID, Rollen.ID AS RollenID
+  FROM (
+    SELECT __KundenAnsprechpartner.*, LTRIM(RTRIM(value)) AS Rolle
+    FROM __KundenAnsprechpartner
+    CROSS APPLY STRING_SPLIT(Rollen, N',')
+    WHERE __KundenAnsprechpartner.SachbearID IS NOT NULL
+  )KdAExploded
+  JOIN Rollen ON KdAExploded.Rolle = Rollen.RollenBez
+  WHERE KdAExploded.SachbearID IS NOT NULL
+) AS ImportRollen (SachbearID, RollenID)
+ON ImportRollen.SachbearID = SachRoll.SachbearID AND ImportRollen.RollenID = SachRoll.RollenID
+WHEN NOT MATCHED BY TARGET THEN
+  INSERT (SachbearID, RollenID, Anlage_, AnlageUserID_, UserID_)
+    VALUES (ImportRollen.SachbearID, ImportRollen.RollenID, GETDATE(), @UserID, @UserID)
+WHEN NOT MATCHED BY SOURCE THEN
+  DELETE;
 
 GO
