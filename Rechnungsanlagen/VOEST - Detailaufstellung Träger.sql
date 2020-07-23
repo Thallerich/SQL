@@ -71,20 +71,29 @@ GROUP BY Artikel.ID,
   Artikel.ArtikelBez,
   KdArti.VariantBez;
 
-UPDATE VOESTRechnung SET Waschkosten = x.EPreis * x.Waschzyklen, Waschzyklen = x.Waschzyklen
-FROM #TmpVOESTRechnung AS VOESTRechnung
-JOIN (
-  SELECT Teile.ArtikelID, Teile.TraegerID, LsPo.EPreis, COUNT(Scans.ID) AS Waschzyklen
+MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
+USING (
+  SELECT Teile.ArtikelID, Teile.TraegerID, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Traeger.Traeger AS TraegerNr, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, KdArti.Variante, LsPo.EPreis, COUNT(Scans.ID) AS Waschzyklen
   FROM Scans
   JOIN LsPo ON Scans.LsPoID = LsPo.ID
   JOIN Teile ON Scans.TeileID = Teile.ID
-  WHERE LsPo.RechPoID IN (
-    SELECT RechPo.ID
-    FROM RechPo
-    WHERE RechPo.RechKoID = @RechKoID
-  )
-  GROUP BY Teile.ArtikelID, Teile.TraegerID, LsPo.EPreis
-) AS x ON x.ArtikelID = VOESTRechnung.ArtikelID AND x.TraegerID = VOESTRechnung.TraegerID;
+  JOIN Traeger ON Teile.TraegerID = Traeger.ID
+  JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Kunden oN Vsa.KundenID = Kunden.ID
+  JOIN RechPo ON LsPo.RechPoID = RechPo.ID
+  JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+  JOIN Abteil ON LsPo.AbteilID = Abteil.ID
+  JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  WHERE RechKo.ID = @RechKoID
+  GROUP BY Teile.ArtikelID, Teile.TraegerID, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Vsa.GebaeudeBez, Abteil.Abteilung, Abteil.Bez, Traeger.Traeger, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdArti.Variante, LsPo.EPreis
+) AS Bearbeitung
+ON Bearbeitung.ArtikelID = VOESTRechnung.ArtikelID AND Bearbeitung.TraegerID = VOESTRechnung.TraegerID AND Bearbeitung.Variante = VOESTRechnung.Variante
+WHEN MATCHED THEN
+  UPDATE SET Waschkosten = Bearbeitung.EPreis * Bearbeitung.Waschzyklen, Waschzyklen = Bearbeitung.Waschzyklen
+WHEN NOT MATCHED THEN
+  INSERT (ArtikelID, TraegerID, RechNr, RechDat, KdNr, Kunde, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Mietkosten, Waschkosten, Waschzyklen, offenBestellt)
+  VALUES (Bearbeitung.ArtikelID, Bearbeitung.TraegerID, Bearbeitung.RechNr, Bearbeitung.RechDat, Bearbeitung.KdNr, Bearbeitung.Kunde, Bearbeitung.VsaNr, Bearbeitung.VsaStichwort, Bearbeitung.VsaBezeichnung, Bearbeitung.Abteilung, Bearbeitung.Kostenstelle, Bearbeitung.Kostenstellenbezeichnung, Bearbeitung.TraegerNr, Bearbeitung.PersNr, Bearbeitung.Nachname, Bearbeitung.Vorname, Bearbeitung.ArtikelNr, Bearbeitung.ArtikelBez, Bearbeitung.Variante, 0, Bearbeitung.EPreis * Bearbeitung.Waschzyklen, Bearbeitung.Waschzyklen, 0);
 
 UPDATE #TmpVOESTRechnung SET Gesamt = Waschkosten + Mietkosten;
 
