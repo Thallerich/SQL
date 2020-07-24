@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 17.07.2020, Version 6.0                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 24.07.2020, Version 6.1                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -37,13 +37,13 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'R' THEN N'AR'
         WHEN Firma.SuchCode = N'SMKR' AND Export.Art = N'R' THEN N'Z1'
-        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'R' THEN N'VF'
+        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'R' THEN N'ZF'
         WHEN Firma.SuchCode = N'FA14' AND Export.Art = N'G' THEN N'GA'
         WHEN Firma.SuchCode = N'SMP' AND Export.Art = N'G' THEN N'VS'
         WHEN Firma.SuchCode = N'WOMI' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'UKLU' AND Export.Art = N'G' THEN N'GU'
         WHEN Firma.SuchCode = N'SMKR' AND Export.Art = N'G' THEN N'Z2'
-        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'G' THEN N'VS'
+        WHEN Firma.SuchCode = N'SMSK' AND Export.Art = N'G' THEN N'ZG'
         ELSE N'XX'
       END,
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert AS Bruttowert,
