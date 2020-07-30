@@ -1,0 +1,2 @@
+SELECT COUNT(ID) AS AnzahlDS
+FROM EvtQueue;
