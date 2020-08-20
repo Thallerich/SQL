@@ -68,7 +68,7 @@ GROUP BY Artikel.ID,
   Traeger.Nachname,
   Traeger.Vorname,
   Artikel.ArtikelNr,
-  Artikel.ArtikelBez,
+  Artikel.ArtikelBez$LAN$,
   KdArti.VariantBez;
 
 MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
