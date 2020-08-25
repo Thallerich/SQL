@@ -14,10 +14,9 @@ JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
-JOIN Week ON RechKo.RechDat BETWEEN Week.VonDat AND Week.BisDat
 WHERE RechKo.FirmaID IN (SELECT Firma.ID FROM Firma WHERE SuchCode IN (N'FA14', N'WOMI', N'UKLU'))
   AND Kunden.HoldingID != (SELECT Holding.ID FROM Holding WHERE Holding.Holding = N'SAL')
-  AND (Week.Woche BETWEEN N'2019/12' AND N'2019/24' OR Week.Woche BETWEEN N'2020/12' AND N'2020/24')-- IN (SELECT Wochen.Woche FROM Wochen WHERE Wochen.Monat1 = N'2020-04')
+  AND (Wochen.Woche BETWEEN N'2019/12' AND N'2019/24' OR Wochen.Woche BETWEEN N'2020/12' AND N'2020/24')-- IN (SELECT Wochen.Woche FROM Wochen WHERE Wochen.Monat1 = N'2020-04')
   AND RechKo.Status < N'X'
 GROUP BY Wochen.Woche, Kunden.ID, RechKo.ID;
 
@@ -29,7 +28,7 @@ USING (
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
   JOIN RechKo ON RechPo.RechKoID = RechKo.ID
   JOIN Kunden ON RechKo.KundenID = Kunden.ID
-  JOIN Week ON RechKo.RechDat BETWEEN Week.VonDat AND Week.BisDat
+  JOIN Week ON LsKo.Datum BETWEEN Week.VonDat AND Week.BisDat
   WHERE RechKo.FirmaID IN (SELECT Firma.ID FROM Firma WHERE SuchCode IN (N'FA14', N'WOMI', N'UKLU'))
     AND Kunden.HoldingID != (SELECT Holding.ID FROM Holding WHERE Holding.Holding = N'SAL')
     AND RechKo.Status < N'X'
@@ -59,9 +58,8 @@ USING (
       JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
       JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
       JOIN RechKo ON RechPo.RechKoID = RechKo.ID
-      JOIN Week ON RechKo.RechDat BETWEEN Week.VonDat AND Week.BisDat
       WHERE RechKo.FirmaID IN (SELECT Firma.ID FROM Firma WHERE SuchCode IN (N'FA14', N'WOMI', N'UKLU'))
-        AND (Week.Woche BETWEEN N'2019/12' AND N'2019/24' OR Week.Woche BETWEEN N'2020/12' AND N'2020/24')-- IN (SELECT Wochen.Woche FROM Wochen WHERE Wochen.Monat1 = N'2020-04')
+        AND (Wochen.Woche BETWEEN N'2019/12' AND N'2019/24' OR Wochen.Woche BETWEEN N'2020/12' AND N'2020/24')-- IN (SELECT Wochen.Woche FROM Wochen WHERE Wochen.Monat1 = N'2020-04')
         AND RechKo.Status < N'X'
     )
     AND RechPo.ID NOT IN (
@@ -70,7 +68,7 @@ USING (
       JOIN LsKo ON LsPo.LsKoID = LsKo.ID
       JOIN RechPo ON LsPo.RechPoID = RechPo.ID
       JOIN RechKo ON RechPo.RechKoID = RechKo.ID
-      JOIN Week ON RechKo.RechDat BETWEEN Week.VonDat AND Week.BisDat
+      JOIN Week ON LsKo.Datum BETWEEN Week.VonDat AND Week.BisDat
       WHERE RechKo.FirmaID IN (SELECT Firma.ID FROM Firma WHERE SuchCode IN (N'FA14', N'WOMI', N'UKLU'))
         AND RechKo.Status < N'X'
         AND (Week.Woche BETWEEN N'2019/12' AND N'2019/24' OR Week.Woche BETWEEN N'2020/12' AND N'2020/24')-- IN (SELECT Wochen.Woche FROM Wochen WHERE Wochen.Monat1 = N'2020-04')
