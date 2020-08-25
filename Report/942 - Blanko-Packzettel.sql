@@ -14,7 +14,14 @@ FROM
 
   UNION ALL
 
-  SELECT N'Anforderung für __.__.____' AS Menge, NULL AS Artikelbezeichnung, NULL AS ArtikelNr, NULL AS VPE, NULL AS [definierter Bestand], NULL AS [durchschn. Liefermenge], 3 AS OrderNum
+  SELECT TOP 1 N'Anforderung für __.__.____' AS Menge, NULL AS Artikelbezeichnung, NULL AS ArtikelNr, NULL AS VPE, N'Telefon: ' + Standort.Telefon AS [definierter Bestand], N'Fax: ' + Standort.Faxnummer AS [durchschn. Liefermenge], 3 AS OrderNum
+  FROM VsaAnf
+  JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
+  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
+  JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = KdBer.BereichID
+  JOIN Standort ON StandBer.KundendienstID = Standort.ID
+  WHERE Vsa.ID = $ID$
 
   UNION ALL
 
@@ -40,5 +47,13 @@ FROM
   WHERE VsaAnf.VsaID = $ID$
     AND VsaBer.Status = 'A'
     AND VsaAnf.Status < 'E'
+
+  UNION ALL
+
+  SELECT N'' AS Menge, NULL AS Artikelbezeichnung, NULL AS ArtikelNr, NULL AS VPE, NULL AS [definierter Bestand], NULL AS [durchschn. Liefermenge], 9000 AS OrderNum
+
+  UNION ALL
+
+  SELECT N'Mitteilungen an die Wäscherei:' AS Menge, NULL AS Artikelbezeichnung, NULL AS ArtikelNr, NULL AS VPE, NULL AS [definierter Bestand], NULL AS [durchschn. Liefermenge], 9001 AS OrderNum
 ) AS x
 ORDER BY OrderNum;
