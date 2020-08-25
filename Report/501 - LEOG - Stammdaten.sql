@@ -27,7 +27,8 @@ JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 WHERE Touren.ExpeditionID = @StandortID
   AND KdBer.BereichID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
   AND Vsa.Status = N'A'
-  AND Kunden.Status = N'A';
+  AND Kunden.Status = N'A'
+  AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum;
 
 OPEN Tourdaten;
 
