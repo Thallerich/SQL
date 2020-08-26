@@ -38,7 +38,34 @@ JOIN Standort ON LsPo.ProduktionID = Standort.ID
 JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
 WHERE LsKo.Datum BETWEEN @von AND @bis
   AND LsPo.ProduktionID IN ($3$)
+  AND NOT EXISTS (
+    SELECT SiS.*
+    FROM OPSets AS SiS
+    WHERE Sis.ArtikelID = OPSets.Artikel1ID
+  )
 GROUP BY Standort.ID, Artikel.ID;
+
+MERGE INTO @OPStats AS OPStats
+USING (
+  SELECT @StandortID AS StandortID, Artikel.ID AS ArtikelID, SUM(CAST(LsPo.Menge AS int) * (OPSets.Menge / OPSetArtikel.Packmenge) * (SiS.Menge / SiSArtikel.Packmenge)) AS Liefermenge
+  FROM LsPo
+  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+  JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
+  JOIN OPSets ON OPSets.ArtikelID = KdArti.ArtikelID
+  JOIN OPSets AS SiS ON OPSets.Artikel1ID = SiS.ArtikelID
+  JOIN Artikel ON SiS.Artikel1ID = Artikel.ID
+  JOIN Standort ON LsPo.ProduktionID = Standort.ID
+  JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
+  JOIN Artikel AS SiSArtikel ON SiS.ArtikelID = SiSArtikel.ID
+  WHERE LsKo.Datum BETWEEN @von AND @bis
+    AND LsPo.ProduktionID IN ($3$)
+  GROUP BY Standort.ID, Artikel.ID
+) AS SiSLiefermenge (StandortID, ArtikelID, Liefermenge)
+ON OPStats.ArtikelID = SiSLiefermenge.ArtikelID AND OPStats.StandortID = SiSLiefermenge.StandortID
+WHEN MATCHED THEN
+  UPDATE SET OPStats.Liefermenge = OPStats.Liefermenge + SiSLiefermenge.Liefermenge
+WHEN NOT MATCHED THEN
+  INSERT (StandortID, ArtikelID, Liefermenge) VALUES (SiSLiefermenge.StandortID, SiSLiefermenge.ArtikelID, SiSLiefermenge.Liefermenge);
 
 MERGE INTO @OPStats AS OPStats
 USING (
