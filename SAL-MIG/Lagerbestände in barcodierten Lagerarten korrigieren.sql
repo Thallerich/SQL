@@ -37,15 +37,18 @@ BEGIN TRANSACTION
   FROM Vergleich
   WHERE BestOrtBestand <> AnzTeileLag;
 
+  --SELECT * FROM @Bestandskorrektur;
+
   UPDATE BestOrt SET Bestand = Bestandskorrektur.Bestand
   --SELECT BestOrt.ID, BestOrt.Bestand, Bestandskorrektur.Bestand AS KorrBestand
   FROM Bestort
   JOIN @Bestandskorrektur AS Bestandskorrektur ON Bestandskorrektur.BestOrtID = BestOrt.ID;
 
   WITH Bestandskorrektur AS (
-    SELECT BestandID, SUM(Bestand) AS Bestand
-    FROM @Bestandskorrektur
-    GROUP BY BestandID
+    SELECT Bestandskorrektur.BestandID, SUM(BestOrt.Bestand) AS Bestand
+    FROM @Bestandskorrektur AS Bestandskorrektur
+    JOIN BestOrt ON Bestandskorrektur.BestandID = BestOrt.BestandID
+    GROUP BY Bestandskorrektur.BestandID
   )
   UPDATE Bestand SET Bestand = Bestandskorrektur.Bestand
   OUTPUT inserted.ID AS BestandID, inserted.Bestand AS BestandNeu, inserted.Bestand - deleted.Bestand AS Differenz
