@@ -49,7 +49,7 @@ BEGIN TRANSACTION
   )
   UPDATE Bestand SET Bestand = Bestandskorrektur.Bestand
   OUTPUT inserted.ID AS BestandID, inserted.Bestand AS BestandNeu, inserted.Bestand - deleted.Bestand AS Differenz
-  INTO @LagerBew
+  INTO @LagerBew (BestandID, BestandNeu, Differenz)
   --SELECT Bestand.ID, Bestand.Bestand, Bestandskorrektur.Bestand AS KorrBestand
   FROM Bestand
   JOIN Bestandskorrektur ON Bestandskorrektur.BestandID = Bestand.ID;
