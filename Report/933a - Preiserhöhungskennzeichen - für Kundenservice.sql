@@ -1,4 +1,12 @@
-SELECT Firma.Bez AS Firma, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.Bez AS Hauptstandort, Vertrag.VertragNr, Vertrag.Nr AS [eindeutige VertragsNr], PrLauf.PrLaufBez$LAN$ AS Preiserhöhungslauf, Vertrag.Preisgarantie AS [Preisgarantie bis], Vertrag.MaxPeProzent AS [maximale Preiserhöhung], Vertrag.LetztePeDatum AS [letzte Preiserhöhung], Vertrag.LetztePeProz AS [letzte Preiserhöhung in %]
+SELECT Firma.Bez AS Firma, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.Bez AS Hauptstandort, Vertrag.VertragNr, Vertrag.Nr, PrLauf.PrLaufBez$LAN$ AS Preiserhöhungslauf, Kundenservice = (
+  SELECT TOP 1 Mitarbei.Name
+  FROM Mitarbei
+  JOIN KdBer ON KdBer.ServiceID = Mitarbei.ID
+  WHERE KdBer.KundenID = Kunden.ID
+    AND KdBer.Status = N'A'
+  GROUP BY Mitarbei.Name
+  ORDER BY COUNT(KdBer.ID) DESC
+)
 FROM Vertrag
 JOIN Kunden ON Vertrag.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
