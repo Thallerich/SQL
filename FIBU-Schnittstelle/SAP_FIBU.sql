@@ -51,7 +51,9 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
       CASE
         WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMP' THEN N'6O'
         WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMP' THEN N'33'
-        WHEN MwSt.SteuerSchl = N'A2' AND Firma.SuchCode = N'SMSK' THEN N'4V'
+        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMSK' THEN N'4E'
+        WHEN MwSt.SteuerSchl = N'A2' AND Firma.SuchCode = N'SMSK' THEN N'4O'
+        WHEN MwSt.SteuerSchl = N'A3' AND Firma.SuchCode = N'SMSK' THEN N'4M'
         ELSE MwSt.Steuerschl
       END,
     Export.Debitor, Export.Gegenkonto, 
