@@ -1,5 +1,5 @@
-DECLARE @DatumVon date = $3$;
-DECLARE @DatumBis date = $4$;
+DECLARE @DatumVon date = $STARTDATE$;
+DECLARE @DatumBis date = $ENDDATE$;
 
 WITH Liefermenge AS (
   SELECT KdArti.ArtikelID, KdArti.KundenID, SUM(CAST(LsPo.Menge AS int)) AS Menge
@@ -27,9 +27,9 @@ WegTeileSumme AS (
     AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
   GROUP BY Teile.ArtikelID, Vsa.KundenID
 )
-SELECT [KdNr], [Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz]
+SELECT [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz]
 FROM (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArtiSum.Umlauf AS [Umlaufmenge aktuell], SUM(ISNULL(Liefermenge.Menge, 0)) AS [Liefermenge im Zeitraum], SUM(ISNULL(WegTeile.Menge, 0)) AS MengeWeg, GrundKurz = 
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.SuchCode AS [Haupstandort Kunde], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArtiSum.Umlauf AS [Umlaufmenge aktuell], SUM(ISNULL(Liefermenge.Menge, 0)) AS [Liefermenge im Zeitraum], SUM(ISNULL(WegTeile.Menge, 0)) AS MengeWeg, GrundKurz = 
     CASE WegTeile.GrundKurz
       WHEN N'A' THEN N'AORW'
       WHEN N'a' THEN N'AMRW'
@@ -45,11 +45,14 @@ FROM (
   ) AS KdArtiSum
   JOIN Kunden ON KdArtiSum.KundenID = Kunden.ID
   JOIN Artikel ON KdArtiSum.ArtikelID = Artikel.ID
+  JOIN Standort ON Kunden.StandortID = Standort.ID
   LEFT OUTER JOIN Liefermenge ON Liefermenge.ArtikelID = KdArtiSum.ArtikelID AND Liefermenge.KundenID = KdArtiSum.KundenID
   LEFT OUTER JOIN WegTeile ON WegTeile.ArtikelID = KdArtiSum.ArtikelID AND WegTeile.KundenID = KdArtiSum.KundenID
   LEFT OUTER JOIN WegTeileSumme ON WegTeileSumme.ArtikelID = KdArtiSum.ArtikelID AND WegTeileSumme.KundenID = KdArtiSum.KundenID
-  WHERE Kunden.KdGFID IN ($2$)
-    AND Kunden.FirmaID IN ($1$)
+  WHERE Kunden.KdGFID IN ($3$)
+    AND Kunden.FirmaID IN ($2$)
+    AND Kunden.StandortID IN ($4$)
+    AND Kunden.SichtbarID IN ($SICHTBARIDS$)
     AND KdArtiSum.Umlauf > 0
     AND EXISTS (
       SELECT Teile.*
@@ -57,7 +60,7 @@ FROM (
       WHERE Teile.ArtikelID = KdArtiSum.ArtikelID
         AND Teile.AltenheimModus = 0
     )
-  GROUP BY Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
+  GROUP BY Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
 ) AS AData
 PIVOT (
   SUM(MengeWeg) FOR GrundKurz IN ([AORW], [AMRW], [BORW], [BMRW], [CORW], [CMRW], [-])
