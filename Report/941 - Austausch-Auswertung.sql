@@ -2,34 +2,34 @@ DECLARE @DatumVon date = $STARTDATE$;
 DECLARE @DatumBis date = $ENDDATE$;
 
 WITH Liefermenge AS (
-  SELECT KdArti.ArtikelID, KdArti.KundenID, SUM(CAST(LsPo.Menge AS int)) AS Menge
+  SELECT KdArti.ArtikelID, KdArti.KundenID, SUM(CAST(LsPo.Menge AS int)) AS Menge, FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT') AS Monat
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
   WHERE LsKo.Datum BETWEEN @DatumVon AND @DatumBis
-  GROUP BY KdArti.ArtikelID, KdArti.KundenID
+  GROUP BY KdArti.ArtikelID, KdArti.KundenID, FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT')
 ),
 WegTeile AS (
-  SELECT Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund AS GrundKurz, COUNT(Teile.ID) AS Menge
+  SELECT Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund AS GrundKurz, COUNT(Teile.ID) AS Menge, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
   FROM Teile
   JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
   JOIN Vsa ON Teile.VsaID = Vsa.ID
   WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
     AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
-  GROUP BY Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund
+  GROUP BY Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
 WegTeileSumme AS (
-  SELECT Teile.ArtikelID, Vsa.KundenID, COUNT(Teile.ID) AS Menge, SUM(Teile.AusdRestw) AS Restwert, SUM(IIF(Teile.RechPoID > 0, Teile.AusdRestw, 0)) AS RestwertFakt
+  SELECT Teile.ArtikelID, Vsa.KundenID, COUNT(Teile.ID) AS Menge, SUM(Teile.AusdRestw) AS Restwert, SUM(IIF(Teile.RechPoID > 0, Teile.AusdRestw, 0)) AS RestwertFakt, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
   FROM Teile
   JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
   JOIN Vsa ON Teile.VsaID = Vsa.ID
   WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
     AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
-  GROUP BY Teile.ArtikelID, Vsa.KundenID
+  GROUP BY Teile.ArtikelID, Vsa.KundenID, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
 )
-SELECT [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz]
+SELECT [Monat], [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz]
 FROM (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.SuchCode AS [Haupstandort Kunde], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArtiSum.Umlauf AS [Umlaufmenge aktuell], SUM(ISNULL(Liefermenge.Menge, 0)) AS [Liefermenge im Zeitraum], SUM(ISNULL(WegTeile.Menge, 0)) AS MengeWeg, GrundKurz = 
+  SELECT COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat) AS Monat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.SuchCode AS [Haupstandort Kunde], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArtiSum.Umlauf AS [Umlaufmenge aktuell], SUM(ISNULL(Liefermenge.Menge, 0)) AS [Liefermenge im Zeitraum], SUM(ISNULL(WegTeile.Menge, 0)) AS MengeWeg, GrundKurz = 
     CASE WegTeile.GrundKurz
       WHEN N'A' THEN N'AORW'
       WHEN N'a' THEN N'AMRW'
@@ -60,8 +60,10 @@ FROM (
       WHERE Teile.ArtikelID = KdArtiSum.ArtikelID
         AND Teile.AltenheimModus = 0
     )
-  GROUP BY Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
+    AND (Liefermenge.Menge != 0 OR WegTeile.Menge != 0 OR WegTeileSumme.Menge != 0)
+  GROUP BY COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat), Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
 ) AS AData
 PIVOT (
   SUM(MengeWeg) FOR GrundKurz IN ([AORW], [AMRW], [BORW], [BMRW], [CORW], [CMRW], [-])
-) AS p;
+) AS p
+ORDER BY Monat, KdNr, ArtikelNr;
