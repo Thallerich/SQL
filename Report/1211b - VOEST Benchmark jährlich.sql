@@ -40,7 +40,7 @@ GROUP BY Holding.Holding,
   Vsa.Bez,
   Vsa.GebaeudeBez,
   Abteil.Bez,
-  Wochen.Woche
+  Wochen.Woche,
   Wochen.Monat1;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
