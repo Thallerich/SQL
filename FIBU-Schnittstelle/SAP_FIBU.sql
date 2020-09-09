@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 08.09.2020, Version 6.2                            **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Wozabal Miettex GmbH, 09.09.2020, Version 6.3                            **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -51,7 +51,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
       CASE
         WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMP' THEN N'6O'
         WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMP' THEN N'33'
-        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMSK' THEN N'4E'
+        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMSK' THEN N'SU'
         WHEN MwSt.SteuerSchl = N'A2' AND Export.Art = N'R' AND Firma.SuchCode = N'SMSK' THEN N'4V'
         WHEN MwSt.SteuerSchl = N'A2' AND Export.Art = N'G' AND Firma.SuchCode = N'SMSK' THEN N'4O'
         WHEN MwSt.SteuerSchl = N'A3' AND Firma.SuchCode = N'SMSK' THEN N'4M'
