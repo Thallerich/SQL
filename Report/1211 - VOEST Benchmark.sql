@@ -53,6 +53,6 @@ ORDER BY Holding, KdNr, VsaNr, Woche;
 /* ++ Cumulated Data for diagrams                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT VOESTBenchmark.Abteilung, SUM(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / SUM(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], SUM(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], SUM(VOESTBenchmark.[Teile gesamt]) / SUM(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
+SELECT VOESTBenchmark.Abteilung, MAX(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], MAX(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], MAX(VOESTBenchmark.[Teile gesamt]) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
 FROM #TmpVOESTBenchmark AS VOESTBenchmark
 GROUP BY VOESTBenchmark.Abteilung;
