@@ -38,17 +38,17 @@ FROM (
       WHEN N'C' THEN N'CORW'
       WHEN N'c' THEN N'CMRW'
     END, WegTeileSumme.Menge AS MengeGesamt, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt, WegTeileSumme.Restwert - WegTeileSumme.RestwertFakt AS Differenz
-  FROM (
+  FROM WegTeile
+  JOIN (
     SELECT KdArti.ArtikelID, KdArti.KundenID, SUM(KdArti.Umlauf) AS Umlauf
     FROM KdArti
     GROUP BY KdArti.ArtikelID, KdArti.KundenID
-  ) AS KdArtiSum
+  ) AS KdArtiSum ON WegTeile.ArtikelID = KdArtiSum.ArtikelID AND WegTeile.KundenID = KdArtiSum.KundenID
   JOIN Kunden ON KdArtiSum.KundenID = Kunden.ID
   JOIN Artikel ON KdArtiSum.ArtikelID = Artikel.ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
-  LEFT OUTER JOIN Liefermenge ON Liefermenge.ArtikelID = KdArtiSum.ArtikelID AND Liefermenge.KundenID = KdArtiSum.KundenID
-  LEFT OUTER JOIN WegTeile ON WegTeile.ArtikelID = KdArtiSum.ArtikelID AND WegTeile.KundenID = KdArtiSum.KundenID
-  LEFT OUTER JOIN WegTeileSumme ON WegTeileSumme.ArtikelID = KdArtiSum.ArtikelID AND WegTeileSumme.KundenID = KdArtiSum.KundenID
+  JOIN WegTeileSumme ON WegTeileSumme.ArtikelID = KdArtiSum.ArtikelID AND WegTeileSumme.KundenID = KdArtiSum.KundenID AND WegTeileSumme.Monat = WegTeile.Monat
+  LEFT JOIN Liefermenge ON Liefermenge.ArtikelID = KdArtiSum.ArtikelID AND Liefermenge.KundenID = KdArtiSum.KundenID AND Liefermenge.Monat = WegTeile.Monat
   WHERE Kunden.KdGFID IN ($3$)
     AND Kunden.FirmaID IN ($2$)
     AND Kunden.StandortID IN ($4$)
