@@ -15,8 +15,9 @@ ArtikelKundenverwendung AS (
   WHERE Firma.SuchCode = N'SMSK'
     AND KdArti.Status = N'A'
 )
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS [Artikelbezeichnung deutsch], Artikel.ArtikelBez4 AS [Artikelbezeichnung slowakisch]
+SELECT Bereich.Bereich AS Produktbereich, Bereich.BereichBez AS [Bereichsbezeichnung deutsch], Bereich.BereichBez4 AS [Bereichsbezeichnung slowakisch], Artikel.ArtikelNr, Artikel.ArtikelBez AS [Artikelbezeichnung deutsch], Artikel.ArtikelBez4 AS [Artikelbezeichnung slowakisch]
 FROM Artikel
+JOIN Bereich ON Artikel.BereichID = Bereich.ID
 WHERE Artikel.ID IN (
     SELECT ArtikelID FROM ArtikelImBestand
   )
