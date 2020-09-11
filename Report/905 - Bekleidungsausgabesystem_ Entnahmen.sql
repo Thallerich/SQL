@@ -2,7 +2,7 @@ DECLARE @von datetime = $STARTDATE$;
 DECLARE @bis datetime = DATEADD(day, 1, $ENDDATE$);
 
 WITH Teilestatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'TEILE')
 ), 
@@ -11,7 +11,7 @@ LastScan AS (
   FROM Scans
   GROUP BY Scans.TeileID
 )
-SELECT Scans.DateTime AS [Datum der Entnahme], EntnahmeTraeger.PersNr, EntnahmeTraeger.Traeger AS TraegerNr, EntnahmeTraeger.Nachname, EntnahmeTraeger.Vorname, Teile.Barcode, Teile.RentomatChip AS Chipcode, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Kunden.KdNr, Kunden.SuchCode AS Kunde, IIF(Teile.Ausdienst IS NULL, Teile.RestwertInfo, Teile.AusdRestw) AS Restwert, Teilestatus.StatusBez AS [aktueller Status des Teils], Actions.ActionsBez AS [letzte Aktion des Teils]
+SELECT Scans.DateTime AS [Datum der Entnahme], EntnahmeTraeger.PersNr, EntnahmeTraeger.Traeger AS TraegerNr, EntnahmeTraeger.Nachname, EntnahmeTraeger.Vorname, Teile.Barcode, Teile.RentomatChip AS Chipcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Kunden.KdNr, Kunden.SuchCode AS Kunde, IIF(Teile.Ausdienst IS NULL, Teile.RestwertInfo, Teile.AusdRestw) AS Restwert, Teilestatus.StatusBez AS [aktueller Status des Teils], Actions.ActionsBez$LAN$ AS [letzte Aktion des Teils]
 FROM Teile
 JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
