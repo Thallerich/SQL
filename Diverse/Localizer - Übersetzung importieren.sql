@@ -1,9 +1,9 @@
-DROP TABLE IF EXISTS _SKLanguageImportTable;
+DROP TABLE IF EXISTS _LanguageImportTable;
 GO
 
-CREATE TABLE _SKLanguageImportTable (
+CREATE TABLE _LanguageImportTable (
   ID int,
-  LanguageID int DEFAULT 6,
+  LanguageID int,
   SourceText nvarchar(120) COLLATE Latin1_General_CS_AS,
   TranslatedText nvarchar(120) COLLATE Latin1_General_CS_AS,
   LastModified date DEFAULT CAST(GETDATE() AS date),
@@ -12,7 +12,9 @@ CREATE TABLE _SKLanguageImportTable (
 
 GO
 
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\SK_Translation.xlsx';
+DECLARE @Language nchar(5) = N'hu_HU';
+DECLARE @LanguageID int;
+DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\HU_Translation.xlsx';
 DECLARE @XLSXImportSQL nvarchar(max);
 
 DECLARE @ImportTable TABLE (
@@ -21,37 +23,35 @@ DECLARE @ImportTable TABLE (
 );
 
 SET @XLSXImportSQL = N'SELECT * ' +
-  N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [SKTranslation$]);';
+  N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [Sheet1$]);';
 
 INSERT INTO @ImportTable
 EXEC sp_executesql @XLSXImportSQL;
 
-INSERT INTO _SKLanguageImportTable (ID, SourceText, TranslatedText)
-SELECT ROW_NUMBER() OVER (ORDER BY SourceText) AS ID, SourceText, LEFT(TranslatedText, 120) AS TranslatedText
+SET @LanguageID = (SELECT ID FROM [Language] WHERE [Language].ISO = @Language);
+
+INSERT INTO _LanguageImportTable (ID, LanguageID, SourceText, TranslatedText)
+SELECT ROW_NUMBER() OVER (ORDER BY SourceText) AS ID, @LanguageID, SourceText, LEFT(TranslatedText, 120) AS TranslatedText
 FROM @ImportTable;
 
-GO
-
-DELETE FROM _SKLanguageImportTable
+DELETE FROM _LanguageImportTable
 WHERE ID IN (
   SELECT MaxID
   FROM (
     SELECT MAX(ID) AS MaxID, SourceText
-    FROM _SKLanguageImportTable
+    FROM _LanguageImportTable
     GROUP BY SourceText
     HAVING COUNT(ID) > 1
   ) AS x
 );
 
-GO
-
-DELETE FROM _SKLanguageImportTable
+DELETE FROM _LanguageImportTable
 WHERE ID IN (
-  SELECT _SKLanguageImportTable.ID
-  FROM _SKlanguageImportTable
-  JOIN LangTran ON LangTran.SourceText = _SKLanguageImportTable.SourceText
-  WHERE LangTran.LanguageID = 6
-    AND LangTran.TranslatedText = _SKLanguageImportTable.TranslatedText
+  SELECT _LanguageImportTable.ID
+  FROM _LanguageImportTable
+  JOIN LangTran ON LangTran.SourceText = _LanguageImportTable.SourceText
+  WHERE LangTran.LanguageID = @LanguageID
+    AND LangTran.TranslatedText = _LanguageImportTable.TranslatedText
 );
 
 GO
