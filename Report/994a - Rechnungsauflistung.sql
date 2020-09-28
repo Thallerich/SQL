@@ -1,4 +1,4 @@
-SELECT RechKo.RechDat AS Rechnungsdatum, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, RechKo.RechNr AS Rechnungsnummer, SUM(RechPo.GPreis) AS Nettosumme, Vsa.Name2 AS Bezeichnung, Abteil.Bez AS Kostenstelle, CAST(Abteil.RechnungsMemo AS nchar) AS [Kostenstelle Auftrags-Nr.]
+SELECT RechKo.RechDat AS Rechnungsdatum, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, RechKo.RechNr AS Rechnungsnummer, SUM(RechPo.GPreis) AS Nettosumme, Vsa.Name1 AS [Vsa-Name1], Vsa.Name2 AS Bezeichnung, Abteil.Bez AS Kostenstelle, CAST(Abteil.RechnungsMemo AS nchar) AS [Kostenstelle Auftrags-Nr.]
 FROM RechPo, RechKo, Kunden, Holding, Abteil, Vsa
 WHERE RechPo.RechKoID = RechKo.ID
   AND RechKo.KundenID = Kunden.ID
@@ -12,5 +12,5 @@ WHERE RechPo.RechKoID = RechKo.ID
     OR ($2$ = 0 AND $3$ = 1 AND RechKo.Art = 'G')
   )
   AND RechKo.RechDat BETWEEN $STARTDATE$ AND $ENDDATE$
-GROUP BY RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode, RechKo.RechNr, Vsa.Name2, Abteil.Bez, CAST(Abteil.RechnungsMemo AS nchar)
+GROUP BY RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode, RechKo.RechNr, Vsa.Name1, Vsa.Name2, Abteil.Bez, CAST(Abteil.RechnungsMemo AS nchar)
 ORDER BY RechKo.RechNr;
