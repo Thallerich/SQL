@@ -1,7 +1,7 @@
 SET NOCOUNT ON;
 
 DECLARE @MaxRuns int = 100;
-DECLARE @RowsPerBatch int = 1000;
+DECLARE @RowsPerBatch int = 10000;
 DECLARE @Cutoff datetime2 = N'2017-01-01 00:00:00';
 
 DECLARE @RunNumber int = 1;
@@ -59,9 +59,6 @@ RAISERROR(@Message, 0, 1) WITH NOWAIT;
 WHILE (@RowsDeleted > 0 AND @RunNumber <= @MaxRuns AND @MaxRows > 0)
 BEGIN
 
-  SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Beginning delete action!';
-  RAISERROR(@Message, 0, 1) WITH NOWAIT;
-
   BEGIN TRANSACTION;
     
     DELETE TOP (@RowsPerBatch)
@@ -79,8 +76,6 @@ BEGIN
   SET @RunNumber = @RunNumber + 1;
   RAISERROR(@Message, 0, 1) WITH NOWAIT;
   WAITFOR DELAY '00:00:02';
-  SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - WAITFOR done!';
-  RAISERROR(@Message, 0, 1) WITH NOWAIT;
 
 END;
 
