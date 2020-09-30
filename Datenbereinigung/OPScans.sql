@@ -1,8 +1,8 @@
 SET NOCOUNT ON;
 
 DECLARE @MaxRuns int = 10;
-DECLARE @RowsPerBatch int = 50000;
-DECLARE @Cutoff datetime2 = N'2018-01-01 00:00:00';
+DECLARE @RowsPerBatch int = 10000;
+DECLARE @Cutoff datetime2 = N'2017-01-01 00:00:00';
 
 DECLARE @RunNumber int = 1;
 DECLARE @RowsDeleted int = 1;
@@ -35,7 +35,7 @@ BEGIN
   SELECT ID, Zeitpunkt, OPTeileID, ZielNrID, ActionsID, OPGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OPEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_
   FROM (
     DELETE TOP (@RowsPerBatch)
-    FROM OPScans
+    FROM OPScans WITH (ROWLOCK)
     OUTPUT deleted.*
     WHERE OPScans.ID IN (
       SELECT ID FROM #TmpScansToDelete
@@ -46,7 +46,7 @@ BEGIN
   SET @RowsDeletedAllRuns = @RowsDeletedAllRuns + @RowsDeleted;
   SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Deleted ' + FORMAT(@RowsDeletedAllRuns, N'##,#', N'de-AT') + N' of ' + FORMAT(@MaxRows, N'##,#', N'de-AT') + ' rows!  -> Run number ' + CAST(@RunNumber AS nvarchar);
   SET @RunNumber = @RunNumber + 1;
-  RAISERROR(@Message, 0, 1);
+  RAISERROR(@Message, 0, 1) WITH NOWAIT;
   WAITFOR DELAY '00:00:10';
 
 END;
