@@ -26,6 +26,6 @@ JOIN LastScan ON LastScan.TeileID = Teile.ID
 JOIN Scans ON LastScan.ScansID = Scans.ID
 JOIN Traeger AS EntnahmeTraeger ON Scans.LastPoolTraegerID = EntnahmeTraeger.ID
 WHERE Vsa.RentomatID = $2$
-  AND Traeger.RentoArtID = (SELECT RentoArt.ID FROM RentoArt WHERE RentoArt.Code = N'S')
+  AND Traeger.RentoArtID IN (SELECT RentoArt.ID FROM RentoArt WHERE RentoArt.Code IN (N'S', N'T'))
   AND Scans.DateTime BETWEEN @von AND @bis
   AND Actions.ID = 65;   -- Aktion "Bekleidungssystem: Entnahme"
