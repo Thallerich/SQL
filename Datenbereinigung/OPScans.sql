@@ -43,7 +43,7 @@ DISABLE TRIGGER RI_OPSCANS_DELETE ON OPScans;
 SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Trigger deactivated!';
 RAISERROR(@Message, 0, 1) WITH NOWAIT;
 
-WHILE (@RowsDeleted > 0 AND @RunNumber <= @MaxRuns AND @MaxRows > 0)
+WHILE ((@RowsDeleted > 0 AND @RunNumber <= @MaxRuns AND @MaxRows > 0) OR DATEPART(hour, GETDATE()) != 6)
 BEGIN
 
   INSERT INTO Wozabal_Archive.dbo.OPSCANS (ID, Zeitpunkt, OPTeileID, ZielNrID, ActionsID, OPGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OPEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_)
@@ -83,3 +83,5 @@ ENABLE TRIGGER RI_OPSCANS_DELETE ON OPScans;
 
 SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Trigger activated!';
 RAISERROR(@Message, 0, 1) WITH NOWAIT;
+
+DROP TABLE IF EXISTS #TmpScansToDelete;
