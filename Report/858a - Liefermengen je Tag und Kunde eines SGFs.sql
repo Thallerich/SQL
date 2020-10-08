@@ -13,6 +13,8 @@ FROM Bereich, (
     AND LsKo.Datum BETWEEN $1$ AND $2$
     AND LsPo.Menge > 0
     AND Kunden.KdGfID IN ($3$)
+    AND Kunden.StandortID IN ($4$)
+    AND Kunden.SichtbarID IN ($SICHTBARIDS$)
   GROUP BY LsKo.Datum, DATENAME(day, LsKo.Datum), KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Artikel.BereichID
 ) AS Daten
 WHERE Daten.BereichID = Bereich.ID
