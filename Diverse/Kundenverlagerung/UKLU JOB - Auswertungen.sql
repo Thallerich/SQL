@@ -54,7 +54,14 @@ JOIN Liefermenge ON Liefermenge.KdArtiID = KdArti.ID AND Liefermenge.VsaID = Vsa
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
 WHERE KdGf.KurzBez = N'JOB'
   AND Kunden.AdrArtID = 1
-  AND Kunden.Status = N'A';
+  AND Kunden.Status = N'A'
+  AND EXISTS (
+    SELECT KdBer.*
+    FROM KdBer
+    JOIN Bereich ON KdBer.BereichID = Bereich.ID
+    WHERE Bereich.Bereich = N'BK'
+      AND KdBer.KundenID = Kunden.ID
+  );
 
 GO
 
@@ -91,7 +98,14 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Liefermenge ON Liefermenge.KdArtiID = KdArti.ID AND Liefermenge.VsaID = Vsa.ID
 WHERE KdGf.KurzBez = N'JOB'
   AND Kunden.AdrArtID = 1
-  AND Kunden.Status = N'A';
+  AND Kunden.Status = N'A'
+  AND EXISTS (
+    SELECT KdBer.*
+    FROM KdBer
+    JOIN Bereich ON KdBer.BereichID = Bereich.ID
+    WHERE Bereich.Bereich = N'BK'
+      AND KdBer.KundenID = Kunden.ID
+  );;
 
 SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Lagerart.LagerartBez AS Lagerart, Lagerart.Neuwertig, SUM(Bestand.Bestand) AS Lagerbestand, SUM(Bestand.Entnahme07) AS [Entnahmen 2020-07], SUM(Bestand.Entnahme08) AS [Entnahmen 2020-08], SUM(Bestand.Entnahme09) AS [Entnahmen 2020-09], SUM(Bestand.Entnahme07 + Bestand.Entnahme08 + Bestand.Entnahme09) AS [Entnahmen letzte 3 Monate]
 FROM Bestand
