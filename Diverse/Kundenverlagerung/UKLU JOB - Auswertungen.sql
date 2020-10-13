@@ -21,6 +21,14 @@ Liefermenge AS (
       WHERE Standort.SuchCode LIKE N'UKL%'
     )
   GROUP BY LsKo.VsaID, LsPo.KdArtiID
+),
+ArtiStanGraz AS (
+  SELECT ArtiStan.ArtikelID, FaltProg.Programm AS FaltprogNr, FaltProg.FaltProgBez, FinishPr.Programm AS FinishPrNr, FinishPr.FinishPrBez
+  FROM ArtiStan
+  JOIN FaltProg ON ArtiStan.FaltProgID = FaltProg.ID
+  JOIN FinishPr ON ArtiStan.FinishPrID = FinishPr.ID
+  JOIN Standort ON ArtiStan.StandortID = Standort.ID
+  WHERE Standort.SuchCode = N'GRAZ'
 )
 SELECT Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
@@ -31,6 +39,10 @@ SELECT Kunden.KdNr,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
   Artikelstatus.StatusBez AS Kundenartikelstatus,
+  ArtiStanGraz.FinishPrNr AS FinishprogrammNr,
+  ArtiStanGraz.FinishPrBez AS Finishprogramm,
+  ArtiStanGraz.FaltProgNr AS FaltprogrammNr,
+  ArtiStanGraz.FaltProgBez AS Faltprogramm,
   Bereich.BereichBez AS Produktbereich,
   KdArti.Umlauf AS Umlaufmenge,
   Liefermenge.Liefermenge AS [Liefermenge letzte 13 Wochen],
@@ -52,6 +64,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Artikelstatus ON KdArti.Status = Artikelstatus.Status
 JOIN Liefermenge ON Liefermenge.KdArtiID = KdArti.ID AND Liefermenge.VsaID = Vsa.ID
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
+JOIN ArtiStanGraz ON ArtiStanGraz.ArtikelID = Artikel.ID
 WHERE KdGf.KurzBez = N'JOB'
   AND Kunden.AdrArtID = 1
   AND Kunden.Status = N'A'
