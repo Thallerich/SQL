@@ -7,16 +7,21 @@ DECLARE @WocheBis nchar(7) = $4$;
 
 DROP TABLE IF EXISTS #TmpVOESTBenchmark;
 
-SELECT Holding.Holding,
+SELECT 
+  Holding.Holding,
   Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
-  VSA.VsaNr,
+  RechKo.RechNr,
+  RechKo.RechDat,
+  DENSE_RANK() OVER(ORDER BY RechKo.RechDat ASC) AS Rechnungsperiode,
+  Vsa.VsaNr,
   Vsa.SuchCode AS [VSA-Stichwort],
   Vsa.Bez AS [VSA-Bezeichnung],
   Vsa.GebaeudeBez AS Abteilung,
+  Vsa.Name2 AS Bereich,
   Abteil.Bez AS Kostenstelle,
   Wochen.Woche,
-  Wochen.Monat1 AS Monat,
+  RechPo.Menge as RGMenge,
   SUM(TraeArch.Menge) AS [Teile gesamt],
   COUNT(DISTINCT TraeArti.TraegerID) AS [Träger gesamt],
   SUM(AbtKdArW.EPreis * TraeArch.Menge) AS Umsatz
@@ -25,37 +30,48 @@ FROM AbtKdArW
 JOIN TraeArch ON TraeArch.AbtKdArWID = AbtKdArW.ID
 JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
 JOIN Vsa ON AbtKdArW.VsaID = Vsa.ID
-JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Kunden ON Traearch.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Abteil ON AbtKdArW.AbteilID = Abteil.ID
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
+JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
+JOIN RechKo ON RechKo.ID = RechPo.RechKoID
 WHERE Holding.ID IN ($1$)
   AND Kunden.ID IN ($2$)
   AND Wochen.Woche BETWEEN @WocheVon AND @WocheBis
+  AND AbtKdArW.RechPoID > 0
 GROUP BY Holding.Holding,
   Kunden.KdNr,
   Kunden.SuchCode,
+  RechKo.RechNr,
+  RechKo.RechDat,
   Vsa.VsaNr,
   Vsa.SuchCode,
   Vsa.Bez,
+  Vsa.Name2,
+  RechPo.ID,
   Vsa.GebaeudeBez,
   Abteil.Bez,
+  RechPo.Menge,
   Wochen.Woche,
-  Wochen.Monat1;
+  RechKo.Rechnr,
+  Rechko.RechDat,
+  RechKo.VonDatum,
+  RechKo.BisDatum;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Detailed Data for Benchmark                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-/* SELECT VOESTBenchmark.*, VOESTBenchmark.[Teile gesamt] / VOESTBenchmark.[Träger gesamt] AS [Durchschnitt Teile pro Träger], VOESTBenchmark.Umsatz / VOESTBenchmark.[Träger gesamt] AS [Durchschnitt Kosten pro Träger]
+SELECT VOESTBenchmark.*, VOESTBenchmark.[Teile gesamt] / VOESTBenchmark.[Träger gesamt] AS [Durchschnitt Teile pro Träger], VOESTBenchmark.Umsatz / VOESTBenchmark.[Träger gesamt] AS [Durchschnitt Kosten pro Träger]
 FROM #TmpVOESTBenchmark AS VOESTBenchmark
-ORDER BY Holding, KdNr, VsaNr, Woche; */
+ORDER BY Rechnungsperiode, Holding, KdNr, VsaNr;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Cumulated Data for diagrams                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT VOESTBenchmark.Monat, VOESTBenchmark.Abteilung, MAX(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], MAX(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], MAX(VOESTBenchmark.[Teile gesamt]) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
+SELECT VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung, MAX(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], MAX(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], MAX(VOESTBenchmark.[Teile gesamt]) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
 FROM #TmpVOESTBenchmark AS VOESTBenchmark
-GROUP BY VOESTBenchmark.Monat, VOESTBenchmark.Abteilung
-ORDER BY Monat, Abteilung;
+GROUP BY VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung
+ORDER BY Rechnungsperiode, Abteilung;
