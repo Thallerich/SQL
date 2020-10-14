@@ -5,6 +5,33 @@
 DECLARE @WocheVon nchar(7) = $3$;
 DECLARE @WocheBis nchar(7) = $4$;
 
+DECLARE @YearVon int = CAST(LEFT(@WocheVon, 4) AS int);
+DECLARE @YearBis int = CAST(LEFT(@WocheBis, 4) AS int);
+
+DECLARE @RechPeriode TABLE (
+  RechKoID int,
+  Jahr int,
+  Rechnungsperiode int
+);
+
+INSERT INTO @RechPeriode
+SELECT RechKo.ID AS RechKoID, DATEPART(year, RechKo.RechDat) AS Jahr, DENSE_RANK() OVER (PARTITION BY DATEPART(year, Rechko.RechDat) ORDER BY RechKo.RechDat) AS Rechnungsperiode
+FROM RechKo
+WHERE RechKo.KundenID IN ($2$)
+  AND DATEPART(year, RechKo.RechDat) BETWEEN @YearVon AND @YearBis
+  AND EXISTS (
+    SELECT RechPo.ID
+    FROM RechPo
+    JOIN AbtKdArW ON AbtKdArW.RechPoID = RechPo.ID
+    JOIN TraeArch ON TraeArch.AbtKdArWID = AbtKdArW.ID
+    WHERE RechPo.RechKoID = RechKo.ID
+  );
+
+UPDATE @RechPeriode SET Rechnungsperiode = Rechnungsperiode + 6
+WHERE Jahr = 2019;
+
+SELECT * FROM @RechPeriode;
+
 DROP TABLE IF EXISTS #TmpVOESTBenchmark;
 
 SELECT 
@@ -13,7 +40,7 @@ SELECT
   Kunden.SuchCode AS Kunde,
   RechKo.RechNr,
   RechKo.RechDat,
-  DENSE_RANK() OVER(ORDER BY RechKo.RechDat ASC) AS Rechnungsperiode,
+  CAST(RechPeriode.Jahr AS nvarchar) + '/' + RIGHT(N'0' + CAST(RechPeriode.Rechnungsperiode AS nvarchar), 2) AS Rechnungsperiode,
   Vsa.VsaNr,
   Vsa.SuchCode AS [VSA-Stichwort],
   Vsa.Bez AS [VSA-Bezeichnung],
@@ -36,6 +63,7 @@ JOIN Abteil ON AbtKdArW.AbteilID = Abteil.ID
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
 JOIN RechKo ON RechKo.ID = RechPo.RechKoID
+JOIN @RechPeriode AS RechPeriode ON RechPeriode.RechKoID = RechKo.ID
 WHERE Holding.ID IN ($1$)
   AND Kunden.ID IN ($2$)
   AND Wochen.Woche BETWEEN @WocheVon AND @WocheBis
@@ -45,6 +73,7 @@ GROUP BY Holding.Holding,
   Kunden.SuchCode,
   RechKo.RechNr,
   RechKo.RechDat,
+  CAST(RechPeriode.Jahr AS nvarchar) + '/' + RIGHT(N'0' + CAST(RechPeriode.Rechnungsperiode AS nvarchar), 2),
   Vsa.VsaNr,
   Vsa.SuchCode,
   Vsa.Bez,
