@@ -38,6 +38,8 @@ SELECT Kunden.KdNr,
   StandKon.StandKonBez AS Standortkonfiguration,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
+  Lief.LiefNr,
+  Lief.SuchCode AS Lieferant,
   Artikelstatus.StatusBez AS Kundenartikelstatus,
   ArtiStanGraz.FinishPrNr AS FinishprogrammNr,
   ArtiStanGraz.FinishPrBez AS Finishprogramm,
@@ -65,6 +67,7 @@ JOIN Artikelstatus ON KdArti.Status = Artikelstatus.Status
 JOIN Liefermenge ON Liefermenge.KdArtiID = KdArti.ID AND Liefermenge.VsaID = Vsa.ID
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
 JOIN ArtiStanGraz ON ArtiStanGraz.ArtikelID = Artikel.ID
+JOIN Lief ON Artikel.LiefID = Lief.ID
 WHERE KdGf.KurzBez = N'JOB'
   AND Kunden.AdrArtID = 1
   AND Kunden.Status = N'A'
@@ -120,17 +123,18 @@ WHERE KdGf.KurzBez = N'JOB'
       AND KdBer.KundenID = Kunden.ID
   );;
 
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Lagerart.LagerartBez AS Lagerart, Lagerart.Neuwertig, SUM(Bestand.Bestand) AS Lagerbestand, SUM(Bestand.Entnahme07) AS [Entnahmen 2020-07], SUM(Bestand.Entnahme08) AS [Entnahmen 2020-08], SUM(Bestand.Entnahme09) AS [Entnahmen 2020-09], SUM(Bestand.Entnahme07 + Bestand.Entnahme08 + Bestand.Entnahme09) AS [Entnahmen letzte 3 Monate]
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Lief.LiefNr AS LieferantNr, Lief.SuchCode AS Lieferant, Lagerart.LagerartBez AS Lagerart, Lagerart.Neuwertig, SUM(Bestand.Bestand) AS Lagerbestand, SUM(Bestand.Entnahme07) AS [Entnahmen 2020-07], SUM(Bestand.Entnahme08) AS [Entnahmen 2020-08], SUM(Bestand.Entnahme09) AS [Entnahmen 2020-09], SUM(Bestand.Entnahme07 + Bestand.Entnahme08 + Bestand.Entnahme09) AS [Entnahmen letzte 3 Monate]
 FROM Bestand
 JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
 JOIN Standort ON Lagerart.LagerID = Standort.ID
+JOIN Lief ON Artikel.LiefID = Lief.ID
 WHERE Artikel.ID IN (
     SELECT ArtikelID FROM @UKLUArtikelJOB
   )
   AND Standort.SuchCode = N'UKLU'
   AND Bestand.Bestand != 0
-GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Lagerart.LagerartBez, Lagerart.Neuwertig;
+GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Lief.LiefNr, Lief.SuchCode, Lagerart.LagerartBez, Lagerart.Neuwertig;
 
 GO
