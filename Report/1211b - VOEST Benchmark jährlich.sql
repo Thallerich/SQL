@@ -71,7 +71,7 @@ ORDER BY Rechnungsperiode, Holding, KdNr, VsaNr;
 /* ++ Cumulated Data for diagrams                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung, MAX(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], MAX(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], MAX(VOESTBenchmark.[Teile gesamt]) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
+SELECT VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung, VOESTBenchmark.Bereich, VOESTBenchmark.Kostenstelle, MAX(VOESTBenchmark.[Träger gesamt]) AS [Anzahl Träger], SUM(VOESTBenchmark.Umsatz) AS [Kosten je Bereich], SUM(VOESTBenchmark.Umsatz) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Kosten je Träger], MAX(VOESTBenchmark.[Teile gesamt]) AS [Anzahl Kleidungstücke], MAX(VOESTBenchmark.[Teile gesamt]) / MAX(VOESTBenchmark.[Träger gesamt]) AS [Durchschnitt Teile je Träger]
 FROM #TmpVOESTBenchmark AS VOESTBenchmark
-GROUP BY VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung
+GROUP BY VOESTBenchmark.Rechnungsperiode, VOESTBenchmark.RechNr, VOESTBenchmark.RechDat, VOESTBenchmark.Abteilung, VOESTBenchmark.Bereich, VOESTBenchmark.Kostenstelle
 ORDER BY Rechnungsperiode, Abteilung;
