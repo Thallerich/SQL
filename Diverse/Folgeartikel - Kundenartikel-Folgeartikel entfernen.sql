@@ -1,5 +1,5 @@
-DECLARE @KdNr int = 10003083;
-DECLARE @Artikel nchar(15) = N'70V1';
+DECLARE @KdNr int = 10001717;
+DECLARE @Artikel nchar(15) = N'45V3';
 
 DECLARE @TraeArti TABLE (
   TraeArtiID int,
@@ -41,10 +41,15 @@ UPDATE TraeArti SET FolgeTraeArtiID = -1, FolgeArtZwingend = 0 WHERE ID IN (
 );
 
 DELETE FROM TraeArti WHERE ID IN (
-  SELECT FolgeTraeArtiID
-  FROM @TraeArti
-  WHERE DeleteFolge = 1
-);
+    SELECT FolgeTraeArtiID
+    FROM @TraeArti
+    WHERE DeleteFolge = 1
+  )
+  AND NOT EXISTS (
+    SELECT TraeMass.*
+    FROM TraeMass
+    WHERE TraeMass.TraeArtiID = TraeArti.ID
+  );
 
 UPDATE KdArti SET FolgeKdArtiID = -1
 WHERE ArtikelID = (SELECT ID FROM Artikel WHERE ArtikelNr = @Artikel)
