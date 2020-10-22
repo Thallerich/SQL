@@ -29,8 +29,8 @@ IF db_id(N'Wozabal_Test') IS NOT NULL AND DATABASEPROPERTYEX(N'Wozabal_Test', N'
 RESTORE DATABASE Wozabal_Test
 FROM DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
 WITH RECOVERY, REPLACE,
-  MOVE N'Wozabal' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test.mdf',
-  MOVE N'Wozabal_Log' TO N'E:\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_Test_Log.mdf';
+  MOVE N'Wozabal' TO N'T:\Wozabal_Test\Wozabal_Test.mdf',
+  MOVE N'Wozabal_Log' TO N'T:\Wozabal_Test\Wozabal_Test_Log.ldf';
 
 IF (SELECT DATABASEPROPERTYEX(N'Wozabal_Test', 'UserAccess')) = N'SINGLE_USER'
   ALTER DATABASE Wozabal_Test
