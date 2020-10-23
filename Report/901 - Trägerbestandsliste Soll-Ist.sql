@@ -1,4 +1,3 @@
-DECLARE @KundenID int = $ID$;
 DECLARE @CurrentWeek nchar(7);
 
 SET @CurrentWeek = (
@@ -11,7 +10,7 @@ WITH Umlaufteile AS (
   SELECT Teile.TraeArtiID, COUNT(Teile.ID) AS inBerechnung
   FROM Teile
   JOIN Vsa ON Teile.VsaID = Vsa.ID
-  WHERE Vsa.KundenID = @KundenID
+  WHERE Vsa.KundenID IN ($1$)
     AND Teile.Kostenlos = 0
     AND Teile.AltenheimModus = 0
     AND ISNULL(Teile.Indienst, N'2099/52') <= @CurrentWeek
@@ -27,7 +26,7 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 LEFT JOIN Umlaufteile ON Umlaufteile.TraeArtiID = TraeArti.ID
-WHERE Kunden.ID = @KundenID
+WHERE Kunden.ID IN ($1$)
   AND (TraeArti.Menge != 0 OR Umlaufteile.inBerechnung != 0)
   AND Traeger.Status NOT IN (N'K', N'P')
 ORDER BY [VSA-Nummer], Nachname, Vorname, [Träger-Nummer];
