@@ -15,7 +15,7 @@ BEGIN
   INSERT INTO OPScans (ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_)
   SELECT TOP (@RowsPerBatch) ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_
   FROM ___OPSCANS
-  WHERE (LsPoID > 0 OR EingAnfPoID > 0 OR AnfPoID > 0 OR InvPoID > 0 OR OPEtiKoID > 0)
+  WHERE (LsPoID > 0 OR EingAnfPoID > 0 OR AnfPoID > 0 OR InvPoID > 0 OR OPEtiKoID > 0 OR Menge != 0)
     AND NOT EXISTS (
       SELECT OPScans.*
       FROM OPScans
