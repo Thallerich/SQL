@@ -1,4 +1,4 @@
-DECLARE @Woche nchar(7) = (SELECT Week.Woche FROM Week WHERE N'2021-06-30' BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @Woche nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 
 PRINT @Woche;
 
@@ -12,7 +12,8 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-WHERE Kunden.KdNr IN (10003817, 10003818, 10003819, 10003845, 10003848, 2529602)
+WHERE Kunden.HoldingID = (SELECT ID FROM Holding WHERE Holding = N'PORS')
+  AND Kunden.Status = N'A'
   AND Teile.Status BETWEEN N'Q' AND N'W'
   AND Teile.Einzug IS NULL
   AND Teile.AltenheimModus = 0;
