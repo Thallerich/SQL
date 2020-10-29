@@ -186,9 +186,9 @@ BEGIN TRANSACTION;
     SET ValueMemo = N'training01'
     WHERE Parameter = N'ABS_USERNAME';
 
-  UPDATE SdcDev
-    SET ConnectPath = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
-    WHERE Bez = N'SAP';
+  UPDATE Settings
+    SET ValueMemo = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
+    WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
 
   DELETE
   FROM dbsystem.dbo.Sessions;

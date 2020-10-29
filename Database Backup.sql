@@ -190,9 +190,9 @@ BEGIN TRANSACTION;
     SET ValueMemo = N'3048'
     WHERE Parameter = N'FAHRER_APP_PORT';
 
-  UPDATE SdcDev
-    SET ConnectPath = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
-    WHERE Bez = N'SAP';
+  UPDATE Settings
+    SET ValueMemo = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
+    WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
 
   UPDATE Settings
     SET ValueMemo = N'10.10.200.195'
