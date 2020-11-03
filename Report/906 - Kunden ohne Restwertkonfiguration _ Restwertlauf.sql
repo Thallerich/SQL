@@ -1,4 +1,13 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, RwConfig.RwConfigBez$LAN$ AS Restwertkonfiguration, RwLauf.RwLaufBez$LAN$ AS Restwertlauf, Kunden.FakFehlteil AS [Fehlteile abrechnen?]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, RwConfig.RwConfigBez$LAN$ AS Restwertkonfiguration, RwLauf.RwLaufBez$LAN$ AS Restwertlauf, Kunden.FakFehlteil AS [Fehlteile abrechnen?], [Kundenservice-Mitarbeiter] = (
+  SELECT TOP 1 Mitarbei.Name
+  FROM KdBer
+  JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
+  WHERE KdBer.KundenID = Kunden.ID
+    AND KdBer.Status = N'A'
+    AND KdBer.ServiceID > 0
+  GROUP BY Mitarbei.Name
+  ORDER BY COUNT(KdBer.ID) DESC
+)
 FROM Kunden
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
