@@ -6,6 +6,6 @@ AND Abteil.ID = RechPo.AbteilID
 AND VSA.ID = RechPo.VsaID
 AND Artikel.ID = KdArti.ArtikelID
 AND KdArti.ID = RechPo.KdArtiID
-AND RechKo.WaeID = Wae.ID
+AND RechKo.RechWaeID = Wae.ID
 AND Artikel.MeID = ME.ID
 AND RechKo.KundenID = Kunden.ID;

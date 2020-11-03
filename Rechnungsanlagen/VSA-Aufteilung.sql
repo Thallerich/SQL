@@ -5,7 +5,7 @@ JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
-JOIN Wae ON RechKo.WaeID = Wae.ID
+JOIN Wae ON RechKo.RechWaeID = Wae.ID
 WHERE RechKo.ID = $RECHKOID$
 GROUP BY RechKo.RechNr, RechKo.RechDat, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, RechPo.EPreis, Vsa.ID, Vsa.VsaNr, Vsa.Bez, Vsa.SuchCode, Kunden.ID, Kunden.KdNr, Kunden.SuchCode, RechKo.AdressBlock, Kunden.UStIdNr, Wae.IsoCode, Wae.Format, Wae.FormatFinal, RechKo.Land
 ORDER BY VsaID, ArtikelNr;
