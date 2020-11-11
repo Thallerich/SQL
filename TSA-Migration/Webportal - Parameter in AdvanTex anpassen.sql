@@ -17,5 +17,6 @@ UPDATE Settings SET ValueMemo = N'/upload_20201020/' WHERE Parameter = N'INTERNE
 UPDATE Settings SET ValueMemo = N'\\ATENADVANTEX01.wozabal.int\AdvanTex\Data\WebDB_Test' WHERE Parameter = N'WEB_EXPORT_UPLOAD_PATH';
 UPDATE Settings SET ValueMemo = N's.thaller@salesianer.com' WHERE Parameter = N'WEBEXPORT_EMAIL';
 UPDATE Settings SET ValueMemo = N's.thaller@salesianer.com' WHERE Parameter = N'WEBIMPORT_EMAIL';
+UPDATE Settings SET ValueMemo = N'2222' WHERE Parameter = N'INTERNET_SFTP_PORT';
 
 GO
