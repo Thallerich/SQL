@@ -1,40 +1,37 @@
--- ######## Step 1 ################################
-BACKUP DATABASE Wozabal
-TO DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
-WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, BUFFERCOUNT = 47, MAXTRANSFERSIZE = 4194304, MEDIANAME = N'AdvanTex-Backup', NAME = N'Full Backup of the AdvanTex-Database';
-
--- ######## Step 2 ################################
-
-IF db_id(N'Wozabal_Test') IS NOT NULL AND DATABASEPROPERTYEX(N'Wozabal_Test', N'Status') = N'ONLINE'
-  ALTER DATABASE Wozabal_Test
-    SET SINGLE_USER
-  WITH ROLLBACK IMMEDIATE;
-
-RESTORE DATABASE Wozabal_Test
-FROM DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
-WITH RECOVERY, REPLACE,
-  MOVE N'Wozabal' TO N'T:\Wozabal_Test\Wozabal_Test.mdf',
-  MOVE N'Wozabal_Log' TO N'T:\Wozabal_Test\Wozabal_Test_Log.ldf';
-
-IF (SELECT DATABASEPROPERTYEX(N'Wozabal_Test', 'UserAccess')) = N'SINGLE_USER'
-  ALTER DATABASE Wozabal_Test
-    SET MULTI_USER
-  WITH ROLLBACK AFTER 60 SECONDS;
-
--- ######## Step 3 ################################
-
 DECLARE @role tinyint;
 
 SET @role = (
   SELECT [role]
-  FROM [sys].[dm_hadr_availability_replica_states] hars 
-  INNER JOIN [sys].[availability_databases_cluster] adc ON hars.[group_id] = adc.[group_id]
+  FROM [sys].[dm_hadr_availability_replica_states] AS hars 
+  JOIN [sys].[availability_databases_cluster] AS adc ON hars.[group_id] = adc.[group_id]
   WHERE hars.[is_local] = 1
-  AND adc.[database_name] = N'Salesianer_Test'
+    AND adc.[database_name] = N'Salesianer'
 );
 
 IF @role = 1 
 BEGIN
+
+  BACKUP DATABASE Salesianer
+  TO DISK = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\Salesianer.bak'
+  WITH COPY_ONLY, COMPRESSION, INIT, SKIP, FORMAT, MEDIANAME = N'AdvanTex-Backup', NAME = N'Copy-Only Backup of the AdvanTex-Database';
+
+  IF db_id(N'Salesianer_Test') IS NOT NULL AND DATABASEPROPERTYEX(N'Salesianer_Test', N'Status') = N'ONLINE'
+    ALTER DATABASE Salesianer_Test
+      SET SINGLE_USER
+    WITH ROLLBACK IMMEDIATE;
+
+  RESTORE DATABASE Salesianer_Test
+  FROM DISK = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\Salesianer.bak'
+  WITH RECOVERY, REPLACE,
+    MOVE N'Wozabal' TO N'E:\DATA\Salesianer_Test.mdf',
+    MOVE N'Wozabal_Log' TO N'E:\LOG\Salesianer_Test_Log.ldf';
+
+  ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE WITH NO_WAIT;
+
+  IF (SELECT DATABASEPROPERTYEX(N'Salesianer_Test', 'UserAccess')) = N'SINGLE_USER'
+    ALTER DATABASE Salesianer_Test
+      SET MULTI_USER
+    WITH ROLLBACK AFTER 60 SECONDS;
 
   BEGIN TRANSACTION;
 
