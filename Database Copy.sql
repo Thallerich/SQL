@@ -23,8 +23,8 @@ BEGIN
   RESTORE DATABASE Salesianer_Test
   FROM DISK = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\Salesianer.bak'
   WITH RECOVERY, REPLACE,
-    MOVE N'Wozabal' TO N'E:\DATA\Salesianer_Test.mdf',
-    MOVE N'Wozabal_Log' TO N'E:\LOG\Salesianer_Test_Log.ldf';
+    MOVE N'Salesianer' TO N'E:\DATA\Salesianer_Test.mdf',
+    MOVE N'Salesianer_Log' TO N'E:\LOG\Salesianer_Test_Log.ldf';
 
   ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE WITH NO_WAIT;
 
@@ -68,19 +68,19 @@ BEGIN
       WHERE [Parameter] = N'INTERNET_HTTP_URL';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\WebDB_Test\'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\WebDB_Test\'
       WHERE [Parameter] = N'WEB_EXPORT_UPLOAD_PATH';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\Logos\Salesianer_LogoTestmandant.bmp'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Logos\Salesianer_LogoTestmandant.bmp'
       WHERE [Parameter] = N'LOGO1_PATH_UND_DATEINAME';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\UHFInventur\Testmandant\'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\UHFInventur\Testmandant\'
       WHERE [Parameter] = N'INVENTUR_UHF2_PATH';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\UHFInventur\Testmandant\Archiv\'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\UHFInventur\Testmandant\Archiv\'
       WHERE [Parameter] = N'INVENTUR_UHF2_BACKUP_PATH';
       
     UPDATE Salesianer_Test.dbo.Settings
@@ -100,15 +100,15 @@ BEGIN
       WHERE [Parameter] = N'URL_WS_COUNTIT_UNCLEANSIDE';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\EDI\EDI_Test\'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\EDI\EDI_Test\'
       WHERE [Parameter] = N'PATH_EOFFICE';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\EDI\BMD_Test\'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\EDI\BMD_Test\'
       WHERE [Parameter] = N'PATH_BMD';
       
     UPDATE Salesianer_Test.dbo.Rentomat 
-      SET ExportFile1 = N'\SALADVPAPP1.salres.com\AdvanTex\Data\Export\Test\'
+      SET ExportFile1 = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Export\Test\'
       WHERE Rentomat.Interface <> 'Unimat';
 
     UPDATE Salesianer_Test.dbo.Rentomat 
@@ -121,7 +121,7 @@ BEGIN
       
     UPDATE Salesianer_Test.dbo.ExpDef 
       SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\fibu\', N'\fibu\testmandant\')
-      WHERE ExportFileName LIKE N'\\SALADVPAPP1.salres.com%';
+      WHERE ExportFileName LIKE N'\\salshdsvm09_681.salres.com\advpapp_file\%';
 
     UPDATE Salesianer_Test.dbo.ExpDef
       SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq\')
@@ -132,15 +132,15 @@ BEGIN
       WHERE RIGHT(RTRIM(BackupFolder), 1) = N'\';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET ValueMemo = N'\\SALADVPAPP1.salres.com\AdvanTex\Data\Rechnungsarchiv_Testmandant\'
+      SET ValueMemo = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Rechnungsarchiv_Testmandant\'
       WHERE Parameter = N'PATH_RECHARCH';
 
     UPDATE Salesianer_Test.dbo.RKoOut
-      SET ArchivePath = N'\SALADVPAPP1.salres.com\AdvanTex\Data\Export\Rechnungen_Testmandant\'
+      SET ArchivePath = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Export\Rechnungen_Testmandant\'
       WHERE ArchivePath IS NOT NULL;
 
     UPDATE Salesianer_Test.dbo.RKoOut
-      SET VersandPath = N'\\\SALADVPAPP1.salres.com\AdvanTex\Data\Export\Rechnungen_Testmandant\'
+      SET VersandPath = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Export\Rechnungen_Testmandant\'
       WHERE VersandPath IS NOT NULL;
 
     UPDATE Salesianer_Test.dbo.Settings
