@@ -60,18 +60,34 @@ CREATE TABLE __Schwundbuchung (
   VsaID int
 );
 
-UPDATE OPTeile SET [Status] = N'W',LastActionsID = 116
+UPDATE OPTeile SET [Status] = N'W',LastActionsID = 116, RechPoID = -2
 OUTPUT inserted.ID, inserted.ArtGroeID, inserted.ArtikelID, inserted.VsaID
 INTO __Schwundbuchung
 WHERE OPTeile.ID IN (
   SELECT OPTeile.ID
-  FROM __Schwundliste AS SchwundTeile
-  JOIN OPTeile ON SchwundTeile.Code = OPTeile.Code
+  FROM OPTeile
   JOIN Vsa ON OPTeile.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
-  WHERE SchwundTeile.KdNr = Kunden.KdNr
+  WHERE Kunden.KdNr IN (SELECT DISTINCT KdNr FROM __Schwundliste)
     AND DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) > 90
+    AND OPTeile.Status < N'W'
 );
+
+UPDATE OPTeile SET RechPoID = -1
+WHERE OPTeile.ID IN (SELECT OPTeileID FROM __Schwundbuchung)
+  AND (
+    OPTeile.ID IN (
+      SELECT OPTeile.ID
+      FROM OPTeile
+      WHERE OPTeile.Code IN (SELECT Code FROM __Schwundliste)
+    )
+    OR
+    OPTeile.ID IN (
+      SELECT OPTeile.ID
+      FROM OPTeile
+      WHERE OPTeile.LastScanTime > N'2020-09-29 23:59:59'
+    )
+  );
 
 -- ########################  System-Checkliste 174 ausführen, um Ist-Bestand anzupassen ########
 
