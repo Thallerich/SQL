@@ -108,7 +108,7 @@ BEGIN
       WHERE [Parameter] = N'PATH_BMD';
       
     UPDATE Salesianer_Test.dbo.Rentomat 
-      SET ExportFile1 = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Export\Test\'
+      SET ExportFile1 = N'\\salshdsvm09_681.salres.com\advpapp_file\DCS\Test\'
       WHERE Rentomat.Interface <> 'Unimat';
 
     UPDATE Salesianer_Test.dbo.Rentomat 
