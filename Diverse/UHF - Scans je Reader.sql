@@ -1,5 +1,3 @@
-DECLARE @ZielGrpID int = (SELECT ID FROM ZielGrp WHERE ZielGrp.ZielGrpBez = N'Beladeband SAWR');
-
 DECLARE @von datetime2;
 DECLARE @bis datetime2;
 
