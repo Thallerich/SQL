@@ -10,7 +10,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
-  AND Kunden.SichtbarID = 51
+  AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
   AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
@@ -28,7 +28,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
-  AND Kunden.SichtbarID = 51
+  AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
   AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
@@ -46,7 +46,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
-  AND Kunden.SichtbarID = 51
+  AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
   AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Kunden.KdNr IN (30291, 30341)
   AND Vsa.SuchCode = '490'

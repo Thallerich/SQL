@@ -8,7 +8,7 @@ FROM KdArti, Artikel, KdBer, Bereich, ZahlZiel, (
   WHERE LsPo.LsKoID = LsKo.ID
     AND LsKo.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
-    AND Kunden.SichtbarID = 51
+    AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
     AND LsKo.Datum BETWEEN $1$ AND $2$
     AND Kunden.KdNr NOT IN (30974)
 ) AS LsDaten
@@ -30,7 +30,7 @@ FROM KdArti, Artikel, KdBer, Bereich, ZahlZiel, (
   WHERE LsPo.LsKoID = LsKo.ID
     AND LsKo.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
-    AND Kunden.SichtbarID = 51
+    AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
     AND LsKo.Datum BETWEEN $1$ AND $2$
     AND Kunden.KdNr IN (30974)
 ) AS LsDaten
