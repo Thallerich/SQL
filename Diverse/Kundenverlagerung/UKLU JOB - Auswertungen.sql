@@ -95,7 +95,7 @@ WITH Liefermenge AS (
   SELECT LsKo.VsaID, LsPo.KdArtiID, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
-  WHERE LsKo.Datum >= DATEADD(week, -13, GETDATE())
+  WHERE LsKo.Datum BETWEEN N'2019-12-01' AND N'2020-11-30'
     AND LsKo.Status >= N'Q'
     AND LsPo.ProduktionID IN (
       SELECT Standort.ID
@@ -123,7 +123,27 @@ WHERE KdGf.KurzBez = N'JOB'
       AND KdBer.KundenID = Kunden.ID
   );;
 
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Lief.LiefNr AS LieferantNr, Lief.SuchCode AS Lieferant, Lagerart.LagerartBez AS Lagerart, Lagerart.Neuwertig, SUM(Bestand.Bestand) AS Lagerbestand, SUM(Bestand.Entnahme07) AS [Entnahmen 2020-07], SUM(Bestand.Entnahme08) AS [Entnahmen 2020-08], SUM(Bestand.Entnahme09) AS [Entnahmen 2020-09], SUM(Bestand.Entnahme07 + Bestand.Entnahme08 + Bestand.Entnahme09) AS [Entnahmen letzte 3 Monate]
+SELECT Artikel.ArtikelNr,
+  Artikel.ArtikelBez AS Artikelbezeichnung,
+  ArtGroe.Groesse,
+  Lief.LiefNr AS LieferantNr,
+  Lief.SuchCode AS Lieferant,
+  Lagerart.LagerartBez AS Lagerart,
+  Lagerart.Neuwertig,
+  SUM(Bestand.Bestand) AS Lagerbestand,
+  SUM(Bestand.Entnahme12) AS [Entnahmen 2019-12],
+  SUM(Bestand.Entnahme01) AS [Entnahmen 2020-01],
+  SUM(Bestand.Entnahme02) AS [Entnahmen 2020-02],
+  SUM(Bestand.Entnahme03) AS [Entnahmen 2020-03],
+  SUM(Bestand.Entnahme04) AS [Entnahmen 2020-04],
+  SUM(Bestand.Entnahme05) AS [Entnahmen 2020-05],
+  SUM(Bestand.Entnahme06) AS [Entnahmen 2020-06],
+  SUM(Bestand.Entnahme07) AS [Entnahmen 2020-07],
+  SUM(Bestand.Entnahme08) AS [Entnahmen 2020-08],
+  SUM(Bestand.Entnahme09) AS [Entnahmen 2020-09],
+  SUM(Bestand.Entnahme10) AS [Entnahmen 2020-10],
+  SUM(Bestand.Entnahme11) AS [Entnahmen 2020-11],
+  SUM(Bestand.Entnahme01 + Bestand.Entnahme02 + Bestand.Entnahme03 + Bestand.Entnahme04 + Bestand.Entnahme05 + Bestand.Entnahme06 + Bestand.Entnahme07 + Bestand.Entnahme08 + Bestand.Entnahme09 + Bestand.Entnahme10 + Bestand.Entnahme11 + Bestand.Entnahme12) AS [Entnahme letzte 12 Monate]
 FROM Bestand
 JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
