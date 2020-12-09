@@ -15,7 +15,7 @@ GROUP BY Kunden.Kdnr, Kunden.SuchCode, Vsa.SuchCode, Vsa.Bez, Artikel.ArtikelNr,
 UNION ALL
 
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfKo.Lieferdatum AS Lieferdatum, FORMAT(OPScans.Zeitpunkt, 'dd.MM.yyyy HH:mm', 'de-AT') AS Einlesezeitpunkt, AnfKo.AuftragsNr AS Packzettel, AnfKo.DruckZeitpunkt AS PZDruckzeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt AS LSDruckzeitpunkt, COUNT(OPScans.ID) AS Eingang, AnfPo.Angefordert, AnfPo.Geliefert AS Ausgang, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz
-FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, Artikel, Wozabal_Archive.dbo.OPScans, LsKo
+FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, Artikel, Salesianer_Archive.dbo.OPScans, LsKo
 WHERE AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID

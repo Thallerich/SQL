@@ -5,7 +5,7 @@ WITH Eingangsscans AS (
 ),
 Eingangsscans_Archiv AS (
   SELECT OPScans.ID, OPScans.EingAnfPoID, OPScans.Zeitpunkt
-  FROM Wozabal_Archive.dbo.OPScans
+  FROM Salesianer_Archive.dbo.OPScans
   WHERE OPScans.EingAnfPoID > 0
 )
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfKo.Lieferdatum AS Lieferdatum, CONVERT(date, Eingangsscans.Zeitpunkt) AS Einlesezeitpunkt, AnfKo.AuftragsNr AS Packzettel, AnfKo.DruckZeitpunkt AS PZDruckzeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt AS LSDruckzeitpunkt, COUNT(Eingangsscans.ID) AS Eingang, AnfPo.Angefordert, AnfPo.Geliefert AS Ausgang, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz
