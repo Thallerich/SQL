@@ -3,19 +3,12 @@
 
 DROP TABLE IF EXISTS __Schwundliste;
 
-DECLARE @ImportFile nvarchar(200) = N'\\ATENADVANTEX01.wozabal.int\AdvanTex\Temp\LKHollabrunnSchwund.xlsx';
-DECLARE @XLSXImportSQL nvarchar(max);
-
+/*
 CREATE TABLE __Schwundliste (
   KdNr int,
   Code nvarchar(33) COLLATE Latin1_General_CS_AS
 );
-
-SET @XLSXImportSQL = N'SELECT * ' +
-  N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [Schwund$]);';
-
-INSERT INTO __Schwundliste
-EXEC sp_executesql @XLSXImportSQL;
+*/
 
 -- ######################## Auswertungen ########################################
 
