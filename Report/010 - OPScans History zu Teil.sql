@@ -15,7 +15,7 @@ FROM WegGrund, ZielNr, (
   UNION ALL
   
   SELECT OPTeile.Code, OPScans.Zeitpunkt, OPScans.ZielNrID, OPScans.AnfPoID, OPScans.EingAnfPoID, OPScans.OPGrundID, OPScans.AnlageUser_ COLLATE Latin1_General_CS_AS AS MitarbeiUser
-  FROM Wozabal_Archive.dbo.OPScans, Wozabal.dbo.OPTeile
+  FROM Salesianer_Archive.dbo.OPScans, Salesianer.dbo.OPTeile
   WHERE OPScans.OPTeileID = OPTeile.ID
     AND (
       OPTeile.Code = @Code OR OPTeile.Code2 = @Code
