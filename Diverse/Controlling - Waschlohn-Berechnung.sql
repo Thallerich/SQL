@@ -4,8 +4,8 @@ DROP TABLE IF EXISTS #ResultWLohnUmsatz;
 DROP TABLE IF EXISTS #ResultWLohnStueck;
 
 DECLARE @FirmaID int = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'SMSK');  --WOMI: Wozabal Miettex; UKLU: Umlauft; FA14: Salesianer; SMP: Budweis
-DECLARE @DatumVon date = CAST(N'2020-07-01' AS date);
-DECLARE @DatumBis date = CAST(N'2020-07-31' AS date);
+DECLARE @DatumVon date = CAST(N'2020-11-01' AS date);
+DECLARE @DatumBis date = CAST(N'2020-11-30' AS date);
 DECLARE @FibuPeriode nchar(7) = (SELECT CAST(DATEPART(year, @DatumBis) AS nchar(4)) + N'-' + IIF(DATEPART(month, @DatumBis) < 10, N'0', N'') + CAST(DATEPART(month, @DatumBis) AS nchar(2)));
 DECLARE @BerufsgruppeID int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_BERUFSGRUPPE');
 DECLARE @MonatAbgeschlossen bit = (SELECT IIF(FiBuPeriode > @FibuPeriode, 1, 0) FROM Firma WHERE Firma.ID = @FirmaID);
@@ -41,7 +41,7 @@ JOIN RechKo WITH (NOLOCK) ON FibuDet.RechKoID = RechKo.ID
 JOIN Konten WITH (NOLOCK) ON RechPo.KontenID = Konten.ID
 JOIN Kunden WITH (NOLOCK) ON RechKo.KundenID = Kunden.ID
 JOIN KdGf WITH (NOLOCK) ON Kunden.KdGfID = KdGf.ID
-JOIN Wae WITH (NOLOCK) ON RechKo.WaeID = Wae.ID
+JOIN Wae WITH (NOLOCK) ON RechKo.RechWaeID = Wae.ID
 WHERE FibuDet.FibuExpID IN (
     SELECT DISTINCT RechKo.FibuExpID
     FROM RechKo
