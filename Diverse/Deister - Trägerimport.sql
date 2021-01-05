@@ -2,7 +2,7 @@ DECLARE @MaxTraegerNr int = (SELECT MAX(CAST(Traeger.Traeger AS int)) FROM Traeg
 
 WITH DeisterBHSTraeger AS (
     SELECT PersNr, KartenNr, KdNr, KsSt, CONVERT(date, Indienst, 112) AS Indienst, CONVERT(date, Ausdiens, 112) AS Ausdienst
-    FROM __DeisterBHS
+    FROM Salesianer.dbo.__DeisterBHS20210105
   )
 MERGE INTO Traeger
 USING (
@@ -16,7 +16,7 @@ USING (
   WHERE Vsa.RentomatID > 0
     AND DeisterBHSTraeger.PersNr IS NOT NULL
 ) AS DeisterImport (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
-ON DeisterImport.VsaID = Traeger.VsaID AND DeisterImport.PersNr = Traeger.PersNr
+ON DeisterImport.VsaID = Traeger.VsaID AND DeisterImport.PersNr = Traeger.PersNr COLLATE Latin1_General_CS_AS
 WHEN MATCHED THEN
   UPDATE SET Traeger.Status = DeisterImport.Status, Traeger.Ausdienst = DeisterImport.Ausdienst, Traeger.AusdienstDat = DeisterImport.AusdienstDat
 WHEN NOT MATCHED THEN
