@@ -1,9 +1,19 @@
 WITH DistinctScans (OPTeileID, Datum, Zeitpunkt, AnlageUserID_)
 AS (
   SELECT OPScans.OPTeileID, CAST(OPScans.Zeitpunkt AS date) AS Datum, MIN(OPScans.Zeitpunkt) AS Zeitpunkt, OPScans.AnlageUserID_
-  FROM OPScans
-  WHERE CAST(OPScans.Zeitpunkt AS date) BETWEEN $1$ AND $2$
-    AND OPScans.ActionsID = 109
+  FROM (
+    SELECT OPScans.OPTeileID, OPScans.Zeitpunkt, OPScans.AnlageUserID_
+    FROM OPScans
+    WHERE CAST(OPScans.Zeitpunkt AS date) BETWEEN $1$ AND $2$
+      AND OPScans.ActionsID = 109
+
+    UNION ALL
+
+    SELECT OPScans.OPTeileID, OPScans.Zeitpunkt, OPScans.AnlageUserID_
+    FROM Salesianer_Archive.dbo.OPScans
+    WHERE CAST(OPScans.Zeitpunkt AS date) BETWEEN $1$ AND $2$
+      AND OPScans.ActionsID = 109
+  ) AS OPScans  
   GROUP BY OPScans.OPTeileID, CAST(OPScans.Zeitpunkt AS date), OPScans.AnlageUserID_
 )
 SELECT Benutzername, Mitarbeiter, Datum, [5] AS [05:00], [6] AS [06:00], [7] AS [07:00], [8] AS [08:00], [9] AS [09:00], [10] AS [10:00], [11] AS [11:00], [12] AS [12:00], [13] AS [13:00], [14] AS [14:00], [15] AS [15:00], [16] AS [16:00], [17] AS [17:00], [18] AS [18:00], [19] AS [19:00], [20] AS [20:00], [21] AS [21:00], [22] AS [22:00], [23] AS [23:00], [99] AS Summe
