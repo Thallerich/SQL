@@ -11,12 +11,12 @@ DECLARE @Message nvarchar(100);
 
 WHILE (@RowsInserted > 0 AND @RunNumber <= @MaxRuns)
 BEGIN
-  INSERT INTO OPScans (ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_)
+  INSERT INTO Salesianer.dbo.OPScans (ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_)
   SELECT TOP (@RowsPerBatch) ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_
-  FROM ___OPSCANS
+  FROM Salesianer.dbo.___OPSCANS
   WHERE NOT EXISTS (
       SELECT OPScans.*
-      FROM OPScans
+      FROM Salesianer.dbo.OPScans
       WHERE OPScans.ID = ___OPSCANS.ID
   );
 
@@ -28,9 +28,9 @@ BEGIN
   RAISERROR(@Message, 0, 1) WITH NOWAIT;
 END;
 
-DELETE FROM ___OPSCANS
+DELETE FROM Salesianer.dbo.___OPSCANS
 WHERE ID IN (
-  SELECT ID FROM OPScans
+  SELECT ID FROM Salesianer.dbo.OPScans
 );
 
 SET @RowsDeleted = @@ROWCOUNT;
