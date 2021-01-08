@@ -1,4 +1,4 @@
-SELECT ADRGRP.Bez AS Adressgruppe, KDGF.KurzBez AS SGF, KUNDEN.KdNr, KUNDEN.SuchCode AS Kunde, KUNDEN.Name1 AS Adresszeile1, KUNDEN.Name2 AS Adresszeile2, KUNDEN.Name3 AS Adresszeile3, KUNDEN.Strasse, KUNDEN.Land, KUNDEN.PLZ, KUNDEN.Ort, STATUS.StatusBez$LAN$ AS Kundenstatus, ISNULL(HasTraeger.HasTraeger, CONVERT(bit, 0)) AS HatTr‰ger
+SELECT ADRGRP.AdrGrpBez$LAN$ AS Adressgruppe, KDGF.KurzBez AS SGF, KUNDEN.KdNr, KUNDEN.SuchCode AS Kunde, KUNDEN.Name1 AS Adresszeile1, KUNDEN.Name2 AS Adresszeile2, KUNDEN.Name3 AS Adresszeile3, KUNDEN.Strasse, KUNDEN.Land, KUNDEN.PLZ, KUNDEN.Ort, STATUS.StatusBez$LAN$ AS Kundenstatus, ISNULL(HasTraeger.HasTraeger, CONVERT(bit, 0)) AS HatTr√§ger
 FROM ADRGRP, KDGRU, STATUS, KDGF, KUNDEN
 LEFT OUTER JOIN (
   SELECT DISTINCT CONVERT(bit, 1) AS HasTraeger, KUNDEN.ID AS KundenID
@@ -13,5 +13,5 @@ WHERE KDGRU.AdrGrpID = ADRGRP.ID
   AND KUNDEN.KdGFID = KDGF.ID
   AND ADRGRP.ID IN ($1$)
   AND KUNDEN.SichtbarID IN ($SICHTBARIDS$)
-  AND KUNDEN.AdrArtID = 1 --nur tats‰chliche Kunden
+  AND KUNDEN.AdrArtID = 1 --nur tats√§chliche Kunden
 ;
