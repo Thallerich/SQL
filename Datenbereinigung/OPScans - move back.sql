@@ -45,6 +45,11 @@ WHERE NOT EXISTS (
     FROM Salesianer.dbo.InvPo
     WHERE InvPo.ID = ___OPSCANS.InvPoID
   )
+  AND EXISTS (
+    SELECT OPTeile.*
+    FROM Salesianer.dbo.OPTeile
+    WHERE OPTeile.ID = ___OPSCANS.OPTeileID
+  )
 ORDER BY ID DESC;
 
 WHILE (@RowsInserted > 0 AND @RunNumber <= @MaxRuns)
