@@ -14,7 +14,7 @@ WHERE Kunden.ID = $ID$;
 /* ++                                                                                                                           ++ */
 /* ++ Author: Stefan Thaller - 2018-09-25                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-DECLARE @NK int = (SELECT Wae.NK FROM Wae JOIN Kunden ON Kunden.WaeID = Wae.ID WHERE Kunden.ID = $ID$);
+DECLARE @NK int = (SELECT Wae.NK FROM Wae JOIN Kunden ON Kunden.VertragWaeID = Wae.ID WHERE Kunden.ID = $ID$);
 
 SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.ID AS KundenID, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.WaschPreis AS NettoPreis, MwSt.MWStFaktor, KdBer.RabattWasch, ROUND((KdArti.WaschPreis - (KdArti.WaschPreis / 100 * KdBer.RabattWasch)) * (1 + MwSt.MWStFaktor), @NK) AS BruttoPreisRabattiert, @NK AS Nachkomma
 FROM Traeger

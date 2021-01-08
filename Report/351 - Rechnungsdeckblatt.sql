@@ -3,7 +3,7 @@ SELECT NettoWert AS EURSumme, MwStBetrag AS MWST, BruttoWert AS Brutto, Kunden.U
 FROM Kunden, RechKo, ZahlZiel, Wae
 WHERE Kunden.ZahlZielID = ZahlZiel.ID 
   AND RechKo.KundenID = Kunden.ID 
-  AND Kunden.WaeID = Wae.ID
+  AND Kunden.RechWaeID = Wae.ID
   AND RechKo.ID = $ID$;
 
 -- Pipeline: Kostenstellen
@@ -12,6 +12,6 @@ FROM Kunden, RechKo, RechPo, Abteil, Wae
 WHERE Abteil.ID = RechPo.AbteilID 
   AND RechPo.RechKoID = RechKo.ID 
   AND RechKo.KundenID = Kunden.ID 
-  AND Kunden.WaeID = Wae.ID
+  AND Kunden.RechWaeID = Wae.ID
   AND RechKo.ID = $ID$
 GROUP BY Abteil.Bez, Kunden.KdNr, Kunden.Name1, Kunden.Name2, Kunden.Name3, Kunden.Strasse, Kunden.PLZ, Kunden.Ort, RechKo.RechDat, RechKo.RechNr, RechKo.VonDatum, RechKo.BisDatum, RechKo.FaelligDat, Kunden.UStIdNr, Wae.Format;
