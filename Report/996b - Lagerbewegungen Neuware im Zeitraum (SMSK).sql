@@ -28,6 +28,7 @@ WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND ArtGroe.ArtikelID = Artikel.ID
   AND Bestand.LagerArtID = LagerArt.ID
   AND LagerArt.LagerID IN ($3$)
+  AND Artikel.BereichID IN ($4$)
   AND LagerArt.Neuwertig = 1
   AND Artikel.ArtiTypeID = 1;  -- nur textile Artikel, keine Namenschilder, Embleme, ...
 
