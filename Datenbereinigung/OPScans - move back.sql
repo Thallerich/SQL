@@ -10,6 +10,10 @@ DECLARE @RowsInsertedAllRuns int = 0;
 DECLARE @RowsDeleted int = 0;
 DECLARE @Message nvarchar(100);
 
+DECLARE @ScansRestored TABLE (
+  OPScansID int
+);
+
 DROP TABLE IF EXISTS #TmpRestoreOPScans;
 
 SELECT TOP (@MaxTemp) ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_
@@ -25,26 +29,27 @@ WHERE NOT EXISTS (
     FROM Salesianer.dbo.OPEtiKo
     WHERE OPEtiKo.ID = ___OPSCANS.OPEtiKoID
   )
-  AND EXISTS (
+  AND ___OPSCANS.OpEtiKoID > 0
+  /* OR NOT EXISTS (
     SELECT LsPo.*
     FROM Salesianer.dbo.LsPo
     WHERE LsPo.ID = ___OPSCANS.LsPoID
   )
-  AND EXISTS (
+  OR NOT EXISTS (
     SELECT AnfPo.*
     FROM Salesianer.dbo.AnfPo
     WHERE AnfPo.ID = ___OPSCANS.EingAnfPoID
   )
-  AND EXISTS (
+  OR NOT EXISTS (
     SELECT AnfPo.*
     FROM Salesianer.dbo.AnfPo
     WHERE AnfPo.ID = ___OPSCANS.AnfPoID
   )
-  AND EXISTS (
+  OR NOT EXISTS (
     SELECT InvPo.*
     FROM Salesianer.dbo.InvPo
     WHERE InvPo.ID = ___OPSCANS.InvPoID
-  )
+  ) */
   AND EXISTS (
     SELECT OPTeile.*
     FROM Salesianer.dbo.OPTeile
@@ -54,7 +59,12 @@ ORDER BY ID DESC;
 
 WHILE (@RowsInserted > 0 AND @RunNumber <= @MaxRuns)
 BEGIN
+
+  DELETE FROM @ScansRestored;
+
   INSERT INTO Salesianer.dbo.OPScans (ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_)
+  OUTPUT inserted.ID
+  INTO @ScansRestored (OPScansID)
   SELECT TOP (@RowsPerBatch) ID, Zeitpunkt, OpTeileID, ZielNrID, ActionsID, OpGrundID, AnfPoID, ArbPlatzID, VPSPoID, EingAnfPoID, Menge, OpEtiKoID, VonLagerBewID, InvPoID, NachLagerBewID, TraegerID, ContainID, LsPoID, Anlage_, Update_, AnlageUserID_, UserID_
   FROM #TmpRestoreOPScans;
 
@@ -67,7 +77,7 @@ BEGIN
 
   DELETE FROM #TmpRestoreOPScans
   WHERE ID IN (
-    SELECT ID FROM Salesianer.dbo.OPScans
+    SELECT OPScansID FROM @ScansRestored
   );
 END;
 
