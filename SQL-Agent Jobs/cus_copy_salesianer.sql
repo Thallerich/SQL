@@ -40,32 +40,40 @@ BEGIN
       WHERE [Parameter] = N'COLOR_BACKGROUND';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'https://kunden.salesianer.com/test/upload/index.php'
+      SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/index.php'
       WHERE [Parameter] = N'INTERNET_IMPORT_PHP';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'https://kunden.salesianer.com/test/upload/index_http.php'
+      SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/index_http.php'
       WHERE [Parameter] = N'INTERNET_IMPORT_PHP_HTTP';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'https://kunden.salesianer.com/test/upload/update.php'
+      SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/update.php'
       WHERE [Parameter] = N'INTERNET_IMPORT_PHP2';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'https://kunden.salesianer.com/test/output/'
+      SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/output_test_20210111/'
       WHERE [Parameter] = N'INTERNET_OUTPUT';	
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'/upload/data.sql'
+      SET [ValueMemo] = N'/__wptest/upload_test_20210111/data.sql'
       WHERE [Parameter] = N'INTERNET_TEMP_SQL';
-
-    UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'11683'
-      WHERE [Parameter] = N'WEBPORTAL_DOWNLOAD_PORT';
       
     UPDATE Salesianer_Test.dbo.Settings
-      SET [ValueMemo] = N'https://kunden.salesianer.com/test/'
+      SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/'
       WHERE [Parameter] = N'INTERNET_HTTP_URL';
+
+    UPDATE Salesianer_Test.dbo.Settings
+      SET [ValueMemo] = N'/__wptest/output_test_20210111/'
+      WHERE [Parameter] = N'INTERNET_OUTPUT_DIR';
+
+    UPDATE Salesianer_Test.dbo.Settings
+      SET [ValueMemo] = N'/__wptest/upload_test_20210111/'
+      WHERE [Parameter] = N'INTERNET_UPLOAD_DIR';
+
+    UPDATE Salesianer_Test.dbo.Settings
+      SET [ValueMemo] = N'/__wptest/'
+      WHERE [Parameter] = N'INTERNET_ROOT_DIR';
       
     UPDATE Salesianer_Test.dbo.Settings
       SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\WebDB_Test\'
