@@ -16,6 +16,8 @@ SELECT
   Artikel.ArtikelNr,
   Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
   ArtGroe.Groesse,
+  Lief.LiefNr AS [Lieferant-Nr],
+  Lief.SuchCode AS Lieferant,
   CAST(0 AS money) AS Preis,
   CAST(0 AS money) AS PreisVormonat,
   CAST(0 AS bigint) AS MengeZugang,
@@ -28,10 +30,11 @@ SELECT
   CAST(0 AS bigint) AS BestandMonatsbeginn,
   CAST(0 AS bigint) AS BestandMonatsende
 INTO #TmpLagerbewegung
-FROM Bestand, ArtGroe, Artikel, LagerArt
+FROM Bestand, ArtGroe, Artikel, LagerArt, Lief
 WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND ArtGroe.ArtikelID = Artikel.ID
   AND Bestand.LagerArtID = LagerArt.ID
+  AND Artikel.LiefID = Lief.ID
   AND LagerArt.LagerID = $1$
   AND LagerArt.Neuwertig = 1;
 
@@ -73,7 +76,7 @@ FROM #TmpLagerbewegung AS Lagerbewegung, (
 WHERE LagerBew.ID = MaxID.ID
   AND MaxID.BestandID = Lagerbewegung.BestandID;
 
-SELECT FORMAT(@Monatsanfang, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, @Monatsende), 'd', 'de-at') AS Zeitraum, Lagerart, ArtikelNr, Artikelbezeichnung, Groesse, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durschnittspreis Monatsbeginn], BestandMonatsbeginn, MengeZugang, MengeAbgang, BestandMonatsende , (MengeZugang + MengeAbgang) * Preis AS [Wert Lagerbewegung], BestandMonatsende * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Lagerbestand Monatsende]
+SELECT FORMAT(@Monatsanfang, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, @Monatsende), 'd', 'de-at') AS Zeitraum, Lagerart, ArtikelNr, Artikelbezeichnung, Groesse, [Lieferant-Nr], Lieferant, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durschnittspreis Monatsbeginn], BestandMonatsbeginn, MengeZugang, MengeAbgang, BestandMonatsende , (MengeZugang + MengeAbgang) * Preis AS [Wert Lagerbewegung], BestandMonatsende * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Lagerbestand Monatsende]
 FROM #TmpLagerbewegung
 WHERE ArtikelID > 0
   AND (BestandMonatsbeginn > 0 OR BestandMonatsende > 0 OR MengeZugang > 0 OR MengeAbgang < 0)
