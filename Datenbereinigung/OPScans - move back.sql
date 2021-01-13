@@ -1,6 +1,6 @@
 SET NOCOUNT ON;
 
-DECLARE @MaxRuns int = 1000;
+DECLARE @MaxRuns int = 10000;
 DECLARE @RowsPerBatch int = 3000;
 DECLARE @MaxTemp int = @MaxRuns * @RowsPerBatch;
 
@@ -25,27 +25,12 @@ WHERE NOT EXISTS (
     WHERE OPScans.ID = ___OPSCANS.ID
   )
   AND EXISTS (
-    SELECT OPEtiKo.*
-    FROM Salesianer.dbo.OPEtiKo
-    WHERE OPEtiKo.ID = ___OPSCANS.OPEtiKoID
-  )
-  AND ___OPSCANS.OpEtiKoID > 0
-  /* OR NOT EXISTS (
-    SELECT LsPo.*
-    FROM Salesianer.dbo.LsPo
-    WHERE LsPo.ID = ___OPSCANS.LsPoID
-  )
-  OR NOT EXISTS (
-    SELECT AnfPo.*
-    FROM Salesianer.dbo.AnfPo
-    WHERE AnfPo.ID = ___OPSCANS.EingAnfPoID
-  )
-  OR NOT EXISTS (
     SELECT AnfPo.*
     FROM Salesianer.dbo.AnfPo
     WHERE AnfPo.ID = ___OPSCANS.AnfPoID
   )
-  OR NOT EXISTS (
+  AND ___OPSCANS.AnfPoID > 0
+  /*OR NOT EXISTS (
     SELECT InvPo.*
     FROM Salesianer.dbo.InvPo
     WHERE InvPo.ID = ___OPSCANS.InvPoID
@@ -72,8 +57,8 @@ BEGIN
 
   SET @RowsInsertedAllRuns = @RowsInsertedAllRuns + @RowsInserted;
   SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Inserted ' + FORMAT(@RowsInsertedAllRuns, N'##,#', N'de-AT') + ' rows!  -> Run number ' + CAST(@RunNumber AS nvarchar) + N' / ' + CAST(@MaxRuns AS nvarchar);
+  IF @RunNumber % 1000 = 0 RAISERROR(@Message, 0, 1) WITH NOWAIT;
   SET @RunNumber = @RunNumber + 1;
-  RAISERROR(@Message, 0, 1) WITH NOWAIT;
 
   DELETE FROM #TmpRestoreOPScans
   WHERE ID IN (
