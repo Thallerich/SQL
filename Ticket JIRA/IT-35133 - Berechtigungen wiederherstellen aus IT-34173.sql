@@ -9,14 +9,22 @@ DECLARE @WebUChanged TABLE (
   FuncDecAmount bit 
 );
 
+DECLARE @KdNr int = 272295;
+
 INSERT INTO @WebUChanged (WebUserID, FuncDeactivateW)
 SELECT __WebUserFuncDeactivateW.ID AS WebUserID, __WebUserFuncDeactivateW.FuncDeactivateW
-FROM __WebUserFuncDeactivateW;
+FROM __WebUserFuncDeactivateW
+JOIN WebUser ON WebUser.ID = __WebUserFuncDeactivateW.ID
+JOIN Kunden ON WebUser.KundenID = Kunden.ID
+WHERE Kunden.KdNr = @KdNr;
 
 MERGE @WebUChanged AS WebUChanged
 USING (
-  SELECT ID AS WebUserID, FuncDecAmount
+  SELECT __WebUserFuncDecAmount.ID AS WebUserID, __WebUserFuncDecAmount.FuncDecAmount
   FROM __WebUserFuncDecAmount
+  JOIN WebUser ON WebUser.ID = __WebUserFuncDecAmount.ID
+  JOIN Kunden ON WebUser.KundenID = Kunden.ID
+  WHERE Kunden.KdNr = @KdNr
 ) AS source (WebUserID, FuncDecAmount) ON source.WebUserID = WebUChanged.WebUserID
 WHEN MATCHED THEN
   UPDATE SET FuncDecAmount = 1
@@ -25,8 +33,11 @@ WHEN NOT MATCHED THEN
 
 MERGE @WebUChanged AS WebUChanged
 USING (
-  SELECT ID AS WebUserID, FuncDecAmount
+  SELECT __WebUserGraz.ID AS WebUserID, __WebUserGraz.FuncDecAmount
   FROM __WebUserGraz
+  JOIN WebUser ON WebUser.ID = __WebUserGraz.ID
+  JOIN Kunden ON WebUser.KundenID = Kunden.ID
+  WHERE Kunden.KdNr = @KdNr
 ) AS source (WebUserID, FuncDecAmount) ON source.WebUserID = WebUChanged.WebUserID
 WHEN MATCHED THEN
   UPDATE SET FuncDecAmount = 1
@@ -43,8 +54,7 @@ FROM WebUser
 JOIN Kunden ON WebUser.KundenID = Kunden.ID
 JOIN Standort ON Kunden.StandortID = Standort.ID
 JOIN @WebUChanged AS WebUChanged ON WebUser.ID = WebUChanged.WebUserID
-WHERE Kunden.KdNr IN (30284, 30285, 30286, 30287, 5011, 30759, 3065, 6076, 30364, 30367, 30370, 30372, 30374, 30375, 30376, 7261, 26200, 19152, 250745, 30129)
-  AND (Webuser.FuncDecAmount != WebUChanged.FuncDecAmount OR WebUser.FuncDeactivateW != WebUChanged.FuncDeactivateW);
+WHERE (Webuser.FuncDecAmount != WebUChanged.FuncDecAmount OR WebUser.FuncDeactivateW != WebUChanged.FuncDeactivateW);
 
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, WebUser.UserName
 FROM @Output AS changed
