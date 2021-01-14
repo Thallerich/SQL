@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS #TmpVOESTRechnung;
 DECLARE @RechKoID int;
 
 /* SET @KundenID = (SELECT ID FROM Kunden WHERE KdNr = 272295); */
-SET @RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 30066577);
+SET @RechKoID = (SELECT ID FROM RechKo WHERE RechNr = 30074432);
 
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
@@ -32,7 +32,8 @@ SELECT Artikel.ID AS ArtikelID,
   CAST(0 AS money) AS Waschkosten,
   CAST(0 AS money) AS Gesamt,
   --0 AS offenBestellt,
-  Teile.Barcode
+  Teile.Barcode,
+  Teile.IndienstDat AS Erstausgabedatum
 INTO #TmpVOESTRechnung
 FROM RechPo
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -70,7 +71,8 @@ GROUP BY Artikel.ID,
   Artikel.ArtikelBez,
   KdArti.VariantBez,
   AbtKdArW.EPreis,
-  Teile.Barcode;
+  Teile.Barcode,
+  Teile.IndienstDat;
 
 MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
 USING (
@@ -113,6 +115,6 @@ JOIN (
   GROUP BY Teile.TraegerID, Teile.ArtikelID
 ) AS x ON x.TraegerID = VOESTRechnung.TraegerID AND x.ArtikelID = VOESTRechnung.ArtikelID; */
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, /* Maximalbestand, */ Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, /* offenBestellt AS [offene bestelle Wäscheteile] */ Barcode
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, /* Maximalbestand, */ Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, /* offenBestellt AS [offene bestelle Wäscheteile] */ Barcode, Erstausgabedatum
 FROM #TmpVOESTRechnung
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
