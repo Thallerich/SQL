@@ -117,5 +117,3 @@ JOIN (
 SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, /* Maximalbestand, */ Waschzyklen, Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, /* offenBestellt AS [offene bestelle Wäscheteile] */ Barcode, Erstausgabedatum
 FROM #TmpVOESTRechnung
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
-
-SELECT SUM(Gesamt) FROM #TmpVOESTRechnung;
