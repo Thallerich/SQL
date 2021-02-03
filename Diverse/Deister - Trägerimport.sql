@@ -1,8 +1,8 @@
 DECLARE @MaxTraegerNr int = (SELECT MAX(CAST(Traeger.Traeger AS int)) FROM Traeger WHERE Traeger.VsaID = 6119607);
 
 WITH DeisterBHSTraeger AS (
-    SELECT PersNr, KartenNr, KdNr, KsSt, CONVERT(date, Indienst, 112) AS Indienst, CONVERT(date, Ausdiens, 112) AS Ausdienst
-    FROM Salesianer.dbo.__DeisterBHS20210105
+    SELECT LTRIM(RTRIM(PersNr)) AS PersNr, LTRIM(RTRIM(KartenNr)) AS KartenNr, KdNr, LTRIM(RTRIM(KsSt)) AS KsSt, CONVERT(date, Indienst, 112) AS Indienst, CONVERT(date, Ausdiens, 112) AS Ausdienst
+    FROM Salesianer.dbo.__DeisterBHS20210203
   )
 MERGE INTO Traeger
 USING (
