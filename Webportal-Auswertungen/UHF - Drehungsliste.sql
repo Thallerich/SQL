@@ -1,6 +1,4 @@
-SELECT Vsa.ID AS BlockID,
-  N'VSA' AS BlockIDName,
-  Kunden.KdNr AS Kundennummer,
+SELECT Kunden.KdNr AS Kundennummer,
   Kunden.SuchCode AS  [Kunden-Stichwort],
   Vsa.VsaNr AS [VSA-Nummer],
   Vsa.Bez AS [VSA-Bezeichnung],
@@ -22,16 +20,17 @@ LEFT JOIN (
   FROM VsaAnf
   JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
 ) AS VsaAnfArti ON VsaAnfArti.VsaID = Vsa.ID AND VsaAnfArti.ArtikelID = Artikel.ID
-WHERE Kunden.ID = " . $kundenID . "
+WHERE Kunden.ID = $kundenID
   AND Vsa.ID IN (
     SELECT Vsa.ID
     FROM Vsa
     JOIN WebUser ON WebUser.KundenID = Vsa.KundenID
     LEFT JOIN WebUVsa ON WebUVsa.WebUserID = WebUser.ID
-    WHERE WebUser.ID = " .$webuserID . "
+    WHERE WebUser.ID = $webuserID
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
   )
-  AND OPTeile.Status IN (N'Q', N'W')
+  AND OPTeile.Status IN (N'Q')
   AND OPTeile.LastActionsID IN (102, 116)
   AND Artikel.BereichID != (SELECT ID FROM Bereich WHERE Bereich = N'LW')
-GROUP BY Vsa.ID, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, VsaAnfArti.Bestand;
+GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, VsaAnfArti.Bestand
+ORDER BY Kundennummer, [VSA-Nummer], ArtikelNr;
