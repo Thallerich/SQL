@@ -10,4 +10,9 @@ SELECT SdcDev.Bez AS Sortieranlage, COUNT(SdcScan.ID) AS [Queue-Länge]
 FROM SdcScan
 JOIN SdcDev ON SdcScan.AdvInstID = SdcDev.ID
 GROUP BY SdcDev.Bez
-ORDER BY sdcDev.Bez;
+
+UNION ALL
+
+SELECT N'Z_UHF Einlesen' AS Sortieranlagen, COUNT(SdcPools.ID) AS [Queue-Länge]
+FROM SdcPools
+ORDER BY Sortieranlage ASC;
