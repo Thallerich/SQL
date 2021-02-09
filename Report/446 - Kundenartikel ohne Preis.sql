@@ -3,7 +3,7 @@ WITH KdArtiStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'KDARTI')
 )
-SELECT Firma.SuchCode AS Firma, KdGf.KurzBez AS SGF, [Zone].ZonenCode AS Vertriebszone, Standort.SuchCode AS Hauptstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.Name1, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, KdArti.Umlauf, KdArtiStatus.StatusBez AS KundenartikelStatus, KdArti.Vorlaeufig
+SELECT Firma.SuchCode AS Firma, KdGf.KurzBez AS SGF, [Zone].ZonenCode AS Transportzone, Standort.SuchCode AS Hauptstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.Name1, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, KdArti.Umlauf, KdArtiStatus.StatusBez AS KundenartikelStatus, KdArti.Vorlaeufig
 FROM Kunden, KdArti, Artikel, KdGf, Firma, KdArtiStatus, [Zone], Standort
 WHERE KdArti.KundenID = Kunden.ID
   AND Kunden.KdgfID = Kdgf.ID
