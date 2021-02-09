@@ -10,15 +10,15 @@ WHERE KdArti.KundenID = Kunden.ID
   AND Kunden.FirmaID = Firma.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND KdArtiStatus.Status = KdArti.Status
-  AND KdGf.ID IN ($1$)
-  AND Kunden.Status = 'A'
+  AND KdGf.ID IN ($2$)
   AND KdArti.LeasingPreis = 0  
   AND KdArti.WaschPreis = 0 
-  AND (KdArti.Vorlaeufig = 0 OR KdArti.Vorlaeufig = $2$)
+  AND (KdArti.Vorlaeufig = 0 OR KdArti.Vorlaeufig = $4$)
   AND Kunden.Status IN (
     SELECT Status
     FROM Status
     WHERE ID IN ($3$)
   )
+  AND Kunden.FirmaID IN ($1$)
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)
 ORDER BY Kunden.KdNr, Artikel.ArtikelNr;
