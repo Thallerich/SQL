@@ -1,10 +1,10 @@
-SELECT DISTINCT [Windows-User], [letzter Login]
+SELECT LOWER([Windows-User]) AS [Windows-User], MAX([letzter Login]) AS [letzter Login]
 FROM (
   SELECT LoginLog.WindowsUserName AS [Windows-User], MAX(LoginLog.LogInZeit) AS [letzter Login]
   FROM Salesianer.dbo.LoginLog
   JOIN Salesianer.dbo.ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Salesianer.dbo.Mitarbei ON LoginLog.UserID = Mitarbei.ID
-  WHERE LoginLog.LogInZeit > N'2020-12-01 00:00:00'
+  WHERE LoginLog.LogInZeit > N'2021-01-01 00:00:00'
     AND LoginLog.WindowsUserName != N'svc_AdvantexAdmin'
   GROUP BY LoginLog.WindowsUserName
 
@@ -14,7 +14,7 @@ FROM (
   FROM Salesianer_Test.dbo.LoginLog
   JOIN Salesianer_Test.dbo.ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Salesianer_Test.dbo.Mitarbei ON LoginLog.UserID = Mitarbei.ID
-  WHERE LoginLog.LogInZeit > N'2020-12-01 00:00:00'
+  WHERE LoginLog.LogInZeit > N'2021-01-01 00:00:00'
     AND LoginLog.WindowsUserName != N'svc_AdvantexAdmin'
   GROUP BY LoginLog.WindowsUserName
 
@@ -24,11 +24,12 @@ FROM (
   FROM OWS.dbo.LoginLog
   JOIN OWS.dbo.ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN OWS.dbo.Mitarbei ON LoginLog.UserID = Mitarbei.ID
-  WHERE LoginLog.LogInZeit > N'2020-12-01 00:00:00'
+  WHERE LoginLog.LogInZeit > N'2021-01-01 00:00:00'
     AND LoginLog.WindowsUserName != N'svc_AdvantexAdmin'
   GROUP BY LoginLog.WindowsUserName
 ) AS LoginLog
-GROUP BY [Windows-User], [letzter Login];
+GROUP BY LOWER([Windows-User])
+ORDER BY [Windows-User];
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++                                                                                                                           ++ */
