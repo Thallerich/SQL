@@ -7,7 +7,7 @@ WITH Teilestatus AS (
   WHERE [Status].Tabelle = UPPER(N'TEILE')
 ), 
 LastScan AS (
-  SELECT Scans.TeileID, MAX(Scans.ID) AS ScansID
+  SELECT Scans.TeileID, MAX(Scans.DateTime) AS MaxTimestamp
   FROM Scans
   GROUP BY Scans.TeileID
 )
@@ -20,10 +20,10 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-JOIN Actions ON Teile.LastActionsID = Actions.ID
 JOIN Teilestatus ON Teile.Status = Teilestatus.Status
 JOIN LastScan ON LastScan.TeileID = Teile.ID
-JOIN Scans ON LastScan.ScansID = Scans.ID
+JOIN Scans ON LastScan.MaxTimestamp = Scans.Datetime
+JOIN Actions ON Scans.ActionsID = Actions.ID
 JOIN Traeger AS EntnahmeTraeger ON Scans.LastPoolTraegerID = EntnahmeTraeger.ID
 WHERE Vsa.RentomatID = $2$
   AND Traeger.RentoArtID IN (SELECT RentoArt.ID FROM RentoArt WHERE RentoArt.Code IN (N'S', N'T'))
