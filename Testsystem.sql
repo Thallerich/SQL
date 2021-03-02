@@ -1,200 +1,183 @@
-USE master;
-GO
-
-IF db_id(N'Wozabal') IS NOT NULL AND DATABASEPROPERTYEX(N'Wozabal', N'Status') = N'ONLINE'
-  ALTER DATABASE Wozabal
-    SET SINGLE_USER
-  WITH ROLLBACK IMMEDIATE;
-
-RESTORE DATABASE Wozabal
-FROM DISK = N'\\ATENVCENTER01.wozabal.int\advbackup\Wozabal.bak'
-WITH RECOVERY, REPLACE, STATS = 5,
-  MOVE N'Wozabal' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal.mdf',
-  MOVE N'Wozabal_Log' TO N'D:\AdvanTex\Data\SQL Server\MSSQL13.ADVANTEX\MSSQL\DATA\Wozabal_log.ldf';
-
-IF (SELECT DATABASEPROPERTYEX(N'Wozabal_Test', 'UserAccess')) = N'SINGLE_USER'
-  ALTER DATABASE Wozabal
-    SET MULTI_USER
-  WITH ROLLBACK AFTER 60 SECONDS;
-
-GO
-
 BEGIN TRANSACTION;
-  USE Wozabal;
 
-  UPDATE Settings
-    SET [ValueMemo] = N'FFFF88'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'53232A'
     WHERE [Parameter] = N'COLOR_BACKGROUND';
 
-  UPDATE Settings
-    SET [ValueMemo] = N'http://srvatenadvtest.wozabal.int/webportal_20/upload/index.php'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/index.php'
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'http://SRVATENADVTEST.wozabal.int/webportal_20/upload/index_http.php'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/index_http.php'
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP_HTTP';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'http://srvatenadvtest.wozabal.int/webportal_20/upload/update.php'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/update.php'
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP2';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'_shadow'
-    WHERE [Parameter] = N'WEB_IMPORT_SHADOW';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N'http://srvatenadvtest.wozabal.int/webportal_20/output/'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/output_test_20210111/'
     WHERE [Parameter] = N'INTERNET_OUTPUT';	
 
-  UPDATE Settings
-    SET [ValueMemo] = N'/upload/data.sql'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'/__wptest/upload_test_20210111/data.sql'
     WHERE [Parameter] = N'INTERNET_TEMP_SQL';
-
-  UPDATE Settings
-    SET [ValueMemo] = N'1763'
-    WHERE [Parameter] = N'WEBPORTAL_DOWNLOAD_PORT';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'http://srvatenadvtest.wozabal.int/webportal_20/'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/'
     WHERE [Parameter] = N'INTERNET_HTTP_URL';
+    
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'/__wptest/output_test_20210111/'
+    WHERE [Parameter] = N'INTERNET_OUTPUT_DIR';
 
-  UPDATE Settings
-    SET [ValueMemo] = N'a.wallas@wozabal.com'
-    WHERE [Parameter] = N'WEBEXPORT_EMAIL';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N'srvatenadvtest.wozabal.int'
-    WHERE [Parameter] = N'INTERNET_FTP_HOST';
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'/__wptest/upload_test_20210111/'
+    WHERE [Parameter] = N'INTERNET_UPLOAD_DIR';
 
-  UPDATE Settings
-    SET [ValueMemo] = N'webportal20'
-    WHERE [Parameter] = N'INTERNET_FTP_USERNAME';	
-    
-  UPDATE Settings
-    SET [ValueMemo] = N''
-    WHERE [Parameter] = N'WEB_UPLOAD_STARTED';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\WebDB\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'/__wptest/'
+    WHERE [Parameter] = N'INTERNET_ROOT_DIR';
+
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\WebDB_Test\'
     WHERE [Parameter] = N'WEB_EXPORT_UPLOAD_PATH';
 
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\Logos\Salesianer_LogoReleasetest.bmp'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Logos\Salesianer_LogoReleasetest.bmp'
     WHERE [Parameter] = N'LOGO1_PATH_UND_DATEINAME';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N''
-    WHERE [Parameter] = N'LOGO2_PATH_UND_DATEINAME';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\data\UHFInventur\'
+
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\UHFInventur\Testmandant\'
     WHERE [Parameter] = N'INVENTUR_UHF2_PATH';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\data\UHFInventur\Archiv\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\UHFInventur\Testmandant\Archiv\'
     WHERE [Parameter] = N'INVENTUR_UHF2_BACKUP_PATH';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\Data\Temp\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\SALADVTAPP1.salres.com\advantex\Data\Temp\'
     WHERE [Parameter] = N'PDF_SPOOL_PATH';
     
-  UPDATE Settings
-    SET [ValueMemo] = N''
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Export\Inventurliste\Inventurliste.csv'
     WHERE [Parameter] = N'CSV_FILENAME_INVENTURIMPORT';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\Data\Temp\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\SALADVTAPP1.salres.com\advantex\Data\Temp\'
     WHERE [Parameter] = N'REPORT_EXPORT_PATH';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'http://SRVATENCITTS01:8090/ConsignmentService.svc/SOAP'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'http://SRVATENCITTS01.wozabal.int:8090/ConsignmentService.svc/SOAP'
     WHERE [Parameter] = N'URL_WS_COUNTIT_CONSIGNMENT';
 
-  UPDATE Settings
-    SET [ValueMemo] = N'http://SRVATENCITTS01:8090/SortingService.svc/SOAP'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'http://SRVATENCITTS01.wozabal.int:8090/SortingService.svc/SOAP'
     WHERE [Parameter] = N'URL_WS_COUNTIT_SORTING';
     
-  UPDATE Settings
-    SET [ValueMemo] = N'http://SRVATENCITTS01:8090/UncleanSideService.svc/SOAP'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'http://SRVATENCITTS01.wozabal.int:8090/UncleanSideService.svc/SOAP'
     WHERE [Parameter] = N'URL_WS_COUNTIT_UNCLEANSIDE';
     
-  UPDATE Settings
-    SET [ValueMemo] = N''
-    WHERE [Parameter] = N'URL_WS_TAGSYS';
-    
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\data\EDI\EDI_Test\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\EDI\EDI_Test\'
     WHERE [Parameter] = N'PATH_EOFFICE';
   
-  UPDATE Settings
-    SET [ValueMemo] = N'\\srvatenadvtest.wozabal.int\advantex\data\EDI\BMD_Test\'
+  UPDATE Salesianer.dbo.Settings
+    SET [ValueMemo] = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\EDI\BMD_Test\'
     WHERE [Parameter] = N'PATH_BMD';
 
-  UPDATE Rentomat 
-    SET ExportFile1 = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\Export\'
-    WHERE Rentomat.Interface <> 'Unimat';
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'3048'
+    WHERE Parameter = N'FAHRER_APP_PORT';
 
-  UPDATE Rentomat 
-    SET FtpUsername = N'noFTPonlyTest'
-    WHERE Rentomat.FtpUsername IS NOT NULL;
-
-  UPDATE Rentomat 
-    SET ExportFile1 = REPLACE(ExportFile1, '192.168.4.26', '127.0.0.1')
-    WHERE Rentomat.Interface = N'Unimat';
-    
-  UPDATE ExpDef
-    SET ExportFilename = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\FIBU\'
-    WHERE ExportFilename LIKE N'\\atenadvantex01%';
-
-  UPDATE ExpDef
-    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq\')
-    WHERE ExportFileName LIKE N'\\tsafile1.sal.co.at%';
-
-  UPDATE ExpDef
-    SET BackupFolder = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\FIBU\Backup\'
-    WHERE RIGHT(RTRIM(BackupFolder), 1) = N'\';
-
-  UPDATE Settings
-    SET ValueMemo = N'\\srvatenadvtest.wozabal.int\AdvanTex\Data\Rechnungsarchiv\'
-    WHERE Parameter = N'PATH_RECHARCH';
-
-  UPDATE Settings
-    SET ValueMemo = N'\\srvatenadvtest.wozabal.int\advantex\data\help\'
-    WHERE Parameter = N'WEBHELP_URL';
-
-  UPDATE RKoOut
-    SET ArchivePath = N'\\srvatenadvtest.wozabal.int\AdvanTex\Export\Rechnungen_Testmandant\'
-    WHERE ArchivePath IS NOT NULL;
-
-  UPDATE RKoOut
-    SET VersandPath = N'\\srvatenadvtest.wozabal.int\AdvanTex\Export\Rechnungen_Testmandant\'
-    WHERE VersandPath IS NOT NULL;
-
-  UPDATE Settings
-    SET ValueMemo = N'10.10.200.195'
-    WHERE Parameter = N'ABS_HOSTNAME';
-
-  UPDATE Settings
-    SET ValueMemo = N'~./~5 z%#;#z~'
-    WHERE Parameter = N'ABS_PASSWORT';
-
-  UPDATE Settings
-    SET ValueMemo = N'ABST12C'
-    WHERE Parameter = N'ABS_SERVICE_NAME';
-
-  UPDATE Settings
-    SET ValueMemo = N'training01'
-    WHERE Parameter = N'ABS_USERNAME';
-
-  UPDATE Settings
+  UPDATE Salesianer.dbo.Settings
     SET ValueMemo = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
     WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
 
-  DELETE
-  FROM dbsystem.dbo.Sessions;
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'10.10.200.195'
+    WHERE Parameter = N'ABS_HOSTNAME';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'~./~5 z%#;#z~'
+    WHERE Parameter = N'ABS_PASSWORT';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'ABST12C'
+    WHERE Parameter = N'ABS_SERVICE_NAME';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'training01'
+    WHERE Parameter = N'ABS_USERNAME';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Dms\Document\'
+    WHERE Parameter = N'PATH_DMS_DOCUMENT';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Dms\'
+    WHERE Parameter = N'PATH_DMS_MASTERS';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\email\'
+    WHERE Parameter = N'TEMP_ANHANG_PATH';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Regina\'
+    WHERE Parameter = N'EXPORT_REGINA';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Temp\'
+    WHERE Parameter = N'PATH_EXCEL';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\easybackup\'
+    WHERE Parameter = N'INVENTUR_FTP_BACKUP_PATH';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\PflegeBackUp\'
+    WHERE Parameter = N'OPETIBCIMPORT_BACKUP_PATH';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Rechnungsarchiv\'
+    WHERE Parameter = N'PATH_RECHARCH';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\Mandant\Salesianer\'
+    WHERE Parameter = N'DATA_PATH_MANDANT';
+
+  UPDATE Salesianer.dbo.Rentomat 
+    SET ExportFile1 = N'\\salshdsvm11_682.salres.com\advsapp_file\DCS\Test\'
+    WHERE Rentomat.Interface <> 'Unimat';
+
+  UPDATE Salesianer.dbo.Rentomat 
+    SET FtpUsername = N'noFTPonlyTest'
+    WHERE Rentomat.FtpUsername IS NOT NULL;
+
+  UPDATE Salesianer.dbo.Rentomat 
+    SET ExportFile1 = REPLACE(ExportFile1, '192.168.4.26', '127.0.0.1')
+    WHERE Rentomat.Interface = N'Unimat';
+    
+  UPDATE Salesianer.dbo.ExpDef
+    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'salshdsvm09_681.salres.com', N'salshdsvm11_682.salres.com')
+    WHERE ExportFileName LIKE N'\\salshdsvm09_681.salres.com\advpapp_file\%'
+
+  UPDATE Salesianer.dbo.ExpDef
+    SET ExportFileName = REPLACE(ExpDef.ExportFileName, N'\scp\', N'\scq\')
+    WHERE ExportFileName LIKE N'\\tsafile1.sal.co.at%';
+
+  UPDATE Salesianer.dbo.ExpDef
+    SET BackupFolder = REPLACE(ExpDef.BackupFolder, N'salshdsvm09_681.salres.com', N'salshdsvm11_682.salres.com')
+    WHERE BackupFolder LIKE N'%salshdsvm09_681.salres.com%';
+
+  UPDATE Salesianer.dbo.RKoOut
+    SET ArchivePath = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Export\Rechnungen_Testmandant\'
+    WHERE ArchivePath IS NOT NULL;
+
+  UPDATE Salesianer.dbo.RKoOut
+    SET VersandPath = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Export\Rechnungen_Testmandant\'
+    WHERE VersandPath IS NOT NULL;
 
 COMMIT;
-
-ALTER DATABASE [Wozabal] SET NEW_BROKER WITH ROLLBACK IMMEDIATE;
-
-DBCC SHRINKFILE (Wozabal_Log);
