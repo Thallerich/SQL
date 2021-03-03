@@ -26,7 +26,9 @@ FROM RechKo
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN [Status] ON RechKo.Status = [Status].[Status] AND [Status].Tabelle = N'RECHKO'
+JOIN DrLauf ON RechKo.DrLaufID = DrLauf.ID
 WHERE KdGf.ID IN ($1$)
   AND RechKo.FirmaID IN ($2$)
   AND RechKo.[Status] < N'F'
+  AND DrLauf.SichtbarID IN ($SICHTBARIDS$)
 ORDER BY SGF, Kunden.KdNr, RechKo.RechNr;
