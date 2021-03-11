@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS _LanguageImportTable;
+DROP TABLE IF EXISTS __Translations;
 GO
 
 CREATE TABLE _LanguageImportTable (
@@ -12,27 +13,19 @@ CREATE TABLE _LanguageImportTable (
 
 GO
 
-DECLARE @Language nchar(5) = N'hu_HU';
+DECLARE @Language nchar(5) = N'ro_RO';
 DECLARE @LanguageID int;
-DECLARE @ImportFile nvarchar(200) = N'\\atenadvantex01.wozabal.int\AdvanTex\Temp\HU_Translation.xlsx';
-DECLARE @XLSXImportSQL nvarchar(max);
 
-DECLARE @ImportTable TABLE (
+/* DECLARE @ImportTable TABLE (
   SourceText nvarchar(200) COLLATE Latin1_General_CS_AS,
   TranslatedText nvarchar(200) COLLATE Latin1_General_CS_AS
-);
-
-SET @XLSXImportSQL = N'SELECT * ' +
-  N'FROM OPENROWSET(N''Microsoft.ACE.OLEDB.12.0'', N''Excel 12.0 Xml;HDR=YES;Database='+@ImportFile+''', [Sheet1$]);';
-
-INSERT INTO @ImportTable
-EXEC sp_executesql @XLSXImportSQL;
+); */
 
 SET @LanguageID = (SELECT ID FROM [Language] WHERE [Language].ISO = @Language);
 
 INSERT INTO _LanguageImportTable (ID, LanguageID, SourceText, TranslatedText)
 SELECT ROW_NUMBER() OVER (ORDER BY SourceText) AS ID, @LanguageID, SourceText, LEFT(TranslatedText, 120) AS TranslatedText
-FROM @ImportTable;
+FROM __Translations;
 
 DELETE FROM _LanguageImportTable
 WHERE ID IN (
