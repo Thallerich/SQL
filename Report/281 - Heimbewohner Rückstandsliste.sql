@@ -17,6 +17,7 @@ FROM (
     AND Teile.Status IN ('Q', 'M', 'N')
     AND Teile.ArtikelID = Artikel.ID
     AND Teile.AltenheimModus != 0
+    AND Traeger.Status != N'I'
   ) a, Scans
 WHERE a.TeileID = Scans.TeileID
   AND Scans.AnlageUserID_ <> (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'ADVSUP')
