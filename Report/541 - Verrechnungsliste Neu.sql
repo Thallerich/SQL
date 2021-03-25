@@ -1,4 +1,4 @@
-SELECT Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, 1 AS Menge, KdArti.PeriodenPreis
+SELECT Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, Traeger.Indienst AS [Indienststellungswoche Träger], 1 AS Menge, KdArti.PeriodenPreis
 FROM KdArti, Abteil, Traeger, Kunden, TraeArti, TraeArch, Wochen
 WHERE TraeArch.WochenID = Wochen.ID
 	AND Wochen.Woche = $2$
@@ -8,7 +8,7 @@ WHERE TraeArch.WochenID = Wochen.ID
 	AND KdArti.ArtikelID = (
 		SELECT CONVERT(integer, ValueMemo)
 		FROM Settings
-		WHERE Parameter = 'ID_ARTIKEL_BERUFSGRUPPE'
+		WHERE Parameter = N'ID_ARTIKEL_BERUFSGRUPPE'
 	)
 	AND Abteil.ID = TraeArch.AbteilID
 	AND Traeger.ID = TraeArti.TraegerID
