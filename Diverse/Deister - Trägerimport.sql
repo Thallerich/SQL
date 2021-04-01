@@ -1,5 +1,6 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ TNr;PersNr;KartenNr;KdNr;KsSt;Indienst;Ausdienst                                                                          ++ */
+/* ++ 0,3,16,40,106,112,124,135,143,152
+TNr;PersNr;KartenNr;KdNr;KsSt;Indienst;Ausdienst                                                                          ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @MaxTraegerNr int = (SELECT MAX(CAST(Traeger.Traeger AS int)) FROM Traeger WHERE Traeger.VsaID = 6119607);
