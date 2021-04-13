@@ -156,8 +156,12 @@ BEGIN
       WHERE Parameter = N'FAHRER_APP_PORT';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET ValueMemo = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
+      SET ValueMemo = N'http://10.10.201.173:50000/XISOAPAdapter/MessageServlet'
       WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
+
+    UPDATE Salesianer_Test.dbo.Settings
+      SET ValueMemo = N'~/''o+*=1%/;sx}~'
+      WHERE Parameter = N'SALSAP_WEBSERVICE_PASSWORD';
 
     UPDATE Salesianer_Test.dbo.Settings
       SET ValueMemo = N'10.10.200.195'

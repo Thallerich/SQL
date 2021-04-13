@@ -1,7 +1,7 @@
 BEGIN TRANSACTION;
 
   UPDATE Salesianer.dbo.Settings
-    SET [ValueMemo] = N'53232A'
+    SET [ValueMemo] = N'B75766'
     WHERE [Parameter] = N'COLOR_BACKGROUND';
 
   UPDATE Salesianer.dbo.Settings
@@ -93,8 +93,12 @@ BEGIN TRANSACTION;
     WHERE Parameter = N'FAHRER_APP_PORT';
 
   UPDATE Salesianer.dbo.Settings
-    SET ValueMemo = N'http://10.10.201.173:50400/XISOAPAdapter/MessageServlet'
-    WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
+      SET ValueMemo = N'http://10.10.201.173:50000/XISOAPAdapter/MessageServlet'
+      WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
+
+  UPDATE Salesianer.dbo.Settings
+    SET ValueMemo = N'~/''o+*=1%/;sx}~'
+    WHERE Parameter = N'SALSAP_WEBSERVICE_PASSWORD';
 
   UPDATE Salesianer.dbo.Settings
     SET ValueMemo = N'10.10.200.195'
