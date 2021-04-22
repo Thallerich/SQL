@@ -5,6 +5,7 @@ WITH Teilestatus AS (
 )
 SELECT KdGf.KurzBez AS Geschäftsbereich,
   Kundenservice.Name AS [Kundenservice-Mitarbeiter],
+  Kundenbetreuer.Name AS Kundenbetreuer,
   Holding.Holding,
   Holding.Bez AS [Holding-Bezeichnung],
   Kunden.KdNr,
@@ -51,6 +52,7 @@ JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN Mitarbei AS Kundenservice ON KdBer.ServiceID = Kundenservice.ID
+JOIN Mitarbei AS Kundenbetreuer ON KdBer.BetreuerID = Kundenbetreuer.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
