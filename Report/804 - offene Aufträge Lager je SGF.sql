@@ -33,4 +33,5 @@ WHERE Artikel.BereichID = 100
   AND Teilestatus.ID IN ($2$)
   AND Kunden.KdGfID IN ($1$)
   AND Kunden.StandortID IN ($3$)
+  AND Teile.Anlage_ BETWEEN $STARTDATE$ AND $ENDDATE$
 ORDER BY [Entnahmeliste angelegt am];
