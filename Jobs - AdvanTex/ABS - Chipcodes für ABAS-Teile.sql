@@ -15,7 +15,7 @@ DECLARE @total int,
   @deletesql nvarchar(max);
 
 -- Bekleidungsautomaten, für die der Abgleich mit ABS durchgeführt wird
-INSERT INTO @Rentomat VALUES (64), (65), (66), (70), (71), (72), (73);
+INSERT INTO @Rentomat VALUES (64), (65), (66), (70), (71), (72), (73), (74), (75), (82), (83), (84), (85);
 
 IF OBJECT_ID('tempdb..#ABASTeile') IS NOT NULL
   TRUNCATE TABLE #ABASTeile;
@@ -43,10 +43,10 @@ WHILE @current < @total
 BEGIN
   DELETE FROM @AbsResult; -- Tabelle leeren
 
-  -- 1000 Barcodes als Text für Abfrage über ABS Linked Server vorbereiten
+  -- 100 Barcodes als Text für Abfrage über ABS Linked Server vorbereiten
   SET @barcodes = (
     SELECT STUFF((
-      SELECT TOP (1000) N', ''''' + Barcode + ''''''
+      SELECT TOP (100) N', ''''' + Barcode + ''''''
       FROM #ABASTeile
       FOR XML PATH ('')
     ), 1, 2, N'')
@@ -67,6 +67,6 @@ BEGIN
   -- Verarbeitete Teile aus Tabelle löschen, damit sie nicht nochmal verarbeitet werden
   EXEC (@deletesql);
 
-  -- Pro Schleifendurchlauf werden 1000 Teile verarbeitet, daher +1000
-  SET @current = @current + 1000;
+  -- Pro Schleifendurchlauf werden 100 Teile verarbeitet, daher +100
+  SET @current = @current + 100;
 END;
