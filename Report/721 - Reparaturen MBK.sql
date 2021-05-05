@@ -29,16 +29,16 @@ BEGIN
 END
 ELSE
 BEGIN
-  SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion, Mitarbei.UserName AS [User]
+  SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion, Mitarbei.UserName AS [User], RepDaten.Zeitpunkt AS Erfassungszeit
   FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Artikel AS RepType, Mitarbei, (
-    SELECT Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID, TeilSoFa.MitarbeiID
+    SELECT Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID, TeilSoFa.MitarbeiID, FORMAT(TeilSoFa.Zeitpunkt, N'dd.MM.yyyy HH:mm') AS Zeitpunkt
     FROM Teile, TeilSoFa, KdArti, Artikel, KdBer
     WHERE TeilSoFa.TeileID = Teile.ID
       AND Teile.KdArtiID = KdArti.ID
       AND KdArti.ArtikelID = Artikel.ID
       AND KdArti.KdBerID = KdBer.ID
       AND CONVERT(date, TeilSoFa.Zeitpunkt) BETWEEN $STARTDATE$ AND $ENDDATE$
-    GROUP BY Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdBer.BereichID, TeilSoFa.MitarbeiID
+    GROUP BY Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdBer.BereichID, TeilSoFa.MitarbeiID, FORMAT(TeilSoFa.Zeitpunkt, N'dd.MM.yyyy HH:mm')
   ) AS RepDaten
   WHERE RepDaten.TraegerID = Traeger.ID
     AND Traeger.VsaID = Vsa.ID
