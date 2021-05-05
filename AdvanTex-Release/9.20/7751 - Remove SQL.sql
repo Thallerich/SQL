@@ -1,0 +1,1 @@
+UPDATE dbSystem.dbo.Updates SET UpdatesSQL = N'SELECT TOP 0 0' WHERE ID = 7751;
