@@ -4,8 +4,8 @@ DECLARE @ShowUser bit = $3$;
 
 IF @ShowUser = 0
 BEGIN
-  SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion
-  FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Artikel AS RepType, (
+  SELECT Kunden.KdNr, Kunden.SuchCode, Hauptstandort.Bez AS Hauptstandort, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion
+  FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Standort AS Hauptstandort, Artikel AS RepType, (
     SELECT Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID
     FROM Teile, TeilSoFa, KdArti, Artikel, KdBer
     WHERE TeilSoFa.TeileID = Teile.ID
@@ -18,6 +18,7 @@ BEGIN
   WHERE RepDaten.TraegerID = Traeger.ID
     AND Traeger.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
+    AND Kunden.StandortID = Hauptstandort.ID
     AND Vsa.StandKonID = StandKon.ID
     AND StandBer.StandKonID = StandKon.ID
     AND StandBer.BereichID = RepDaten.BereichID
@@ -29,8 +30,8 @@ BEGIN
 END
 ELSE
 BEGIN
-  SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion, Mitarbei.UserName AS [User], RepDaten.Zeitpunkt AS Erfassungszeit
-  FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Artikel AS RepType, Mitarbei, (
+  SELECT Kunden.KdNr, Kunden.SuchCode, Hauptstandort.Bez AS Hauptstandort, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, RepDaten.ArtikelNr, RepDaten.Artikelbezeichnung, RepDaten.Barcode, RepType.ArtikelBez$LAN$ AS Reparaturgrund, RepDaten.LastRepDate AS [Letzte Reparatur], RepDaten.RepAnz AS [Anzahl Reparaturen], RepDaten.Indienst, Standort.Bez AS Produktion, Mitarbei.UserName AS [User], RepDaten.Zeitpunkt AS Erfassungszeit
+  FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Standort AS Hauptstandort, Artikel AS RepType, Mitarbei, (
     SELECT Teile.TraegerID, Teile.Barcode, Teile.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID, TeilSoFa.MitarbeiID, FORMAT(TeilSoFa.Zeitpunkt, N'dd.MM.yyyy HH:mm') AS Zeitpunkt
     FROM Teile, TeilSoFa, KdArti, Artikel, KdBer
     WHERE TeilSoFa.TeileID = Teile.ID
@@ -43,6 +44,7 @@ BEGIN
   WHERE RepDaten.TraegerID = Traeger.ID
     AND Traeger.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
+    AND Kunden.StandortID = Hauptstandort.ID
     AND Vsa.StandKonID = StandKon.ID
     AND StandBer.StandKonID = StandKon.ID
     AND StandBer.BereichID = RepDaten.BereichID
