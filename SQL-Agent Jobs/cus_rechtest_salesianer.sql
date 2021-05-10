@@ -68,7 +68,7 @@ BEGIN
       WHERE [Parameter] = N'WEB_EXPORT_UPLOAD_PATH';
 
     UPDATE Salesianer_RechTest.dbo.Settings
-      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Logos\Salesianer_LogoTestmandant.bmp'
+      SET [ValueMemo] = N'\\salshdsvm09_681.salres.com\advpapp_file\AdvanTex\Data\Logos\Salesianer_LogoRechTest.bmp'
       WHERE [Parameter] = N'LOGO1_PATH_UND_DATEINAME';
       
     UPDATE Salesianer_RechTest.dbo.Settings
