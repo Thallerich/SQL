@@ -10,7 +10,8 @@ JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON Teile.ArtikelID = Artikel.ID
 JOIN Bereich ON Artikel.BereichID = Bereich.ID
 JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
-WHERE Kunden.FirmaID = (SELECT ID FROM Firma WHERE SuchCode = N'FA14')
+WHERE Kunden.FirmaID IN ($2$)
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$)
   AND Teile.AusdienstDat BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Teile.RechPoID > 0
   AND Teile.KaufwareModus = 0;
