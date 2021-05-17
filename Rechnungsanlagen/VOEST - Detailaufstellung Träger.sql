@@ -43,8 +43,8 @@ JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID = @RechKoID
-  AND Teile.Status BETWEEN N'Q' AND N'W'
-  AND Teile.Einzug IS NULL
+  AND Teile.IndienstDat <= RechKo.BisDatum
+  AND ISNULL(Teile.AusdienstDat, N'2099-12-31') >= RechKo.VonDatum
 GROUP BY Artikel.ID,
   Traeger.ID,
   RechKo.RechNr,
