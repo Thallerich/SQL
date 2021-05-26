@@ -16,7 +16,7 @@ WHERE Kunden.ID = $ID$;
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 DECLARE @NK int = 2;
 
-SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.ID AS KundenID, Artikel.ArtikelBez AS Artikelbezeichnung, IIF(WaschPrg.ChemReinigung = 1, N'chem.', N'') AS Variante, KdArti.WaschPreis AS NettoPreis, MwSt.MWStFaktor, KdBer.RabattWasch, ROUND((KdArti.WaschPreis - (KdArti.WaschPreis / 100 * KdBer.RabattWasch)) * (1 + MwSt.MWStFaktor), @NK) AS BruttoPreisRabattiert, @NK AS Nachkomma
+SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.ID AS KundenID, Artikel.ArtikelBez AS Artikelbezeichnung, IIF(WaschPrg.ChemReinigung = 1, N'chem.', N'') AS Variante, KdArti.WaschPreis AS NettoPreis, MwStZeit.MWStFaktor, KdBer.RabattWasch, ROUND((KdArti.WaschPreis - (KdArti.WaschPreis / 100 * KdBer.RabattWasch)) * (1 + MwStZeit.MWStFaktor), @NK) AS BruttoPreisRabattiert, @NK AS Nachkomma
 FROM Traeger
 JOIN BewKdAr ON Traeger.BewAbrID = BewKdAr.BewAbrID
 JOIN KdArti ON BewKdAr.KdArtiID = KdArti.ID
@@ -25,6 +25,7 @@ JOIN WaschPrg ON Artikel.WaschPrgID = WaschPrg.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN MwSt ON Kunden.MWStID = MwSt.ID
+JOIN MwStZeit ON MwStZeit.MwStID = MwSt.ID AND GETDATE() BETWEEN MwStZeit.VonDatum AND MwStZeit.BisDatum
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 WHERE BewKdAr.ProzTraeger = 100
   AND BewKdAr.Vorlaeufig = 0
