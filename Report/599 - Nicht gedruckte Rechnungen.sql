@@ -31,4 +31,5 @@ WHERE KdGf.ID IN ($1$)
   AND RechKo.FirmaID IN ($2$)
   AND RechKo.[Status] < N'F'
   AND DrLauf.SichtbarID IN ($SICHTBARIDS$)
+  AND ((Kunden.FakAustausch = 1 AND $3$ = 1) OR ($3$ = 0))
 ORDER BY SGF, Kunden.KdNr, RechKo.RechNr;
