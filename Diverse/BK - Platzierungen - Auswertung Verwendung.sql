@@ -7,7 +7,7 @@ SELECT DISTINCT Platz.PlatzBez AS Platzierungsbezeichung, PlatzStatus.StatusBez 
 FROM Platz
 JOIN PlatzStatus ON Platz.[Status] = PlatzStatus.[Status]
 JOIN KdArAppl ON KdArAppl.PlatzID = Platz.ID
-JOIN KdArti ON KdArAppl.KdArtiID = KdArti.ArtikelID
+JOIN KdArti ON KdArAppl.KdArtiID = KdArti.ID
 JOIN KdArti AS ApplKdArti ON KdArAppl.ApplKdArtiID = ApplKdArti.ID
 JOIN Artikel AS ApplArtikel ON ApplKdArti.ArtikelID = ApplArtikel.ID
 JOIN ArtiType ON ApplArtikel.ArtiTypeID = ArtiType.ID
