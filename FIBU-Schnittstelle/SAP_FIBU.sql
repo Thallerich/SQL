@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
 **                                                                                                                            **
-** FIBU-Export zu ITM - erstellt von Stefan Thaller, Salesianer Miettex GmbH, 06.10.2020, Version 7.0                         **
+** FIBU-Export zu ITM - erstellt von Stefan Thaller, Salesianer Miettex GmbH, 10.06.2021, Version 8.0                         **
 ** laut Schnittstellenbeschreibung: Doku_Schnittstelle-ITM-SAP_SMRO.xls                                                       **
 **                                                                                                                            **
 ** ACHTUNG: Alle Felder haben vorgegeben Längen - bei Änderungen am Skript beachten, dass diese gleich bleiben!               **
@@ -51,14 +51,14 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
     Export.Belegdat, Wae.IsoCode AS WaeCode, Export.BelegNr, Export.Nettowert, Export.Bruttowert AS Bruttowert,
     Steuerschl =
       CASE
-        WHEN MwSt.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMP' THEN N'6O'
-        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMP' THEN N'33'
-        WHEN MwSt.Steuerschl = N'A6' AND Firma.SuchCode = N'SMSK' THEN N'SU'
-        WHEN MwSt.SteuerSchl = N'A2' AND Export.Art = N'R' AND Firma.SuchCode = N'SMSK' THEN N'4V'
-        WHEN MwSt.SteuerSchl = N'A2' AND Export.Art = N'G' AND Firma.SuchCode = N'SMSK' THEN N'4O'
-        WHEN MwSt.SteuerSchl = N'A3' AND Firma.SuchCode = N'SMSK' THEN N'4M'
-        WHEN MwSt.MWStSatz = 0 AND Firma.SuchCode = N'SMB' THEN N'F4'
-        ELSE MwSt.Steuerschl
+        WHEN MwStZeit.SteuerSchl = N'6Z' AND Export.Art = N'G' AND Firma.SuchCode = N'SMP' THEN N'6O'
+        WHEN MwStZeit.Steuerschl = N'A6' AND Firma.SuchCode = N'SMP' THEN N'33'
+        WHEN MwStZeit.Steuerschl = N'A6' AND Firma.SuchCode = N'SMSK' THEN N'SU'
+        WHEN MwStZeit.SteuerSchl = N'A2' AND Export.Art = N'R' AND Firma.SuchCode = N'SMSK' THEN N'4V'
+        WHEN MwStZeit.SteuerSchl = N'A2' AND Export.Art = N'G' AND Firma.SuchCode = N'SMSK' THEN N'4O'
+        WHEN MwStZeit.SteuerSchl = N'A3' AND Firma.SuchCode = N'SMSK' THEN N'4M'
+        WHEN MwStZeit.MWStSatz = 0 AND Firma.SuchCode = N'SMB' THEN N'F4'
+        ELSE MwStZeit.Steuerschl
       END,
     Export.Debitor, Export.Gegenkonto, 
     Kostenstelle =
@@ -100,6 +100,7 @@ DECLARE fibuexp CURSOR LOCAL FAST_FORWARD FOR
   JOIN Standort ON Kunden.StandortID = Standort.ID
   JOIN Firma ON RechKo.FirmaID = Firma.ID
   JOIN MwSt ON RechKo.MwStID = MwSt.ID
+  JOIN MwStZeit ON MwStZeit.MwStID = MwSt.ID AND RechKo.MwStDat BETWEEN MwStZeit.VonDatum AND MwStZeit.BisDatum
   WHERE Export.KopfPos IN (N'K', N'P')
   ORDER BY OrderByAutoInc ASC;
 
