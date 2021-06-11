@@ -11,7 +11,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
-  AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
+  AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
   AND Kunden.KdNr NOT IN (30974)
@@ -29,7 +29,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
-  AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
+  AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Bereich.Bereich IN ('FW', 'IK', 'TW', 'LW')
   AND LsPo.Kostenlos = 0
   AND Kunden.KdNr IN (30974)
@@ -47,10 +47,11 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
-  AND LsKo.Datum BETWEEN $1$ AND $2$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
+  AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$ -- Datumsbereich, welche Lieferscheine berücksichtigt werden
   AND Kunden.KdNr IN (30291, 30341)
   AND Vsa.SuchCode = '490'
   AND LsPo.Kostenlos = 0
+  AND Bereich.Bereich != N'MA'
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Bereich.Bereich, Bereich.BereichBez$LAN$, Kdarti.Variante
 ORDER BY Kunden.KdNr, Artikel.ArtikelNr, Bereich.Bereich;
 

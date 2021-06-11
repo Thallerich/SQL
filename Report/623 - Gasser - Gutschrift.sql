@@ -9,7 +9,7 @@ FROM KdArti, Artikel, KdBer, Bereich, ZahlZiel, (
     AND LsKo.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
     AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
-    AND LsKo.Datum BETWEEN $1$ AND $2$
+    AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
     AND Kunden.KdNr NOT IN (30974)
 ) AS LsDaten
 WHERE LsDaten.KdArtiID = KdArti.ID
@@ -31,7 +31,7 @@ FROM KdArti, Artikel, KdBer, Bereich, ZahlZiel, (
     AND LsKo.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
     AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Bez = N'Gasser')
-    AND LsKo.Datum BETWEEN $1$ AND $2$
+    AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
     AND Kunden.KdNr IN (30974)
 ) AS LsDaten
 WHERE LsDaten.KdArtiID = KdArti.ID
@@ -54,13 +54,14 @@ FROM KdArti, Artikel, KdBer, Bereich, ZahlZiel, (
     AND Vsa.KundenID = Kunden.ID
     AND Kunden.KdNr IN (30291, 30341)
     AND Vsa.SuchCode = '490'
-    AND LsKo.Datum BETWEEN $1$ AND $2$
+    AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
 ) AS LsDaten
 WHERE LsDaten.KdArtiID = KdArti.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND KdArti.KdBerID = KdBer.ID
   AND KdBer.BereichID = Bereich.ID
   AND LsDaten.ZahlZielID = ZahlZiel.ID
+  AND Bereich.Bereich != N'MA'
 GROUP BY LsDaten.KdNr, LsDaten.SuchCode, Bereich.Bereich, Bereich.BereichBez$LAN$, Kdarti.Variante, LsDaten._ManRabatt + KdBer.RabattWasch + ZahlZiel.Skonto * 1.2
 ORDER BY LsDaten.KdNr, Bereich.Bereich;
 
