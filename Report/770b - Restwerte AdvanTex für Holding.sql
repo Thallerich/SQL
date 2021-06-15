@@ -1,19 +1,52 @@
-DECLARE @Woche char(7);
+DECLARE @HoldingID int = $1$;
+DECLARE @Stichtag date = $2$;
+DECLARE @LanguageID int = (SELECT MainLanguageID FROM #AdvSession);
+DECLARE @Lang nchar(2) = (SELECT SysLanguage FROM advFunc_LanguageIDToSysLanguage(@LanguageID));
+DECLARE @Woche nchar(7);
+DECLARE @sqltext nvarchar(max);
 
-SET @Woche = (SELECT Week.Woche FROM Week WHERE Week.vonDat < CONVERT(date, GETDATE()) AND Week.bisDat > CONVERT(date, GETDATE()));
+SET @Woche = (SELECT Week.Woche FROM Week WHERE @Stichtag BETWEEN Week.vonDat AND Week.BisDat);
 
-SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung, Vsa.VsaNr, Vsa.Bez AS VSA, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, Artikel.EKPreis, Teile.Barcode, Teile.Eingang1, Teile.Ausgang1, Teile.Indienst, Week.Woche AS Erstwoche, IIF(Teile.Status IN ('Z', 'V', 'X', 'Y', 'U') OR (Teile.Einzug < CONVERT(date, GETDATE())), 0, IIF((Teile.AusDienst = '' OR Teile.AusDienst IS NULL), Teile.RestWertInfo, IIF(@Woche < Teile.AusDienst, Teile.RestWertInfo, Teile.AusDRestW))) AS RestWert, DATEDIFF(day, ISNULL(Teile.Ausgang1, CONVERT(date, GETDATE())), CONVERT(date, GETDATE())) AS BeimKundeSeitTagen
-FROM Teile, Traeger, Vsa, Kunden, Abteil, Artikel, ArtGroe, Holding, Week
-WHERE Teile.TraegerID = Traeger.ID
-  AND Traeger.VsaID = Vsa.ID
-  AND Vsa.KundenID = Kunden.ID
-  AND Traeger.AbteilID = Abteil.ID
-  AND Teile.ArtikelID = Artikel.ID
-  AND Teile.ArtGroeID = ArtGroe.ID
-  AND Kunden.HoldingID = Holding.ID
-  AND DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
-  AND Holding.ID = $1$
-  AND Artikel.Status <> N'B'
-  AND (Teile.Ausdienst = N'' OR Teile.Ausdienst IS NULL)
-  AND Teile.Status <> N'5'
+SET @sqltext = N'
+SELECT Holding.Holding,
+  Kunden.KdNr,
+  Kunden.SuchCode AS Kunde,
+  Vsa.VsaNr,
+  Vsa.Bez AS [VSA-Bezeichnung],
+  Traeger.Traeger AS TrägerNr,
+  Traeger.Vorname,
+  Traeger.Nachname,
+  Abteil.Abteilung AS KsSt,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez' + @Lang + ' AS Artikelbezeichnung,
+  ArtGroe.Groesse AS Größe,
+  Artikel.EKPreis,
+  Teile.Barcode,
+  Teile.Eingang1 AS [letzter Eingang],
+  Teile.Ausgang1 AS [letzter Ausgang],
+  Teile.Indienst AS [Indienststellungswoche],
+  Teile.Ausdienst AS [Abmeldungswoche],
+  Week.Woche AS [Ersteinsatzwoche],
+  fRW.RestwertInfo AS [Restwert ' + FORMAT(@Stichtag, N'dd.MM.yyyy', N'de-AT') + '],
+  DATEDIFF(day, ISNULL(Teile.Ausgang1, GETDATE()), GETDATE()) AS BeimKundeSeitTagen
+FROM Teile
+JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Abteil ON Traeger.AbteilID = Abteil.ID
+JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
+JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
+JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
+CROSS APPLY funcGetRestwert(Teile.ID, N''' + @Woche + ''', 1) AS fRW
+WHERE Holding.ID = ' + CAST(@HoldingID AS nvarchar) + '
+  AND Artikel.Status != N''B''
+  AND (Teile.Ausdienst = N'''' OR Teile.Ausdienst IS NULL)
+  AND Teile.Status BETWEEN N''Q'' AND N''W''
+  AND Teile.Einzug IS NULL
   AND Traeger.Altenheim = 0;
+';
+
+EXEC sp_executesql @sqltext;
