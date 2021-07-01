@@ -1,6 +1,13 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ 0,3,16,40,106,112,124,135,143,152
-TNr;PersNr;KartenNr;KdNr;KsSt;Indienst;Ausdienst                                                                          ++ */
+/* ++ 0,3,16,40,106,112,124,135,143,152                                                                                         ++ */
+/* ++                                                                                                                           ++ */
+/* ++ TNr smallint                                                                                                              ++ */
+/* ++ PersNr nchar(14)                                                                                                          ++ */
+/* ++ KartenNr nchar(20)                                                                                                        ++ */
+/* ++ KdNr smallint                                                                                                             ++ */
+/* ++ KsSt nvarchar(50)                                                                                                         ++ */
+/* ++ Indienst nchar(8)                                                                                                         ++ */
+/* ++ Ausdienst nchar(8)                                                                                                        ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @MaxTraegerNr int = (SELECT MAX(CAST(Traeger.Traeger AS int)) FROM Traeger WHERE Traeger.VsaID = 6119607);
@@ -27,3 +34,9 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
   INSERT (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
   VALUES (DeisterImport.VsaID, DeisterImport.Status, DeisterImport.Traeger, DeisterImport.AbteilID, DeisterImport.PersNr, DeisterImport.Vorname, DeisterImport.Nachname, DeisterImport.Indienst, DeisterImport.IndienstDat, DeisterImport.Ausdienst, DeisterImport.AusdienstDat);
+
+GO
+
+DROP TABLE __DeisterBHS;
+
+GO
