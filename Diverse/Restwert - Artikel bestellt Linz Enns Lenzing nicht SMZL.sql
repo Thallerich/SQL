@@ -21,7 +21,9 @@ JOIN Standort AS Lager ON Lagerart.LagerID = Lager.ID
 JOIN Lief ON BKo.LiefID = Lief.ID
 LEFT JOIN ArtiSMZL ON ArtiSMZL.ArtikelID = Artikel.ID
 WHERE BKo.Datum >= N'2021-01-01'
-  AND (Lager.SuchCode LIKE N'WOL_' OR Lager.SuchCode LIKE N'WOE_')
+  AND BKo.Status BETWEEN N'F' AND N'M'
+  --AND (Lager.SuchCode LIKE N'WOL_' OR Lager.SuchCode LIKE N'WOE_' OR Lager.SuchCode LIKE N'UKL_')
+  AND Lager.FirmaID = (SELECT ID FROM Firma WHERE SuchCode = N'FA14')
   AND Lief.LiefNr != 100
 GROUP BY Bereich.BereichBez, ArtGru.ArtGruBez, ArtGru.OPEinweg, Artikel.ArtikelNr, Artikel.ArtikelBez, Artikelstatus.StatusBez, Lief.LiefNr, Lief.SuchCode, Lief.Name1, Lager.Bez, COALESCE(ArtiSMZL.HasSMZL, 0)
 ORDER BY ArtikelNr ASC, LiefNr ASC;
