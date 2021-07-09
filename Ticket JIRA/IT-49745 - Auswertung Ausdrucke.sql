@@ -3,7 +3,8 @@ SELECT Standort.SuchCode AS Standort, Formular =
     WHEN N'Packzettel_Groessen' THEN N'Packzettel'
     WHEN N'Packzettel_CZ' THEN N'Packzettel'
     WHEN N'Lieferschein_SM' THEN N'Lieferschein'
-    WHEN N'Lieferschein_CZ' THEN N'Lieferschien'
+    WHEN N'Lieferschein_CZ' THEN N'Lieferschein'
+    WHEN N'LieferscheinBew' THEN N'Lieferschein'
     WHEN N'BlankoPZ' THEN N'Blanko-Packzettel'
     WHEN N'LsCont' THEN N'Containerbeschriftungsblatt'
     WHEN N'DruckEtikett' THEN N'Ausliefer-Etikett'
@@ -14,7 +15,7 @@ FROM RptHisto
 JOIN Mitarbei ON RptHisto.MitarbeiID = Mitarbei.ID
 JOIN Standort ON Mitarbei.StandortID = Standort.ID
 WHERE RptHisto.GedrucktAm >= N'2020-07-01'
-  AND RptHisto.ReportFile IN (N'Packzettel', N'Packzettel_Groessen', N'Packzettel_CZ', N'Lieferschein', N'Lieferschein_SM', N'Lieferschein_CZ', N'LsCont', N'BlankoPZ', N'DruckEtikett')
+  AND RptHisto.ReportFile IN (N'Packzettel', N'Packzettel_Groessen', N'Packzettel_CZ', N'Lieferschein', N'Lieferschein_SM', N'Lieferschein_CZ', N'LieferscheinBew', N'LsCont', N'BlankoPZ', N'DruckEtikett')
   AND UPPER(ISNULL(RptHisto.Druckername, N'')) NOT IN (N'ZZZ_DUMMY', N'Default')
   AND RptHisto.Anzahl != 0
 GROUP BY Standort.SuchCode,
@@ -22,7 +23,8 @@ GROUP BY Standort.SuchCode,
     WHEN N'Packzettel_Groessen' THEN N'Packzettel'
     WHEN N'Packzettel_CZ' THEN N'Packzettel'
     WHEN N'Lieferschein_SM' THEN N'Lieferschein'
-    WHEN N'Lieferschein_CZ' THEN N'Lieferschien'
+    WHEN N'Lieferschein_CZ' THEN N'Lieferschein'
+    WHEN N'LieferscheinBew' THEN N'Lieferschein'
     WHEN N'BlankoPZ' THEN N'Blanko-Packzettel'
     WHEN N'LsCont' THEN N'Containerbeschriftungsblatt'
     WHEN N'DruckEtikett' THEN N'Ausliefer-Etikett'
