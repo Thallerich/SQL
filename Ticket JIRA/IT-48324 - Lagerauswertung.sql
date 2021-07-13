@@ -112,7 +112,7 @@ Kundenstand AS (
   WHERE ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)
   GROUP BY x.ArtGroeID
 )
-SELECT Artikel.ArtikelNr AS Typ, Artikel.ArtikelNr + ArtGroe.Groesse AS ArtNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGru.Gruppe AS Artgruppe, ISNULL(BestandNeu.Bestand, 0) AS Neu, ISNULL(BestandGebraucht.Bestand, 0) AS Gebraucht, ISNULL(LagerBewNeu.Lagerabgang, 0) AS [Lagerabgang Neu], ISNULL(LagerBewGebraucht.Lagerabgang, 0) AS [Lagerabgang gebraucht], ISNULL(Kundenstand.Umlauf, 0) AS [aktuell Kundenstand]
+SELECT Artikel.ArtikelNr AS Typ, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)) AS ArtNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGru.Gruppe AS Artgruppe, SUM(ISNULL(BestandNeu.Bestand, 0)) AS Neu, SUM(ISNULL(BestandGebraucht.Bestand, 0)) AS Gebraucht, SUM(ISNULL(LagerBewNeu.Lagerabgang, 0)) AS [Lagerabgang Neu], SUM(ISNULL(LagerBewGebraucht.Lagerabgang, 0)) AS [Lagerabgang gebraucht], SUM(ISNULL(Kundenstand.Umlauf, 0)) AS [aktuell Kundenstand]
 FROM ArtGroe
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
@@ -121,4 +121,6 @@ LEFT JOIN BestandGebraucht ON BestandGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewNeu ON LagerBewNeu.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewGebraucht ON LagerBewGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN Kundenstand ON Kundenstand.ArtGroeID = ArtGroe.ID
-WHERE BestandNeu.Bestand != 0;
+WHERE BestandNeu.Bestand != 0
+GROUP BY Artikel.ArtikelNr, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)), Artikel.ArtikelBez, ArtGru.Gruppe
+ORDER BY ArtNr;
