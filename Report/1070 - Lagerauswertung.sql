@@ -1,7 +1,7 @@
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
-DECLARE @LagerID int = (SELECT ID FROM Standort WHERE SuchCode = N'ORAD');
-DECLARE @von date = N'2021-01-01';
-DECLARE @bis date = DATEADD(day, 1, N'2021-03-31');
+DECLARE @LagerID int = $2$;
+DECLARE @von date = $STARTDATE$;
+DECLARE @bis date = DATEADD(day, 1, $ENDDATE$);  -- add one day to include all stock transactions on the last day; date is implicitly converted to "dd.mm.yyyy 00:00:00", which would exclude all transactions on this date!
 
 WITH BestandNeu AS (
   SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
@@ -111,16 +111,22 @@ Kundenstand AS (
   JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
   WHERE ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)
   GROUP BY x.ArtGroeID
+),
+Artikelstatus AS (
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
+  FROM [Status]
+  WHERE [Status].Tabelle = UPPER(N'Artikel')
 )
-SELECT Artikel.ArtikelNr AS Typ, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)) AS ArtNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGru.Gruppe AS Artgruppe, SUM(ISNULL(BestandNeu.Bestand, 0)) AS Neu, SUM(ISNULL(BestandGebraucht.Bestand, 0)) AS Gebraucht, SUM(ISNULL(LagerBewNeu.Lagerabgang, 0)) AS [Lagerabgang Neu], SUM(ISNULL(LagerBewGebraucht.Lagerabgang, 0)) AS [Lagerabgang gebraucht], SUM(ISNULL(Kundenstand.Umlauf, 0)) AS [aktuell Kundenstand]
+SELECT Artikel.ArtikelNr AS Typ, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)) AS ArtNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.Gruppe AS Artgruppe, Artikelstatus.StatusBez AS [Status Artikel], SUM(ISNULL(BestandNeu.Bestand, 0)) AS Neu, SUM(ISNULL(BestandGebraucht.Bestand, 0)) AS Gebraucht, SUM(ISNULL(LagerBewNeu.Lagerabgang, 0)) AS [Lagerabgang Neu], SUM(ISNULL(LagerBewGebraucht.Lagerabgang, 0)) AS [Lagerabgang gebraucht], SUM(ISNULL(Kundenstand.Umlauf, 0)) AS [aktuell Kundenstand]
 FROM ArtGroe
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+JOIN Artikelstatus ON Artikel.[Status] = Artikelstatus.[Status]
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 LEFT JOIN BestandNeu ON BestandNeu.ArtGroeID = ArtGroe.ID
 LEFT JOIN BestandGebraucht ON BestandGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewNeu ON LagerBewNeu.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewGebraucht ON LagerBewGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN Kundenstand ON Kundenstand.ArtGroeID = ArtGroe.ID
-WHERE BestandNeu.Bestand != 0
-GROUP BY Artikel.ArtikelNr, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)), Artikel.ArtikelBez, ArtGru.Gruppe
+WHERE Artikel.ID > 0
+GROUP BY Artikel.ArtikelNr, Artikel.ArtikelNr + LEFT(ArtGroe.Groesse, IIF(CHARINDEX(N'/', ArtGroe.Groesse, 1) = 0, LEN(ArtGroe.Groesse), CHARINDEX(N'/', ArtGroe.Groesse, 1) - 1)), Artikel.ArtikelBez, ArtGru.Gruppe, Artikelstatus.StatusBez
 ORDER BY ArtNr;
