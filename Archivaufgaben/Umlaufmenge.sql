@@ -1,6 +1,16 @@
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 
-SELECT CAST(GETDATE() AS date) AS Datum, VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID, SUM(Umlauf) AS Umlauf
+CREATE TABLE #UmlaufArchiv (
+  VsaID int,
+  TraegerID int,
+  KdArtiID int,
+  ArtGroeID int,
+  ArtikelID int,
+  Umlauf int
+);
+
+INSERT INTO #UmlaufArchiv (VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID, Umlauf)
+SELECT VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID, SUM(Umlauf) AS Umlauf
 FROM (
   SELECT VsaLeas.VsaID, - 1 AS TraegerID, VsaLeas.KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaLeas.Menge) AS Umlauf
   FROM VsaLeas
@@ -64,3 +74,6 @@ FROM (
     AND Traeger.NS = 1  --Träger bekommt Namenschild 
 ) AS x
 GROUP BY VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID;
+
+SELECT VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID, Umlauf
+FROM #UmlaufArchiv;
