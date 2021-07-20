@@ -10,7 +10,7 @@ WITH VsaAnfSuspect AS (
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
   WHERE KdGf.KurzBez = N'MED'
-    AND Produktion.Bez = N'Produktion GP Enns'
+    AND Produktion.SuchCode LIKE N'WOE_'
     AND UPPER(VsaAnf.Art) = N'M'
     AND VsaAnf.Bestand = 0
     AND VsaAnf.BestandIst != 0
@@ -47,7 +47,7 @@ WHERE EXISTS (
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
   WHERE KdGf.KurzBez = N'MED'
-    AND Produktion.Bez = N'Produktion GP Enns'
+    AND Produktion.SuchCode LIKE N'WOE_'
     AND UPPER(VsaAnf.Art) = N'M'
     AND VsaAnf.Bestand = 0
     AND VsaAnf.BestandIst != 0
