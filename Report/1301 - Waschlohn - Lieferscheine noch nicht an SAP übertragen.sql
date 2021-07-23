@@ -13,6 +13,7 @@ WHERE LsKo.Status >= N'Q'
     SELECT LsPo.*
     FROM LsPo
     WHERE LsPo.LsKoID = LsKo.ID
-      AND LsPo.Menge > 0
+      AND LsPo.Menge != 0
+      AND LsPo.EPreis != 0
   )
 ORDER BY Firma, KdNr, Lieferdatum;
