@@ -37,7 +37,7 @@ FROM (
   JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
   WHERE Strumpf.[Status] != N'X'
-    AND Strumpf.Indienst >= @CurrentWeek
+    AND ISNULL(Strumpf.Indienst, N'1980/01') >= @CurrentWeek
     AND Strumpf.WegGrundID < 0
   GROUP BY Strumpf.VsaID, Strumpf.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
   
@@ -47,7 +47,7 @@ FROM (
   FROM TraeArti
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
   JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-  WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+  WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
 
   UNION ALL
 
@@ -57,7 +57,7 @@ FROM (
   JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
   JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-  WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+  WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
     AND KdArAppl.ArtiTypeID = 3  --Emblem
     AND Traeger.Emblem = 1  --Träger bekommt Emblem 
 
@@ -69,7 +69,7 @@ FROM (
   JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
   JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-  WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+  WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
     AND KdArAppl.ArtiTypeID = 2 --Namenschild
     AND Traeger.NS = 1  --Träger bekommt Namenschild 
 ) AS x
