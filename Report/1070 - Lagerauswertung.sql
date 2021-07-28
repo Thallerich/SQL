@@ -1,12 +1,21 @@
-DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @AktuelleWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @LagerID int = $2$;
 DECLARE @von date = $STARTDATE$;
+DECLARE @vonWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE $STARTDATE$ BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @bis date = DATEADD(day, 1, $ENDDATE$);  -- add one day to include all stock transactions on the last day; date is implicitly converted to "dd.mm.yyyy 00:00:00", which would exclude all transactions on this date!
+Declare @bisWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE $ENDDATE$ BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH BestandNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
+  SELECT Bestand.ArtGroeID, SUM(LagerBew.BestandNeu) AS Bestand
   FROM Bestand
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
+  JOIN (
+    SELECT LagerBew.BestandID, MAX(LagerBew.ID) AS LagerBewID
+    FROM LagerBew
+    WHERE LagerBew.Zeitpunkt < @bis
+    GROUP BY LagerBew.BestandID
+  ) AS LastLagerBew ON LastLagerBew.BestandID = Bestand.ID
+  JOIN LagerBew ON LastLagerBew.LagerBewID = LagerBew.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 1
   GROUP BY Bestand.ArtGroeID
@@ -15,6 +24,13 @@ BestandGebraucht AS (
   SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
   FROM Bestand
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
+  JOIN (
+    SELECT LagerBew.BestandID, MAX(LagerBew.ID) AS LagerBewID
+    FROM LagerBew
+    WHERE LagerBew.Zeitpunkt < @bis
+    GROUP BY LagerBew.BestandID
+  ) AS LastLagerBew ON LastLagerBew.BestandID = Bestand.ID
+  JOIN LagerBew ON LastLagerBew.LagerBewID = LagerBew.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 0
   GROUP BY Bestand.ArtGroeID
@@ -28,7 +44,7 @@ LagerBewNeu AS (
     AND Lagerart.Neuwertig = 1
     AND LagerBew.Zeitpunkt BETWEEN @von AND @bis
     AND LagerBew.Differenz < 0
-  GROUP BY Bestand.ArtGroeID
+  GROUP BY Bestand.ArtGroeID 
 ),
 LagerBewGebraucht AS (
   SELECT Bestand.ArtGroeID, SUM(LagerBew.Differenz) AS Lagerabgang
@@ -49,7 +65,9 @@ Kundenstand AS (
     JOIN Vsa ON VsaLeas.VsaID = Vsa.ID
     JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') AND ISNULL(VsaLeas.Ausdienst, N'2099/52')
+    WHERE ISNULL(VsaLeas.Indienst, N'1980/01') <= @vonWoche
+      AND ISNULL(VsaLeas.AusDienst, N'2099/52') >= @vonWoche
+    WHERE @AktuelleWoche BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') AND ISNULL(VsaLeas.Ausdienst, N'2099/52')
     GROUP BY VsaLeas.VsaID, VsaLeas.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
@@ -69,7 +87,7 @@ Kundenstand AS (
     JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
     WHERE Strumpf.[Status] != N'X'
-      AND Strumpf.Indienst >= @CurrentWeek
+      AND Strumpf.Indienst >= @AktuelleWoche
       AND Strumpf.WegGrundID < 0
     GROUP BY Strumpf.VsaID, Strumpf.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
     
@@ -79,7 +97,7 @@ Kundenstand AS (
     FROM TraeArti
     JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
     JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @AktuelleWoche BETWEEN Traeger.Indienst AND Traeger.Ausdienst
 
     UNION ALL
 
@@ -89,7 +107,7 @@ Kundenstand AS (
     JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
     JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @AktuelleWoche BETWEEN Traeger.Indienst AND Traeger.Ausdienst
       AND KdArAppl.ArtiTypeID = 3  --Emblem
       AND Traeger.Emblem = 1  --Träger bekommt Emblem 
 
@@ -101,7 +119,7 @@ Kundenstand AS (
     JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
     JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @AktuelleWoche BETWEEN Traeger.Indienst AND Traeger.Ausdienst
       AND KdArAppl.ArtiTypeID = 2 --Namenschild
       AND Traeger.NS = 1  --Träger bekommt Namenschild 
   ) AS x
