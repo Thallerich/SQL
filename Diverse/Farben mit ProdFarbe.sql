@@ -9,7 +9,7 @@ ArtiFarb AS (
   WHERE Artikel.ArtiTypeID = 1
   GROUP BY Artikel.FarbeID
 )
-SELECT Farbe.FarbeBez, Farbstatus.StatusBez AS [Status Farbe], ProdFarb.ProdFarbBez, ISNULL(ArtiFarb.ArtikelAnzahl, 0) AS [Anzahl Artikel mit dieser Farbe]
+SELECT Farbe.Farbe AS [Farb-Code], Farbe.FarbeBez, Farbstatus.StatusBez AS [Status Farbe], ProdFarb.ProdFarbBez, ISNULL(ArtiFarb.ArtikelAnzahl, 0) AS [Anzahl Artikel mit dieser Farbe]
 FROM Farbe
 JOIN Farbstatus ON Farbe.[Status] = Farbstatus.[Status]
 JOIN ProdFarb ON Farbe.ProdFarbID = ProdFarb.ID
