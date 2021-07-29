@@ -1,3 +1,5 @@
+-- alte: PeKo.ID IN (487, 492)
+
 DELETE FROM PePo WHERE ID IN (
   SELECT PePo.ID
   FROM PeKo
