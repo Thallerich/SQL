@@ -57,10 +57,12 @@ DECLARE @NewTraeArti TABLE (
   ArtGroeID int
 );
 
-INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, FolgeTraeArtiID, FolgeArtZwingend)
+DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+
+INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, FolgeTraeArtiID, FolgeArtZwingend, AnlageUserID_, UserID_)
 OUTPUT inserted.ID, inserted.TraegerID, inserted.KdArtiID, inserted.ArtGroeID
 INTO @NewTraeArti (TraeArtiID, TraegerID, KdArtiID, ArtGroeID)
-SELECT DISTINCT VsaID, TraegerID, NewArtGroeID, KdArtiID, FolgeTraeArtiID, FolgeArtZwingend
+SELECT DISTINCT VsaID, TraegerID, NewArtGroeID, KdArtiID, FolgeTraeArtiID, FolgeArtZwingend, @UserID, @UserID
 FROM __SizeChangeIT49847
 WHERE NOT EXISTS (
   SELECT TA.*
@@ -90,6 +92,18 @@ WHERE OldTraeArtiID != NewTraeArtiID;
 
 GO
 
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], Traeger.Traeger AS [Träger-Nummer], Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroeAlt.Groesse AS [Größe alt], ArtGroeNeu.Groesse AS [Größe neu]
+FROM __SizeChangeIT49847 AS sizechange
+JOIN ArtGroe AS ArtGroeAlt ON sizechange.OldArtGroeID = ArtGroeAlt.ID
+JOIN ArtGroe AS ArtGroeNeu ON sizechange.NewArtGroeID = ArtGroeNeu.ID
+JOIN Traeger ON sizechange.TraegerID = Traeger.ID
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti ON sizechange.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID;
+
+GO
+
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Teile.ArtGroeID korrigieren                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -103,26 +117,40 @@ WHERE TraeArti.ID = Teile.TraeArtiID
 /* ++ Änderungen löschen                                                                                                        ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+DECLARE @DelTraeAppl TABLE (
+  TraeApplID int
+);
+
+DECLARE @DelTeilAppl TABLE (
+  TeilApplID int
+);
+
+INSERT INTO @DelTraeAppl (TraeApplID)
+SELECT TraeAppl.ID
+FROM __SizeChangeIT49847
+JOIN TraeArti ON __SizeChangeIT49847.NewTraeArtiID = TraeArti.ID
+JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
+JOIN TraeAppl ON TraeAppl.TraeArtiID = TraeArti.ID
+JOIN KdArti ON TraeAppl.ApplKdArtiID = KdArti.ID
+WHERE KdArti.ArtikelID IN (3806701, 3806724, 3806737, 3806738)
+  AND TraeAppl.Mass = SUBSTRING(ArtGroe.Groesse, CHARINDEX(N'/', ArtGroe.Groesse, 1) + 1, LEN(ArtGroe.Groesse) - CHARINDEX(N'/', ArtGroe.Groesse, 1));
+
+INSERT INTO @DelTeilAppl (TeilApplID)
+SELECT TeilAppl.ID
+FROM __SizeChangeIT49847
+JOIN Teile ON Teile.TraeArtiID = __SizeChangeIT49847.NewTraeArtiID
+JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
+JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
+JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
+WHERE KdArti.ArtikelID IN (3806701, 3806724, 3806737, 3806738)
+  AND TeilAppl.Mass = SUBSTRING(ArtGroe.Groesse, CHARINDEX(N'/', ArtGroe.Groesse, 1) + 1, LEN(ArtGroe.Groesse) - CHARINDEX(N'/', ArtGroe.Groesse, 1));
+
 DELETE FROM TraeAppl
 WHERE ID IN (
-  SELECT TraeAppl.ID
-  FROM __SizeChangeIT49847
-  JOIN TraeArti ON __SizeChangeIT49847.NewTraeArtiID = TraeArti.ID
-  JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-  JOIN TraeAppl ON TraeAppl.TraeArtiID = TraeArti.ID
-  JOIN KdArti ON TraeAppl.ApplKdArtiID = KdArti.ID
-  WHERE KdArti.ArtikelID IN (3806701, 3806724, 3806737, 3806738)
-    AND TraeAppl.Mass = SUBSTRING(ArtGroe.Groesse, CHARINDEX(N'/', ArtGroe.Groesse, 1) + 1, LEN(ArtGroe.Groesse) - CHARINDEX(N'/', ArtGroe.Groesse, 1))
+  SELECT TraeApplID FROM @DelTraeAppl
 );
 
 DELETE FROM TeilAppl
 WHERE ID IN (
-  SELECT TeilAppl.ID
-  FROM __SizeChangeIT49847
-  JOIN Teile ON Teile.TraeArtiID = __SizeChangeIT49847.NewTraeArtiID
-  JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
-  JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
-  JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
-  WHERE KdArti.ArtikelID IN (3806701, 3806724, 3806737, 3806738)
-    AND TeilAppl.Mass != SUBSTRING(ArtGroe.Groesse, CHARINDEX(N'/', ArtGroe.Groesse, 1) + 1, LEN(ArtGroe.Groesse) - CHARINDEX(N'/', ArtGroe.Groesse, 1))
+  SELECT TeilApplID FROM @DelTeilAppl
 );
