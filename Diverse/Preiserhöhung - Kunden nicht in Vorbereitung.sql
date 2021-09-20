@@ -14,4 +14,16 @@ WHERE Kunden.FirmaID = 5260
     JOIN PePo ON PePo.VertragID = Vertrag.ID
     JOIN PeKo ON PePo.PeKoID = PeKo.ID
     WHERE PeKo.Status = N'C'
+  )
+  AND EXISTS (
+    SELECT Vertrag.*
+    FROM Vertrag
+    WHERE Vertrag.Status = N'A'
+      AND Vertrag.KundenID = Kunden.ID
+  )
+  AND EXISTS (
+    SELECT KdArti.*
+    FROM KdArti
+    WHERE KdArti.KundenID = Kunden.ID
+      AND (KdArti.WaschPreis != 0 OR KdArti.LeasPreis != 0 OR KdArti.SonderPreis != 0 OR KdArti.VkPreis != 0)
   );
