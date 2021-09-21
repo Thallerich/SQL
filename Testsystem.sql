@@ -4,6 +4,10 @@ BEGIN TRANSACTION;
     SET [ValueMemo] = N'B75766'
     WHERE [Parameter] = N'COLOR_BACKGROUND';
 
+  UPDATE OWS.dbo.Settings
+    SET [ValueMemo] = N'B75766'
+    WHERE [Parameter] = N'COLOR_BACKGROUND';
+
   UPDATE Salesianer.dbo.Settings
     SET [ValueMemo] = N'https://kunden-test.salesianer.com/__wptest/upload_test_20210111/index.php'
     WHERE [Parameter] = N'INTERNET_IMPORT_PHP';
