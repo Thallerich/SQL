@@ -79,7 +79,7 @@ Kundenstand AS (
     FROM TraeArti
     JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
     JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
 
     UNION ALL
 
@@ -89,7 +89,7 @@ Kundenstand AS (
     JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
     JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
       AND KdArAppl.ArtiTypeID = 3  --Emblem
       AND Traeger.Emblem = 1  --Träger bekommt Emblem 
 
@@ -101,7 +101,7 @@ Kundenstand AS (
     JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
     JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND Traeger.Ausdienst
+    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
       AND KdArAppl.ArtiTypeID = 2 --Namenschild
       AND Traeger.NS = 1  --Träger bekommt Namenschild 
   ) AS x
