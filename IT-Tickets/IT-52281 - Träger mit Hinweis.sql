@@ -1,4 +1,5 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Traeger AS [Träger-Nr], Traeger.Nachname, Traeger.Vorname, Traeger.Hinweise
+--SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Traeger AS [Träger-Nr], Traeger.Nachname, Traeger.Vorname, Traeger.Hinweise
+UPDATE Traeger SET Hinweise = NULL
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
