@@ -1,5 +1,5 @@
 WITH VsaAnfSuspect AS (
-  SELECT VsaAnf.*
+  SELECT VsaAnf.*, Produktion.SuchCode AS ProdCode, Produktion.Bez AS ProdLocation
   FROM VsaAnf
   JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -22,7 +22,7 @@ WITH VsaAnfSuspect AS (
     AND Kunden.Status = N'A'
     AND KdArti.ErsatzFuerKdArtiID < 0
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Artikel.ArtikelNr, Artikel.ArtikelBez, VsaAnfSuspect.BestandIst AS Istbestand, VsaAnfSuspect.Bestand AS Vertragsbestand
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, VsaAnfSuspect.ProdCode, VsaAnfSuspect.ProdLocation, Artikel.ArtikelNr, Artikel.ArtikelBez, VsaAnfSuspect.BestandIst AS Istbestand, VsaAnfSuspect.Bestand AS Vertragsbestand
 FROM VsaAnfSuspect
 JOIN KdArti ON VsaAnfSuspect.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
