@@ -24,7 +24,8 @@ JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
 JOIN Status ON Teile.Status = Status.Status AND Status.Tabelle = N'TEILE'
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
 JOIN StandBer ON StandBer.StandKonID = StandKon.ID AND StandBer.BereichID = Artikel.BereichID
-JOIN BPo ON Teile.BPoID = BPo.ID
+JOIN TeileBPo ON TeileBPo.TeileID = Teile.ID AND TeileBPo.Latest = 1
+JOIN BPo ON TeileBPo.BPoID = BPo.ID
 JOIN BKo ON BPo.BKoID = BKo.ID
 LEFT OUTER JOIN LiefAbPo ON LiefAbPo.BPoID = BPo.ID
 LEFT OUTER JOIN Lagerbestand ON ArtGroe.ID = Lagerbestand.ArtGroeID AND StandBer.LagerID = Lagerbestand.LagerID
