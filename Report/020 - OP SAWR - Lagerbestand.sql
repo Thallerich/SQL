@@ -3,7 +3,7 @@ WITH Artikelstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'Artikel')
 )
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikelstatus.StatusBez AS [Status Artikel], ArtGroe.Groesse AS Größe, COUNT(OPTeile.ID) AS Bestand
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikelstatus.StatusBez AS [Status Artikel], ArtGroe.Groesse AS Größe, COUNT(OPTeile.ID) AS [Bestand gesamt], SUM(IIF(OPTeile.AnzWasch <= 1, 1, 0)) AS [Bestand neu], SUM(IIF(OPTeile.AnzWasch > 1, 1, 0)) AS [Bestand gebraucht]
 FROM OPTeile
 JOIN ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
