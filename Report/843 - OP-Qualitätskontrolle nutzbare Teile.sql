@@ -9,14 +9,22 @@ WITH QKTeile AS (
   WHERE OPScans.Zeitpunkt BETWEEN @von AND @bis
     AND Standort.ID IN ($2$)
 )
-SELECT QKPivot.Datum, QKPivot.Name AS Mitarbeiter, [109] AS [Qualitätskontrolle OK], [105] AS Nachwäsche
+SELECT QKPivot.Datum, QKPivot.Name AS Mitarbeiter, [109] AS [Qualitätskontrolle OK], [105] AS Nachwäsche, [108] AS Schrott
 FROM (
-  SELECT QKTeile.Datum, Mitarbei.Name, ISNULL(QKTeile.NextActionID, QKTeile.ActionsID) AS ActionID
+  SELECT QKTeile.OPTeileID,
+    QKTeile.Datum,
+    Mitarbei.Name,
+    ActionID =
+      CASE QKTeile.NextActionID
+        WHEN 105 THEN 105
+        WHEN 108 THEN 108
+        ELSE 109
+      END
   FROM QKTeile
   JOIN Mitarbei ON QKTeile.UserID = Mitarbei.ID
   WHERE QKTeile.ActionsID = 109
 ) AS QKPivotDaten
 PIVOT (
-  COUNT(QKPivotDaten.ActionID)
-  FOR ActionID IN ([109], [105])
+  COUNT(QKPivotDaten.OPTeileID)
+  FOR ActionID IN ([109], [105], [108])
 ) AS QKPivot;
