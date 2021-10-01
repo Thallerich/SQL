@@ -1,13 +1,13 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ 0,3,16,40,106,112,124,135,143,152                                                                                         ++ */
 /* ++                                                                                                                           ++ */
-/* ++ TNr smallint                                                                                                              ++ */
-/* ++ PersNr nchar(14)                                                                                                          ++ */
-/* ++ KartenNr nchar(20)                                                                                                        ++ */
-/* ++ KdNr smallint                                                                                                             ++ */
-/* ++ KsSt nvarchar(50)                                                                                                         ++ */
-/* ++ Indienst nchar(8)                                                                                                         ++ */
-/* ++ Ausdienst nchar(8)                                                                                                        ++ */
+/* ++ Column1 → TNr smallint                                                                                                    ++ */
+/* ++ Column2 → PersNr nchar(14)                                                                                                ++ */
+/* ++ Column3 → KartenNr nchar(20)                                                                                              ++ */
+/* ++ Column5 → KdNr smallint                                                                                                   ++ */
+/* ++ Column6 → KsSt nvarchar(50)                                                                                               ++ */
+/* ++ Column8 → Indienst nchar(8)                                                                                               ++ */
+/* ++ Column9 → Ausdienst nchar(8)                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @MaxTraegerNr int = (SELECT MAX(CAST(Traeger.Traeger AS int)) FROM Traeger WHERE Traeger.VsaID = 6119607);
