@@ -1,3 +1,10 @@
+ALTER TABLE __OPSetArtiChange ALTER COLUMN Setartikel nchar(15) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __OPSetArtiChange ALTER COLUMN InhaltAktuell nchar(15) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __OPSetArtiChange ALTER COLUMN InhaltNeu nchar(15) COLLATE Latin1_General_CS_AS;
+ALTER TABLE __OPSetArtiChange ALTER COLUMN ErsatzNeu nchar(15) COLLATE Latin1_General_CS_AS;
+
+GO
+
 WITH SetArtiChange AS (
   SELECT DISTINCT Setartikel.ID AS SetartikelID, InhaltAktuell.ID AS InhaltAktuellID, InhaltNeu.ID AS InhaltNeuID, ErsatzNeu.ID AS ErsatzNeuID
   FROM Salesianer.dbo.__OPSetArtiChange
@@ -26,5 +33,9 @@ UPDATE OPSets SET Artikel1ID = SetArtiChange.InhaltNeuID, Artikel2ID = SetArtiCh
 FROM OPSets
 JOIN SetArtiChange ON OPSets.ArtikelID = SetArtiChange.SetartikelID AND OPSets.Artikel1ID = SetArtiChange.InhaltAktuellID
 WHERE OPSets.Artikel2ID < 0;
+
+GO
+
+DROP TABLE __OPSetArtiChange;
 
 GO
