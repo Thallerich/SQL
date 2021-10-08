@@ -15,6 +15,7 @@ DECLARE @StandortID int =
     WHEN 5212 THEN 5001
     WHEN 5213 THEN 5001
     WHEN 5214 THEN 5001
+    WHEN 5133 THEN 5133
     ELSE NULL
   END;
 
@@ -37,7 +38,7 @@ JOIN Artikel ON OPSets.Artikel1ID = Artikel.ID
 JOIN Standort ON LsPo.ProduktionID = Standort.ID
 JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
 WHERE LsKo.Datum BETWEEN @von AND @bis
-  AND LsPo.ProduktionID IN ($3$)
+  AND LsPo.ProduktionID = $3$
   AND NOT EXISTS (
     SELECT SiS.*
     FROM OPSets AS SiS
@@ -58,7 +59,7 @@ USING (
   JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
   JOIN Artikel AS SiSArtikel ON SiS.ArtikelID = SiSArtikel.ID
   WHERE LsKo.Datum BETWEEN @von AND @bis
-    AND LsPo.ProduktionID IN ($3$)
+    AND LsPo.ProduktionID = $3$
   GROUP BY Standort.ID, Artikel.ID
 ) AS SiSLiefermenge (StandortID, ArtikelID, Liefermenge)
 ON OPStats.ArtikelID = SiSLiefermenge.ArtikelID AND OPStats.StandortID = SiSLiefermenge.StandortID
@@ -75,7 +76,7 @@ USING (
   JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
   JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = Artikel.BereichID
   WHERE OPTeile.WegDatum BETWEEN @von AND @bis
-    AND StandBer.ProduktionID IN ($3$)
+    AND StandBer.ProduktionID = $3$
     AND OPTeile.Status = N'Z'
   GROUP BY OPTeile.ArtikelID
 ) AS OPSchrott (ArtikelID, StandortID, Schrottmenge)
@@ -92,7 +93,7 @@ USING (
   JOIN OPTeile ON OPScans.OPTeileID = OPTeile.ID
   JOIN ArbPlatz ON OPScans.ArbPlatzID = ArbPlatz.ID
   WHERE OPScans.ActionsID = 115 --OP erstellt
-    AND ArbPlatz.StandortID IN (@StandortID)
+    AND ArbPlatz.StandortID = @StandortID
     AND OPScans.Zeitpunkt BETWEEN @von AND DATEADD(day, 1, @bis)
   GROUP BY OPTeile.ArtikelID
 ) AS OPNeu (ArtikelID, StandortID, NeuMenge)
@@ -115,7 +116,7 @@ USING (
   ) AS OPTeil
   JOIN OPScans ON OPTeil.LastOPScanID = OPScans.ID
   JOIN ArbPlatz ON OPScans.ArbPlatzID = ArbPlatz.ID
-  WHERE ArbPlatz.StandortID IN (@StandortID)
+  WHERE ArbPlatz.StandortID = @StandortID
   GROUP BY OPTeil.ArtikelID
 ) AS OPInProd (ArtikelID, StandortID, InProdMenge)
 ON OPStats.ArtikelID = OPInProd.ArtikelID AND OPStats.StandortID = OPInProd.StandortID
