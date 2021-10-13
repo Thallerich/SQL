@@ -1,6 +1,6 @@
 DECLARE @KdNr AS TABLE (KdNr int);
 
-INSERT INTO @KdNr VALUES (24045), (11050), (20000), (6071), (7240), (9013), (23041), (23042), (23032), (23037), (10001756), (242013), (2710499), (2710498), (18029), (245347), (248564), (246805), (10003247), (19080), (20156), (25033);
+INSERT INTO @KdNr VALUES (24045), (11050), (20000), (6071), (7240), (9013), (23041), (23042), (23044), (23032), (23037), (10001756), (242013), (2710499), (2710498), (18029), (245347), (248564), (246805), (10003247), (19080), (20156), (25033), (10001810), (10001671), (10001672), (10001816);
 
 DROP TABLE IF EXISTS #TmpSchwundAuto;
 
@@ -11,11 +11,11 @@ WHERE OPTeile.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
   AND OPTeile.LastErsatzFuerKdArtiID = KdArti.ID
   AND Kunden.KdNr IN (SELECT KdNr FROM @KdNr)
-  AND OPTeile.Status = 'Q'
-  AND OPTeile.LastActionsID = 102
+  AND OPTeile.Status = N'Q'
+  AND OPTeile.LastActionsID IN (102, 120, 136)
   AND DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) > 180;
 
-UPDATE OPTeile SET Status = 'W', LastActionsID = 116
+UPDATE OPTeile SET Status = N'W', LastActionsID = 116
 WHERE ID IN (
   SELECT OPTeileID FROM #TmpSchwundAuto
 );
