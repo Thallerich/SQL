@@ -7,6 +7,7 @@ JOIN Branche ON Kunden.BrancheID = Branche.ID
 JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN AnfArt ON Vsa.AnfArtID = AnfArt.ID
 WHERE Kunden.Status = N'A'
+  AND Vsa.Status = N'A'
   AND Kunden.AdrArtID = 1
   AND Kunden.FirmaID IN ($1$)
   AND Kunden.HoldingID IN ($2$)
