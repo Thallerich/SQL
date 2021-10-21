@@ -1,4 +1,4 @@
-SELECT Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, Traeger.Indienst AS [Indienststellungswoche Träger], 1 AS Menge, KdArti.PeriodenPreis
+SELECT Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, Traeger.Indienst AS [Indienststellungswoche Träger], 1 AS Menge, KdArti.LeasPreis AS Periodenpreis
 FROM KdArti, Abteil, Traeger, Kunden, TraeArti, TraeArch, Wochen
 WHERE TraeArch.WochenID = Wochen.ID
 	AND Wochen.Woche = $2$
