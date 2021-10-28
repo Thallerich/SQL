@@ -1,11 +1,19 @@
-DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @LagerID int = $2$;
 DECLARE @von date = $STARTDATE$;
 DECLARE @bis date = DATEADD(day, 1, $ENDDATE$);  -- add one day to include all stock transactions on the last day; date is implicitly converted to "dd.mm.yyyy 00:00:00", which would exclude all transactions on this date!
+DECLARE @vonWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @von BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @bisWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @bis BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH BestandNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
-  FROM Bestand
+  SELECT Bestand.ArtGroeID, SUM(LagerBew.BestandNeu) AS Bestand
+  FROM (
+    SELECT MAX(LagerBew.ID) AS LagerBewIDMax, LagerBew.BestandID
+    FROM LagerBew
+    WHERE LagerBew.Zeitpunkt <= @bis
+    GROUP BY LagerBew.BestandID
+  ) AS LastLagerBew
+  JOIN LagerBew ON LastLagerBew.LagerBewIDMax = LagerBew.ID
+  JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 1
@@ -13,7 +21,14 @@ WITH BestandNeu AS (
 ),
 BestandGebraucht AS (
   SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
-  FROM Bestand
+  FROM (
+    SELECT MAX(LagerBew.ID) AS LagerBewIDMax, LagerBew.BestandID
+    FROM LagerBew
+    WHERE LagerBew.Zeitpunkt <= @bis
+    GROUP BY LagerBew.BestandID
+  ) AS LastLagerBew
+  JOIN LagerBew ON LastLagerBew.LagerBewIDMax = LagerBew.ID
+  JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 0
@@ -49,17 +64,24 @@ Kundenstand AS (
     JOIN Vsa ON VsaLeas.VsaID = Vsa.ID
     JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') AND ISNULL(VsaLeas.Ausdienst, N'2099/52')
+    WHERE ISNULL(VsaLeas.InDienst, N'1980/01') <= @bisWoche
+      AND ISNULL(VsaLeas.AusDienst, N'2099/52') >= @vonWoche
     GROUP BY VsaLeas.VsaID, VsaLeas.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
 
-    SELECT VsaAnf.VsaID, - 1 AS TraegerID, VsaAnf.KdArtiID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Umlauf
+    SELECT VsaAnf.VsaID, -1 AS TraegerID, VsaAnf.KdArtiID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand - VsaAnfBestandDiff.Differenz) AS Umlauf
     FROM VsaAnf
+    JOIN (
+      SELECT VsaAnfHi.VsaID, VsaAnfHi.KdArtiID, VsaAnfHi.ArtGroeID, SUM(VsaAnfHi.VertragDiff) AS Differenz
+      FROM VsaAnfHi
+      WHERE VsaAnfHi.Zeitpunkt > @bis
+        AND VsaAnfHi.VertragDiff != 0
+      GROUP BY VsaAnfHi.VsaID, VsaAnfHi.KdArtiID, VsaAnfHi.ArtGroeID
+    ) AS VsaAnfBestandDiff ON VsaAnf.VsaID = VsaAnfBestandDiff.VsaID AND VsaAnf.KdArtiID = VsaAnfBestandDiff.KdArtiID AND VsaAnf.ArtGroeID = VsaAnfBestandDiff.ArtGroeID
     JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE VsaAnf.Bestand != 0
-      AND VsaAnf.[Status] = N'A'
+    WHERE VsaAnf.Bestand - VsaAnfBestandDiff.Differenz != 0
     GROUP BY VsaAnf.VsaID, VsaAnf.KdArtiID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
@@ -69,41 +91,53 @@ Kundenstand AS (
     JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
     WHERE Strumpf.[Status] != N'X'
-      AND Strumpf.Indienst >= @CurrentWeek
-      AND Strumpf.WegGrundID < 0
+      AND Strumpf.Indienst <= @bisWoche
+      AND Strumpf.WegGrundID < 0  -- eigentlich müsste hier der Schrott-Scan ausgewertet werden, TPS-Strümpfe sind aber so geringe Mengen dass das hier nicht relevant ist und ich mir den Aufwand fürs erste spare -- THALST 2021-10-28
     GROUP BY Strumpf.VsaID, Strumpf.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
     
     UNION ALL
 
-    SELECT Traeger.VsaID, TraeArti.TraegerID, TraeArti.KdArtiID, TraeArti.ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
+    SELECT Traeger.VsaID, Teile.TraegerID, Teile.KdArtiID, Teile.ArtGroeID, KdArti.ArtikelID, COUNT(Teile.ID) AS Umlauf
+    FROM Teile
+    JOIN Traeger ON Teile.TraegerID = Traeger.ID
+    JOIN KdArti ON Teile.KdArtiID = KdArti.ID
+    WHERE Traeger.Indienst <= @bisWoche
+      AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
+      AND Teile.Indienst <= @bisWoche
+      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
+    GROUP BY Traeger.VsaID, Teile.TraegerID, Teile.KdArtiID, Teile.ArtGroeID, KdArti.ArtikelID
 
     UNION ALL
 
-    SELECT Traeger.VsaID, TraeArti.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
-    JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
+    SELECT Traeger.VsaID, Teile.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
+    FROM Teile
+    JOIN Traeger ON Teile.TraegerID = Traeger.ID
+    JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
+    JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
-      AND KdArAppl.ArtiTypeID = 3  --Emblem
-      AND Traeger.Emblem = 1  --Träger bekommt Emblem 
+    WHERE Traeger.Indienst <= @bisWoche
+      AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
+      AND Teile.Indienst <= @bisWoche
+      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
+      AND TeilAppl.ArtiTypeID = 3  --Emblem
+      AND TeilAppl.Bearbeitung = N'-' --erledigt, Emblem aufgebracht
+    GROUP BY Traeger.VsaID, Teile.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
 
-    SELECT Traeger.VsaID, TraeArti.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
-    JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
+    SELECT Traeger.VsaID, Teile.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
+    FROM Teile
+    JOIN Traeger ON Teile.TraegerID = Traeger.ID
+    JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
+    JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN Traeger.Indienst AND ISNULL(Traeger.Ausdienst, N'2099/52')
-      AND KdArAppl.ArtiTypeID = 2 --Namenschild
-      AND Traeger.NS = 1  --Träger bekommt Namenschild 
+    WHERE Traeger.Indienst <= @bisWoche
+      AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
+      AND Teile.Indienst <= @bisWoche
+      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
+      AND TeilAppl.ArtiTypeID = 2 --Namenschild
+      AND TeilAppl.Bearbeitung = N'-' --ereledigt, Namenschild aufgebracht
+    GROUP BY Traeger.VsaID, Teile.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
   ) AS x
   JOIN Vsa ON x.VsaID = Vsa.ID
   JOIN KdArti ON x.KdArtiID = KdArti.ID
