@@ -2,20 +2,18 @@ DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
 DECLARE @VsaAnfKorr TABLE (
   VsaAnfID int,
-  BestandIst int,
-  Bestand int
+  BestandIst int
 );
 
 DECLARE @Changelog TABLE (
   VsaAnfID int,
-  BestandAlt int,
+  Vertragsbestand int,
   BestandIstAlt int,
-  BestandNeu int,
   BestandIstNeu int
 );
 
-INSERT INTO @VsaAnfKorr (VsaAnfID, BestandIst, Bestand)
-SELECT VsaAnf.ID, COUNT(Daten.ID) AS BestandIst, IIF(VsaAnf.Bestand = 0, 0, VsaAnf.BestandIst - (VsaAnf.BestandIst % Artikel.Packmenge) + IIF(VsaAnf.BestandIst % Artikel.Packmenge = 0, 0, Artikel.Packmenge)) AS Bestand
+INSERT INTO @VsaAnfKorr (VsaAnfID, BestandIst)
+SELECT VsaAnf.ID, COUNT(Daten.ID) AS BestandIst
 --SELECT Kunden.KdNr, Vsa.SuchCode AS [Vsa-Stichwort], vsa.VsaNr AS VSANr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez ArtikelBez, daten.Artikelgr AS Größe, VsaAnf.Bestand SollBestand, VsaAnf.BestandIst [Ist-Bestand aktuell], COUNT(Daten.ID) AS [Ist-Bestand neu], VsaAnf.ID AS VsaAnfID, IIF(VsaAnf.Bestand = 0, 0, VsaAnf.BestandIst - (VsaAnf.BestandIst % Artikel.Packmenge) + IIF(VsaAnf.BestandIst % Artikel.Packmenge = 0, 0, Artikel.Packmenge)) AS [Sollbestand neu]
 FROM (
   SELECT OpTeile.ID, OpTeile.VsaID, OpTeile.LastErsatzFuerKdArtiID, KdArti.KdBerID, KdArti.ID KdArtiID, KdArti.ArtikelID, KdArti.IstBestandAnpass, OpTeile.LastErsatzArtGroeID ArtGroeID, '-' AS Artikelgr
@@ -59,21 +57,13 @@ WHERE Vsa.ID = Daten.VsaID
 GROUP BY Kunden.KdNr, Vsa.SuchCode, vsa.VsaNr, Vsa.Bez, daten.Artikelgr, Artikel.ArtikelNr, Artikel.ArtikelBez, Vsa.ID, VsaAnf.Bestand, VsaAnf.BestandIst, VsaAnf.ID, Artikel.PackMenge
 HAVING COUNT(Daten.ID) != VsaAnf.BestandIst;
 
-UPDATE VsaAnf SET BestandIst = VsaAnfKorr.BestandIst, Bestand = IIF(VsaAnf.Bestand >= VsaAnfKorr.Bestand, VsaAnf.Bestand, VsaAnfKorr.Bestand)
-OUTPUT inserted.ID, deleted.Bestand, deleted.BestandIst, inserted.Bestand, inserted.BestandIst
-INTO @Changelog (VsaAnfID, BestandAlt, BestandIstAlt, BestandNeu, BestandIstNeu)
+UPDATE VsaAnf SET BestandIst = VsaAnfKorr.BestandIst
+OUTPUT inserted.ID, inserted.Bestand, deleted.BestandIst, inserted.BestandIst
+INTO @Changelog (VsaAnfID, Vertragsbestand, BestandIstAlt, BestandIstNeu)
 FROM @VsaAnfKorr AS VsaAnfKorr
 WHERE VsaAnfKorr.VsaAnfID = VsaAnf.ID;
 
-INSERT INTO VsaAnfHi (VsaID, KdArtiID, Zeitpunkt, MitarbeiID, [Text], VertragDiff, ArtGroeID, AenderungsGrund, VsaAnfTpID, EPreis, UserID_)
-SELECT VsaAnf.VsaID, VsaAnf.KdArtiID, GETDATE() AS Zeitpunkt, @UserID AS MitarbeiID, N'Korrektur-Skript ' + FORMAT(GETDATE(), N'dd.MM.yyyy'), Changelog.BestandNeu - Changelog.BestandAlt AS VertragDiff, VsaAnf.ArtGroeID, N'LEER' AS Aenderungsgrund, 10 AS VsaAnfTpID, Artikel.EkPreis AS Epreis, @UserID AS UserID_
-FROM @Changelog AS Changelog
-JOIN VsaAnf ON Changelog.VsaAnfID = VsaAnf.ID
-JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
-JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-WHERE Changelog.BestandAlt != Changelog.BestandNeu;
-
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Changelog.BestandAlt AS [Vertragsbestand bisher], Changelog.BestandNeu AS [Vertragsbestand erhöht], Changelog.BestandIstAlt AS [Ist-Bestand bisher], Changelog.BestandIstNeu AS [Ist-Bestand korrigiert]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, Changelog.Vertragsbestand, Changelog.BestandIstAlt AS [Ist-Bestand bisher], Changelog.BestandIstNeu AS [Ist-Bestand korrigiert], Changelog.BestandIstNeu - Changelog.BestandIstAlt AS [Differenz Ist-Bestand]
 FROM @Changelog AS Changelog
 JOIN VsaAnf ON Changelog.VsaAnfID = VsaAnf.ID
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
