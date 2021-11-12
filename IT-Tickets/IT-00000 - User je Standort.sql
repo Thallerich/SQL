@@ -16,3 +16,26 @@ WHERE LoginLog.LoginZeit >= N'2021-07-01'
 GROUP BY PCList.[Location];
 
 GO
+
+SELECT Standort.SuchCode AS Standort,
+  [Geräte-Art] = 
+    CASE MdeDev.Art
+      WHEN N'H' THEN N'Fahrer-App'
+      WHEN N'O' THEN N'Pool-Inventur'
+      ELSE N'(Unknown)'
+    END,
+  COUNT(DISTINCT Mitarbei.ID) AS [Anzahl User]
+FROM MdeDev
+JOIN Mitarbei ON MdeDev.LastMitarbeiID = Mitarbei.ID
+JOIN Standort ON Mitarbei.StandortID = Standort.ID
+WHERE MdeDev.LastMitarbeiID > 0
+  AND MdeDev.LetzterZugriff >= N'2021-07-01 00:00:00'
+  AND MdeDev.Status = N'A'
+GROUP BY Standort.SuchCode,
+  CASE MdeDev.Art
+    WHEN N'H' THEN N'Fahrer-App'
+    WHEN N'O' THEN N'Pool-Inventur'
+    ELSE N'(Unknown)'
+  END;
+
+GO
