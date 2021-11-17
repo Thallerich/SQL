@@ -1,4 +1,4 @@
---SELECT VsaAnf.ID AS VsaAnfID, VsaAnf.Status, VsaAnf.KdArtiID, VsaAnf.ArtGroeID, ArtGroe.ID AS ArtGroeIDArtikel
+--SELECT VsaAnf.ID AS VsaAnfID, VsaAnf.Status, VsaAnf.KdArtiID, VsaAnf.ArtGroeID, ArtGroe.ID AS ArtGroeIDArtikel, VsaAnf.AnlageUserID_, VsaAnf.Anlage_
 UPDATE VsaAnf SET ArtGroeID = ArtGroe.ID
 FROM VsaAnf
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
@@ -6,9 +6,16 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN ArtGroe ON ArtGroe.ArtikelID = Artikel.ID
-WHERE Artikel.ArtikelNr IN (N'54A7L', N'54A7XL')
-  AND Bereich.VsaAnfGroe = 1
-  AND VsaAnf.ArtGroeID != ArtGroe.ID;
+WHERE Bereich.Bereich = N'FW'
+  AND VsaAnf.ArtGroeID != ArtGroe.ID
+  AND VsaAnf.ArtGroeID = -1
+  AND NOT EXISTS (
+    SELECT v.*
+    FROM VsaAnf AS v
+    WHERE v.VsaID = VsaAnf.VsaID
+      AND v.KdArtiID = VsaAnf.KdArtiID
+      AND v.ArtGroeID = ArtGroe.ID
+  );
 
 GO
 
@@ -29,10 +36,10 @@ JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN ArtGroe ON ArtGroe.ArtikelID = Artikel.ID
 JOIN AnfPo AS AnfPoGroe ON AnfPoGroe.AnfKoID = AnfPo.AnfKoID AND AnfPoGroe.KdArtiID = AnfPo.KdArtiID AND AnfPoGroe.ArtGroeID > 0
-WHERE Artikel.ArtikelNr IN (N'54A7L', N'54A7XL')
-  AND Bereich.VsaAnfGroe = 1
+WHERE Bereich.Bereich = N'FW'
   AND AnfKo.Status < N'I'
-  AND AnfPo.ArtGroeID != ArtGroe.ID;
+  AND AnfPo.ArtGroeID != ArtGroe.ID
+  AND AnfPo.ArtGroeID = -1;
 
 UPDATE AnfPo SET Angefordert = Angefordert + AnfKorr.AngefordertOld
 FROM AnfPo
