@@ -1,6 +1,3 @@
-USE Salesianer_INZ;
-GO
-
 UPDATE Touren SET TourKatID = 5
 WHERE Touren.Tour LIKE N'_-37800' OR Touren.Tour LIKE N'_-37804' OR Touren.Tour LIKE N'_-37808' OR Touren.Tour LIKE N'_-37816' OR Touren.Tour LIKE N'_-37820' OR Touren.Tour LIKE N'_-37824' OR Touren.Tour LIKE N'_-37828' OR Touren.Tour LIKE N'_-37832' OR Touren.Tour LIKE N'_-37812';
 
