@@ -1,20 +1,13 @@
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Pipeline: DROP                                                                                                            ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
 DROP TABLE IF EXISTS #TmpLsKontrolle888e;
 
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Pipeline: CREATE                                                                                                          ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, CONVERT(char(15), NULL) AS ArtikelNr, CONVERT(nvarchar(60), NULL) AS ArtikelBez, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, 0) AS NichtKdArti, CONVERT(bit, IIF(KdArti.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti.ID AS OrigKdArtiID, KdArti.ErsatzFuerKdArtiID, IIF(KdArti.ErsatzFuerKdArtiID > 0, KdArti.ErsatzFuerKdArtiID, KdArti.ID) AS KdArtiID, CONVERT(bit, 0) AS IstFalschlieferung, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, AnfPo.Kostenlos, Vsa.ID AS VsaID, NULL AS KdBerID, NULL AS ArtikelID
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, CONVERT(char(15), NULL) AS ArtikelNr, CONVERT(nvarchar(60), NULL) AS ArtikelBez, ArtGroe.Groesse AS Größe, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, 0) AS NichtKdArti, CONVERT(bit, IIF(KdArti.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti.ID AS OrigKdArtiID, KdArti.ErsatzFuerKdArtiID, IIF(KdArti.ErsatzFuerKdArtiID > 0, KdArti.ErsatzFuerKdArtiID, KdArti.ID) AS KdArtiID, CONVERT(bit, 0) AS IstFalschlieferung, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, AnfPo.Kostenlos, Vsa.ID AS VsaID, NULL AS KdBerID, NULL AS ArtikelID, AnfPo.ArtGroeID
 INTO #TmpLsKontrolle888e
-FROM AnfPo, AnfKo, Vsa, Kunden, KdArti
+FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, ArtGroe
 WHERE AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
   AND AnfPo.KdArtiID = KdArti.ID
+  AND AnfPo.ArtGroeID = ArtGroe.ID
   AND AnfKo.Lieferdatum = $1$
   AND (AnfPo.Angefordert > 0 OR AnfPo.Geliefert > 0)
   AND AnfKo.Status >= N'I'
@@ -50,6 +43,7 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND LsKontrolle.LsKoID = LsKo.ID
   AND LsKontrolle.OrigKdArtiID = LsPo.KdArtiID
   AND LsKontrolle.Kostenlos = LsPo.Kostenlos
+  AND LsKontrolle.ArtGroeID = LsPo.ArtGroeID
   AND LsKontrolle.LsKoID > 0;
 
 UPDATE #TmpLsKontrolle888e
@@ -71,11 +65,7 @@ WHERE OPScans.AnfPoID = LsKontrolle.AnfPoID
   AND OPTeile.VsaOwnerID > 0
   AND OPTeile.VsaOWnerID <> LsKontrolle.VsaID;
 
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Pipeline: Lieferscheindaten                                                                                               ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-SELECT Kundenservice.Name AS Kundenservice, Betreuer.Name AS Kundenbetreuer, Vertrieb.Name AS [Key Account], LSK.KdNr, LSK.Kunde, LSK.VsaStichwort, LSK.VsaBezeichnung, LSK.ArtikelNr, LSK.ArtikelBez AS Artikelbezeichnung, LSK.Angefordert, LSK.Liefermenge, LSK.AnzahlChips, LSK.Abweichung, FORMAT(LSK.AbweichungProzent, N'P2', N'de-AT') AS [Abweichung %], LSK.LsNr AS Lieferschein, LSK.Datum AS Lieferdatum, LSK.Packzettelnummer AS Packzettel, LSK.IstErsatz AS [Ersatzartikel geliefert], LSK.IstFalschlieferung AS [Lieferung nicht an Eigentümer]
+SELECT Kundenservice.Name AS Kundenservice, Betreuer.Name AS Kundenbetreuer, Vertrieb.Name AS [Key Account], LSK.KdNr, LSK.Kunde, LSK.VsaStichwort, LSK.VsaBezeichnung, LSK.ArtikelNr, LSK.ArtikelBez AS Artikelbezeichnung, LSK.Größe, LSK.Angefordert, LSK.Liefermenge, LSK.AnzahlChips, LSK.Abweichung, FORMAT(LSK.AbweichungProzent, N'P2', N'de-AT') AS [Abweichung %], LSK.LsNr AS Lieferschein, LSK.Datum AS Lieferdatum, LSK.Packzettelnummer AS Packzettel, LSK.IstErsatz AS [Ersatzartikel geliefert], LSK.IstFalschlieferung AS [Lieferung nicht an Eigentümer]
 FROM #TmpLsKontrolle888e LSK, KdBer, Mitarbei AS Betreuer, Mitarbei AS Vertrieb, Mitarbei AS Kundenservice
 WHERE LSK.KdBerID = KdBer.ID
   AND KdBer.BetreuerID = Betreuer.ID

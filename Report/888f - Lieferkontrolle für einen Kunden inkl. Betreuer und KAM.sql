@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS #TmpLsKontrolle888f;
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, IIF(KdArti_2.Vorlaeufig = 1 AND KdArti_2.AnlageUserID_ IN (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName IN ('TAGJOB', 'CITJOB')), 1, 0)) AS NichtKdArti, CONVERT(bit, 0) AS LsIsOK, CONVERT(bit, IIF(KdArti_1.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti_1.ID AS OrigKdArtiID, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, Vsa.ID AS VsaID, KdArti_2.KdBerID
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, ArtGroe.Groesse AS Größe, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, IIF(KdArti_2.Vorlaeufig = 1 AND KdArti_2.AnlageUserID_ IN (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName IN ('TAGJOB', 'CITJOB')), 1, 0)) AS NichtKdArti, CONVERT(bit, 0) AS LsIsOK, CONVERT(bit, IIF(KdArti_1.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti_1.ID AS OrigKdArtiID, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, Vsa.ID AS VsaID, KdArti_2.KdBerID, AnfPo.ArtGroeID
 INTO #TmpLsKontrolle888f
-FROM AnfPo, AnfKo, Vsa, Kunden, KdArti AS KdArti_1, KdArti AS KdArti_2, Artikel, Bereich
+FROM AnfPo, AnfKo, Vsa, Kunden, KdArti AS KdArti_1, KdArti AS KdArti_2, Artikel, Bereich, ArtGroe
 WHERE AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
@@ -11,6 +11,7 @@ WHERE AnfPo.AnfKoID = AnfKo.ID
   AND KdArti_2.ArtikelID = Artikel.ID
   AND Artikel.BereichID = Bereich.ID
   AND Bereich.Bereich NOT IN ('EW') -- Ticket 19775
+  AND AnfPo.ArtGroeID = ArtGroe.ID
   AND Artikel.ID > 0
   AND AnfKo.Lieferdatum = $1$
   AND (AnfPo.Angefordert > 0 OR AnfPo.Geliefert > 0)
@@ -31,6 +32,7 @@ FROM #TmpLsKontrolle888f LsKontrolle, LsPo, LsKo
 WHERE LsPo.LsKoID = LsKo.ID
   AND LsKontrolle.LsKoID = LsKo.ID
   AND LsKontrolle.OrigKdArtiID = LsPo.KdArtiID
+  AND LsKontrolle.ArtGroeID = LsPo.ArtGroeID
   AND LsKontrolle.LsKoID > 0;
 
 UPDATE #TmpLsKontrolle888f
@@ -45,7 +47,7 @@ FROM #TmpLsKontrolle888f LsKontrolle, (
 ) x
 WHERE x.AnfPoID = LsKontrolle.AnfPoID;
 
-SELECT Betreuer.Name AS Kundenbetreuer, Vertrieb.Name AS [Key Account], LSK.KdNr, LSK.Kunde, LSK.VsaStichwort, LSK.VsaBezeichnung, LSK.ArtikelNr, LSK.ArtikelBez AS Artikelbezeichnung, LSK.Angefordert, LSK.Liefermenge, LSK.AnzahlChips, LSK.Abweichung, FORMAT(LSK.AbweichungProzent, 'P2', 'de-AT') AS [Abweichung %], LSK.LsNr AS Lieferschein, LSK.Datum AS Lieferdatum, LSK.Packzettelnummer AS Packzettel, LSK.IstErsatz AS [Ersatzartikel geliefert]
+SELECT Betreuer.Name AS Kundenbetreuer, Vertrieb.Name AS [Key Account], LSK.KdNr, LSK.Kunde, LSK.VsaStichwort, LSK.VsaBezeichnung, LSK.ArtikelNr, LSK.ArtikelBez AS Artikelbezeichnung, LSK.Größe, LSK.Angefordert, LSK.Liefermenge, LSK.AnzahlChips, LSK.Abweichung, FORMAT(LSK.AbweichungProzent, 'P2', 'de-AT') AS [Abweichung %], LSK.LsNr AS Lieferschein, LSK.Datum AS Lieferdatum, LSK.Packzettelnummer AS Packzettel, LSK.IstErsatz AS [Ersatzartikel geliefert]
 FROM #TmpLsKontrolle888f LSK, KdBer, Mitarbei AS Betreuer, Mitarbei AS Vertrieb
 WHERE LSK.KdBerID = KdBer.ID
   AND KdBer.BetreuerID = Betreuer.ID
