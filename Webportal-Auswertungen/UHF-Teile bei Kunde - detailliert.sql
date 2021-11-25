@@ -14,7 +14,7 @@ WITH LiefScan AS (
     GROUP BY OPScans.OPTeileID
   ) AS LastLiefScan ON LastLiefScan.LiefScanID = OPScans.ID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], LsKo.Datum AS Lieferdatum, IIF(DATEDIFF(day, LsKo.Datum, GETDATE()) < 0, 0, DATEDIFF(day, LsKo.Datum, GETDATE())) AS [Tage seit Lieferung]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen]
 FROM dbo.OPTeile
 JOIN dbo.Vsa ON OPTeile.VsaID = Vsa.ID
 JOIN dbo.Kunden ON Vsa.KundenID = Kunden.ID
@@ -25,19 +25,19 @@ JOIN dbo.GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = Groe
 JOIN LiefScan ON LiefScan.OPTeileID = OPTeile.ID
 JOIN dbo.LsPo ON LiefScan.LsPoID = LsPo.ID
 JOIN dbo.LsKo ON LsPo.LsKoID = LsKo.ID
-WHERE Kunden.ID = ' + CAST(@kundenid AS nvarchar) + N'
+WHERE Kunden.ID = @kundenid
   AND Vsa.ID IN (  
     SELECT Vsa.ID
     FROM dbo.Vsa
     JOIN dbo.WebUser ON WebUser.KundenID = Vsa.KundenID
     LEFT JOIN dbo.WebUVsa ON WebUVsa.WebUserID = WebUser.ID
-    WHERE WebUser.ID = ' + CAST(@webuserid AS nvarchar) + N'
+    WHERE WebUser.ID = @webuserid
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
   )
   AND Abteil.ID IN (  
     SELECT WebUAbt.AbteilID
     FROM dbo.WebUAbt
-    WHERE WebUAbt.WebUserID = ' + CAST(@webuserid AS nvarchar) + N'
+    WHERE WebUAbt.WebUserID = @webuserid
   )
   AND OPTeile.LastActionsID IN (102, 120, 136)
   AND OPTeile.Status = N''Q''

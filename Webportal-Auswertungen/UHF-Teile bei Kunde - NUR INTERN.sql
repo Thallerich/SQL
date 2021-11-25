@@ -24,7 +24,7 @@ EmpfangScan AS (
     GROUP BY OPScans.OPTeileID
   ) AS LastEmpfangScan ON LastEmpfangScan.EmpfangScanID = OPScans.ID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], LsKo.Datum AS Lieferdatum, IIF(DATEDIFF(day, LsKo.Datum, GETDATE()) < 0, 0, DATEDIFF(day, LsKo.Datum, GETDATE())) AS [Tage seit Lieferung], OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen], EmpfangScan.Zeitpunkt AS [Zeitpunkt Empfang bei Kunde]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], LsKo.Datum AS Lieferdatum, OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen], EmpfangScan.Zeitpunkt AS [Zeitpunkt Empfang bei Kunde]
 FROM dbo.OPTeile
 JOIN dbo.Vsa ON OPTeile.VsaID = Vsa.ID
 JOIN dbo.Kunden ON Vsa.KundenID = Kunden.ID
@@ -36,19 +36,19 @@ JOIN LiefScan ON LiefScan.OPTeileID = OPTeile.ID
 JOIN dbo.LsPo ON LiefScan.LsPoID = LsPo.ID
 JOIN dbo.LsKo ON LsPo.LsKoID = LsKo.ID
 LEFT JOIN EmpfangScan ON EmpfangScan.OPTeileID = OPTeile.ID AND EmpfangScan.Zeitpunkt > OPTeile.LastScanToKunde
-WHERE Kunden.ID = ' + CAST(@kundenid AS nvarchar) + N'
+WHERE Kunden.ID = @kundenid
   AND Vsa.ID IN (  
     SELECT Vsa.ID
     FROM dbo.Vsa
     JOIN dbo.WebUser ON WebUser.KundenID = Vsa.KundenID
     LEFT JOIN dbo.WebUVsa ON WebUVsa.WebUserID = WebUser.ID
-    WHERE WebUser.ID = ' + CAST(@webuserid AS nvarchar) + N'
+    WHERE WebUser.ID = @webuserid
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
   )
   AND Abteil.ID IN (  
     SELECT WebUAbt.AbteilID
     FROM dbo.WebUAbt
-    WHERE WebUAbt.WebUserID = ' + CAST(@webuserid AS nvarchar) + N'
+    WHERE WebUAbt.WebUserID = @webuserid
   )
   AND OPTeile.LastActionsID IN (102, 120, 136)
   AND OPTeile.Status = N''Q''
