@@ -28,7 +28,7 @@ SET @pivotsql = N'
 SELECT KdNr, Kunde, VsaNr, VsaBez AS [Vsa-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, ' + @pivotcolumns + ',
   Gesamt = ' + @pivotsumcol + N'
 FROM (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], FORMAT(LsKo.Datum, N''dd.MM.yyyy'', N''de-AT'') AS Datum, ROUND(SUM(LsPo.Menge), 0) AS Liefermenge, GroePo.Folge AS GroesseFolge
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], FORMAT(LsKo.Datum, N''dd.MM.yyyy'', N''de-AT'') AS Datum, ROUND(SUM(LsPo.Menge), 0) AS Liefermenge, GroePo.Folge AS GroesseFolge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
@@ -42,7 +42,7 @@ FROM (
   JOIN GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = GroePo.Groesse
   WHERE LsKo.Datum BETWEEN @von AND @bis
     AND Kunden.ID = @kundenid
-  GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.Vsanr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, FORMAT(LsKo.Datum, N''dd.MM.yyyy'', N''de-AT''), GroePo.Folge
+  GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.Vsanr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, ArtGroe.Groesse, FORMAT(LsKo.Datum, N''dd.MM.yyyy'', N''de-AT''), GroePo.Folge
 ) AS PivoData
 PIVOT (SUM(Liefermenge) FOR Datum IN (' + @pivotcolumns + N')) AS LiefermengenPivot
 ORDER BY KdNr, VsaNr, ArtikelNr, GroesseFolge;';
