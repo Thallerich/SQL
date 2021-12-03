@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, InvKo.Anlage_ AS [Inventur-Zeitpunkt], InvKo.Datum AS [Inventur für Datum], Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, InvPo.Menge AS [inventierte Menge]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, InvKo.Anlage_ AS [Inventur-Zeitpunkt], InvKo.Datum AS [Inventur für Datum], Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, InvPo.HistSollPuffer AS [Soll-Puffer zum Planungszeitpunkt], InvPo.Menge AS [inventierte Menge]
 FROM InvPo
 JOIN InvKo ON InvPo.InvKoID = InvKo.ID
 JOIN Vsa ON InvPo.VsaID = Vsa.ID
