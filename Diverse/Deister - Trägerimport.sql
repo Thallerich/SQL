@@ -30,7 +30,7 @@ USING (
 ) AS DeisterImport (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
 ON DeisterImport.VsaID = Traeger.VsaID AND DeisterImport.PersNr = Traeger.PersNr COLLATE Latin1_General_CS_AS
 WHEN MATCHED THEN
-  UPDATE SET Traeger.Status = DeisterImport.Status, Traeger.Ausdienst = DeisterImport.Ausdienst, Traeger.AusdienstDat = DeisterImport.AusdienstDat
+  UPDATE SET Traeger.Status = DeisterImport.Status, Traeger.Ausdienst = DeisterImport.Ausdienst, Traeger.AusdienstDat = DeisterImport.AusdienstDat, Traeger.AbteilID = DeisterImport.AbteilID
 WHEN NOT MATCHED THEN
   INSERT (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
   VALUES (DeisterImport.VsaID, DeisterImport.Status, DeisterImport.Traeger, DeisterImport.AbteilID, DeisterImport.PersNr, DeisterImport.Vorname, DeisterImport.Nachname, DeisterImport.Indienst, DeisterImport.IndienstDat, DeisterImport.Ausdienst, DeisterImport.AusdienstDat);
