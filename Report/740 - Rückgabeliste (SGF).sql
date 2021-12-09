@@ -65,7 +65,7 @@ JOIN KdArti AS Berufsgruppe ON Traeger.BerufsgrKdArtiID = Berufsgruppe.ID
 JOIN WegGrund on Teile.WegGrundID = WegGrund.ID
 LEFT JOIN Einsatz ON  Teile.AusdienstGrund = Einsatz.EinsatzGrund
 WHERE Kunden.ID IN ($4$)
-  AND Teile.Status = N'W'
+  AND Teile.Status BETWEEN N'U' AND N'W'
   AND Teile.AbmeldDat BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Teile.Einzug IS NULL
   AND Artikel.BereichID IN ($5$)
