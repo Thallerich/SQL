@@ -32,7 +32,7 @@ FROM OPTeile
 JOIN LastScan ON OPTeile.ID = LastScan.OPTeileID
 JOIN OPScans ON LastScan.LastScanTime = OPScans.Zeitpunkt AND OPTeile.ID = OPScans.OPTeileID
 WHERE OPTeile.ZielNrID = 100070077
-  AND OPTeile.LastScanTime < N'2021-11-25 00:00:00';
+  AND ISNULL(OPTeile.LastScanTime, N'1980-01-01 00:00:00') < N'2021-11-25 00:00:00';
 
 GO
 
@@ -40,7 +40,7 @@ INSERT INTO #InvDelete (OPTeileID)
 SELECT OPTeile.ID
 FROM OPTeile
 WHERE OPTeile.ZielNrID = 100070077
-  AND OPTeile.LastScanTime < N'2021-11-25 00:00:00'
+  AND ISNULL(OPTeile.LastScanTime, N'1980-01-01 00:00:00') < N'2021-11-25 00:00:00'
   AND OPTeile.ID NOT IN (
     SELECT InvUpdate.OPTeileID
     FROM #InvUpdate AS InvUpdate
