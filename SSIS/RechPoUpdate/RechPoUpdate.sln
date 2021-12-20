@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32002.261
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{159641D6-6404-4A2A-AE62-294DE0FE8301}") = "RechPoUpdate", "RechPoUpdate\RechPoUpdate.dtproj", "{5DCF04E8-7818-4C46-BF4F-5019D659E40C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Development|Default = Development|Default
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5DCF04E8-7818-4C46-BF4F-5019D659E40C}.Development|Default.ActiveCfg = Development
+		{5DCF04E8-7818-4C46-BF4F-5019D659E40C}.Development|Default.Build.0 = Development
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {76016EE8-3D68-4A2B-ACC8-8C146498AF9E}
+	EndGlobalSection
+EndGlobal
