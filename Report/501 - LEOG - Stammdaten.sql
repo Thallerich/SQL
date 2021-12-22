@@ -46,6 +46,15 @@ END;
 CLOSE Tourdaten;
 DEALLOCATE Tourdaten;
 
+DELETE FROM #VsaTourLief
+WHERE VsaTourID IN (
+  SELECT vtl.VsaTourID
+  FROM #VsaTourLief vtl
+  JOIN VsaTour ON vtl.VsaTourID = VsaTour.ID
+  JOIN Touren ON VsaTour.TourenID = Touren.ID
+  WHERE Touren.ExpeditionID != @StandortID
+);
+
 SELECT DISTINCT
   Kunden.KdNr AS Kundennummer,
   Vsa.Bez AS Verteilstellenbezeichnung,
