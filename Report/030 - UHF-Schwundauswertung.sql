@@ -11,7 +11,7 @@ PoolteilStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'OPTEILE'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], OPTeile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], KdArti.Vertragsartikel, RWCalc.RestwertInfo AS Restwert, CAST(OPTeile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], OPTeile.Erstwoche AS [Erster Einsatz]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], OPTeile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], KdArti.Vertragsartikel, RWCalc.BasisAfa AS Basisrestwert, RWCalc.RestwertInfo AS Restwert, CAST(OPTeile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], OPTeile.Erstwoche AS [Erster Einsatz]
 FROM OPTeile
 CROSS APPLY funcGetRestwertOP(OPTeile.ID, @curweek, 1) AS RWCalc
 JOIN Vsa ON OPTeile.VsaID = Vsa.ID
