@@ -1,3 +1,5 @@
+DECLARE @curweek nchar(7) = CAST(DATEPART(year, GETDATE()) AS nchar(4)) + N'/' + RIGHT(N'00' + RTRIM(CAST(DATEPART(week, GETDATE()) AS nchar(2))), 2);
+
 WITH Inventurscan AS (
   SELECT OPScans.OPTeileID, MAX(OPScans.Zeitpunkt) AS Zeitpunkt
   FROM OPScans
@@ -9,8 +11,9 @@ PoolteilStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'OPTEILE'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], OPTeile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], KdArti.Vertragsartikel, OPTeile.RestwertInfo AS Restwert, CAST(OPTeile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], OPTeile.Erstwoche AS [Erster Einsatz], OPTeile.AlterInfo AS [Alter in Wochen]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], OPTeile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], KdArti.Vertragsartikel, RWCalc.RestwertInfo AS Restwert, CAST(OPTeile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], OPTeile.Erstwoche AS [Erster Einsatz]
 FROM OPTeile
+CROSS APPLY funcGetRestwertOP(OPTeile.ID, @curweek, 1) AS RWCalc
 JOIN Vsa ON OPTeile.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
