@@ -1,4 +1,4 @@
-DECLARE @curweek nchar(7) = CAST(DATEPART(year, GETDATE()) AS nchar(4)) + N'/' + RIGHT(N'00' + RTRIM(CAST(DATEPART(week, GETDATE()) AS nchar(2))), 2);
+DECLARE @curweek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH Inventurscan AS (
   SELECT OPScans.OPTeileID, MAX(OPScans.Zeitpunkt) AS Zeitpunkt
@@ -21,7 +21,7 @@ JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
 JOIN Bereich ON Artikel.BereichID = Bereich.ID
 JOIN KdArti ON KdArti.KundenID = Kunden.ID AND KdArti.ArtikelID = Artikel.ID
 JOIN Actions ON OPTeile.LastActionsID = Actions.ID
-JOIN Inventurscan ON Inventurscan.OPTeileID = OPTeile.ID
+LEFT JOIN Inventurscan ON Inventurscan.OPTeileID = OPTeile.ID
 JOIN PoolteilStatus ON PoolteilStatus.Status = OPTeile.Status
 WHERE OPTeile.Status IN (N'Q', N'W')
   AND OPTeile.LastActionsID IN (102, 120, 136)
