@@ -14,7 +14,7 @@ WITH LiefScan AS (
     GROUP BY OPScans.OPTeileID
   ) AS LastLiefScan ON LastLiefScan.LiefScanID = OPScans.ID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen], OPTeile.LastScanTime AS [letzter Scan], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage seit letztem Scan]
 FROM dbo.OPTeile
 JOIN dbo.Vsa ON OPTeile.VsaID = Vsa.ID
 JOIN dbo.Kunden ON Vsa.KundenID = Kunden.ID
