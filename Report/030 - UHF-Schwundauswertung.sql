@@ -27,4 +27,5 @@ WHERE OPTeile.Status IN (N'Q', N'W')
   AND OPTeile.LastActionsID IN (102, 120, 136)
   AND OPTeile.RechPoID < 0
   AND OPTeile.LastScanTime < $1$
+  AND Bereich.ID IN ($2$)
   AND Kunden.ID = $ID$;
