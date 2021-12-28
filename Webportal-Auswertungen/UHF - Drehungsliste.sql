@@ -29,8 +29,8 @@ WHERE Kunden.ID = $kundenID
     WHERE WebUser.ID = $webuserID
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
   )
-  AND OPTeile.Status IN (N'Q')
-  AND OPTeile.LastActionsID IN (102, 116)
+  AND OPTeile.Status = N'Q'
+  AND OPTeile.LastActionsID IN (102, 120, 136)
   AND Artikel.BereichID != (SELECT ID FROM Bereich WHERE Bereich = N'LW')
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, VsaAnfArti.Bestand
 ORDER BY Kundennummer, [VSA-Nummer], ArtikelNr;
