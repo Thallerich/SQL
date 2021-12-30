@@ -10,9 +10,10 @@ Traegerstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'TRAEGER'
 )
-SELECT Vsa.GebaeudeBez AS Gebäude, Vsa.Bez AS [Vsa-Bezeichnung], Traeger.SchrankInfo AS [Schrank-Fach], Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS [Status Träger], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, TraeArti.Menge AS [Max-Bestand], ISNULL(TeileIst.IstMenge, 0) AS Umlaufmenge, TraeArti.Menge - ISNULL(TeileIst.IstMenge, 0) AS Differenz
+SELECT Vsa.GebaeudeBez AS Gebäude, Vsa.Bez AS [Vsa-Bezeichnung], Abteil.Bez AS Kostenstelle, Traeger.SchrankInfo AS [Schrank-Fach], Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS [Status Träger], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, TraeArti.Menge AS [Max-Bestand], ISNULL(TeileIst.IstMenge, 0) AS Umlaufmenge, TraeArti.Menge - ISNULL(TeileIst.IstMenge, 0) AS Differenz
 FROM TraeArti
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
+JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
