@@ -13,7 +13,37 @@ VertragPE AS (
   FROM Vertrag
   WHERE Vertrag.Status = N'A'
 )
-SELECT DISTINCT Firma.SuchCode AS Firma, Holding.Holding, [Zone].ZonenCode AS Vertriebszone, KdGf.KurzBez AS Geschäftsbereich, Abc.ABCBez$LAN$ AS [ABC-Klasse], Kunden.KdNr, Kunden.SuchCode AS Kunde, VertragPE.VertragLastPEDate AS [Datum der letzten PE], IIF(VertragPE.VertragLastPEProz = 0, NULL, VertragPE.VertragLastPEProz) AS [letzte PE - Prozent], PrLauf.PrLaufBez AS [PE-Kennzeichen], PrListPE.PrListNr AS [Preisliste-Nr], PrListPE.PrListBez AS Preisliste, PrListPE.PrListLastPEDate AS [Datum letzte PE Preisliste], IIF(PrListPE.PrListLastPeProz = 0, NULL, PrListPE.PrListLastPEProz) AS [letzte PE Preisliste - Prozent]
+SELECT DISTINCT Firma.SuchCode AS Firma,
+  Holding.Holding,
+  [Zone].ZonenCode AS Vertriebszone,
+  KdGf.KurzBez AS Geschäftsbereich,
+  Abc.ABCBez$LAN$ AS [ABC-Klasse],
+  Kunden.KdNr,
+  Kunden.SuchCode AS Kunde,
+  Kunden.Name1 AS Adresszeile1,
+  Kunden.Name2 AS Adresszeile2,
+  Kunden.Name3 AS Adresszeile3,
+  Kunden.Strasse,
+  Kunden.Land,
+  Kunden.PLZ,
+  Kunden.Ort,
+  Betreuer = (
+    SELECT TOP 1 Mitarbei.Name
+    FROM KdBer
+    JOIN Mitarbei ON KdBer.BetreuerID = Mitarbei.ID
+    WHERE KdBer.KundenID = Kunden.ID
+      AND KdBer.Status = N'A'
+      AND KdBer.BetreuerID > 0
+    GROUP BY KdBer.BetreuerID, Mitarbei.Name
+    ORDER BY COUNT(KdBer.ID) DESC
+  ),
+  VertragPE.VertragLastPEDate AS [Datum der letzten PE],
+  IIF(VertragPE.VertragLastPEProz = 0, NULL, VertragPE.VertragLastPEProz) AS [letzte PE - Prozent],
+  PrLauf.PrLaufBez AS [PE-Kennzeichen],
+  PrListPE.PrListNr AS [Preisliste-Nr],
+  PrListPE.PrListBez AS Preisliste,
+  PrListPE.PrListLastPEDate AS [Datum letzte PE Preisliste],
+  IIF(PrListPE.PrListLastPeProz = 0, NULL, PrListPE.PrListLastPEProz) AS [letzte PE Preisliste - Prozent]
 FROM VertragPE
 JOIN Kunden ON VertragPE.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
