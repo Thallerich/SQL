@@ -11,7 +11,7 @@ PoolteilStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'OPTEILE'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Schwundteile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Schwundteile.Vertragsartikel, Schwundteile.BasisAfa AS Basisrestwert, Schwundteile.RestwertInfo AS Restwert, CAST(Schwundteile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, Schwundteile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], Schwundteile.Erstwoche AS [Erster Einsatz], Schwundteile.SetTeil AS [ist Set-Inhalt?]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Schwundteile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Schwundteile.Vertragsartikel, Schwundteile.BasisAfa AS Basisrestwert, Schwundteile.RestwertInfo AS Restwert, CAST(Schwundteile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, Schwundteile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], Schwundteile.Erstwoche AS [Erster Einsatz], Schwundteile.SetTeil AS [ist Set-Inhalt?], CAST(IIF(Schwundteile.RechPoID = -2, 1, 0) AS bit) AS [ohne Berrechnung?]
 FROM (
   SELECT OPTeile.ID AS OPTeileID, ArtGroe.ArtikelID, OPTeile.ArtGroeID, OPTeile.Status, OPTeile.RechPoID, OPTeile.VsaID, OPTeile.Code, OPTeile.LastScanTime, OPTeile.Erstwoche, OPTeile.LastErsatzFuerKdArtiID, CAST(MAX(CAST(KdArti.Vertragsartikel AS int)) AS bit) AS Vertragsartikel, OPTeile.LastActionsID, fRW.BasisAfa, fRW.RestwertInfo, CAST(0 AS bit) AS SetTeil
   FROM Opteile
@@ -47,7 +47,7 @@ JOIN Bereich ON Artikel.BereichID = Bereich.ID
 JOIN Actions ON Schwundteile.LastActionsID = Actions.ID
 LEFT JOIN Inventurscan ON Inventurscan.OPTeileID = Schwundteile.OPTeileID
 JOIN PoolteilStatus ON PoolteilStatus.Status = Schwundteile.Status
-WHERE Schwundteile.LastActionsID IN (102, 120, 136)
+WHERE (($3$ = 1 AND Schwundteile.LastActionsID IN (102, 120, 136, 116)) OR ($3$ = 0 AND Schwundteile.LastActionsID IN (102, 120, 136)))  --schwundgebuchte Teile anzeigen, falls Parameter aktiviert
   AND Schwundteile.RechPoID < 0
   AND Schwundteile.LastScanTime < $1$
   AND Bereich.ID IN ($2$)
