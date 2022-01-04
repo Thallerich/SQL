@@ -13,7 +13,7 @@ DECLARE @sqltext nvarchar(max) =
   N'JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID ' +
   N'JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID ' +
   N'LEFT JOIN LsPo ON LsPo.KdArtiID = AnfPo.KdArtiID AND LsPo.ArtGroeID = AnfPo.ArtGroeID AND LsPo.Kostenlos = AnfPo.Kostenlos AND LsPo.LsKoGruID = AnfPo.LsKoGruID AND LsPo.VpsKoID = AnfPo.VpsKoID AND LsPo.LsKoID = AnfKo.LsKoID ' +
-  N'WHERE AnfKo.LieferDatum = CAST(GETDATE() AS date) ' +
+  N'WHERE AnfKo.LieferDatum = @curdate ' +
   N'  AND Kunden.KdNr = @kdnr ' +
   N'  AND AnfKo.Status >= N''I''' +
   N'  AND (AnfPo.Angefordert <> 0 OR ISNULL(LsPo.Menge, 0) <> 0)';
