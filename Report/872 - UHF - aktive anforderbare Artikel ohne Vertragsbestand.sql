@@ -26,8 +26,8 @@ WHERE VsaAnf.Status = N'A'
   AND KdGf.KurzBez != N'INT'
   AND ((KdBer.AnfAusEpo > 1 AND VsaBer.AnfAusEpo = -1) OR VsaBer.AnfAusEpo > 1)
   AND (KdBer.IstBestandAnpass = 1 OR KdArti.IstBestandAnpass = 1)
-  AND VsaAnf.Bestand = 0
-  AND VsaAnf.BestandIst != 0
+  AND VsaAnf.Bestand = 0 
+  AND (VsaAnf.BestandIst != 0 OR (VsaAnf.BestandIst - VsaAnf.AusstehendeReduz > 0))
   AND (
     EXISTS (
       SELECT OPTeile.*
