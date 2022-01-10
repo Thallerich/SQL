@@ -50,7 +50,7 @@ WHERE Kunden.ID = @kundenid
     FROM dbo.WebUAbt
     WHERE WebUAbt.WebUserID = @webuserid
   )
-  AND OPTeile.LastActionsID IN (102, 120, 136)
+  AND OPTeile.LastActionsID IN (2, 102, 120, 129, 130, 136)
   AND OPTeile.Status = N''Q''
 ORDER BY KdNr, [VSA-Nr], Kostenstelle, ArtikelNr, GroePo.Folge;';
 
