@@ -10,12 +10,12 @@ SET @sqltext = N'SELECT Kunden.KdNr AS Kundennummer,
   Artikel.ArtikelBez AS Artikelbezeichnung, 
   IIF(Bereich.VsaAnfGroe = 1, ArtGroe.Groesse, N''-'') AS Größe, 
   VsaAnfArti.Bestand AS Vertragsbestand, 
-  SUM(IIF(OPTeile.Status = N''Q'', 1, 0)) AS [Teile beim Kunden], 
-  VsaAnfArti.Bestand - SUM(IIF(OPTeile.Status = N''Q'', 1, 0)) AS [Differenz VB - Ist], 
+  COUNT(OPTeile.ID) AS [Teile beim Kunden], 
+  VsaAnfArti.Bestand - COUNT(OPTeile.ID) AS [Differenz VB - Ist], 
   SUM(IIF(DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) <= 7, 1, 0)) AS [stark drehend <= 7], 
   SUM(IIF(DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) > 7 AND DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) <= 30, 1, 0)) AS [schwach drehend <= 30], 
   SUM(IIF(DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) > 30 AND DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) <= 90, 1, 0)) AS [kaum drehend <= 90], 
-  SUM(IIF(DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) > 90, 1, 0)) AS [nicht drehend > 90] 
+  SUM(IIF(DATEDIFF(day, ISNULL(OPTeile.LastScanToKunde, N''1980-01-01''), GETDATE()) > 90, 1, 0)) AS [nicht drehend > 90] 
 FROM OPTeile 
 JOIN Vsa ON OPTeile.VsaID = Vsa.ID 
 JOIN Kunden ON Vsa.KundenID = Kunden.ID 
