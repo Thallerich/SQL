@@ -1,4 +1,4 @@
-DECLARE @RechKoID int = (SELECT ID FROM RechKo WHERE RechNr = 30176933); --$RECHKOID$;
+DECLARE @RechKoID int = $RECHKOID$;
 
 DECLARE @MinDate date = (
   SELECT MIN(LsKo.Datum) AS MinDate
