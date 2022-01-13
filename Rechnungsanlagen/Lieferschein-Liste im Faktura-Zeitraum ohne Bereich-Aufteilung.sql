@@ -1,4 +1,4 @@
-DECLARE @RechKoID int = $RECHKOID$;
+DECLARE @RechKoID int = (SELECT ID FROM RechKo WHERE RechNr = 30176933); --$RECHKOID$;
 
 DECLARE @MinDate date = (
   SELECT MIN(LsKo.Datum) AS MinDate
@@ -51,7 +51,7 @@ CREATE TABLE #LsDataRKoAnlag3062 (
   KsStBez nvarchar(80),
   LsNrs nvarchar(max)
 );
-
+        
 INSERT INTO @LsKdData
 SELECT DISTINCT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr, LsKo.Datum AS LsDatum
 FROM LsPo
@@ -59,23 +59,35 @@ JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON LsPo.AbteilID = Abteil.ID
-WHERE LsKo.ID IN (
-  SELECT LsKo.ID
-  FROM LsPo
-  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
-  WHERE LsKo.Datum BETWEEN @MinDate AND @MaxDate
-    AND LsPo.AbteilID IN (
-      SELECT DISTINCT RechPo.AbteilID
-      FROM RechPo
-      WHERE RechPo.RechKoID = @RechKoID
-    )
-    AND (LsPo.RechPoID < 0 OR LsPo.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID))
-);
+WHERE Kunden.ID = (SELECT RechKo.KundenID FROM RechKo WHERE RechKo.ID =  @RechKoID)
+  AND LsKo.Datum BETWEEN @MinDate AND @MaxDate
+  AND LsPo.AbteilID IN (
+    SELECT DISTINCT RechPo.AbteilID
+    FROM RechPo
+    WHERE RechPo.RechKoID = @RechKoID
+  )
+  AND (LsPo.RechPoID < 0 OR LsPo.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID));
 
 INSERT INTO #LsDataRKoAnlag3062 (KundenID, KdNr, AbteilID, KsSt, KsStBez)
 SELECT DISTINCT KundenID, KdNr, AbteilID, KsSt, KsStBez
 FROM @LsKdData;
 
-UPDATE #LsDataRKoAnlag3062 SET LsNrs = (SELECT (STUFF((SELECT N', ' + RTRIM(CAST(LsNr AS char)) + N': ' + FORMAT(LsDatum, 'd', 'de-at') FROM @LsKdData AS x WHERE x.AbteilID = #LsDataRKoAnlag3062.AbteilID ORDER BY LsNr FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 2, '')));
+DROP TABLE IF EXISTS #LsDataRKoAnlag3062LsNrsProAbteilDat;
+
+select AbteilID, LsDatum, (FORMAT(LsDatum, 'd', 'de-at') + ': ' + LsNrs) LsNrs
+into #LsDataRKoAnlag3062LsNrsProAbteilDat
+from (
+SELECT AbteilID, LsDatum, STUFF((select ', ' + RTRIM(CAST(LsNr AS char)) from @LsKdData as innerLsKoData where innerLsKoData.LsDatum = LsKoData.LsDatum
+and innerLsKoData.AbteilID = LsKoData.AbteilID order by LsNr for xml path('')), 1,1,'') as LsNrs
+FROM @LsKdData as LsKoData
+group by AbteilID, LsDatum) Daten
+order by AbteilID, LsDatum;
+
+update #LsDataRKoAnlag3062 set LsNrs = Daten2.DatLsNr
+from (
+select AbteilID, STUFF((select char(10) + LsNrs from #LsDataRKoAnlag3062LsNrsProAbteilDat as innertbl where innertbl.AbteilID = #LsDataRKoAnlag3062LsNrsProAbteilDat.AbteilID order by AbteilID, LsDatum for xml path('')), 1,1,'') as DatLsNr
+from #LsDataRKoAnlag3062LsNrsProAbteilDat
+group by AbteilID) Daten2
+where Daten2.AbteilID = #LsDataRKoAnlag3062.AbteilID;
 
 SELECT * FROM #LsDataRKoAnlag3062 ORDER BY KsSt ASC;
