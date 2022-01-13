@@ -69,6 +69,7 @@ WHERE LsKo.ID IN (
       FROM RechPo
       WHERE RechPo.RechKoID = @RechKoID
     )
+    AND (LsPo.RechPoID < 0 OR LsPo.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID))
 );
 
 INSERT INTO #LsDataRKoAnlag3062 (KundenID, KdNr, AbteilID, KsSt, KsStBez)
