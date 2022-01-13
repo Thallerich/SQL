@@ -53,20 +53,32 @@ CREATE TABLE #LsDataRKoAnlag3062 (
 );
         
 INSERT INTO @LsKdData
-SELECT DISTINCT Kunden.ID AS KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr, LsKo.Datum AS LsDatum
+SELECT DISTINCT Vsa.KundenID, Kunden.KdNr, Abteil.ID AS AbteilID, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr, LsKo.Datum AS LsDatum
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON LsPo.AbteilID = Abteil.ID
-WHERE Kunden.ID = (SELECT RechKo.KundenID FROM RechKo WHERE RechKo.ID =  @RechKoID)
+WHERE Kunden.ID = (SELECT RechKo.KundenID FROM RechKo WHERE RechKo.ID = @RechKoID)
+  AND LsPo.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID);
+
+INSERT INTO @LsKdData
+SELECT Vsa.KundenID, Kunden.KdNr, Abteil.ID AS AbteiliD, Abteil.Abteilung AS KsSt, Abteil.Bez AS KsStBez, LsKo.LsNr, LsKo.Datum AS LsDatum
+FROM LsPo
+JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+JOIN Vsa ON LsKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Abteil ON LsPo.AbteilID = Abteil.ID
+WHERE Kunden.ID = (SELECT RechKo.KundenID FROM RechKo WHERE RechKo.ID = @RechKoID)
+  AND Abteil.ID IN (SELECT RechPo.AbteilID FROM RechPo WHERE RechPo.RechKoID = @RechKoID)
   AND LsKo.Datum BETWEEN @MinDate AND @MaxDate
-  AND LsPo.AbteilID IN (
-    SELECT DISTINCT RechPo.AbteilID
-    FROM RechPo
-    WHERE RechPo.RechKoID = @RechKoID
-  )
-  AND (LsPo.RechPoID < 0 OR LsPo.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID));
+  AND LsPo.RechPoID < 0
+  AND NOT EXISTS (
+    SELECT pos.*
+    FROM LsPo AS pos
+    WHERE pos.LsKoID = LsKo.ID
+      AND pos.RechPoID > 0
+  );
 
 INSERT INTO #LsDataRKoAnlag3062 (KundenID, KdNr, AbteilID, KsSt, KsStBez)
 SELECT DISTINCT KundenID, KdNr, AbteilID, KsSt, KsStBez
