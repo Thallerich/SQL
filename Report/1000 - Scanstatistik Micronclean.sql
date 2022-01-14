@@ -11,5 +11,5 @@ SELECT Mitarbei.UserName AS Arbeitsplatz,
 FROM Scans
 LEFT OUTER JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
 WHERE CAST(Scans.DateTime AS date) = $1$
-  AND Mitarbei.UserName IN (N'MICRORR1', N'MICRORR2', N'MICRORR3', N'MICRORR4', N'MICROUZ1', N'MICROUZ2')
+  AND Mitarbei.UserName IN (N'MICRORR1', N'MICRORR2', N'MICRORR3', N'MICRORR4', N'MICRORR6', N'MICROUZ1', N'MICROUZ2')
 GROUP BY Mitarbei.UserName;
