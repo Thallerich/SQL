@@ -10,6 +10,6 @@ SELECT Mitarbei.UserName AS Arbeitsplatz,
   COUNT(Scans.ID) AS Total
 FROM Scans
 LEFT OUTER JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
-WHERE CONVERT(date, Scans.DateTime) = $1$
-  AND Mitarbei.UserName IN (N'RHOF', N'MICRORR1', N'MICR0RR2', N'MICR0RR3', N'MICR0RR4', N'MICR0RR6','MICROUZ0', N'MICROUZ2')
+WHERE CAST(Scans.DateTime AS date) = $1$
+  AND Mitarbei.UserName IN (N'MICRORR1', N'MICRORR2', N'MICRORR3', N'MICRORR4', N'MICROUZ1', N'MICROUZ2')
 GROUP BY Mitarbei.UserName;
