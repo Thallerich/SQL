@@ -23,14 +23,14 @@ USING (
   JOIN Kunden ON DeisterBHSTraeger.KdNr = Kunden.KdNr
   JOIN Vsa ON Vsa.KundenID = Kunden.ID
   JOIN Week ON IIF(DeisterBHSTraeger.Indienst < N'1980-01-01', N'1980-01-01', DeisterBHSTraeger.Indienst) BETWEEN Week.VonDat AND Week.BisDat
-  JOIN Week AS AusWeek ON IIF(DeisterBHSTraeger.Ausdienst = N'9999-12-31', N'2050-12-31', DeisterBHSTraeger.Ausdienst) BETWEEN AusWeek.VonDat AND AusWeek.BisDat
+  JOIN Week AS AusWeek ON IIF(DeisterBHSTraeger.Ausdienst > N'2050-12-31', N'2050-12-31', DeisterBHSTraeger.Ausdienst) BETWEEN AusWeek.VonDat AND AusWeek.BisDat
   JOIN Abteil ON Abteil.KundenID = Kunden.ID AND Abteil.Abteilung = ISNULL(DeisterBHSTraeger.KsSt, N'Dummy') COLLATE Latin1_General_CS_AS
   WHERE Vsa.RentomatID > 0
-    AND DeisterBHSTraeger.PersNr IS NOT NULL
+    AND DeisterBHSTraeger.PersNr = N'3800227'
 ) AS DeisterImport (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
 ON DeisterImport.VsaID = Traeger.VsaID AND DeisterImport.PersNr = Traeger.PersNr COLLATE Latin1_General_CS_AS
 WHEN MATCHED THEN
-  UPDATE SET Traeger.Status = DeisterImport.Status, Traeger.Ausdienst = DeisterImport.Ausdienst, Traeger.AusdienstDat = DeisterImport.AusdienstDat, Traeger.AbteilID = DeisterImport.AbteilID
+  UPDATE SET Traeger.Status = DeisterImport.Status, Traeger.Indienst = DeisterImport.Indienst, Traeger.IndienstDat = DeisterImport.IndienstDat, Traeger.Ausdienst = DeisterImport.Ausdienst, Traeger.AusdienstDat = DeisterImport.AusdienstDat, Traeger.AbteilID = DeisterImport.AbteilID
 WHEN NOT MATCHED THEN
   INSERT (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
   VALUES (DeisterImport.VsaID, DeisterImport.Status, DeisterImport.Traeger, DeisterImport.AbteilID, DeisterImport.PersNr, DeisterImport.Vorname, DeisterImport.Nachname, DeisterImport.Indienst, DeisterImport.IndienstDat, DeisterImport.Ausdienst, DeisterImport.AusdienstDat);
