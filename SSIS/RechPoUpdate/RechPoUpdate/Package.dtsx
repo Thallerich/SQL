@@ -5,14 +5,15 @@
   DTS:CreationName="Microsoft.Package"
   DTS:CreatorComputerName="NBAT192025"
   DTS:CreatorName="SAL\thalst"
+  DTS:DelayValidation="True"
   DTS:DTSID="{5CB300C2-7E2F-4652-9F9E-85A100775E0E}"
   DTS:ExecutableType="Microsoft.Package"
   DTS:LastModifiedProductVersion="15.0.2000.170"
   DTS:LocaleID="3079"
   DTS:ObjectName="Package"
   DTS:PackageType="5"
-  DTS:VersionBuild="15"
-  DTS:VersionGUID="{95DE5635-E00D-4758-ACAA-D1EF7EE88E07}">
+  DTS:VersionBuild="21"
+  DTS:VersionGUID="{18D07608-9F82-49D7-96D7-FE3C1B2AD442}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -27,7 +28,7 @@
         <DTS:ConnectionManager
           DTS:ConnectRetryCount="0"
           DTS:ConnectRetryInterval="0"
-          DTS:ConnectionString="Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\thalst.SAL\Downloads\RPoUpdate\2019_01_RE_SMP.xlsx;Extended Properties=&quot;EXCEL 12.0 XML;HDR=YES&quot;;" />
+          DTS:ConnectionString="Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\thalst.SAL\Downloads\RPoUpdate\2019_01_RE_FA14.xlsx;Extended Properties=&quot;EXCEL 12.0 XML;HDR=YES&quot;;" />
       </DTS:ObjectData>
     </DTS:ConnectionManager>
     <DTS:ConnectionManager
@@ -60,7 +61,7 @@
       DTS:Namespace="User"
       DTS:ObjectName="FilePath">
       <DTS:VariableValue
-        DTS:DataType="8">C:\Users\thalst.SAL\Downloads\RPoUpdate\2019_01_RE_SMP.xlsx</DTS:VariableValue>
+        DTS:DataType="8">C:\Users\thalst.SAL\Downloads\RPoUpdate\2019_01_RE_FA14.xlsx</DTS:VariableValue>
     </DTS:Variable>
   </DTS:Variables>
   <DTS:Executables>
@@ -266,7 +267,7 @@
                     <property
                       dataType="System.String"
                       description="Specifies the name of the database object used to open a rowset."
-                      name="OpenRowset">Ausland$</property>
+                      name="OpenRowset">Inland$</property>
                     <property
                       dataType="System.String"
                       description="Specifies the variable that contains the name of the database object used to open a rowset."
@@ -326,7 +327,7 @@
                           dataType="wstr"
                           errorOrTruncationOperation="Conversion"
                           errorRowDisposition="FailComponent"
-                          externalMetadataColumnId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Output].ExternalColumns[RechPoID]"
+                          externalMetadataColumnId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Output].ExternalColumns[RG#Rechnungsposition]"
                           length="255"
                           lineageId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Output].Columns[RechPoID]"
                           name="RechPoID"
@@ -343,10 +344,10 @@
                           dataType="r8"
                           name="Produktion" />
                         <externalMetadataColumn
-                          refId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Output].ExternalColumns[RechPoID]"
+                          refId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Output].ExternalColumns[RG#Rechnungsposition]"
                           dataType="wstr"
                           length="255"
-                          name="RechPoID" />
+                          name="RG#Rechnungsposition" />
                       </externalMetadataColumns>
                     </output>
                     <output
@@ -355,11 +356,11 @@
                       name="Excel Source Error Output">
                       <outputColumns>
                         <outputColumn
-                          refId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Error Output].Columns[RechPoID]"
+                          refId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Error Output].Columns[RG#Rechnungsposition]"
                           dataType="wstr"
                           length="255"
-                          lineageId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Error Output].Columns[RechPoID]"
-                          name="RechPoID" />
+                          lineageId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Error Output].Columns[RG#Rechnungsposition]"
+                          name="RG#Rechnungsposition" />
                         <outputColumn
                           refId="Package\Load Excel Files from Directory\Excel Import\Excel Source.Outputs[Excel Source Error Output].Columns[Expedition]"
                           dataType="r8"
@@ -540,8 +541,8 @@
       <DTS:ForEachVariableMappings>
         <DTS:ForEachVariableMapping
           DTS:CreationName=""
-          DTS:DTSID="{E77A4CC8-7065-480A-8EA9-CC0A3271B487}"
-          DTS:ObjectName="{E77A4CC8-7065-480A-8EA9-CC0A3271B487}"
+          DTS:DTSID="{AF9ADEA3-6625-4352-97E5-DDEB1762CF37}"
+          DTS:ObjectName="{AF9ADEA3-6625-4352-97E5-DDEB1762CF37}"
           DTS:ValueIndex="0"
           DTS:VariableName="User::FilePath" />
       </DTS:ForEachVariableMappings>
