@@ -45,7 +45,7 @@ INSERT INTO #Preishistory (ArtikelNr, Artikelbezeichnung, Variante, Variantenbez
 SELECT DISTINCT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, Preishistory_Jahr.Bearbeitung AS Preis, N'B' + CAST(Jahre.Jahr AS nchar(4)) AS Preistyp
 FROM @Years AS Jahre
 JOIN (
-  SELECT Preishistory.KdArtiID, Preishistory.Bearbeitung, Preishistory.Jahr AS vonJahr, ISNULL(PreisHistory_Next.Jahr, @endYear) AS bisJahr
+  SELECT Preishistory.KdArtiID, Preishistory.Bearbeitung, Preishistory.Jahr AS vonJahr, ISNULL(PreisHistory_Next.Jahr, @endYear + 1) AS bisJahr
   FROM Preishistory
   LEFT JOIN Preishistory AS PreisHistory_Next ON PreisHistory_Next.KdArtiID = Preishistory.KdArtiID AND Preishistory.Sequenz = PreisHistory_Next.Sequenz - 1
 ) AS Preishistory_Jahr ON Jahre.Jahr >= Preishistory_Jahr.vonJahr AND Jahre.Jahr < Preishistory_Jahr.bisJahr
@@ -76,7 +76,7 @@ INSERT INTO #Preishistory (ArtikelNr, Artikelbezeichnung, Variante, Variantenbez
 SELECT DISTINCT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, Preishistory_Jahr.Leasing AS Preis, N'L' + CAST(Jahre.Jahr AS nchar(4)) AS Preistyp
 FROM @Years AS Jahre
 JOIN (
-  SELECT Preishistory.KdArtiID, Preishistory.Leasing, Preishistory.Jahr AS vonJahr, ISNULL(PreisHistory_Next.Jahr, @endYear) AS bisJahr
+  SELECT Preishistory.KdArtiID, Preishistory.Leasing, Preishistory.Jahr AS vonJahr, ISNULL(PreisHistory_Next.Jahr, @endYear + 1) AS bisJahr
   FROM Preishistory
   LEFT JOIN Preishistory AS PreisHistory_Next ON PreisHistory_Next.KdArtiID = Preishistory.KdArtiID AND Preishistory.Sequenz = PreisHistory_Next.Sequenz - 1
 ) AS Preishistory_Jahr ON Jahre.Jahr >= Preishistory_Jahr.vonJahr AND Jahre.Jahr < Preishistory_Jahr.bisJahr
