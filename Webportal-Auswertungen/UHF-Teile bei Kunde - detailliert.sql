@@ -41,6 +41,7 @@ WHERE Kunden.ID = @kundenid
   )
   AND OPTeile.LastActionsID IN (2, 102, 120, 129, 130, 136)
   AND OPTeile.Status = N''Q''
+  AND Artikel.BereichID NOT IN (SELECT ID FROM Bereich WHERE Bereich IN (N''LW'', N''ST'')) 
 ORDER BY KdNr, [VSA-Nr], Kostenstelle, ArtikelNr, GroePo.Folge;';
 
 EXEC sp_executesql @sqltext, N'@kundenid int, @webuserid int', @kundenid, @webuserid;
