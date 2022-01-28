@@ -1,5 +1,5 @@
 DECLARE @curdate date = CAST(GETDATE() AS date);
-DECLARE @date1weekago date = CAST(DATEADD(week, -1, GETDATE()) AS date);
+DECLARE @date1dayago date = CAST(DATEADD(day, -1, GETDATE()) AS date);
 
 DECLARE @sqltext nvarchar(max);
 
@@ -19,7 +19,7 @@ UPDATE OPEtiKo SET PackLiefDat = Anf.Lieferdatum
 FROM OPEtiKo
 JOIN Anf ON Anf.ArtikelID = OPEtiKo.ArtikelID AND Anf.VsaID = OPEtiKo.PackVsaID
 WHERE OPEtiKo.Status IN (N''J'', N''M'', N''P'')
-  AND OPEtiKo.PackLiefDat < @date1weekago;
+  AND OPEtiKo.PackLiefDat < @date1dayago;
 ';
 
-EXEC sp_executesql @sqltext, N'@curdate date, @date1weekago date', @curdate, @date1weekago;
+EXEC sp_executesql @sqltext, N'@curdate date, @date1dayago date', @curdate, @date1dayago;
