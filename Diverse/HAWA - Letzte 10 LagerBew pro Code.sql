@@ -1,6 +1,6 @@
 SELECT *
 FROM (
-  SELECT Lager.SuchCode AS Lagerstandort, Lagerart.Lagerart, Lagerart.LagerartBez, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse AS Größe, LagerBew.Zeitpunkt, LgBewCod.Code AS Bewegungscode, LgBewCod.LgBewCodBez AS BewegungscodeBez, LagerBew.BestandNeu - LagerBew.Differenz AS BestandAlt, LagerBew.Differenz AS Bewegung, LagerBew.BestandNeu, DENSE_RANK() OVER (PARTITION BY LagerBew.LgBewCodID ORDER BY LagerBew.ID DESC) AS TopRank
+  SELECT Lager.SuchCode AS Lagerstandort, Lagerart.Lagerart, Lagerart.LagerartBez, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse AS Größe, LagerBew.ID AS TransactionID, LagerBew.Zeitpunkt, LgBewCod.Code AS Bewegungscode, LgBewCod.LgBewCodBez AS BewegungscodeBez, LagerBew.BestandNeu - LagerBew.Differenz AS BestandAlt, LagerBew.Differenz AS Bewegung, LagerBew.BestandNeu, DENSE_RANK() OVER (PARTITION BY LagerBew.LgBewCodID ORDER BY LagerBew.ID DESC) AS TopRank
   FROM LagerBew
   JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
