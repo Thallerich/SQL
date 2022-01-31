@@ -13,4 +13,5 @@ WHERE BPo.Menge > BPo.LiefMenge
   AND Artikel._IsHAWA = 1
   AND BKo.LiefID = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = 100)
   AND LiefAbKo.ID > 0
+  AND Standort.FirmaID = 5260 --FA14
 ORDER BY Datum, BestNr, ArtikelNr;
