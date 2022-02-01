@@ -26,7 +26,6 @@ USING (
   JOIN Week AS AusWeek ON IIF(DeisterBHSTraeger.Ausdienst > N'2050-12-31', N'2050-12-31', DeisterBHSTraeger.Ausdienst) BETWEEN AusWeek.VonDat AND AusWeek.BisDat
   JOIN Abteil ON Abteil.KundenID = Kunden.ID AND Abteil.Abteilung = ISNULL(DeisterBHSTraeger.KsSt, N'Dummy') COLLATE Latin1_General_CS_AS
   WHERE Vsa.RentomatID > 0
-    AND DeisterBHSTraeger.PersNr = N'3800227'
 ) AS DeisterImport (VsaID, Status, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, Ausdienst, AusdienstDat)
 ON DeisterImport.VsaID = Traeger.VsaID AND DeisterImport.PersNr = Traeger.PersNr COLLATE Latin1_General_CS_AS
 WHEN MATCHED THEN
