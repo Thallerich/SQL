@@ -8,7 +8,8 @@ SET @LetztesJahr = DATEPART(year, @bis) - 1;
 
 SET @Firma = $1$;
 
-SET @sqltext = N'
+/* CAST(N'' AS nvarchar(max)) prevents implicit conversion to nvarchar(4000) because of string concetanation --> stupid bug! */
+SET @sqltext = CAST(N'' AS nvarchar(max)) + N'
   WITH Jahresumsatz AS (
     SELECT RechKo.KundenID, SUM(RechKo.Nettowert) AS Nettoumsatz
     FROM RechKo
