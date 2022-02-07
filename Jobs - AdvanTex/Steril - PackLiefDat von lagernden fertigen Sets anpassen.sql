@@ -1,5 +1,6 @@
 DECLARE @curdate date = CAST(GETDATE() AS date);
 DECLARE @date1dayago date = CAST(DATEADD(day, -1, GETDATE()) AS date);
+DECLARE @verfalldays int = (SELECT CAST(ValueMemo AS int) FROM Settings WHERE Parameter = N'OP_ZU_PACKZETTEL_VOR_ABLAUF');
 
 DECLARE @sqltext nvarchar(max);
 
@@ -15,11 +16,12 @@ WITH Anf AS (
     AND AnfKo.Status <= N''I''
   GROUP BY AnfKo.VsaID, KdArti.ArtikelID
 )
-UPDATE OPEtiKo SET PackLiefDat = Anf.Lieferdatum
+UPDATE OPEtiKo SET PackLiefDat = ISNULL(Anf.Lieferdatum, DATEADD(day, 1, CAST(GETDATE() AS date)))
 FROM OPEtiKo
-JOIN Anf ON Anf.ArtikelID = OPEtiKo.ArtikelID AND Anf.VsaID = OPEtiKo.PackVsaID
+LEFT JOIN Anf ON Anf.ArtikelID = OPEtiKo.ArtikelID AND Anf.VsaID = OPEtiKo.PackVsaID
 WHERE OPEtiKo.Status IN (N''J'', N''M'', N''P'')
-  AND OPEtiKo.PackLiefDat < @date1dayago;
+  AND OPEtiKo.PackLiefDat < @date1dayago
+  AND OPEtiKo.Verfalldatum < DATEADD(day, @verfalldays * -1, @curdate);
 ';
 
-EXEC sp_executesql @sqltext, N'@curdate date, @date1dayago date', @curdate, @date1dayago;
+EXEC sp_executesql @sqltext, N'@curdate date, @date1dayago date, @verfalldays int', @curdate, @date1dayago, @verfalldays;
