@@ -11,6 +11,6 @@ WHERE LagerBew.BestandID = Bestand.ID
   AND Bestand.LagerArtID = LagerArt.ID
   AND LagerArt.LagerID = Standort.ID
   AND LagerBew.LgBewCodID = LgBewCod.ID
-  AND Standort.FirmaID = 5260
-  AND Standort.SuchCode != N'SMZL'
+  AND (Standort.SuchCode = N'FA14' OR Standort.SuchCode = N'BUDA')
+  AND ((DB_NAME() = N'Salesianer' AND Standort.SuchCode != N'SMZL') OR (DB_NAME() != N'Salesianer'))
   AND LagerBew.ID > @MinLagerBewID;
