@@ -10,7 +10,10 @@ FROM (
   JOIN LgBewCod ON LagerBew.LgBewCodID = LgBewCod.ID
   WHERE Artikel._IsHAWA = 1
     AND Lagerart.FirmaID = 5260
+    AND Lagerart.BestandZu = 0
     AND LagerBew.Differenz != 0
     AND LagerBew.Zeitpunkt > N'2020-04-01 00:00:00'
+    AND LagerBew.Zeitpunkt < DATEADD(day, -1, GETDATE())
+    AND LgBewCod.Code != N'IN??'
 ) AS x
 WHERE x.TopRank <= 10;
