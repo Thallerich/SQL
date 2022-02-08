@@ -2,7 +2,7 @@
 /* ++ Parameter                                                                                                                 ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @KdNr int = 13950; /* Kundennummer hier eintragen! */
+DECLARE @KdNr int = 0; /* Kundennummer hier eintragen! */
 DECLARE @Traeger bit = 1; /* Träger anonymisieren? 1 = Ja / 0 = Nein */
 DECLARE @Ansprechpartner bit = 0; /* Ansprechpartner anonymisieren? 1 = Ja / 0 = Nein */
 DECLARE @Webuser bit = 0; /* Web-User anonymisieren? 1 = Ja / 0 = Nein */
