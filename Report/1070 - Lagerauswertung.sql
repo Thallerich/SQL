@@ -5,30 +5,30 @@ DECLARE @vonWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @von BETWEEN Wee
 DECLARE @bisWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @bis BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH BestandNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(LagerBew.BestandNeu) AS Bestand
-  FROM (
-    SELECT MAX(LagerBew.ID) AS LagerBewIDMax, LagerBew.BestandID
+  SELECT Bestand.ArtGroeID, SUM(LastLagerBew.BestandNeu) AS Bestand
+  FROM Bestand
+  OUTER APPLY (
+    SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
     FROM LagerBew
-    WHERE LagerBew.Zeitpunkt <= @bis
-    GROUP BY LagerBew.BestandID
+    WHERE LagerBew.BestandID = Bestand.ID
+      AND LagerBew.Zeitpunkt <= @bis
+    ORDER BY LagerBew.Zeitpunkt DESC, LagerBew.ID DESC
   ) AS LastLagerBew
-  JOIN LagerBew ON LastLagerBew.LagerBewIDMax = LagerBew.ID
-  JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 1
   GROUP BY Bestand.ArtGroeID
 ),
 BestandGebraucht AS (
-  SELECT Bestand.ArtGroeID, SUM(Bestand.Bestand) AS Bestand
-  FROM (
-    SELECT MAX(LagerBew.ID) AS LagerBewIDMax, LagerBew.BestandID
+  SELECT Bestand.ArtGroeID, SUM(LastLagerBew.BestandNeu) AS Bestand
+  FROM Bestand
+  OUTER APPLY (
+    SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
     FROM LagerBew
-    WHERE LagerBew.Zeitpunkt <= @bis
-    GROUP BY LagerBew.BestandID
+    WHERE LagerBew.BestandID = Bestand.ID
+      AND LagerBew.Zeitpunkt <= @bis
+    ORDER BY LagerBew.Zeitpunkt DESC, LagerBew.ID DESC
   ) AS LastLagerBew
-  JOIN LagerBew ON LastLagerBew.LagerBewIDMax = LagerBew.ID
-  JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
   WHERE Lagerart.LagerID = @LagerID
     AND Lagerart.Neuwertig = 0
