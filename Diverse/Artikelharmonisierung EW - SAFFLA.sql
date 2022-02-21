@@ -67,12 +67,11 @@ MERGE INTO VsaAnf USING (
   JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
   JOIN @ArtiMapEW AS ArtiMapEW ON KdArti.ArtikelID = ArtiMapEW.ArtikelIDAlt
   JOIN KdArti AS KdArtiNeu ON KdArti.KundenID = KdArtiNeu.KundenID AND ArtiMapEW.ArtikelIDNeu = KdArtiNeu.ArtikelID AND KdArti.Variante = KdArtiNeu.Variante
-  WHERE VsaAnf.Status != N'I'
 ) AS VsaAnfMap ([Status], VsaID, AbteilID, KdArtiID, Liefern1, Liefern2, Liefern3, Liefern4, Liefern5, Liefern6, Liefern7, SollPuffer, NormMenge, Art, Ungueltig, UngueltigBis, LeasingStop, MitInventur, Bestand, BestandKostenlos, AusstehendeReduz, ReduzAb, ArtGroeID, MaxBestellmenge, KeineWebBestellung, KdArtiIDNeu)
 ON VsaAnf.VsaID = VsaAnfMap.VsaID AND VsaAnf.KdArtiID = VsaAnfMap.KdArtiIDNeu AND VsaAnf.ArtGroeID = VsaAnfMap.ArtGroeID
 WHEN NOT MATCHED THEN
   INSERT ([Status], VsaID, AbteilID, KdArtiID, Liefern1, Liefern2, Liefern3, Liefern4, Liefern5, Liefern6, Liefern7, SollPuffer, NormMenge, Art, Ungueltig, UngueltigBis, LeasingStop, MitInventur, Bestand, BestandKostenlos, AusstehendeReduz, ReduzAb, ArtGroeID, MaxBestellmenge, KeineWebBestellung)
-  VALUES (VsaAnfMap.[Status], VsaAnfMap.VsaID, VsaAnfMap.AbteilID, VsaAnfMap.KdArtiID, VsaAnfMap.Liefern1, VsaAnfMap.Liefern2, VsaAnfMap.Liefern3, VsaAnfMap.Liefern4, VsaAnfMap.Liefern5, VsaAnfMap.Liefern6, VsaAnfMap.Liefern7, VsaAnfMap.SollPuffer, VsaAnfMap.NormMenge, VsaAnfMap.Art, VsaAnfMap.Ungueltig, VsaAnfMap.UngueltigBis, VsaAnfMap.LeasingStop, VsaAnfMap.MitInventur, VsaAnfMap.Bestand, VsaAnfMap.BestandKostenlos, VsaAnfMap.AusstehendeReduz, VsaAnfMap.ReduzAb, VsaAnfMap.ArtGroeID, VsaAnfMap.MaxBestellmenge, VsaAnfMap.KeineWebBestellung);
+  VALUES (VsaAnfMap.[Status], VsaAnfMap.VsaID, VsaAnfMap.AbteilID, VsaAnfMap.KdArtiIDNeu, VsaAnfMap.Liefern1, VsaAnfMap.Liefern2, VsaAnfMap.Liefern3, VsaAnfMap.Liefern4, VsaAnfMap.Liefern5, VsaAnfMap.Liefern6, VsaAnfMap.Liefern7, VsaAnfMap.SollPuffer, VsaAnfMap.NormMenge, VsaAnfMap.Art, VsaAnfMap.Ungueltig, VsaAnfMap.UngueltigBis, VsaAnfMap.LeasingStop, VsaAnfMap.MitInventur, VsaAnfMap.Bestand, VsaAnfMap.BestandKostenlos, VsaAnfMap.AusstehendeReduz, VsaAnfMap.ReduzAb, VsaAnfMap.ArtGroeID, VsaAnfMap.MaxBestellmenge, VsaAnfMap.KeineWebBestellung);
 
 PRINT(N'Old VsaAnf inactive');
 
@@ -96,12 +95,12 @@ MERGE INTO LaundryAutomation.dbo.SalesianerChip USING (
   JOIN [SALADVPSQLC1A1.salres.com].Salesianer_Test.dbo.Artikel ON OPTeile.ArtikelID = Artikel.ID
   JOIN LaundryAutomation.dbo.Article ON Article.ArticleNumber = Artikel.ArtikelNr COLLATE Latin1_General_CI_AS
 ) EWTeile (ID, Code, ArtikelID, ArtGroeID, ArticleID)
-ON SalesianerChip.Sgtin96HexCode = EWTeile.Code
+ON SalesianerChip.Sgtin96HexCode = EWTeile.Code COLLATE Latin1_General_CI_AS
 WHEN MATCHED THEN
   UPDATE SET ArticleID = EWTeile.ArticleID
 WHEN NOT MATCHED THEN
-  INSERT (ArticleID, Sgtin96HexCode, IsEncoded)
-  VALUES (EWTeile.ArticleID, EWTeile.Code, CAST(0 AS bit));
+  INSERT (ArticleID, Sgtin96HexCode, IsEncoded, Created, LastUpdated)
+  VALUES (EWTeile.ArticleID, EWTeile.Code, CAST(0 AS bit), GETDATE(), GETDATE());
 
 GO
 */
