@@ -3,19 +3,24 @@ DROP TABLE IF EXISTS #ApplyInKalk;
 
 GO
 
-DECLARE @VonDat date = N'2022-02-07';
-DECLARE @BisDat date = N'2022-02-13';
+DECLARE @VonDat date = N'2022-02-01';
+DECLARE @BisDat date = N'2022-02-20';
 DECLARE @MinPrio int = (SELECT MIN(Prio) FROM InKalk);
 DECLARE @MaxPrio int = (SELECT MAX(Prio) FROM InKalk);
 DECLARE @CurrPrio int;
 
 SET NOCOUNT ON;
 
-SELECT ID, VsaID, FahrtID, Datum, ProduktionID, LsKoArtID
+SELECT LsKo.ID, LsKo.VsaID, LsKo.FahrtID, LsKo.Datum, LsKo.ProduktionID, LsKo.LsKoArtID
 INTO #InKalkLsKo
 FROM LsKo
+JOIN Vsa ON LsKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGFID = KdGf.ID
 WHERE LsKo.Datum BETWEEN @VonDat AND @BisDat
-  AND LsKo.STATUS >= N'Q'
+  AND LsKo.Status >= N'Q'
+  AND ISNULL(LsKo.DruckZeitpunkt, LsKo.Update_) <= DATEADD(day, 1, @BisDat)
+  AND KdGf.KurzBez IN ('MED', 'GAST', 'JOB', 'SAEU')
   AND EXISTS (
     SELECT LsPo.ID
     FROM LsPo
