@@ -16,5 +16,6 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND Standort.ID IN ($3$)
   AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Artikel.ID > 0
-  AND LsPo.Menge > 0
+  AND LsPo.Menge != 0
+  AND Artikel.ArtiTypeID = 1
 GROUP BY Firma.Bez, Standort.Bez, StandKon.StandKonBez$LAN$, KdGf.KurzBez, KdGf.KdGfBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), Artikel.StueckGewicht, Artikel.Packmenge, ME.MeBez$LAN$;
