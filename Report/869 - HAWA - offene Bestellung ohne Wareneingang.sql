@@ -6,6 +6,7 @@ JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN LiefAbKo ON BPo.LatestLiefABKoID = LiefAbKo.ID
 JOIN Standort ON BKo.LagerID = Standort.ID
 JOIN Lagerart ON BKo.LagerartID = Lagerart.ID
+JOIN GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = GroePo.Groesse
 JOIN Mitarbei AS FreigabeUser ON BKo.FreigabeMitarbeiID = FreigabeUser.ID
 JOIN Mitarbei AS AnlageUser ON BPo.AnlageUserID_ = AnlageUser.ID
 WHERE BPo.Menge > BPo.LiefMenge
@@ -14,4 +15,4 @@ WHERE BPo.Menge > BPo.LiefMenge
   AND BKo.LiefID = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = 100)
   AND LiefAbKo.ID > 0
   AND Standort.FirmaID = 5260 --FA14
-ORDER BY Datum, BestNr, ArtikelNr;
+ORDER BY Datum, BestNr, ArtikelNr, GroePo.Folge;
