@@ -1,5 +1,9 @@
 DROP TABLE IF EXISTS #TmpVOESTRechnung;
 
+DECLARE @vonDatum date = N'2021-01-01';
+DECLARE @bisDatum date = N'2021-12-31';
+DECLARE @Wochenanzahl int;
+
 DECLARE @RechKo TABLE (
   RechKoID int
 );
@@ -11,6 +15,16 @@ JOIN Kunden ON RechKo.KundenID = Kunden.ID
 WHERE RechKo.RechDat BETWEEN N'2021-01-01' AND N'2021-12-31'
   AND RechKo.Status = N'F'
   AND Kunden.KdNr = 272295;
+
+SELECT @Wochenanzahl = DATEDIFF(week, MIN(Week.VonDat), MAX(Week.BisDat))
+FROM AbtKdArW
+JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
+JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
+JOIN Week ON Wochen.Woche = Week.Woche
+WHERE RechPo.RechKoID IN (
+  SELECT RechKoID
+  FROM @RechKo
+);
 
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
@@ -109,7 +123,7 @@ WHEN NOT MATCHED THEN
 
 UPDATE #TmpVOESTRechnung SET Gesamt = Waschkosten + Mietkosten;
 
-SELECT VOESTRechnung.KdNr, VOESTRechnung.Kunde, VOESTRechnung.VsaNr, VOESTRechnung.VsaBezeichnung AS [Vsa-Bezeichnung], VOESTRechnung.Abteilung, VOESTRechnung.Bereich, VOESTRechnung.Kostenstelle, VOESTRechnung.Kostenstellenbezeichnung, VOESTRechnung.TraegerNr AS TrägerNr, VOESTRechnung.PersNr AS Personalnummer, VOESTRechnung.Nachname, VOESTRechnung.Vorname, VOESTRechnung.ArtikelNr, VOESTRechnung.ArtikelBez AS Artikelbezeichnung, VOESTRechnung.Variante AS Verrechnungsart, VOESTRechnung.Barcode, VOESTRechnung.Erstausgabedatum, VOESTRechnung.Waschzyklen, VOESTRechnung.WaschzyklenGesamt AS [Waschzyklen Gesamt], VOESTRechnung.Mietkosten, VOESTRechnung.Waschkosten, VOESTRechnung.Gesamt AS Gesamtkosten, VOEST_VVPrList.Vollversorgungspreis * DATEDIFF(week, N'2021-01-01', N'2021-12-31') AS [Kosten bei Vollversorgung]
+SELECT VOESTRechnung.KdNr, VOESTRechnung.Kunde, VOESTRechnung.VsaNr, VOESTRechnung.VsaBezeichnung AS [Vsa-Bezeichnung], VOESTRechnung.Abteilung, VOESTRechnung.Bereich, VOESTRechnung.Kostenstelle, VOESTRechnung.Kostenstellenbezeichnung, VOESTRechnung.TraegerNr AS TrägerNr, VOESTRechnung.PersNr AS Personalnummer, VOESTRechnung.Nachname, VOESTRechnung.Vorname, VOESTRechnung.ArtikelNr, VOESTRechnung.ArtikelBez AS Artikelbezeichnung, VOESTRechnung.Variante AS Verrechnungsart, VOESTRechnung.Barcode, VOESTRechnung.Erstausgabedatum, VOESTRechnung.Waschzyklen, VOESTRechnung.WaschzyklenGesamt AS [Waschzyklen Gesamt], VOESTRechnung.Mietkosten, VOESTRechnung.Waschkosten, VOESTRechnung.Gesamt AS Gesamtkosten, VOEST_VVPrList.Vollversorgungspreis * @Wochenanzahl AS [Kosten bei Vollversorgung]
 FROM #TmpVOESTRechnung AS VOESTRechnung
 LEFT JOIN Salesianer_Archive.dbo.VOEST_VVPrList ON VOESTRechnung.ArtikelNr = VOEST_VVPrList.ArtikelNr
 ORDER BY KdNr, VsaNr, TrägerNr, ArtikelNr;
