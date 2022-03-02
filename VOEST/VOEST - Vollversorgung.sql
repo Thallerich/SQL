@@ -54,6 +54,8 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
   AND Teile.IndienstDat <= RechKo.BisDatum
   AND ISNULL(Teile.AusdienstDat, N'2099-12-31') >= RechKo.VonDatum
+  AND KdArti.WaschPreis != 0
+  AND KdArti.LeasPreis != 0
 GROUP BY Artikel.ID,
   Traeger.ID,
   Kunden.KdNr,
@@ -107,7 +109,7 @@ WHEN NOT MATCHED THEN
 
 UPDATE #TmpVOESTRechnung SET Gesamt = Waschkosten + Mietkosten;
 
-SELECT VOESTRechnung.KdNr, VOESTRechnung.Kunde, VOESTRechnung.VsaNr, VOESTRechnung.VsaBezeichnung AS [Vsa-Bezeichnung], VOESTRechnung.Abteilung, VOESTRechnung.Bereich, VOESTRechnung.Kostenstelle, VOESTRechnung.Kostenstellenbezeichnung, VOESTRechnung.TraegerNr AS TrägerNr, VOESTRechnung.PersNr AS Personalnummer, VOESTRechnung.Nachname, VOESTRechnung.Vorname, VOESTRechnung.ArtikelNr, VOESTRechnung.ArtikelBez AS Artikelbezeichnung, VOESTRechnung.Variante AS Verrechnungsart, VOESTRechnung.Waschzyklen, VOESTRechnung.WaschzyklenGesamt AS [Waschzyklen Gesamt], VOESTRechnung.Mietkosten, VOESTRechnung.Waschkosten, VOESTRechnung.Gesamt AS Gesamtkosten, VOESTRechnung.Barcode, VOESTRechnung.Erstausgabedatum, VOEST_VVPrList.Vollversorgungspreis
+SELECT VOESTRechnung.KdNr, VOESTRechnung.Kunde, VOESTRechnung.VsaNr, VOESTRechnung.VsaBezeichnung AS [Vsa-Bezeichnung], VOESTRechnung.Abteilung, VOESTRechnung.Bereich, VOESTRechnung.Kostenstelle, VOESTRechnung.Kostenstellenbezeichnung, VOESTRechnung.TraegerNr AS TrägerNr, VOESTRechnung.PersNr AS Personalnummer, VOESTRechnung.Nachname, VOESTRechnung.Vorname, VOESTRechnung.ArtikelNr, VOESTRechnung.ArtikelBez AS Artikelbezeichnung, VOESTRechnung.Variante AS Verrechnungsart, VOESTRechnung.Barcode, VOESTRechnung.Erstausgabedatum, VOESTRechnung.Waschzyklen, VOESTRechnung.WaschzyklenGesamt AS [Waschzyklen Gesamt], VOESTRechnung.Mietkosten, VOESTRechnung.Waschkosten, VOESTRechnung.Gesamt AS Gesamtkosten, VOEST_VVPrList.Vollversorgungspreis * DATEDIFF(week, N'2021-01-01', N'2021-12-31') AS [Kosten bei Vollversorgung]
 FROM #TmpVOESTRechnung AS VOESTRechnung
 LEFT JOIN Salesianer_Archive.dbo.VOEST_VVPrList ON VOESTRechnung.ArtikelNr = VOEST_VVPrList.ArtikelNr
 ORDER BY KdNr, VsaNr, TrägerNr, ArtikelNr;
