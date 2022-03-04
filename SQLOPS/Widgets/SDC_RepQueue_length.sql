@@ -13,6 +13,11 @@ GROUP BY SdcDev.Bez
 
 UNION ALL
 
-SELECT N'Z_UHF Einlesen' AS Sortieranlagen, COUNT(SdcPools.ID) AS [Queue-Länge]
+SELECT N'Z_UHF Einlesen' AS Sortieranlage, COUNT(SdcPools.ID) AS [Queue-Länge]
 FROM SdcPools
+
+UNION ALL
+
+SELECT N'Z_UHF Count-IT' AS Sortieranlage, COUNT(_CITRepQ.ID) AS [Queue-Länge]
+FROM _CITRepQ
 ORDER BY Sortieranlage ASC;
