@@ -21,4 +21,5 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND LsPo.Kostenlos = 0
   AND LsPo.Menge > 0
   AND (KdArti.Status = N'I' OR Artikel.Status IN (N'D', N'E', N'I'))
+  AND NOT (Artikel.ArtikelNr IN (N'111260022002', N'111260022001', N'P275T1') AND KdArti.LsAusblenden = 1) /* Anforderung Saffertmüller Larissa - Ticket IT-57028 */
 ORDER BY SGF, Kunden.KdNr, Vsa.VsaNr, LsKo.Datum, Artikel.ArtikelNr;
