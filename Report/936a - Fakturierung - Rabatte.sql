@@ -6,8 +6,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
-JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = KdBer.BereichID
+JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = RechPo.BereichID
 JOIN Standort AS Expedition ON StandBer.ExpeditionID = Expedition.ID
 JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 JOIN Standort AS Hauptstandort ON Kunden.StandortID = Hauptstandort.ID
