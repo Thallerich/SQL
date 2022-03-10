@@ -27,7 +27,12 @@ SELECT Kunden.ID AS KundenID, Artikel.ID AS ArtikelID, KdBer.ID AS KdBerID, Arti
 FROM __CRSetArtikel
 JOIN Kunden ON __CRSetArtikel.KdNr = Kunden.KdNr
 JOIN Artikel ON __CRSetArtikel.RRSetArtikelNr = Artikel.ArtikelNr
-JOIN KdBer ON KdBer.KundenID = Kunden.ID AND KdBer.BereichID = Artikel.BereichID;
+JOIN KdBer ON KdBer.KundenID = Kunden.ID AND KdBer.BereichID = Artikel.BereichID
+WHERE NOT EXISTS (
+    SELECT KA.*
+    FROM KdArti KA
+    WHERE KA.KundenID = Kunden.ID AND KA.ArtikelID = Artikel.ID
+  );
 
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez
 FROM @InsertedKdArti AS IKA
