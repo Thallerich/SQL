@@ -8,6 +8,7 @@ JOIN ServType ON Vsa.ServTypeID = ServType.ID
 WHERE KdGf.ID IN ($3$)
   AND Firma.ID IN ($2$)
   AND ServType.ID IN ($4$)
+  AND Kunden.StandortID IN ($5$)
   AND AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Vsa.SichtbarID IN ($SICHTBARIDS$)
 ORDER BY Lieferdatum, KdNr, VsaNr;
