@@ -10,6 +10,7 @@ WHERE LagerBew.BestandID = Bestand.ID
   AND ArtGroe.ArtikelID = Artikel.ID
   AND Bestand.LagerArtID = LagerArt.ID
   AND LagerArt.LagerID = Standort.ID
+  AND LagerArt.ArtiTypeID = 1
   AND LagerBew.LgBewCodID = LgBewCod.ID
   AND Lagerart.FirmaID = Firma.ID
   AND (Firma.SuchCode = N'FA14' OR Firma.SuchCode = N'BUDA')
