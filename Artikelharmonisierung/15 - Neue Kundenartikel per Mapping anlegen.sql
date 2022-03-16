@@ -12,6 +12,11 @@ DECLARE @NewKdArti TABLE (
   LeasPreisAbwAbWo money
 );
 
+DECLARE @TeilChange TABLE (
+  TeileID int,
+  TraeArtiID int
+);
+
 DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
 BEGIN TRANSACTION;
@@ -77,15 +82,15 @@ BEGIN TRANSACTION;
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, MengeAufkauf, RueckgabeMenge, KaufwareModus, SchleichReduz, MengeOpTeile, MengeKredit, AnlageUserID_, UserID_)
-  SELECT TraeArti.VsaID, TraeArti.TraegerID, ArtiMap.NeuArtGroeID AS ArtGroeID, NewKdArti.KdArtiID, TraeArti.MengeAufkauf, TraeArti.RueckgabeMenge, TraeArti.KaufwareModus, TraeArti.SchleichReduz, TraeArti.MengeOpTeile, TraeArti.MengeKredit, @UserID AS AnlageUserID_, @UserID AS UserID_
-  FROM TraeArti
-  JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID AND TraeArti.ArtGroeID = Artimap.AltArtGroeID
+  SELECT OldTraeArti.VsaID, OldTraeArti.TraegerID, ArtiMap.NeuArtGroeID AS ArtGroeID, NewKdArti.KdArtiID, OldTraeArti.MengeAufkauf, OldTraeArti.RueckgabeMenge, OldTraeArti.KaufwareModus, OldTraeArti.SchleichReduz, OldTraeArti.MengeOpTeile, OldTraeArti.MengeKredit, @UserID AS AnlageUserID_, @UserID AS UserID_
+  FROM TraeArti AS OldTraeArti
+  JOIN KdArti ON OldTraeArti.KdArtiID = KdArti.ID
+  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID AND OldTraeArti.ArtGroeID = Artimap.AltArtGroeID
   JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
   WHERE NOT EXISTS (
       SELECT ta.*
       FROM TraeArti ta
-      WHERE ta.TraegerID = TraeArti.TraegerID
+      WHERE ta.TraegerID = OldTraeArti.TraegerID
         AND ta.KdArtiID = NewKdArti.KdArtiID
         AND ta.ArtGroeID = ArtiMap.NeuArtGroeID
     );
@@ -96,15 +101,84 @@ BEGIN TRANSACTION;
   /* ++ !! keine Teile auf Bestellungen, Entnahmenlisten, diese können auf Grund Reservierungsprozess nicht angepasst werden      ++ */
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+  WITH ArtiMap AS (
+    SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
+    FROM __ArtiMapKentaur20220309
+    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
+    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
+  )
+  UPDATE Teile SET TraeArtiID = NeuTraeArti.ID, KdArtiID = NeuTraeArti.KdArtiID, ArtikelID = NewKdArti.ArtikelID, ArtGroeID = NeuTraeArti.ArtGroeID
+  OUTPUT inserted.ID, inserted.TraeArtiID
+  INTO @TeilChange (TeileID, TraeArtiID)
+  FROM Teile
+  JOIN KdArti ON Teile.KdArtiID = KdArti.ID
+  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID AND Teile.ArtGroeID = Artimap.AltArtGroeID
+  JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
+  JOIN TraeArti AS NeuTraeArti ON Teile.TraegerID = NeuTraeArti.TraegerID AND NewKdArti.KdArtiID = NeuTraeArti.KdArtiID AND ArtiMap.NeuArtGroeID = NeuTraeArti.ArtGroeID
+  WHERE Teile.Status BETWEEN N'M' AND N'W';
+
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-  /* ++ TRAEAPPL:                                                                                                                 ++ */
-  /* ++   KdArApplID                                                                                                              ++ */
+  /* ++ TRAEAPPL neu anlegen                                                                                                      ++ */
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+  WITH ArtiMap AS (
+    SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
+    FROM __ArtiMapKentaur20220309
+    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
+    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
+  )
+  INSERT INTO TraeAppl (TraeArtiID, ApplKdArtiID, ArtiTypeID, Mass, PlatzID, KdArApplID, AnlageUserID_, UserID_)
+  SELECT NeuTraeArti.ID, TraeAppl.ApplKdArtiID, TraeAppl.ArtiTypeID, TraeAppl.ArtiTypeID, TraeAppl.Mass, TraeAppl.PlatzID, @UserID, @UserID
+  FROM TraeArti
+  JOIN TraeAppl ON TraeAppl.TraeArtiID = TraeArti.ID
+  JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID AND TraeArti.ArtGroeID = Artimap.AltArtGroeID
+  JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
+  JOIN TraeArti AS NeuTraeArti ON TraeArti.TraegerID = NeuTraeArti.TraegerID AND NewKdArti.KdArtiID = NeuTraeArti.KdArtiID AND ArtiMap.NeuArtGroeID = NeuTraeArti.ArtGroeID
+  JOIN KdArAppl ON NewKdArti.KdArtiID = KdArAppl.KdArtiID AND TraeAppl.ApplKdArtiID = KdArAppl.ApplKdArtiID AND TraeAppl.PlatzID = KdArAppl.PlatzID
+  WHERE NOT EXISTS (
+      SELECT tapl.*
+      FROM TraeAppl tapl
+      WHERE tapl.TraeArtiID = NeuTraeArti.ID
+        AND tapl.ApplKdArtiID = TraeAppl.ApplKdArtiID
+        AND tapl.PlatzID = TraeAppl.PlatzID
+    );
+
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+  /* ++ TEILAPPL:                                                                                                                 ++ */
+  /* ++   TraeApplID                                                                                                              ++ */
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+  UPDATE TeilAppl SET TraeApplID = TraeAppl.ID
+  FROM @TeilChange AS Teil
+  JOIN TraeAppl ON Teil.TraeArtiID = TraeAppl.TraeArtiID 
+  WHERE Teil.TeileID = TeilAppl.TeileID
+    AND TeilAppl.ApplKdArtiID = TraeAppl.ApplKdArtiID
+    AND TeilAppl.PlatzID = TraeAppl.PlatzID;
 
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
   /* ++ PROD:                                                                                                                     ++ */
   /* ++   TraeArtiID, ArtikelID, KdArtiID, ArtGroeID                                                                              ++ */
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+  WITH ArtiMap AS (
+    SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
+    FROM __ArtiMapKentaur20220309
+    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
+    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
+  )
+  UPDATE Prod SET TraeArtiID = NeuTraeArti.ID, KdArtiID = NeuTraeArti.KdArtiID, ArtikelID = NewKdArti.ArtikelID, ArtGroeID = NeuTraeArti.ArtGroeID
+  FROM Prod
+  JOIN KdArti ON Prod.KdArtiID = KdArti.ID
+  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID AND Prod.ArtGroeID = Artimap.AltArtGroeID
+  JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
+  JOIN TraeArti AS NeuTraeArti ON Prod.TraegerID = NeuTraeArti.TraegerID AND NewKdArti.KdArtiID = NeuTraeArti.KdArtiID AND ArtiMap.NeuArtGroeID = NeuTraeArti.ArtGroeID;
+
 /* COMMIT; */
-/* ROLLBACK; */
+ROLLBACK;
