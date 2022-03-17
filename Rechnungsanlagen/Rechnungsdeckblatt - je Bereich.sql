@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS #Final;
 
-SELECT CONVERT(money, 0) AS BW, CONVERT(money, 0) AS BK, CONVERT(money, 0) AS SH, CONVERT(money, 0) AS EW, CONVERT(money, 0) AS IK, CONVERT(money, 0) AS OP, CONVERT(money, 0) AS TW, CONVERT(money, 0) AS BG, CONVERT(money, 0) AS MA, CONVERT(money, 0) AS Summe, Abteil.ID AS AbteilID, Abteil.Bez AS KsSt, Kunden.UStIDNr, Kunden.KdNr, Kunden.ID AS KundenID, RechKo.RechDat, RechKo.RechNr, RechKo.Art, RechKo.VonDatum, RechKo.BisDatum, RechKo.FaelligDat, RechKo.Nettowert, RechKo.Bruttowert, RechKo.MwStBetrag, RechKo.MwStSatz, TRIM(ZahlZiel.BezDruckMemo$LAN$) AS ZahlZielText
+SELECT CONVERT(money, 0) AS BW, CONVERT(money, 0) AS BK, CONVERT(money, 0) AS SH, CONVERT(money, 0) AS EW, CONVERT(money, 0) AS IK, CONVERT(money, 0) AS OP, CONVERT(money, 0) AS TW, CONVERT(money, 0) AS BG, CONVERT(money, 0) AS MA, CONVERT(money, 0) AS Summe, Abteil.ID AS AbteilID, Abteil.Bez AS KsSt, Kunden.UStIDNr, Kunden.KdNr, Kunden.ID AS KundenID, RechKo.RechDat, RechKo.RechNr, RechKo.Art, RechKo.VonDatum, RechKo.BisDatum, RechKo.FaelligDat, RechKo.Nettowert, RechKo.Bruttowert, RechKo.MwStBetrag, RechKo.MwStSatz, dbo.Trim(ZahlZiel.BezDruckMemo$LAN$) AS ZahlZielText
 INTO #Final
 FROM RechPo, RechKo, Kunden, Abteil, Bereich, ZahlZiel
 WHERE RechPo.RechKoID = RechKo.ID
@@ -17,7 +17,7 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
-    AND RechPo.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe = N'OPK')
+    AND RechPo.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'OPK', N'OPS'))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -28,7 +28,7 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
-    AND RechPo.ArtGruID NOT IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'BGP', N'OPK'))
+    AND RechPo.ArtGruID NOT IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'BGP', N'OPK', N'OPS'))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
