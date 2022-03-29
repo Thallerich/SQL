@@ -1,11 +1,12 @@
-DECLARE @from date = $4$;
-DECLARE @to date = $5$;
+DECLARE @from date = $STARTDATE$;
+DECLARE @to date = $ENDDATE$;
 
 DROP TABLE IF EXISTS #Reklamation;
 
 CREATE TABLE #Reklamation (
   Datumsbereich nchar(23),
   Standort nvarchar(40),
+  Geschäftsbereich nchar(5),
   KdNr int,
   Kunde nvarchar(20),
   ArtikelNr nvarchar(15),
@@ -14,11 +15,12 @@ CREATE TABLE #Reklamation (
   Reklamationsmenge int
 );
 
-INSERT INTO #Reklamation
-SELECT FORMAT(@from, 'd', 'de-at') + ' - ' + FORMAT(@to, 'd', 'de-at') AS Datumsbereich, Standort.Bez AS Standort, Kunden.KdNr AS KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsKoGru.LsKoGruBez$LAN$ AS Reklamationsgrund,  SUM(ABS(LsPo.Menge)) AS Reklamationsmenge
-FROM Kunden, Vsa, LsKo, LsKoGru, LsPo, KdArti, Artikel, Standort
-WHERE Kunden.ID IN ($1$)
+INSERT INTO #Reklamation (Datumsbereich, Standort, Geschäftsbereich, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund, Reklamationsmenge)
+SELECT FORMAT(@from, 'd', 'de-at') + ' - ' + FORMAT(@to, 'd', 'de-at') AS Datumsbereich, Standort.Bez AS Standort, KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr AS KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsKoGru.LsKoGruBez$LAN$ AS Reklamationsgrund,  SUM(ABS(LsPo.Menge)) AS Reklamationsmenge
+FROM Kunden, Vsa, LsKo, LsKoGru, LsPo, KdArti, Artikel, Standort, KdGf
+WHERE Kunden.ID IN ($2$)
   AND Kunden.ID = Vsa.KundenID
+  AND Kunden.KdGfID = KdGf.ID
   AND Vsa.ID = LsKo.VsaID
   AND LsKo.ID = LsPo.LsKoID
   AND LsPo.LsKoGruID = LsKoGru.ID
@@ -27,15 +29,16 @@ WHERE Kunden.ID IN ($1$)
   AND KdArti.ArtikelID = Artikel.ID
   AND LsKo.Datum BETWEEN @from AND @to
   AND LsKo.ProduktionID = Standort.ID
-  AND Standort.ID IN ($6$)
-GROUP BY Standort.Bez, Kunden.KdNr, Kunden.SuchCode, LsKoGru.LsKoGruBez, Artikel.ArtikelNr, Artikel.ArtikelBez
+  AND Standort.ID IN ($4$)
+GROUP BY Standort.Bez, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode, LsKoGru.LsKoGruBez$lan$, Artikel.ArtikelNr, Artikel.ArtikelBez$lan$
 HAVING SUM(ABS(LsPo.Menge)) > 0;
 
-INSERT INTO #Reklamation
-SELECT FORMAT(@from, 'd', 'de-at') + ' - ' + FORMAT(@to, 'd', 'de-at') AS Datumsbereich, Standort.Bez AS Standort, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsKoGru.LsKoGruBez$LAN$ AS Reklamationsgrund, SUM(ABS(LsPo.Menge)) AS Reklamationsmenge
-FROM Kunden, Vsa, LsKo, LsKoGru, LsPo, KdArti, Artikel, Standort
-WHERE Kunden.ID IN ($1$)
+INSERT INTO #Reklamation (Datumsbereich, Standort, Geschäftsbereich, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund, Reklamationsmenge)
+SELECT FORMAT(@from, 'd', 'de-at') + ' - ' + FORMAT(@to, 'd', 'de-at') AS Datumsbereich, Standort.Bez AS Standort, KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsKoGru.LsKoGruBez$LAN$ AS Reklamationsgrund, SUM(ABS(LsPo.Menge)) AS Reklamationsmenge
+FROM Kunden, Vsa, LsKo, LsKoGru, LsPo, KdArti, Artikel, Standort, KdGf
+WHERE Kunden.ID IN ($2$)
   AND Kunden.ID = Vsa.KundenID
+  AND Kunden.KdGfID = KdGf.ID
   AND Vsa.ID = LsKo.VsaID
   AND LsKo.ID = LsPo.LsKoID
   AND LsKo.LsKoGruID = LsKoGru.ID
@@ -45,15 +48,15 @@ WHERE Kunden.ID IN ($1$)
   AND KdArti.ArtikelID = Artikel.ID
   AND LsKo.Datum BETWEEN @from AND @to
   AND LsKo.ProduktionID = Standort.ID
-  AND Standort.ID IN ($6$)
-GROUP BY Standort.Bez, Kunden.KdNr, Kunden.SuchCode, LsKoGru.LsKoGruBez, Artikel.ArtikelNr, Artikel.ArtikelBez
+  AND Standort.ID IN ($4$)
+GROUP BY Standort.Bez, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode, LsKoGru.LsKoGruBez$lan$, Artikel.ArtikelNr, Artikel.ArtikelBez$lan$
 HAVING SUM(ABS(LsPo.Menge)) > 0;
 
-SELECT Datumsbereich, Standort, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund, SUM(Reklamationsmenge) AS Reklamationsmenge 
+SELECT Datumsbereich, Standort, Geschäftsbereich, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund, SUM(Reklamationsmenge) AS Reklamationsmenge 
 FROM #Reklamation
-GROUP BY Datumsbereich, Standort, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund
+GROUP BY Datumsbereich, Standort, Geschäftsbereich, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Reklamationsgrund
 
-UNION
+UNION ALL
 
-SELECT 'Summe:' AS Datumsbereich, '' AS Standort, NULL AS Kundennummer, '' AS Kundenname, '' AS Artikelnummer, '' AS Artikelbezeichnung, '' AS Reklamationsgrund,  SUM(Reklamationsmenge) AS Reklamationsmenge
+SELECT 'Summe:' AS Datumsbereich, '' AS Standort, NULL AS Geschäftsbereich, NULL AS Kundennummer, '' AS Kundenname, '' AS Artikelnummer, '' AS Artikelbezeichnung, '' AS Reklamationsgrund,  SUM(Reklamationsmenge) AS Reklamationsmenge
 FROM #Reklamation;
