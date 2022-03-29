@@ -18,5 +18,6 @@ WHERE Firma.ID IN ($2$)
   AND WebLogin.Zeitpunkt BETWEEN $STARTDATE$ AND $ENDDATE$
   AND WebLogin.IsLogout = 0
   AND WebLogin.Success = 1
+  AND Kundenstatus.ID IN ($4$)
 GROUP BY Firma.SuchCode, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode, Kundenstatus.StatusBez, Standort.Suchcode
 ORDER BY Firma, Geschäftsbereich, KdNr;

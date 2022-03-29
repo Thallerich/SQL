@@ -24,5 +24,6 @@ WHERE Firma.ID IN ($2$)
   AND WebLogin.Zeitpunkt >= $1$
   AND WebLogin.IsLogout = 0
   AND WebLogin.Success = 1
+  AND Kundenstatus.ID IN ($4$)
 GROUP BY Firma.SuchCode, KdGf.KurzBez, Kunden.KdNr, Kunden.SuchCode, Kundenstatus.StatusBez, Standort.Suchcode, WebUser.UserName, WebUserStatus.StatusBez
 ORDER BY Firma, Geschäftsbereich, KdNr;
