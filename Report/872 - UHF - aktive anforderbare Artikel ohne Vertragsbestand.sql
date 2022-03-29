@@ -20,7 +20,15 @@ JOIN StandBer ON StandBer.StandKonID = StandKon.ID AND StandBer.BereichID = Bere
 JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 JOIN Mitarbei AS Kundenservice ON KdBer.ServiceID = Kundenservice.ID
 JOIN GroePo ON GroePo.GroeKoID = Artikel.GroeKoID AND GroePo.Groesse = ArtGroe.Groesse
+LEFT JOIN (
+  SELECT VsaAnfSo.VsaAnfID, SUM(VsaAnfSo.AusstehendeReduz) AS OffeneEinmLief
+  FROM VsaAnfSo
+  WHERE VsaAnfSo.AusstehendeReduz > 0
+    AND VsaAnfSo.Art != N'V'
+  GROUP BY VsaAnfSo.VsaAnfID
+) ReduzEinmalig ON ReduzEinmalig.VsaAnfID = Vsaanf.ID
 WHERE VsaAnf.Status = N'A'
+  AND UPPER(VsaAnf.Art) = N'M'
   AND Vsa.Status = N'A'
   AND Kunden.Status = N'A'
   AND KdGf.KurzBez != N'INT'
@@ -28,7 +36,8 @@ WHERE VsaAnf.Status = N'A'
   AND ((KdBer.AnfAusEpo > 1 AND VsaBer.AnfAusEpo = -1) OR VsaBer.AnfAusEpo > 1)
   AND (KdBer.IstBestandAnpass = 1 OR KdArti.IstBestandAnpass = 1)
   AND VsaAnf.Bestand = 0 
-  AND (VsaAnf.BestandIst != 0 OR (VsaAnf.BestandIst - VsaAnf.AusstehendeReduz > 0))
+  AND (VsaAnf.BestandIst != 0 OR (VsaAnf.BestandIst - VsaAnf.AusstehendeReduz - ISNULL(ReduzEinmalig.OffeneEinmLief, 0) > 0))
+  AND Bereich.Bereich != N'LW'
   AND (
     EXISTS (
       SELECT OPTeile.*
