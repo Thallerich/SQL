@@ -29,6 +29,7 @@ FROM #Final AS F, (
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
     AND RechPo.ArtGruID NOT IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'BGP', N'OPK', N'OPS'))
+    AND RechPo.KdArtiID NOT IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID IN (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr IN (N'54A7XL', N'54A7L')))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -38,7 +39,11 @@ FROM #Final AS F, (
   SELECT RechPo.AbteilID, SUM(RechPo.GPreis) AS Summe
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
-    AND RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'FW', N'FWL', N'SHC'))
+    AND (
+      RechPo.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'FW', N'FWL', N'SHC'))
+      OR
+      RechPo.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID IN (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr IN (N'54A7XL', N'54A7L')))
+    )
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
