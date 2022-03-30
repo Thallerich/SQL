@@ -132,7 +132,7 @@ BEGIN TRANSACTION;
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   INSERT INTO TraeAppl (TraeArtiID, ApplKdArtiID, ArtiTypeID, Mass, PlatzID, KdArApplID, AnlageUserID_, UserID_)
-  SELECT NeuTraeArti.ID, TraeAppl.ApplKdArtiID, TraeAppl.ArtiTypeID, TraeAppl.ArtiTypeID, TraeAppl.Mass, TraeAppl.PlatzID, @UserID, @UserID
+  SELECT NeuTraeArti.ID, TraeAppl.ApplKdArtiID, TraeAppl.ArtiTypeID, TraeAppl.Mass, TraeAppl.PlatzID, KdArAppl.ID, @UserID, @UserID
   FROM TraeArti
   JOIN TraeAppl ON TraeAppl.TraeArtiID = TraeArti.ID
   JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
@@ -180,5 +180,32 @@ BEGIN TRANSACTION;
   JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
   JOIN TraeArti AS NeuTraeArti ON Prod.TraegerID = NeuTraeArti.TraegerID AND NewKdArti.KdArtiID = NeuTraeArti.KdArtiID AND ArtiMap.NeuArtGroeID = NeuTraeArti.ArtGroeID;
 
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+  /* ++ KDAUSART                                                                                                                  ++ */
+  /* ++   KdAusstaID, KdArtiID, Pos, Menge                                                                                        ++ */
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+  
+  WITH ArtiMap AS (
+    SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
+    FROM __ArtiMapKentaur20220309
+    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
+    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
+  )
+  UPDATE KdAusArt SET KdArtiID = NewKdArti.KdArtiID
+  FROM KdAusArt
+  JOIN KdAussta ON KdAusArt.KdAusstaID = KdAussta.ID
+  JOIN KdArti ON KdAusArt.KdArtiID = KdArti.ID
+  JOIN ArtiMap ON KdArti.ArtikelID = ArtiMap.AltArtikelID
+  JOIN @NewKdArti AS NewKdArti ON ArtiMap.NeuArtikelID = NewKdArti.ArtikelID AND KdArti.KundenID = NewKdArti.KundenID AND KdArti.Variante = NewKdArti.Variante
+  WHERE KdAussta.RentomatCode = 1
+    AND NOT EXISTS (
+      SELECT kaa.*
+      FROM KdAusArt AS kaa
+      WHERE kaa.KdAusstaID = KdAusArt.KdAusstaID
+        AND kaa.KdArtiID = NewKdArti.KdArtiID
+    );
+
 /* COMMIT; */
-ROLLBACK;
+/* ROLLBACK; */
