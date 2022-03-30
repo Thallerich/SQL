@@ -33,7 +33,7 @@ CREATE TABLE SCANS_NEW (
   ID bigint NOT NULL,
   TeileID int NOT NULL,
   EinzTeilID int NOT NULL,
-  [DATETIME] datetime2(3),
+  [DateTime] datetime2(3),
   ActionsID int NOT NULL,
   ZielNrID int NOT NULL,
   ArbPlatzID int NOT NULL,
