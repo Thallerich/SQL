@@ -16,6 +16,6 @@ JOIN GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = GroePo.G
 JOIN Teilestatus ON Teilestatus.Status = Teile.Status
 JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
 CROSS APPLY funcGetRestwert(Teile.ID, N'2022/09', 1) AS TeileRestwert
-WHERE Teile.Barcode IN (SELECT Barcode FROM _VOESTPoolBarcode)
+WHERE Teile.Barcode IN (SELECT Barcode COLLATE Latin1_General_CS_AS FROM __voestpool)
   AND Teile.Status BETWEEN N'Q' AND N'W'
   AND Teile.Einzug IS NULL;
