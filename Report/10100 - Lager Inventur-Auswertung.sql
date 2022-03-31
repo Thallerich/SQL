@@ -1,4 +1,4 @@
-SELECT Standort.SuchCode AS Lagerstandort, Lagerart.LagerartBez$LAN$ AS Lagerart, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, LagerBew.Zeitpunkt AS [Zeitpunkt Inventurbuchung], LagerBew.BestandNeu + LagerBew.Differenz AS [Bestand vor Inventur], LagerBew.BestandNeu AS [Bestand nach Inventur], LagerBew.Differenz
+SELECT Standort.SuchCode AS Lagerstandort, Lagerart.LagerartBez$LAN$ AS Lagerart, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, LagerBew.Zeitpunkt AS [Zeitpunkt Inventurbuchung], LagerBew.BestandNeu - LagerBew.Differenz AS [Bestand vor Inventur], LagerBew.BestandNeu AS [Bestand nach Inventur], LagerBew.Differenz
 FROM LagerBew
 JOIN Bestand ON LagerBew.BestandID = Bestand.ID
 JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
