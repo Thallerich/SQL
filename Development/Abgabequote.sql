@@ -1,6 +1,6 @@
-SELECT KdNr, Kunde, ArtikelNr, Artikelbezeichnung, ROUND(AVG(Menge), 1) AS Durchschnitt, SUM(Menge) AS Umlauf, ROUND(SUM(Ruecklauf), 1) AS Maximum, SUM(Effektiv) AS Effektiv, ROUND(IIF(SUM(Ruecklauf) = 0, 0.0, SUM(Effektiv) * 100 / SUM(Ruecklauf)), 2) AS [Quote %]
+SELECT KdNr, Kunde, ArtikelNr, Artikelbezeichnung, ROUND(AVG(TraeAnz), 0) AS Trägeranzahl, ROUND(AVG(Menge), 0) AS Durchschnitt, SUM(Menge) AS Umlauf, ROUND(SUM(Ruecklauf), 1) AS Maximum, SUM(Effektiv) AS Effektiv, ROUND(IIF(SUM(Ruecklauf) = 0, 0.0, SUM(Effektiv) * 100 / SUM(Ruecklauf)), 2) AS [Quote %]
 FROM (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, Wochen.Woche, SUM(TraeArch.Menge) AS Menge, SUM(TraeArch.Effektiv) AS Effektiv, IIF(SUM(TraeArch.Menge) < 3, CAST((SUM(TraeArch.Menge) / 3.0) AS numeric(18, 4)), CAST(((SUM(TraeArch.Menge) - 1) / 2.0) AS numeric(18, 4))) AS Ruecklauf
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, Wochen.Woche, SUM(TraeArch.Menge) AS Menge, SUM(TraeArch.Effektiv) AS Effektiv, IIF(SUM(TraeArch.Menge) < 3, CAST((SUM(TraeArch.Menge) / 3.0) AS numeric(18, 4)), CAST(((SUM(TraeArch.Menge) - 1) / 2.0) AS numeric(18, 4))) AS Ruecklauf, COUNT(DISTINCT Traeger.ID) AS TraeAnz
   FROM TraeArch
   JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
