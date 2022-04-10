@@ -12,12 +12,12 @@ CREATE TABLE #AdvUHF (
 );
 
 INSERT INTO #AdvUHF (Code, ArtikelNr, Groesse)
-SELECT OPTeile.Code, Artikel.ArtikelNr, ArtGroe.Groesse
-FROM [SALADVPSQLC1A1.SALRES.COM].Salesianer.dbo.OPTeile
-JOIN [SALADVPSQLC1A1.SALRES.COM].Salesianer.dbo.ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
+SELECT EinzTeil.Code, Artikel.ArtikelNr, ArtGroe.Groesse
+FROM [SALADVPSQLC1A1.SALRES.COM].Salesianer.dbo.EinzTeil
+JOIN [SALADVPSQLC1A1.SALRES.COM].Salesianer.dbo.ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
 JOIN [SALADVPSQLC1A1.SALRES.COM].Salesianer.dbo.Artikel ON ArtGroe.ArtikelID = Artikel.ID
-WHERE LEN(OPTeile.Code) = 24
-  AND OPTeile.Anlage_ > @Anlage;
+WHERE LEN(EinzTeil.Code) = 24
+  AND EinzTeil.Anlage_ > @Anlage;
 
 UPDATE #AdvUHF SET ArtikelNr = ProductSizeConversion.singlesizeproduct
 FROM LaundryAutomation.dbo.ProductSizeConversion
