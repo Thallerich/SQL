@@ -20,9 +20,9 @@ END
 SELECT Contain.Barcode, x.LsKoID, SUM(Artikel.StueckGewicht) AS Gewicht
 INTO #TmpInhalt
 FROM (
-  SELECT OPScans.AnfPoID, OPScans.ContainID, OPScans.OPTeileID
-  FROM OPScans
-  WHERE OPScans.AnfPoID IN (
+  SELECT Scans.AnfPoID, Scans.ContainID, Scans.EinzTeilID
+  FROM Scans
+  WHERE Scans.AnfPoID IN (
     SELECT AnfPo.ID
     FROM AnfPo, AnfKo
     WHERE AnfPo.AnfKoID = AnfKo.ID
@@ -32,7 +32,7 @@ FROM (
 WHERE OPScans.AnfPoID = AnfPo.ID
   AND AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.LsKoID = x.LsKoID
-  AND OPScans.OPTeileID = OPTeile.ID
+  AND OPScans.EinzTeilID = OPTeile.ID
   AND OPTeile.ArtikelID = Artikel.ID
   AND OPScans.ContainID = Contain.ID
 GROUP BY Contain.Barcode, x.LsKoID;
