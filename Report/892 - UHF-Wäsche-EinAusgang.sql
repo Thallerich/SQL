@@ -1,7 +1,7 @@
 WITH Eingangsscans AS (
-  SELECT OPScans.ID, OPScans.EingAnfPoID, OPScans.Zeitpunkt
-  FROM OPScans
-  WHERE OPScans.EingAnfPoID > 0
+  SELECT Scans.ID, Scans.EingAnfPoID, Scans.[DateTime] AS Zeitpunkt
+  FROM Scans
+  WHERE Scans.EingAnfPoID > 0
 ),
 Eingangsscans_Archiv AS (
   SELECT OPScans.ID, OPScans.EingAnfPoID, OPScans.Zeitpunkt

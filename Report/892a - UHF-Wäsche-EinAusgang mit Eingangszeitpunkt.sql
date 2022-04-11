@@ -1,16 +1,16 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfKo.Lieferdatum AS Lieferdatum, FORMAT(OPScans.Zeitpunkt, 'dd.MM.yyyy HH:mm', 'de-AT') AS Einlesezeitpunkt, AnfKo.AuftragsNr AS Packzettel, AnfKo.DruckZeitpunkt AS PZDruckzeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt AS LSDruckzeitpunkt, COUNT(OPScans.ID) AS Eingang, AnfPo.Angefordert, AnfPo.Geliefert AS Ausgang, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz
-FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, Artikel, OPScans, LsKo
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfKo.Lieferdatum AS Lieferdatum, FORMAT(Scans.[DateTime], 'dd.MM.yyyy HH:mm', 'de-AT') AS Einlesezeitpunkt, AnfKo.AuftragsNr AS Packzettel, AnfKo.DruckZeitpunkt AS PZDruckzeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt AS LSDruckzeitpunkt, COUNT(Scans.ID) AS Eingang, AnfPo.Angefordert, AnfPo.Geliefert AS Ausgang, AnfPo.Geliefert - AnfPo.Angefordert AS Differenz
+FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, Artikel, Scans, LsKo
 WHERE AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
   AND AnfPo.KdArtiID = KdArti.ID
   AND KdArti.ArtikelID = Artikel.ID
-  AND OPScans.EingAnfPoID = AnfPo.ID
+  AND Scans.EingAnfPoID = AnfPo.ID
   AND Kunden.ID = $ID$
   AND AnfKo.Lieferdatum BETWEEN $1$ AND $2$
   AND Vsa.Status = 'A'
   AND AnfKo.LsKoID = LsKo.ID
-GROUP BY Kunden.Kdnr, Kunden.SuchCode, Vsa.SuchCode, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfKo.Lieferdatum, FORMAT(OPScans.Zeitpunkt, 'dd.MM.yyyy HH:mm', 'de-AT'), AnfKo.AuftragsNr, AnfKo.DruckZeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt, AnfPo.Angefordert, AnfPo.Geliefert
+GROUP BY Kunden.Kdnr, Kunden.SuchCode, Vsa.SuchCode, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfKo.Lieferdatum, FORMAT(Scans.[DateTime], 'dd.MM.yyyy HH:mm', 'de-AT'), AnfKo.AuftragsNr, AnfKo.DruckZeitpunkt, LsKo.LsNr, LsKo.DruckZeitpunkt, AnfPo.Angefordert, AnfPo.Geliefert
 
 UNION ALL
 
