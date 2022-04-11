@@ -20,95 +20,95 @@ GROUP BY Artikel.ID, Status.StatusBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBe
 
 UPDATE OPBestand SET OPBestand.Umlaufmenge = x.Menge
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS Menge
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb von 6 Monaten
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS Menge
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb von 6 Monaten
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Qualitaetskontrolle = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID = 109
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID = 109
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Fehlerhaft = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID IN (104, 105, 106)  --Chemisch, Nachwäsche, Reparatur
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID IN (104, 105, 106)  --Chemisch, Nachwäsche, Reparatur
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Teilelager = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID = 107
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID = 107
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.EingangUnrein = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID = 100
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-    AND OPTeile.ZielNrID = 300
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID = 100
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+    AND EinzTeil.ZielNrID = 300
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Gepackt = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID IN (101, 113, 114)  -- Packen, steril, unsteril
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID IN (101, 113, 114)  -- Packen, steril, unsteril
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Schrott = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status = 'Z'
-    AND OPTeile.WegDatum >= CONVERT(date, '01.01.' + CONVERT(char(4), YEAR(GETDATE())))
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status = 'Z'
+    AND EinzTeil.WegDatum >= CONVERT(date, '01.01.' + CONVERT(char(4), YEAR(GETDATE())))
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 UPDATE OPBestand SET OPBestand.Neu = x.AnzTeile
 FROM #TmpOPBestand AS OPBestand, (
-  SELECT OPTeile.ArtikelID, COUNT(OPTeile.ID) AS AnzTeile
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.Erstwoche >= CONVERT(char(4), YEAR(GETDATE())) + '/01'
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.Erstwoche >= CONVERT(char(4), YEAR(GETDATE())) + '/01'
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+  GROUP BY EinzTeil.ArtikelID
 ) AS x
 WHERE x.ArtikelID = OPBestand.ArtikelID;
 
@@ -161,10 +161,10 @@ WHERE x.ArtikelID = OPBestand.ArtikelID;
 
 DROP TABLE IF EXISTS #TmpErsatzVortag;
 
-SELECT OPTeile.ArtikelID, OPEtiKo.Status, COUNT(OPTeile.ID) AS Menge
+SELECT EinzTeil.ArtikelID, OPEtiKo.Status, COUNT(EinzTeil.ID) AS Menge
 INTO #TmpErsatzVortag
-FROM OPEtiPo, OPTeile, OPEtiKo, AnfPo, AnfKo, Vsa
-WHERE OPEtiPo.OPTeileID = OPTeile.ID
+FROM OPEtiPo, EinzTeil, OPEtiKo, AnfPo, AnfKo, Vsa
+WHERE OPEtiPo.EinzTeilID = EinzTeil.ID
   AND OPEtiPo.OPEtiKoID = OPEtiKo.ID
   AND OPEtiKo.AnfPoID = AnfPo.ID
   AND AnfPo.AnfKoID = AnfKo.ID
@@ -173,9 +173,9 @@ WHERE OPEtiPo.OPTeileID = OPTeile.ID
   AND ((DATEPART(weekday, GETDATE()) <= 5 AND AnfKo.LieferDatum = CONVERT(date, GETDATE())) OR (DATEPART(weekday, GETDATE()) > 5 AND AnfKo.LieferDatum BETWEEN CONVERT(date, GETDATE()) AND CONVERT(date, GETDATE() + 2)))
   AND AnfKo.Status >= 'F'
   AND AnfKo.Lieferdatum >= CONVERT(date, GETDATE())
-  AND OPEtiPo.Ersatzartikel = $TRUE$
-  AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-GROUP BY OPTeile.ArtikelID, OPEtiKo.Status;
+  AND OPEtiPo.Ersatzartikel = 1
+  AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+GROUP BY EinzTeil.ArtikelID, OPEtiKo.Status;
 
 UPDATE OPBestand SET OPBestand.ErsatzmengeVortag = x.Menge
 FROM #TmpOPBestand AS OPBestand, (
@@ -200,7 +200,7 @@ WHERE OPEtiPo.OPSetsID = OPSets.ID
   AND ((DATEPART(weekday, GETDATE()) <= 5 AND AnfKo.LieferDatum = CONVERT(date, GETDATE())) OR (DATEPART(weekday, GETDATE()) > 5 AND AnfKo.LieferDatum BETWEEN CONVERT(date, GETDATE()) AND CONVERT(date, GETDATE() + 2)))
   AND AnfKo.Status >= 'F'
   AND AnfKo.Lieferdatum >= CONVERT(date, GETDATE())
-  AND OPEtiPo.Ersatzartikel = $TRUE$
+  AND OPEtiPo.Ersatzartikel = 1
   AND OPSets.Artikel1ID IN (SELECT ArtikelID FROM #TmpOPBestand)
   AND OPSets.ID > 0
 GROUP BY OPSets.Artikel1ID, OPEtiKo.Status;
@@ -235,15 +235,15 @@ FROM #TmpOPBestand AS OPBestand, (
 ) AS LTData
 WHERE LTData.ArtikelIDInhalt = OPBestand.ArtikelID;
 
-UPDATE OPBestand SET Drehung = ISNULL(x.DrehungSchnitt, 0)
+UPDATE OPBestand SET Drehung = Coalesce(x.DrehungSchnitt, 0)
 FROM (
-  SELECT OPTeile.ArtikelID, SUM(DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE())) / COUNT(OPTeile.ID) AS DrehungSchnitt
-  FROM OPTeile
-  WHERE OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID = 102  -- ausgelesen
-    AND OPTeile.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
-    AND DATEDIFF(month, OPTeile.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
-  GROUP BY OPTeile.ArtikelID
+  SELECT EinzTeil.ArtikelID, SUM(DATEDIFF(day, EinzTeil.LastScanToKunde, GETDATE())) / COUNT(EinzTeil.ID) AS DrehungSchnitt
+  FROM EinzTeil
+  WHERE EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID = 102  -- ausgelesen
+    AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
+    AND DATEDIFF(month, EinzTeil.LastScanTime, GETDATE()) <= 6 --nur Teile mit letztem Scan innerhalb der letzten 6 Monate
+  GROUP BY EinzTeil.ArtikelID
 ) AS x, #TmpOPBestand AS OPBestand
 WHERE OPBestand.ArtikelID = x.ArtikelID;
 
