@@ -51,19 +51,19 @@ SET Abweichung = Liefermenge - Angefordert, AbweichungProzent = CONVERT(numeric(
 
 UPDATE LsKontrolle SET LsKontrolle.AnzahlChips = x.AnzahlChips
 FROM #TmpLsKontrolle888e LsKontrolle, (
-  SELECT COUNT(DISTINCT OPScans.OPTeileID) AS AnzahlChips, OPScans.AnfPoID
-  FROM OPScans, #TmpLsKontrolle888e LSK
-  WHERE OPScans.AnfPoID = LSK.AnfPoID
-  GROUP BY OPScans.AnfPoID
+  SELECT COUNT(DISTINCT Scans.EinzTeilID) AS AnzahlChips, Scans.AnfPoID
+  FROM Scans, #TmpLsKontrolle888e LSK
+  WHERE Scans.AnfPoID = LSK.AnfPoID
+  GROUP BY Scans.AnfPoID
 ) x
 WHERE x.AnfPoID = LsKontrolle.AnfPoID;
 
 UPDATE LsKontrolle SET IstFalschlieferung = 1
-FROM #TmpLsKontrolle888e LsKontrolle, OPScans, OPTeile
-WHERE OPScans.AnfPoID = LsKontrolle.AnfPoID
-  AND OPScans.OPTeileID = OPTeile.ID
-  AND OPTeile.VsaOwnerID > 0
-  AND OPTeile.VsaOWnerID <> LsKontrolle.VsaID;
+FROM #TmpLsKontrolle888e LsKontrolle, Scans, EinzTeil
+WHERE Scans.AnfPoID = LsKontrolle.AnfPoID
+  AND Scans.EinzTeilID = EinzTeil.ID
+  AND EinzTeil.VsaOwnerID > 0
+  AND EinzTeil.VsaOWnerID <> LsKontrolle.VsaID;
 
 SELECT Kundenservice.Name AS Kundenservice, Betreuer.Name AS Kundenbetreuer, Vertrieb.Name AS [Key Account], LSK.KdNr, LSK.Kunde, LSK.VsaStichwort, LSK.VsaBezeichnung, LSK.ArtikelNr, LSK.ArtikelBez AS Artikelbezeichnung, LSK.Größe, LSK.Angefordert, LSK.Liefermenge, LSK.AnzahlChips, LSK.Abweichung, FORMAT(LSK.AbweichungProzent, N'P2', N'de-AT') AS [Abweichung %], LSK.LsNr AS Lieferschein, LSK.Datum AS Lieferdatum, LSK.Packzettelnummer AS Packzettel, LSK.IstErsatz AS [Ersatzartikel geliefert], LSK.IstFalschlieferung AS [Lieferung nicht an Eigentümer]
 FROM #TmpLsKontrolle888e LSK, KdBer, Mitarbei AS Betreuer, Mitarbei AS Vertrieb, Mitarbei AS Kundenservice
