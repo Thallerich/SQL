@@ -69,8 +69,8 @@ WHERE #OpTeileBKAnlage.TraegerID = TraeArti.TraegerID
   AND #OpTeileBKAnlage.KdArtiID = TraeArti.KdArtiID
   AND #OpTeileBKAnlage.ArtGroeID = TraeArti.ArtGroeID;
 
-INSERT INTO Teile (Barcode, STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, IndienstDat, Indienst, ErstDatum, PatchDatum)
-SELECT op.Code Barcode, 'Q' STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, CAST(N'1980-01-01' AS date) AS Indienstdat, dbo.WeekOfDate(CAST(N'1980-01-01' AS date)) AS Indienst, CAST(N'1980-01-01' AS date) AS Erstdatum, CAST(N'1980-01-01' AS date) AS PatchDatum
+INSERT INTO Teile (Barcode, STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, IndienstDat, Indienst, ErstDatum, PatchDatum, EinsatzGrund)
+SELECT op.Code Barcode, 'Q' STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, CAST(N'1980-01-01' AS date) AS Indienstdat, dbo.WeekOfDate(CAST(N'1980-01-01' AS date)) AS Indienst, CAST(N'1980-01-01' AS date) AS Erstdatum, CAST(N'1980-01-01' AS date) AS PatchDatum, N'5' AS EinsatzGrund
 FROM #OpTeileBKAnlage op
 WHERE NOT EXISTS (
     SELECT ID
