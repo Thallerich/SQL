@@ -59,7 +59,6 @@ FROM (
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
   WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
     AND KdArAppl.ArtiTypeID = 3  --Emblem
-    AND Traeger.Emblem = 1  --Träger bekommt Emblem 
 
   UNION ALL
 
@@ -71,7 +70,6 @@ FROM (
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
   WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
     AND KdArAppl.ArtiTypeID = 2 --Namenschild
-    AND Traeger.NS = 1  --Träger bekommt Namenschild 
 ) AS x
 GROUP BY VsaID, TraegerID, KdArtiID, ArtGroeID, ArtikelID;
 
