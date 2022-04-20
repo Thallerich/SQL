@@ -15,7 +15,7 @@ WHERE AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.Status >= 'I'
   AND Vsa.StandKonID IN ($4$)
   AND ((Artikel.EAN IS NOT NULL AND $3$ = 1) OR ($3$ = 0))
-  AND (($6$ = 1 AND Artikel.ArtikelNr NOT IN ('111260022001', '111260020001')) OR ($6$ = 0))  -- Artikel 111260022001, 111260020001 - Ticket 17910 / ticket 19345
+  AND (($6$ = 1 AND Artikel.ArtikelNr NOT IN (N'111260022001', N'111260020001')) OR ($6$ = 0))  -- Artikel 111260022001, 111260020001 - Ticket 17910 / ticket 19345
 ;
 
 UPDATE LsKontrolle SET LsNr = CONVERT(varchar(10), LsKo.LsNr), Datum = LsKo.Datum
@@ -36,10 +36,10 @@ SET Abweichung = Liefermenge - Angefordert, AbweichungProzent = CONVERT(numeric(
 
 UPDATE LsKontrolle SET LsKontrolle.AnzahlChips = x.AnzahlChips
 FROM #TmpLsKontrolle888d LsKontrolle, (
-  SELECT COUNT(DISTINCT OPScans.OPTeileID) AS AnzahlChips, OPScans.AnfPoID
-  FROM OPScans, #TmpLsKontrolle888d LSK
-  WHERE OPScans.AnfPoID = LSK.AnfPoID
-  GROUP BY OPScans.AnfPoID
+  SELECT COUNT(DISTINCT Scans.EinzTeilID) AS AnzahlChips, Scans.AnfPoID
+  FROM Scans, #TmpLsKontrolle888d LSK
+  WHERE Scans.AnfPoID = LSK.AnfPoID
+  GROUP BY Scans.AnfPoID
 ) x
 WHERE x.AnfPoID = LsKontrolle.AnfPoID;
 
