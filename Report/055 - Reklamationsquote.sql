@@ -8,12 +8,13 @@ ELSE
     Jahr int,
     Geschäftsbereich nchar(5) COLLATE Latin1_General_CS_AS,
     Produktion nvarchar(40) COLLATE Latin1_General_CS_AS,
+    ArtikelID int,
     Liefermenge bigint,
     Reklamationsmenge bigint
   );
 
-INSERT INTO #ReklQuot (Jahr, Geschäftsbereich, Produktion, Reklamationsmenge, Liefermenge)
-SELECT YEAR(LsKo.Datum) AS Jahr, KdGf.KurzBez AS Geschäftsbereich, Standort.Bez AS Produktion, SUM(IIF(LsPoLsKoGru.Reklamation = 1 OR LsKoLsKoGru.Reklamation = 1, ABS(LsPo.Menge), 0)) AS Reklamationsmenge, SUM(IIF(LsPoLsKoGru.Reklamation = 0 OR LsKoLsKoGru.Reklamation = 0, LsPo.Menge, 0)) AS Liefermenge
+INSERT INTO #ReklQuot (Jahr, Geschäftsbereich, Produktion, ArtikelID, Reklamationsmenge, Liefermenge)
+SELECT YEAR(LsKo.Datum) AS Jahr, KdGf.KurzBez AS Geschäftsbereich, Standort.Bez AS Produktion, Artikel.ID AS ArtikelID, SUM(IIF(LsPoLsKoGru.Reklamation = 1 OR LsKoLsKoGru.Reklamation = 1, ABS(LsPo.Menge), 0)) AS Reklamationsmenge, SUM(IIF(LsPoLsKoGru.Reklamation = 0 OR LsKoLsKoGru.Reklamation = 0, LsPo.Menge, 0)) AS Liefermenge
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Standort ON LsPo.ProduktionID = Standort.ID
@@ -29,8 +30,9 @@ WHERE LsKo.Datum BETWEEN @from AND @to
   AND Standort.ID IN ($2$)
   AND KdGf.ID IN ($1$)
   AND Me.IsoCode = N'ST'
-GROUP BY YEAR(LsKo.Datum), KdGf.KurzBez, Standort.Bez
+GROUP BY YEAR(LsKo.Datum), KdGf.KurzBez, Standort.Bez, Artikel.ID;
 
-SELECT Jahr, Geschäftsbereich, Produktion, Liefermenge, Reklamationsmenge, Reklamationsquote = CAST(ROUND(CAST(Reklamationsmenge AS decimal(15, 3)) / CAST(Liefermenge AS decimal(15, 3)) * 100, 4) AS decimal(7, 4))
-FROM #ReklQuot
+SELECT ReklQuot.Jahr, ReklQuot.Geschäftsbereich, ReklQuot.Produktion, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ReklQuot.Liefermenge, ReklQuot.Reklamationsmenge, Reklamationsquote = CAST(ROUND(CAST(ReklQuot.Reklamationsmenge AS decimal(15, 3)) / CAST(IIF(ReklQuot.Liefermenge = 0, 1, ReklQuot.Liefermenge) AS decimal(15, 3)) * 100, 4) AS decimal(7, 4))
+FROM #ReklQuot AS ReklQuot
+JOIN Artikel ON ReklQuot.ArtikelID = Artikel.ID
 ORDER BY Produktion, Geschäftsbereich, Jahr;
