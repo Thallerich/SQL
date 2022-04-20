@@ -6,6 +6,17 @@ DECLARE @Standort TABLE (
   OPStandortID int
 );
 
+IF OBJECT_ID(N'tempdb..#EinzTeilProd') IS NULL
+BEGIN
+  CREATE TABLE #EinzTeilProd (
+    EinzTeilID int PRIMARY KEY,
+    ArtikelID int NOT NULL,
+    LastScanID int DEFAULT -1
+  );
+END ELSE BEGIN
+  TRUNCATE TABLE #EinzTeilProd;
+END;
+
 INSERT INTO @Standort (StandortID)
 SELECT Standort.ID
 FROM Standort
@@ -78,15 +89,15 @@ WHEN NOT MATCHED THEN
 
 MERGE INTO @OPStats AS OPStats
 USING (
-  SELECT OPTeile.ArtikelID, s.OPStandortID AS StandortID, COUNT(OPTeile.ID) AS Schrottmenge
-  FROM OPTeile
-  JOIN Vsa ON OPTeile.VsaID = Vsa.ID
-  JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
+  SELECT EinzTeil.ArtikelID, s.OPStandortID AS StandortID, COUNT(EinzTeil.ID) AS Schrottmenge
+  FROM EinzTeil
+  JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
+  JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
   JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = Artikel.BereichID
   JOIN @Standort s ON StandBer.ProduktionID = s.StandortID
-  WHERE OPTeile.WegDatum BETWEEN @von AND @bis
-    AND OPTeile.Status = N'Z'
-  GROUP BY OPTeile.ArtikelID, s.OPStandortID
+  WHERE EinzTeil.WegDatum BETWEEN @von AND @bis
+    AND EinzTeil.Status = N'Z'
+  GROUP BY EinzTeil.ArtikelID, s.OPStandortID
 ) AS OPSchrott (ArtikelID, StandortID, Schrottmenge)
 ON OPStats.ArtikelID = OPSchrott.ArtikelID AND OPStats.StandortID = OPSchrott.StandortID
 WHEN MATCHED THEN
@@ -96,14 +107,15 @@ WHEN NOT MATCHED THEN
 
 MERGE INTO @OPStats AS OPStats
 USING (
-  SELECT OPTeile.ArtikelID, s.OPStandortID AS StandortID, COUNT(DISTINCT OPTeile.ID) AS NeuMenge
-  FROM OPScans
-  JOIN OPTeile ON OPScans.OPTeileID = OPTeile.ID
-  JOIN ArbPlatz ON OPScans.ArbPlatzID = ArbPlatz.ID
+  SELECT EinzTeil.ArtikelID, s.OPStandortID AS StandortID, COUNT(DISTINCT EinzTeil.ID) AS NeuMenge
+  FROM Scans
+  JOIN EinzTeil ON Scans.EinzTeilID = EinzTeil.ID
+  JOIN ArbPlatz ON Scans.ArbPlatzID = ArbPlatz.ID
   JOIN @Standort s ON ArbPlatz.StandortID = s.StandortID
-  WHERE OPScans.ActionsID = 115 --OP erstellt
-    AND OPScans.Zeitpunkt BETWEEN @von AND DATEADD(day, 1, @bis)
-  GROUP BY OPTeile.ArtikelID, s.OPStandortID
+  WHERE Scans.ActionsID = 115 --OP erstellt
+    AND Scans.[DateTime] BETWEEN @von AND DATEADD(day, 1, @bis)
+    AND Scans.TeileID = -1
+  GROUP BY EinzTeil.ArtikelID, s.OPStandortID
 ) AS OPNeu (ArtikelID, StandortID, NeuMenge)
 ON OPStats.ArtikelID = OPNeu.ArtikelID AND OPStats.StandortID = OPNeu.StandortID
 WHEN MATCHED THEN
@@ -111,21 +123,29 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
   INSERT (StandortID, ArtikelID, NeuMenge) VALUES (OPNeu.StandortID, OPNeu.ArtikelID, OPNeu.NeuMenge);
 
+INSERT INTO #EinzTeilProd (EinzTeilID, ArtikelID)
+SELECT EinzTeil.ID, EinzTeil.ArtikelID
+FROM EinzTeil
+WHERE ISNULL(EinzTeil.LastScanTime, N'1980-01-01 00:00:00') > DATEADD(year, -1, GETDATE())
+    AND EinzTeil.LastActionsID NOT IN (102, 107, 108);
+
+UPDATE #EinzTeilProd SET LastScanID = LastScan.LastScanID
+FROM (
+  SELECT EinzTeilProd.EinzTeilID, MAX(Scans.ID) AS LastScanID
+  FROM #EinzTeilProd AS EinzTeilProd
+  JOIN Scans ON Scans.EinzTeilID = EinzTeilProd.EinzTeilID
+  GROUP BY EinzTeilProd.EinzTeilID
+) LastScan
+WHERE LastScan.EinzTeilID = #EinzTeilProd.EinzTeilID;
+
 MERGE INTO @OPStats AS OPStats
 USING (
-  SELECT OPTeil.ArtikelID, s.OPStandortID AS StandortID, COUNT(DISTINCT OPTeil.ID) AS NeuMenge
-  FROM (
-    SELECT OPTeile.ID, OPTeile.ArtikelID, OPTeile.LastActionsID, OPTeile.LastScanTime, MAX(OPScans.ID) AS LastOPScanID
-    FROM OPTeile
-    JOIN OPScans ON OPScans.OPTeileID = OPTeile.ID
-    WHERE ISNULL(OPTeile.LastScanTime, N'1980-01-01 00:00:00') > DATEADD(year, -1, GETDATE())
-      AND OPTeile.LastActionsID NOT IN (102, 107, 108)  -- OP Auslesen, OP Lager, OP Schrott
-    GROUP BY OPTeile.ID, OPTeile.ArtikelID, OPTeile.LastActionsID, OPTeile.LastScanTime
-  ) AS OPTeil
-  JOIN OPScans ON OPTeil.LastOPScanID = OPScans.ID
-  JOIN ArbPlatz ON OPScans.ArbPlatzID = ArbPlatz.ID
+  SELECT EinzTeilProd.ArtikelID, s.OPStandortID AS StandortID, COUNT(DISTINCT EinzTeilProd.EinzTeilID) AS NeuMenge
+  FROM #EinzTeilProd AS EinzTeilProd
+  JOIN Scans ON EinzTeilProd.LastScanID = Scans.ID
+  JOIN ArbPlatz ON Scans.ArbPlatzID = ArbPlatz.ID
   JOIN @Standort s ON ArbPlatz.StandortID = s.StandortID
-  GROUP BY OPTeil.ArtikelID, s.OPStandortID
+  GROUP BY EinzTeilProd.ArtikelID, s.OPStandortID
 ) AS OPInProd (ArtikelID, StandortID, InProdMenge)
 ON OPStats.ArtikelID = OPInProd.ArtikelID AND OPStats.StandortID = OPInProd.StandortID
 WHEN MATCHED THEN
