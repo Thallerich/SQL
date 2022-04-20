@@ -1,8 +1,10 @@
-WITH Scan AS (
-  SELECT Scans.TeileID, Scans.AnlageUserID_
+WITH AustauschScan AS (
+  SELECT Scans.TeileID, MAX(Scans.ID) AS ScanID
   FROM Scans
   WHERE Scans.ActionsID = 4
-  ),
+    AND Scans.TeileID > 0
+  GROUP BY Scans.TeileID
+),
 Teilestatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
@@ -16,8 +18,9 @@ JOIN Artikel ON Teile.ArtikelID = Artikel.ID
 JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
 JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
 JOIN WegGrund ON Teile.WegGrundID = WegGrund.ID
-LEFT JOIN Scan ON Scan.TeileID = Teile.ID
-JOIN Mitarbei ON Scan.AnlageUserID_ = Mitarbei.ID
+LEFT JOIN AustauschScan ON AustauschScan.TeileID = Teile.ID
+LEFT JOIN Scans ON AustauschScan.ScanID = Scans.ID
+LEFT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
 JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
 WHERE Teile.AltenheimModus = 0
   AND Kunden.ID = $ID$
@@ -34,8 +37,9 @@ JOIN Artikel ON Teile.ArtikelID = Artikel.ID
 JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
 JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
 JOIN WegGrund ON Teile.WegGrundID = WegGrund.ID
-LEFT JOIN Scan ON Scan.TeileID = Teile.ID
-JOIN Mitarbei ON Scan.AnlageUserID_ = Mitarbei.ID
+LEFT JOIN AustauschScan ON AustauschScan.TeileID = Teile.ID
+LEFT JOIN Scans ON AustauschScan.ScanID = Scans.ID
+LEFT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
 JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
 WHERE Teile.AltenheimModus = 0
   AND Teile.AusdienstGrund IN ('A', 'a', 'B', 'b', 'C', 'c')
