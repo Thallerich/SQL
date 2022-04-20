@@ -15,5 +15,6 @@ UNION ALL
 
 SELECT N'Z_UHF Einlesen' AS Sortieranlage, COUNT(SdcPools.ID) AS [Queue-Länge]
 FROM SdcPools
+WHERE SdcPools.Processed = 0
 
 ORDER BY Sortieranlage ASC;
