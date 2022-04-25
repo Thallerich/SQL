@@ -32,7 +32,7 @@ WHERE LsKo.Datum BETWEEN @from AND @to
   AND Me.IsoCode = N'ST'
 GROUP BY YEAR(LsKo.Datum), KdGf.KurzBez, Standort.Bez, Artikel.ID;
 
-SELECT ReklQuot.Jahr, ReklQuot.Geschäftsbereich, ReklQuot.Produktion, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ReklQuot.Liefermenge, ReklQuot.Reklamationsmenge, Reklamationsquote = CAST(ROUND(CAST(ReklQuot.Reklamationsmenge AS decimal(15, 3)) / CAST(IIF(ReklQuot.Liefermenge = 0, 1, ReklQuot.Liefermenge) AS decimal(15, 3)) * 100, 4) AS decimal(7, 4))
+SELECT ReklQuot.Jahr, ReklQuot.Geschäftsbereich, ReklQuot.Produktion, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ReklQuot.Liefermenge, ReklQuot.Reklamationsmenge, Reklamationsquote = CAST(ROUND(CAST(ReklQuot.Reklamationsmenge AS float) / CAST(IIF(ReklQuot.Liefermenge = 0, 1, ReklQuot.Liefermenge) AS float) * 100, 4) AS float)
 FROM #ReklQuot AS ReklQuot
 JOIN Artikel ON ReklQuot.ArtikelID = Artikel.ID
 ORDER BY Produktion, Geschäftsbereich, Jahr;
