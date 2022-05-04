@@ -22,9 +22,10 @@ UHFVSA AS (
   JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
   WHERE (VsaBer.AnfAusEpo > 1 OR (VsaBer.AnfAusEpo = -1 AND KdBer.AnfAusEpo > 1))
 )
-SELECT KdGf.KurzBez AS Geschäftsbereich, ABC.ABCBez$LAN$ AS [ABC-Klasse], Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], CAST(IIF(WebVsa.VsaID IS NULL, 0, 1) AS bit) AS [Hat Webportal?], CAST(IIF(UHFVSA.VsaID IS NULL, 0, 1) AS bit) AS [UHF-Prozess?]
+SELECT KdGf.KurzBez AS Geschäftsbereich, ABC.ABCBez$LAN$ AS [ABC-Klasse], Holding.Holding, Standort.SuchCode AS Haupstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], CAST(IIF(WebVsa.VsaID IS NULL, 0, 1) AS bit) AS [Hat Webportal?], CAST(IIF(UHFVSA.VsaID IS NULL, 0, 1) AS bit) AS [UHF-Prozess?]
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Firma ON Kunden.FirmaID = Firma.ID
 JOIN ABC ON Kunden.ABCID = ABC.ID
