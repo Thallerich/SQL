@@ -5,7 +5,7 @@ WITH KdArtiStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'KDARTI'
 )
-SELECT IIF(Firma.SuchCode = N'91', N'GASSER', Firma.SuchCode) AS Firma, KdGf.KurzBez AS Geschäftsbereich, [Zone].[ZonenCode] AS Vertriebszone, Kunden.KdNr, Kunden.SuchCode AS Kunde, Bereich.BereichBez AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArtiStatus.StatusBez AS [Status Kundenartikel]
+SELECT IIF(Firma.SuchCode = N'91', N'GASSER', Firma.SuchCode) AS Firma, KdGf.KurzBez AS Geschäftsbereich, [Zone].[ZonenCode] AS Vertriebszone, Kunden.KdNr, Kunden.SuchCode AS Kunde, Bereich.BereichBez AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArtiStatus.StatusBez AS [Status Kundenartikel], KdArti.Umlauf, KdArti.AbrechMenge AS [Verrechnungsmenge]
 FROM KdArti
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Bereich ON Artikel.BereichID = Bereich.ID
@@ -19,6 +19,8 @@ WHERE Artikel.ArtikelBez LIKE N'*%'
   AND Kunden.AdrArtID = 1
   AND Kunden.[Status] = N'A'
   AND Bereich.Traeger = 1
+  AND Firma.SuchCode = N'FA14'
+  AND Artikel.ArtikelNr != N'HKUND'
   AND (
     KdArti.Status != N'I'
     OR EXISTS (
