@@ -9,4 +9,5 @@ WHERE LsPo.LsKoID = LsKo.ID
   AND LsKo.Datum BETWEEN $1$ AND $2$
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)
 GROUP BY Kunden.SuchCode, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, LsPo.EPreis
+HAVING SUM(LsPo.Menge) != 0
 ORDER BY VsaBezeichnung ASC, ArtikelNr ASC
