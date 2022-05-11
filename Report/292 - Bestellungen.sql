@@ -17,5 +17,7 @@ JOIN BKoArt ON BKo.BKoArtID = BKoArt.ID
 JOIN LiefAbKo ON BPo.LatestLiefABKoID = LiefAbKo.ID
 WHERE BKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND LagerArt.SichtbarID IN ($SICHTBARIDS$)
+  AND Lagerstandort.ID IN ($2$)
+  AND Bestellstatus.ID IN ($3$)
 GROUP BY BKo.Datum, BKo.BestNr, Bestellstatus.StatusBez, BKoArt.BKoArtBez$LAN$, Lief.LiefNr, Lief.Name1, Lagerstandort.Bez, LagerArt.LagerartBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, ArtGroe.Groesse, Bereich.BereichBez$LAN$, LiefAbKo.ABNr, LiefAbKo.Datum, BPo.Einzelpreis, BKo.MemoIntern
 ORDER BY BKo.Datum, Lieferant, ArtikelNr, Größe;
