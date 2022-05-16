@@ -1,22 +1,43 @@
-drop table #lieflsko_erstellen;
-select distinct bko.bestnr, BKo.LiefID, BKo.ID BKoID, BPo.ID BPoID, -1 LiefLsKoID
-into #lieflsko_erstellen
-from bko, bpo, auftrag, entnko
-where bko.intauftragid = auftrag.id
-and auftrag.id = entnko.auftragid
-and bpo.bkoid = bko.id
-and entnko.id = 2922624 
-and bpo.id > -1;
+DECLARE @Entnahmeliste int = 2943566;
 
-insert into LiefLsKo (Status, LiefID, LsNr, Datum, SentToSap)
-select distinct 'G', LiefID, 'INTERN_' + rtrim(cast(bestnr as nvarchar(20))), '2022-04-24', 1
-from #lieflsko_erstellen
-where not exists (select id from lieflsko where lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr as nvarchar(20))));
+DECLARE @LiefLs TABLE (
+  BestNr bigint,
+  LiefID int,
+  BKoID int,
+  BPoID int,
+  LiefLsKoID int
+);
 
-update #lieflsko_erstellen set lieflskoid = lieflsko.id
-from Lieflsko
-where lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr as nvarchar(20)));
+INSERT INTO @LiefLs (BestNr, LiefID, BKoID, BPoID, LiefLsKoID)
+SELECT DISTINCT BKo.BestNr, BKo.LiefID, BKo.ID AS BKoID, BPo.ID AS BPoID, -1 AS LiefLsKoID
+FROM BPo
+JOIN BKo ON BPo.BKoID = BKo.ID
+JOIN Auftrag ON BKo.IntAuftragID = Auftrag.ID
+JOIN EntnKo ON EntnKo.AuftragID = Auftrag.ID
+WHERE EntnKo.ID = @Entnahmeliste
+  AND BPo.ID > 0;
 
-insert into lieflspo (LiefLsKoID, BPoID, Menge, Ursprungsmenge, LiefInfo)
-select distinct LiefLsKoID, BPoID, 0, 0, 'ABS Dummy'
-from #lieflsko_erstellen
+DECLARE @LiefLsKo TABLE (
+  LiefLsKoID int PRIMARY KEY
+);
+
+INSERT INTO LiefLsKo ([Status], LiefID, LsNr, Datum, SentToSap)
+OUTPUT inserted.ID
+INTO @LiefLsKo (LiefLsKoID)
+SELECT DISTINCT 'G', LiefID, 'INTERN_' + rtrim(cast(bestnr AS NVARCHAR(20))), CAST(GETDATE() AS date), 0
+FROM #lieflsko_erstellen
+WHERE NOT EXISTS (
+  SELECT id
+  FROM lieflsko
+  WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr AS NVARCHAR(20)))
+);
+
+UPDATE #lieflsko_erstellen
+SET lieflskoid = lieflsko.id
+FROM Lieflsko
+WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr AS NVARCHAR(20)))
+  AND LieflsKo.ID IN (SELECT LiefLsKoID FROM @LiefLsKo);
+
+INSERT INTO lieflspo (LiefLsKoID, BPoID, Menge, Ursprungsmenge, LiefInfo)
+SELECT DISTINCT LiefLsKoID, BPoID, 0, 0, 'ABS Dummy'
+FROM #lieflsko_erstellen;
