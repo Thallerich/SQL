@@ -24,15 +24,16 @@ Kundenstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'KUNDEN'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS [Status], KdGf.KurzBez AS Geschäftsbereich, Schwund.SchwundNetto, Umsatz.UmsatzNetto
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS [Status], KdGf.KurzBez AS Geschäftsbereich, [Zone].ZonenCode AS Vertriebszone, Schwund.SchwundNetto, Umsatz.UmsatzNetto
 FROM Kunden
 LEFT JOIN Schwund ON Schwund.KundenID = Kunden.ID
 LEFT JOIN Umsatz ON Umsatz.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Kundenstatus ON Kunden.[Status] = Kundenstatus.[Status]
+JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 WHERE Kunden.FirmaID = @FirmaID
   AND Kunden.AdrArtID = 1
-  AND Kunden.ID IN ($3$)
+  AND Kunden.ID IN ($4$)
   AND EXISTS (
     SELECT RechKo.ID
     FROM RechKo
