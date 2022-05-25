@@ -27,8 +27,9 @@ JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 WHERE LsKo.Datum BETWEEN @from AND @to
-  AND Standort.ID IN ($2$)
   AND KdGf.ID IN ($1$)
+  AND Kunden.HoldingID IN ($2$)
+  AND Standort.ID IN ($3$)
   AND Me.IsoCode = N'ST'
   AND Artikel.ArtiTypeID = 1
 GROUP BY YEAR(LsKo.Datum), KdGf.KurzBez, Standort.Bez, Artikel.ID;
