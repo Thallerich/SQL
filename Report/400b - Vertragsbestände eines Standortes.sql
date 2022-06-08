@@ -3,13 +3,14 @@ WITH VsaAnfStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'VSAANF')
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, KdGf.KurzBez AS Geschäftsbereich, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Bereich.Bereich AS Kundenbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, VsaAnfStatus.StatusBez AS [Status anforderbarer Artikel], VsaAnf.Bestand AS Vertragsbestand, VsaAnf.BestandIst AS [Ist-Bestand]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, KdGf.KurzBez AS Geschäftsbereich, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Bereich.Bereich AS Kundenbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, ArtGroe.Groesse, VsaAnfStatus.StatusBez AS [Status anforderbarer Artikel], VsaAnf.Bestand AS Vertragsbestand, VsaAnf.BestandIst AS [Ist-Bestand]
 FROM VsaAnf
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID 
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN ArtGroe ON VsaAnf.ArtGroeID = ArtGroe.ID
