@@ -1,3 +1,7 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ VSA-Ebene                                                                                                                 ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 WITH WebVSA AS (
   SELECT Vsa.ID AS VsaID
   FROM Vsa
@@ -38,3 +42,34 @@ WHERE Firma.ID IN ($1$)
   AND Kunden.[Status] = N'A'
   AND Vsa.[Status] = N'A'
 ORDER BY KdNr, [VSA-Nr];
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Kunden-Ebene                                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+WITH WebKunde AS (
+  SELECT WebUser.KundenID, COUNT(WebUser.ID) AS AnzUser
+  FROM WebUser
+  WHERE WebUser.Status = N'A'
+  GROUP BY WebUser.KundenID
+),
+UHFKunde AS (
+  SELECT DISTINCT KdBer.KundenID
+  FROM VsaBer
+  JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
+  WHERE (VsaBer.AnfAusEpo > 1 OR (VsaBer.AnfAusEpo = -1 AND KdBer.AnfAusEpo > 1))
+)
+SELECT KdGf.KurzBez AS Geschäftsbereich, ABC.ABCBez$LAN$ AS [ABC-Klasse], Holding.Holding, Standort.SuchCode AS Haupstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, CAST(IIF(WebKunde.KundenID IS NULL, 0, 1) AS bit) AS [Hat Webportal?], WebKunde.AnzUser AS [Anzahl Webportal-Benutzer], CAST(IIF(UHFKunde.KundenID IS NULL, 0, 1) AS bit) AS [UHF-Prozess?]
+FROM Kunden
+JOIN Standort ON Kunden.StandortID = Standort.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Firma ON Kunden.FirmaID = Firma.ID
+JOIN ABC ON Kunden.ABCID = ABC.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
+LEFT JOIN WebKunde ON WebKunde.KundenID = Kunden.ID
+LEFT JOIN UHFKunde ON UHFKunde.KundenID = Kunden.ID
+WHERE Firma.ID IN ($1$)
+  AND KdGf.ID IN ($2$)
+  AND Kunden.AdrArtID = 1
+  AND Kunden.[Status] = N'A'
+ORDER BY KdNr;
