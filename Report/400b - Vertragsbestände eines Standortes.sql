@@ -3,7 +3,7 @@ WITH VsaAnfStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'VSAANF')
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, KdGf.KurzBez AS Geschäftsbereich, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Bereich.Bereich AS Kundenbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, ArtGroe.Groesse, VsaAnfStatus.StatusBez AS [Status anforderbarer Artikel], VsaAnf.Bestand AS Vertragsbestand, VsaAnf.BestandIst AS [Ist-Bestand]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, KdGf.KurzBez AS Geschäftsbereich, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Bereich.Bereich AS Kundenbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, ArtGroe.Groesse, VsaAnfStatus.StatusBez AS [Status anforderbarer Artikel], VsaAnf.Bestand AS Vertragsbestand, VsaAnf.BestandIst AS [Ist-Bestand], StandKon.StandKonBez$LAN$ AS Standortkonfiguration, Produktion.SuchCode AS Produktion
 FROM VsaAnf
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -15,6 +15,9 @@ JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN ArtGroe ON VsaAnf.ArtGroeID = ArtGroe.ID
 JOIN VsaAnfStatus ON VsaAnf.Status = VsaAnfStatus.Status
+JOIN StandKon ON Vsa.StandKonID = StandKon.ID
+JOIN StandBer ON StandBer.StandKonID = StandKon.ID AND StandBer.BereichID = Artikel.BereichID
+JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 WHERE (($2$ = 1 AND VsaAnf.Bestand != 0) OR ($2$ = 0))
   AND VsaAnf.Status != N'I'
   AND Vsa.Status = N'A'
