@@ -3,8 +3,8 @@ DECLARE @ErrorMessages TABLE (
 );
 
 DECLARE @KundenID int = $ID$;
-DECLARE @von datetime = $1$;
-DECLARE @bis datetime = $2$;
+DECLARE @von datetime = $STARTDATE$;
+DECLARE @bis datetime = $ENDDATE$;
 DECLARE @RwConfigID int = (SELECT RwPoolTeileConfigID FROM Kunden WHERE ID = @KundenID);
 DECLARE @RwArt int = 1;
 DECLARE @RwBerechnungsVar int = (SELECT RwBerechnungsVar FROM RwConfig WHERE ID = @RwConfigID);
@@ -25,11 +25,11 @@ IF @RwBerechnungsVar = 2 BEGIN
   SET @ArtiMaxWaschNull = (
     SELECT COUNT(Artikel.ID)
     FROM Artikel
-    JOIN OPTeile ON OPTeile.ArtikelID = Artikel.ID
-    JOIN Vsa ON OPTeile.VsaID = Vsa.ID
+    JOIN EinzTeil ON EinzTeil.ArtikelID = Artikel.ID
+    JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
     WHERE Vsa.KundenID = @KundenID
-      AND OPTeile.Status IN (N'Q', N'W')
-      AND OPTeile.RechPoID < 0
+      AND EinzTeil.Status IN (N'Q', N'W')
+      AND EinzTeil.RechPoID < 0
       AND Artikel.MaxWaschen = 0
   );
 
@@ -42,11 +42,11 @@ IF @RwBerechnungsVar = 2 BEGIN
     FROM (
       SELECT DISTINCT Artikel.ArtikelNr, Artikel.ArtikelBez
       FROM Artikel
-      JOIN OPTeile ON OPTeile.ArtikelID = Artikel.ID
-      JOIN Vsa ON OPTeile.VsaID = Vsa.ID
+      JOIN EinzTeil ON EinzTeil.ArtikelID = Artikel.ID
+      JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
       WHERE Vsa.KundenID = @KundenID
-        AND OPTeile.Status IN (N'A', N'Q', N'W')
-        AND OPTeile.RechPoID < 0
+        AND EinzTeil.Status IN (N'A', N'Q', N'W')
+        AND EinzTeil.RechPoID < 0
         AND Artikel.MaxWaschen = 0
     ) x;
   END;
@@ -64,10 +64,10 @@ END ELSE BEGIN
   )
   SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, VsaStatus.StatusBez AS VsaStatus, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Bereich.BereichBez$LAN$ AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, 0 AS Vertragsbestand, 0 AS SchwundZeitraum, 0 AS SchwundAlt, 0 AS BereitsSchwundmarkiertZeitraum, 0 AS BereitsSchwundmarkiertAlt, 0 AS BereitsSchwundmarkiertNeu, 0 AS SchwundGesperrt, 0 AS Durchschnittsliefermenge, CAST(0 AS money) AS RestwertSchwundZeitraum, CAST(0 AS money) AS RestwertBereitsSchwund, Artikel.EKPreis, Vsa.ID AS VsaID, Artikel.ID AS ArtikelID, ArtGroe.ID AS ArtGroeID
   INTO #TmpSchwund
-  FROM OPTeile
-  JOIN Vsa ON OPTeile.VsaID = Vsa.ID
+  FROM EinzTeil
+  JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
-  JOIN ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
+  JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
   JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
   JOIN KdArti ON KdArti.ArtikelID = Artikel.ID AND KdArti.KundenID = Kunden.ID
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
@@ -88,79 +88,79 @@ END ELSE BEGIN
 
   UPDATE Schwund SET Schwund.SchwundZeitraum = x.Anzahl, Schwund.RestwertSchwundZeitraum = x.Restwert
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl, SUM(RestwertOP.RestwertInfo) AS Restwert
-    FROM OPTeile
-    CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Woche, @RwArt) AS RestwertOP
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.LastScanTime BETWEEN @von AND @bis
-      AND OPTeile.Status IN (N'A', N'Q')
-      AND OPTeile.LastActionsID = 102  -- Teile beim Kunden
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl, SUM(RestwertOP.RestwertInfo) AS Restwert
+    FROM EinzTeil
+    CROSS APPLY funcGetRestwertOP(EinzTeil.ID, @Woche, @RwArt) AS RestwertOP
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.LastScanTime BETWEEN @von AND @bis
+      AND EinzTeil.Status IN (N'A', N'Q')
+      AND EinzTeil.LastActionsID IN (102, 120, 136)  -- Teile beim Kunden
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
   UPDATE Schwund SET Schwund.SchwundAlt = x.Anzahl
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl
-    FROM OPTeile
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.LastScanTime < @von
-      AND OPTeile.Status IN (N'A', N'Q')
-      AND OPTeile.LastActionsID = 102  -- Teile beim Kunden
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl
+    FROM EinzTeil
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.LastScanTime < @von
+      AND EinzTeil.Status IN (N'A', N'Q')
+      AND EinzTeil.LastActionsID IN (102, 120, 136)  -- Teile beim Kunden
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
   UPDATE Schwund SET Schwund.BereitsSchwundmarkiertZeitraum = x.Anzahl, Schwund.RestwertBereitsSchwund = x.Restwert
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl, SUM(RestwertOP.RestwertInfo) AS Restwert
-    FROM OPTeile
-    CROSS APPLY funcGetRestwertOP(OPTeile.ID, @Woche, @RwArt) AS RestwertOP
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.Status = 'W'
-      AND OPTeile.RechPoID = -1
-      AND OPTeile.LastScanTime BETWEEN @von AND @bis
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl, SUM(RestwertOP.RestwertInfo) AS Restwert
+    FROM EinzTeil
+    CROSS APPLY funcGetRestwertOP(EinzTeil.ID, @Woche, @RwArt) AS RestwertOP
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.Status = N'W'
+      AND EinzTeil.RechPoID = -1
+      AND EinzTeil.LastScanTime BETWEEN @von AND @bis
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
   UPDATE Schwund SET Schwund.BereitsSchwundmarkiertAlt = x.Anzahl
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl
-    FROM OPTeile
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.Status = 'W'
-      AND OPTeile.RechPoID = -1
-      AND OPTeile.LastScanTime < @von
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl
+    FROM EinzTeil
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.Status = N'W'
+      AND EinzTeil.RechPoID = -1
+      AND EinzTeil.LastScanTime < @von
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
   UPDATE Schwund SET Schwund.BereitsSchwundmarkiertNeu = x.Anzahl
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl
-    FROM OPTeile
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.Status = 'W'
-      AND OPTeile.RechPoID = -1
-      AND OPTeile.LastScanTime > @bis
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl
+    FROM EinzTeil
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.Status = 'NW'
+      AND EinzTeil.RechPoID = -1
+      AND EinzTeil.LastScanTime > @bis
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
 
   UPDATE Schwund SET Schwund.SchwundGesperrt = x.Anzahl
   FROM #TmpSchwund AS Schwund, (
-    SELECT OPTeile.VsaID, OPTeile.ArtGroeID, COUNT(OPTeile.ID) AS Anzahl
-    FROM OPTeile
-    WHERE OPTeile.VsaID IN (SELECT VsaID FROM #TmpSchwund)
-      AND OPTeile.Status = 'W'
-      AND OPTeile.RechPoID = -2
-    GROUP BY OPTeile.VsaID, OPTeile.ArtGroeID
+    SELECT EinzTeil.VsaID, EinzTeil.ArtGroeID, COUNT(EinzTeil.ID) AS Anzahl
+    FROM EinzTeil
+    WHERE EinzTeil.VsaID IN (SELECT VsaID FROM #TmpSchwund)
+      AND EinzTeil.Status = N'W'
+      AND EinzTeil.RechPoID = -2
+    GROUP BY EinzTeil.VsaID, EinzTeil.ArtGroeID
   ) AS x
   WHERE x.VsaID = Schwund.VsaID
     AND x.ArtGroeID = Schwund.ArtGroeID;
