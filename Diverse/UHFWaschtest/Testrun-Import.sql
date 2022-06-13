@@ -46,14 +46,14 @@ GO
 /* ++ Insert test runs into table Testrun                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-INSERT INTO Testrun (EPC, [Timestamp], RSSI, [Power], RunNumber)
-SELECT UPPER(REPLACE(EPCValue, N'0x', N'')) AS EPC, GETDATE() AS [Timestamp], RSSI, CAST([Power] AS numeric(10, 2)) AS [Power], 3 AS RunNumber
+INSERT INTO Testrun (EPC, [Timestamp], RSSI, [Power], RunNumber, Waschzyklen)
+SELECT UPPER(REPLACE(EPCValue, N'0x', N'')) AS EPC, GETDATE() AS [Timestamp], RSSI, CAST([Power] AS numeric(10, 2)) AS [Power], 5 AS RunNumber, 20 AS Waschzyklen
 FROM _Run1;
 
 GO
 
-INSERT INTO Testrun (EPC, [Timestamp], RSSI, [Power], RunNumber)
-SELECT UPPER(REPLACE(EPCValue, N'0x', N'')) AS EPC, GETDATE() AS [Timestamp], RSSI, CAST([Power] AS numeric(10, 2)) AS [Power], 4 AS RunNumber
+INSERT INTO Testrun (EPC, [Timestamp], RSSI, [Power], RunNumber, Waschzyklen)
+SELECT UPPER(REPLACE(EPCValue, N'0x', N'')) AS EPC, GETDATE() AS [Timestamp], RSSI, CAST([Power] AS numeric(10, 2)) AS [Power], 6 AS RunNumber, 20 AS Waschzyklen
 FROM _Run2;
 
 GO
