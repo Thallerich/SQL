@@ -5,53 +5,53 @@ DECLARE @sqltext nvarchar(max);
 
 SET @sqltext = N'
 WITH LiefScan AS (
-  SELECT OPScans.OPTeileID, OPScans.LsPoID, OPScans.Zeitpunkt
-  FROM dbo.OPScans
+  SELECT Scans.EinzTeilID, Scans.LsPoID, Scans.Zeitpunkt
+  FROM Scans
   JOIN (
-    SELECT OPScans.OPTeileID, MAX(OPScans.ID) AS LiefScanID
-    FROM dbo.OPScans
-    WHERE OPScans.LsPoID > 0
-    GROUP BY OPScans.OPTeileID
-  ) AS LastLiefScan ON LastLiefScan.LiefScanID = OPScans.ID
+    SELECT Scans.EinzTeilID, MAX(Scans.ID) AS LiefScanID
+    FROM Scans
+    WHERE Scans.LsPoID > 0
+    GROUP BY Scans.EinzTeilID
+  ) AS LastLiefScan ON LastLiefScan.LiefScanID = Scans.ID
 ),
 EmpfangScan AS (
-  SELECT OPScans.OPTeileID, OPScans.Zeitpunkt
-  FROM dbo.OPScans
+  SELECT Scans.EinzTeilID, Scans.Zeitpunkt
+  FROM Scans
   JOIN (
-    SELECT OPScans.OPTeileID, MAX(OPScans.ID) AS EmpfangScanID
-    FROM dbo.OPScans
-    WHERE OPScans.ActionsID = 136
-    GROUP BY OPScans.OPTeileID
-  ) AS LastEmpfangScan ON LastEmpfangScan.EmpfangScanID = OPScans.ID
+    SELECT Scans.EinzTeilID, MAX(Scans.ID) AS EmpfangScanID
+    FROM Scans
+    WHERE Scans.ActionsID = 136
+    GROUP BY Scans.EinzTeilID
+  ) AS LastEmpfangScan ON LastEmpfangScan.EmpfangScanID = Scans.ID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, OPTeile.Code AS [EPC-Code], LsKo.Datum AS Lieferdatum, OPTeile.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, OPTeile.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen], EmpfangScan.Zeitpunkt AS [Zeitpunkt Empfang bei Kunde], OPTeile.LastScanTime AS [letzter Scan], DATEDIFF(day, OPTeile.LastScanTime, GETDATE()) AS [Tage seit letztem Scan]
-FROM dbo.OPTeile
-JOIN dbo.Vsa ON OPTeile.VsaID = Vsa.ID
-JOIN dbo.Kunden ON Vsa.KundenID = Kunden.ID
-JOIN dbo.Abteil ON Vsa.AbteilID = Abteil.ID
-JOIN dbo.ArtGroe ON OPTeile.ArtGroeID = ArtGroe.ID
-JOIN dbo.Artikel ON OPTeile.ArtikelID = Artikel.ID
-JOIN dbo.GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = GroePo.Groesse
-JOIN LiefScan ON LiefScan.OPTeileID = OPTeile.ID
-JOIN dbo.LsPo ON LiefScan.LsPoID = LsPo.ID
-JOIN dbo.LsKo ON LsPo.LsKoID = LsKo.ID
-LEFT JOIN EmpfangScan ON EmpfangScan.OPTeileID = OPTeile.ID AND EmpfangScan.Zeitpunkt > OPTeile.LastScanToKunde
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Groesse, EinzTeil.Code AS [EPC-Code], LsKo.Datum AS Lieferdatum, EinzTeil.LastScanToKunde AS [Zeitpunkt Auslesen], DATEDIFF(day, EinzTeil.LastScanToKunde, GETDATE()) AS [Tage seit Auslesen], EmpfangScan.Zeitpunkt AS [Zeitpunkt Empfang bei Kunde], EinzTeil.LastScanTime AS [letzter Scan], DATEDIFF(day, EinzTeil.LastScanTime, GETDATE()) AS [Tage seit letztem Scan]
+FROM EinzTeil
+JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Abteil ON Vsa.AbteilID = Abteil.ID
+JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
+JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
+JOIN GroePo ON Artikel.GroeKoID = GroePo.GroeKoID AND ArtGroe.Groesse = GroePo.Groesse
+JOIN LiefScan ON LiefScan.EinzTeilID = EinzTeil.ID
+JOIN LsPo ON LiefScan.LsPoID = LsPo.ID
+JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+LEFT JOIN EmpfangScan ON EmpfangScan.EinzTeilID = EinzTeil.ID AND EmpfangScan.Zeitpunkt > EinzTeil.LastScanToKunde
 WHERE Kunden.ID = @kundenid
-  AND Vsa.ID IN (  
+  AND EinzTeil.VsaID IN (  
     SELECT Vsa.ID
-    FROM dbo.Vsa
-    JOIN dbo.WebUser ON WebUser.KundenID = Vsa.KundenID
-    LEFT JOIN dbo.WebUVsa ON WebUVsa.WebUserID = WebUser.ID
+    FROM Vsa
+    JOIN WebUser ON WebUser.KundenID = Vsa.KundenID
+    LEFT JOIN WebUVsa ON WebUVsa.WebUserID = WebUser.ID
     WHERE WebUser.ID = @webuserid
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
   )
   AND Abteil.ID IN (  
     SELECT WebUAbt.AbteilID
-    FROM dbo.WebUAbt
+    FROM WebUAbt
     WHERE WebUAbt.WebUserID = @webuserid
   )
-  AND OPTeile.LastActionsID IN (2, 102, 120, 129, 130, 136)
-  AND OPTeile.Status = N''Q''
+  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136)
+  AND EinzTeil.Status = N''Q''
 ORDER BY KdNr, [VSA-Nr], Kostenstelle, ArtikelNr, GroePo.Folge;';
 
 EXEC sp_executesql @sqltext, N'@kundenid int, @webuserid int', @kundenid, @webuserid;
