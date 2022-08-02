@@ -15,10 +15,15 @@ WHERE Kunden.RWLaufID = -1
   AND Kunden.AdrArtID = 1
   AND Kunden.ID > 0;
 
+UPDATE r SET RwLaufID = RwLauf.ID
+FROM @RwLauf AS r
+JOIN RwLauf ON RwLauf.RWLaufBez = r.RwLaufBez;
+
 BEGIN TRANSACTION
   INSERT INTO RwLauf (RWLaufBez, RWLaufBez1, RWLaufBez2, RWLaufBez3, RWLaufBez4, RWLaufBez5, RWLaufBez6, RWLaufBez7, RWLaufBez8, RWLaufBez9, RWLaufBezA, AnlageUserID_, UserID_)
   SELECT RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, RwLaufBez, @UserID, @UserID
-  FROM @RwLauf;
+  FROM @RwLauf
+  WHERE RwLaufID IS NULL;
 
   UPDATE r SET RwLaufID = RwLauf.ID
   FROM @RwLauf AS r
