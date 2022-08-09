@@ -1,4 +1,4 @@
-DECLARE @Entnahmeliste int = 2943566;
+DECLARE @Entnahmeliste int = 3110574;
 
 DECLARE @LiefLs TABLE (
   BestNr bigint,
@@ -25,19 +25,19 @@ INSERT INTO LiefLsKo ([Status], LiefID, LsNr, Datum, SentToSap)
 OUTPUT inserted.ID
 INTO @LiefLsKo (LiefLsKoID)
 SELECT DISTINCT 'G', LiefID, 'INTERN_' + rtrim(cast(bestnr AS NVARCHAR(20))), CAST(GETDATE() AS date), 0
-FROM #lieflsko_erstellen
+FROM @LiefLs AS LiefLs
 WHERE NOT EXISTS (
   SELECT id
   FROM lieflsko
-  WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr AS NVARCHAR(20)))
+  WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(LiefLs.bestnr AS NVARCHAR(20)))
 );
 
-UPDATE #lieflsko_erstellen
+UPDATE @LiefLs
 SET lieflskoid = lieflsko.id
 FROM Lieflsko
-WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(#lieflsko_erstellen.bestnr AS NVARCHAR(20)))
+WHERE lieflsko.lsnr = 'INTERN_' + rtrim(cast(bestnr AS NVARCHAR(20)))
   AND LieflsKo.ID IN (SELECT LiefLsKoID FROM @LiefLsKo);
 
 INSERT INTO lieflspo (LiefLsKoID, BPoID, Menge, Ursprungsmenge, LiefInfo)
 SELECT DISTINCT LiefLsKoID, BPoID, 0, 0, 'ABS Dummy'
-FROM #lieflsko_erstellen;
+FROM @LiefLs;
