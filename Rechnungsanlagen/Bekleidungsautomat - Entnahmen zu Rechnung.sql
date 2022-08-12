@@ -13,5 +13,5 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Traeger AS EntnahmeTraeger ON Scans.LastPoolTraegerID = EntnahmeTraeger.ID
 JOIN Abteil ON EntnahmeTraeger.AbteilID = Abteil.ID
 WHERE RechPo.RechKoID = $RECHKOID$
-  AND Traeger.RentoArtID IN (SELECT RentoArt.ID FROM RentoArt WHERE RentoArt.Code IN (N'S', N'T'))
+  /* AND Traeger.RentoArtID IN (SELECT RentoArt.ID FROM RentoArt WHERE RentoArt.Code IN (N'S', N'T')) */ /* 2022-08-12 - Eigentlich falsch, einfach alles nehmen was aus Entnahmen auch auf die Rechnung lief, egal wo das Teil angelegt ist */
   AND Scans.ActionsID = 65;
