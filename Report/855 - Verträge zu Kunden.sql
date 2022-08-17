@@ -8,6 +8,7 @@ JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN Firma ON Kunden.FirmaID = Firma.ID
 JOIN Bereich ON Vertrag.BereichID = Bereich.ID
 WHERE Vertrag.[Status] = N'A'
+  AND Kunden.Status = N'A'
   AND Firma.ID IN ($1$)
   AND KdGf.ID IN ($2$)
   AND [Zone].ID IN ($3$)
