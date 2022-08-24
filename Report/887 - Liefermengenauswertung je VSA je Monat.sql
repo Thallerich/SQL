@@ -42,13 +42,39 @@ WITH LiefermengeMonatlich AS (
   SELECT FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+  JOIN Vsa ON LsKo.VsaID = Vsa.ID
   WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
     AND LsKo.Status >= N'Q'
+    AND Vsa.KundenID = $ID$
+    AND LsPo.Menge != 0
+    AND NOT EXISTS (
+      SELECT Scans.*
+      FROM Scans
+      WHERE Scans.LsPoID = LsPo.ID
+    )
   GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID
+
+  UNION ALL
+
+  SELECT FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, Teile.ArtGroeID, COUNT(Scans.ID) AS Liefermenge
+  FROM LsPo
+  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+  JOIN Vsa ON LsKo.VsaID = Vsa.ID
+  JOIN Scans ON Scans.LsPoID = LsPo.ID
+  JOIN Teile ON Scans.TeileID = Teile.ID
+  WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
+    AND LsKo.Status >= N'Q'
+    AND Vsa.KundenID = $ID$
+    AND LsPo.Menge != 0
+  GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, Teile.ArtGroeID
 )
 SELECT ProdBetrieb.SuchCode AS [produzierender Betrieb], IntProdBetrieb.SuchCode AS [intern produzierender Betrieb], Holding.Holding AS Kette, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Artikel.StueckGewicht AS Stückgewicht, LiefArt.LiefArt AS Auslieferart, LiefermengeMonatlich.Monat, LiefermengeMonatlich.Liefermenge
 INTO #LiefermengeVSA
-FROM LiefermengeMonatlich
+FROM (
+  SELECT Monat, VsaID, KdArtiID, AbteilID, ArtGroeID, SUM(Liefermenge) AS Liefermenge
+  FROM LiefermengeMonatlich
+  GROUP BY Monat, VsaID, KdArtiID, AbteilID, ArtGroeID
+) AS LiefermengeMonatlich
 JOIN Vsa ON LiefermengeMonatlich.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
