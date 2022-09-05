@@ -48,3 +48,22 @@ BEGIN
 END;
 
 GO
+
+USE dbSystem;
+GO
+
+UPDATE TabField SET [Name] = N'FahrtID'
+FROM TabName 
+WHERE TabField.TabNameID = TabName.ID
+  AND TabName.TabName = N'SCANS'
+  AND TabField.[Name] = N'AltOpScansID';
+
+GO
+
+UPDATE TabIndex SET [TagName] = N'FahrtID', [Expression] = N'FahrtID'
+FROM TabName
+WHERE TabIndex.TabNameID = TabName.ID
+  AND TabName.TabName = N'SCANS'
+  AND TabIndex.TagName = N'AltOpScansID';
+
+GO
