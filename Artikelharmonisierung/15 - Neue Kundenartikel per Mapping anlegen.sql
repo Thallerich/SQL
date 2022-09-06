@@ -1,3 +1,22 @@
+/*
+BEGIN TRANSACTION;
+  
+  ALTER TABLE __ArtikelMapping
+    ALTER COLUMN ArtikelNrAlt nchar(15) COLLATE Latin1_General_CS_AS;
+  
+  ALTER TABLE __ArtikelMapping
+    ALTER COLUMN ArtikelNrNeu nchar(15) COLLATE Latin1_General_CS_AS;
+
+  ALTER TABLE __ArtikelMapping
+    ADD ArtikelIDAlt int, ArtikelIDNeu int;
+
+COMMIT;
+
+UPDATE __ArtikelMapping SET ArtikelIDAlt = -1, ArtikelIDNeu = -1;
+
+GO
+*/
+
 DECLARE @NewKdArti TABLE (
   KdArtiID int,
   ArtikelID int,
@@ -23,9 +42,9 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, AltArtikel.ID AS AltArtikelID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
   )
   INSERT INTO KdArti ([Status], KundenID, ArtikelID, KdBerID, Variante, VariantBez, Referenz, LeasPreis, WaschPreis, SonderPreis, Lagerverkauf, VkPreis, Bestellerfassung, LiefArtID, WaschPrgID, AfaWochen, MaxWaschen, MinEinwaschen, MinEinwaschenGebraucht, BasisRestwert, WaescherID, Lieferwochen, Anfordern, Vorlaeufig, Kaufpflicht, AnteilNS, AnteilEmbl, AnteilSchrank, AnteilZubehoer, AnteilFachsort, FolgeKdArtiID, Memo, BearbProzessID, LieferProzessID, KeineAnfPo, KostenlosRPo, BKojeVSAKunde, KontrolleXMal, MindLagerProz, KdArtikelNr, KdArtikelNr2, KdArtikelBez, WebArtikel, FakRepModus, KaufwareModus, FixAusschluss, KundQualID, FreqID, LSAusblenden, ESDGrenzeNachmessung, ESDGrenzeAustausch, BDE, EigentumID, ErsatzFuerKdArtiID, IstBestandAnpass, Vertragsartikel, VerwendID, SofaKdBeachten, CheckPackmenge, AfAundBasisRWausPrList, AusblendenVsaAnfAusgang, AusblendenVsaAnfEingang, ArtiZwingendBarcodiert, ArtiOptionalBarcodiert, AnfErfNurAusgang, AbwLeasPrNachWo, LeasPreisAbwAbWo, UsesBkOpTeile, AnlageUserID_, UserID_)
   OUTPUT inserted.ID, inserted.ArtikelID, inserted.KundenID, inserted.Variante, inserted.WaschPreis, inserted.LeasPreis, inserted.SonderPreis, inserted.VkPreis, inserted.BasisRestwert, inserted.AfaWochen, inserted.LeasPreisAbwAbWo
@@ -49,9 +68,9 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, AltArtikel.ID AS AltArtikelID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
   )
   INSERT INTO KdArAppl (KdArtiID, ArtiTypeID, ApplKdArtiID, PlatzID, NutzeZeile1, NutzeZeile2, NutzeZeile3, NutzeZeile4, AutoModus, AnlageUserID_, UserID_)
   SELECT NeuKdArti.ID AS KdArtiID, KdArAppl.ArtiTypeID, KdArAppl.ApplKdArtiID, KdArAppl.PlatzID, KdArAppl.NutzeZeile1, KdArAppl.NutzeZeile2, KdArAppl.NutzeZeile3, KdArAppl.NutzeZeile4, KdArAppl.AutoModus, @UserID AS AnlageUserID_, @UserID AS UserID_
@@ -75,10 +94,10 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
     JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, MengeAufkauf, RueckgabeMenge, KaufwareModus, SchleichReduz, MengeOpTeile, MengeKredit, AnlageUserID_, UserID_)
@@ -103,10 +122,10 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
     JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   UPDATE Teile SET TraeArtiID = NeuTraeArti.ID, KdArtiID = NeuTraeArti.KdArtiID, ArtikelID = NewKdArti.ArtikelID, ArtGroeID = NeuTraeArti.ArtGroeID
@@ -125,10 +144,10 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
     JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   INSERT INTO TraeAppl (TraeArtiID, ApplKdArtiID, ArtiTypeID, Mass, PlatzID, KdArApplID, AnlageUserID_, UserID_)
@@ -167,10 +186,10 @@ BEGIN TRANSACTION;
 
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
     JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   UPDATE Prod SET TraeArtiID = NeuTraeArti.ID, KdArtiID = NeuTraeArti.KdArtiID, ArtikelID = NewKdArti.ArtikelID, ArtGroeID = NeuTraeArti.ArtGroeID
@@ -187,10 +206,10 @@ BEGIN TRANSACTION;
   
   WITH ArtiMap AS (
     SELECT NeuArtikel.ID AS NeuArtikelID, NeuArtGroe.ID AS NeuArtGroeID, AltArtikel.ID AS AltArtikelID, AltArtGroe.ID AS AltArtGroeID
-    FROM __ArtiMapKentaur20220309
-    JOIN Artikel AS NeuArtikel ON __ArtiMapKentaur20220309.ArtikelNrNeu = NeuArtikel.ArtikelNr
+    FROM __ArtikelMapping
+    JOIN Artikel AS NeuArtikel ON __ArtikelMapping.ArtikelNrNeu = NeuArtikel.ArtikelNr
     JOIN ArtGroe AS NeuArtGroe ON NeuArtikel.ID = NeuArtGroe.ArtikelID
-    JOIN Artikel AS AltArtikel ON __ArtiMapKentaur20220309.ArtikelNrAlt = AltArtikel.ArtikelNr
+    JOIN Artikel AS AltArtikel ON __ArtikelMapping.ArtikelNrAlt = AltArtikel.ArtikelNr
     JOIN ArtGroe AS AltArtGroe ON AltArtikel.ID = AltArtGroe.ArtikelID AND NeuArtGroe.Groesse = AltArtGroe.Groesse
   )
   UPDATE KdAusArt SET KdArtiID = NewKdArti.KdArtiID
