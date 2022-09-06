@@ -56,10 +56,10 @@ from Bestand
 where Bestand.ArtGroeID = _TeileLag_ArtikelundGroesse_aendern.ArtGroeID
 and Bestand.LagerArtID = _TeileLag_ArtikelundGroesse_aendern.LagerArtID;
 
-if Object_ID('Error_0001_fehlende_Groesse_bei_neuem_Artikel') is not null
-  drop table Error_0001_fehlende_Groesse_bei_neuem_Artikel;
+if Object_ID('_Error_0001_fehlende_Groesse_bei_neuem_Artikel') is not null
+  drop table _Error_0001_fehlende_Groesse_bei_neuem_Artikel;
 
-select Barcode, Groesse 
+select Barcode, ArtikelNrAlt, Groesse AS GroesseAlt, ArtikelNrNeu
 into _Error_0001_fehlende_Groesse_bei_neuem_Artikel
 from _TeileLag_ArtikelundGroesse_aendern where ArtGroeIDNeu = -1;
 
