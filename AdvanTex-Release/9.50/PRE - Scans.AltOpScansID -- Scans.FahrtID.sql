@@ -67,3 +67,32 @@ WHERE TabIndex.TabNameID = TabName.ID
   AND TabIndex.TagName = N'AltOpScansID';
 
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ FahrtID NOT NULL und DEFAULT -1                                                                                           ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+USE Salesianer;
+GO
+
+DROP INDEX SCANS.FahrtID;
+GO
+ALTER TABLE SCANS ADD CONSTRAINT SCANS_FahrtIDDefault DEFAULT -1 FOR FahrtID;
+GO
+UPDATE SCANS SET FahrtID = -1 WHERE FahrtID IS NULL;
+GO
+ALTER TABLE SCANS ALTER COLUMN FahrtID int NOT NULL WITH (ONLINE = ON);
+GO
+CREATE INDEX FahrtID ON SCANS (FahrtID) WITH (ONLINE = ON);
+GO
+
+USE dbSystem;
+GO
+
+UPDATE TabField SET Bez = N'frühere OpScansID', BezEN = N'previous OpScansID', NotNullDD = 1, RefTableName = N'FAHRT', RefFieldName = N'ID', RestrictDelete = 1, AllowMinus1 = 1, RefChkMode = 2, DefaultValue = N'-1', ToDoNr = N'129935', IgnoreRefCheckMsSQL = 1, User_ = N'TERBRACK', OldName = N'AltOpScansID'
+FROM TabName
+WHERE TabField.TabNameID = TabName.ID
+  AND TabName.TabName = N'SCANS'
+  AND TabField.Name = N'FahrtID';
+
+GO
