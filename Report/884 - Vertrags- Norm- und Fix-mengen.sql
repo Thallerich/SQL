@@ -12,16 +12,17 @@ DECLARE @LieferInfo TABLE (
   Freitag numeric(18,4),
   Samstag numeric(18,4),
   Sonntag numeric(18,4),
-  Vertragsbestand int
+  Vertragsbestand int,
+  Istbestand int
 );
 
-INSERT INTO @LieferInfo (VsaID, ArtGroeID, KdArtiID, KdBerID, AnfArt, NormMenge, Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag, Vertragsbestand)
-SELECT VsaAnf.VsaID, VsaAnf.ArtGroeID, VsaAnf.KdArtiID, KdArti.KdBerID, VsaAnf.Art AS AnfArt, VsaAnf.NormMenge, VsaAnf.Liefern1 AS Montag, VsaAnf.Liefern2 AS Dienstag, VsaAnf.Liefern3 AS Mittwoch, VsaAnf.Liefern4 AS Donnerstag, VsaAnf.Liefern5 AS Freitag, VsaAnf.Liefern6 AS Samstag, VsaAnf.Liefern7 AS Sonntag, VsaAnf.Bestand AS Vertragsbestand
+INSERT INTO @LieferInfo (VsaID, ArtGroeID, KdArtiID, KdBerID, AnfArt, NormMenge, Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag, Sonntag, Vertragsbestand, Istbestand)
+SELECT VsaAnf.VsaID, VsaAnf.ArtGroeID, VsaAnf.KdArtiID, KdArti.KdBerID, VsaAnf.Art AS AnfArt, VsaAnf.NormMenge, VsaAnf.Liefern1 AS Montag, VsaAnf.Liefern2 AS Dienstag, VsaAnf.Liefern3 AS Mittwoch, VsaAnf.Liefern4 AS Donnerstag, VsaAnf.Liefern5 AS Freitag, VsaAnf.Liefern6 AS Samstag, VsaAnf.Liefern7 AS Sonntag, VsaAnf.Bestand AS Vertragsbestand, VsaAnf.BestandIst AS Istbestandt
 FROM VsaAnf
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
-WHERE Kunden.ID = $ID$
+WHERE Kunden.ID IN ($1$)
   AND Vsa.Status = N'A'
   AND VsaAnf.Status < N'E';
 
@@ -78,7 +79,8 @@ SELECT Kunden.KdNr,
   LieferInfo.Freitag,
   LieferInfo.Samstag,
   LieferInfo.Sonntag,
-  LieferInfo.Vertragsbestand
+  LieferInfo.Vertragsbestand,
+  LieferInfo.Istbestand AS [Ist-Bestand]
 FROM @LieferInfo AS LieferInfo
 JOIN Vsa ON LieferInfo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
