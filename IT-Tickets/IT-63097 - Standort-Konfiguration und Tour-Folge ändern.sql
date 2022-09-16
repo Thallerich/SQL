@@ -51,7 +51,7 @@ WHERE BaseData.VsaTourID = VsaTour.ID;
 GO */
 
 WITH BaseData AS (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.Bez, StandKon.ID AS StandKonID, StandKon.StandKonBez, ServType.ID AS ServTypeID, ServType.ServTypeBez, LEFT(__IT63097StandKon_1.VsaName3 COLLATE Latin1_General_CS_AS + ISNULL(N' - ' + Vsa.Name3, N''), 40) AS Name3
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.Bez, StandKon.ID AS StandKonID, StandKon.StandKonBez, ServType.ID AS ServTypeID, ServType.ServTypeBez, LEFT(__IT63097StandKon_2.VsaName3 COLLATE Latin1_General_CS_AS + ISNULL(N' - ' + Vsa.Name3, N''), 40) AS Name3
   FROM Salesianer.dbo.__IT63097StandKon_2
   JOIN Kunden ON __IT63097StandKon_2.KdNr = Kunden.KdNr
   JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = __IT63097StandKon_2.VsaNr
