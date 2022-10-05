@@ -6,6 +6,7 @@ FROM KdArti
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE Kunden.FirmaID = $1$
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$)
   AND Kunden.Status = N'A'
   AND KdArti.Status = N'A'
   AND Artikel.ArtiTypeID = 1 /* Textiler Artikel */

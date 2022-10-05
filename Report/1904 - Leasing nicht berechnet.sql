@@ -16,6 +16,7 @@ JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN DrLauf ON Kunden.DrLaufID = DrLauf.ID
 JOIN BrLauf ON Kunden.BRLaufID = BrLauf.ID
 WHERE Firma.ID = $2$
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$)
   AND Week.VonDat >= $STARTDATE$
   AND Week.BisDat <= $ENDDATE$
   AND KdGf.ID IN ($3$)

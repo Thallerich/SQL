@@ -17,4 +17,5 @@ LEFT JOIN Liefermenge ON Liefermenge.KdArtiID = KdArti.ID
 WHERE (KdArti.Umlauf != 0 OR Liefermenge.Liefermenge IS NOT NULL)
   AND (($2$ = 1 AND (KdArti.AbrechMenge * KdArti.LeasPreis != 0 OR KdArti.WaschPreis * ISNULL(Liefermenge.Liefermenge, 0) != 0)) OR ($2$ = 0))
   AND KdArti.Status = N'I'
-  AND Kunden.FirmaID = $1$;
+  AND Kunden.FirmaID = $1$
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$);

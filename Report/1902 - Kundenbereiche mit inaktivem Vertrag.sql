@@ -7,4 +7,5 @@ WHERE Kunden.Status = N'A'
   AND Kunden.AdrArtID = 1
   AND KdBer.Status = N'A'
   AND ISNULL(Vertrag.Status, N'I') = N'I'
-  AND Kunden.FirmaID = $1$;
+  AND Kunden.FirmaID = $1$
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$);
