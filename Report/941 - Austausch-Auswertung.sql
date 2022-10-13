@@ -19,13 +19,22 @@ WegTeile AS (
   GROUP BY Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
 WegTeileSumme AS (
-  SELECT Teile.ArtikelID, Vsa.KundenID, COUNT(Teile.ID) AS Menge, SUM(Teile.AusdRestw) AS Restwert, SUM(IIF(Teile.RechPoID > 0, Teile.AusdRestw, 0)) AS RestwertFakt, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
-  FROM Teile
-  JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
-  WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
-    AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
-  GROUP BY Teile.ArtikelID, Vsa.KundenID, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
+  SELECT x.ArtikelID, x.KundenID, COUNT(x.TeileID) AS Menge, SUM(x.AusdRestw) AS Restwert, SUM(IIF(x.HasRech = 1, x.AusdRestw, 0)) AS RestwertFakt, FORMAT(x.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
+  FROM (
+    SELECT Teile.ArtikelID, Vsa.KundenID, Teile.ID AS TeileID, Teile.AusdRestw, Teile.AusdienstDat, HasRech = CAST(ISNULL((
+      SELECT 1
+      FROM TeilSoFa
+      WHERE TeilSoFa.TeileID = Teile.ID
+        AND TeilSoFa.SoFaArt = N'R'
+        AND TeilSoFa.RechPoID > 0
+    ), 0) AS bit)
+    FROM Teile
+    JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
+    JOIN Vsa ON Teile.VsaID = Vsa.ID
+    WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
+      AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
+  ) x
+  GROUP BY x.ArtikelID, x.KundenID, FORMAT(x.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
 TeileRep AS (
   SELECT Teile.ArtikelID, Vsa.KundenID, CAST(SUM(TeilSoFa.Menge) AS int) AS AnzReparatur, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT') AS Monat
