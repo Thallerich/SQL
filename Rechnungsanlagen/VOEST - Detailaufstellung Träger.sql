@@ -76,9 +76,10 @@ USING (
   SELECT Teile.ArtikelID, Teile.TraegerID, Teile.Barcode, Teile.IndienstDat AS Erstausgabedatum, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.ID AS AbteilID, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Traeger.Traeger AS TraegerNr, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS ArtikelBez, KdArti.VariantBez AS Variante, LsPo.EPreis, COUNT(Scans.ID) AS Waschzyklen, Teile.RuecklaufG
   FROM Scans
   JOIN LsPo ON Scans.LsPoID = LsPo.ID
+  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN Teile ON Scans.TeileID = Teile.ID
   JOIN Traeger ON Teile.TraegerID = Traeger.ID
-  JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Vsa ON LsKo.VsaID = Vsa.ID
   JOIN Kunden oN Vsa.KundenID = Kunden.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
   JOIN RechKo ON RechPo.RechKoID = RechKo.ID
