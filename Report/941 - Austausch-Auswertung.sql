@@ -14,7 +14,7 @@ WegTeile AS (
   FROM Teile
   JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
   JOIN Vsa ON Teile.VsaID = Vsa.ID
-  WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
+  WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
     AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
   GROUP BY Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
@@ -31,7 +31,7 @@ WegTeileSumme AS (
     FROM Teile
     JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
     JOIN Vsa ON Teile.VsaID = Vsa.ID
-    WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c')
+    WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
       AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
   ) x
   GROUP BY x.ArtikelID, x.KundenID, FORMAT(x.AusdienstDat, N'yyyy-MM', N'de-AT')
@@ -46,7 +46,7 @@ TeileRep AS (
     AND Artikel.ArtiTypeID = 5  --Reparatur-Artikel
   GROUP BY Teile.ArtikelID, Vsa.KundenID, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT')
 )
-SELECT [Monat], [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz], [AnzReparatur]
+SELECT [Monat], [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [SMRW] AS [Austausch Service mit RW-Berechnung], [SORW] AS [Austausch Service ohne RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz], [AnzReparatur]
 FROM (
   SELECT COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat) AS Monat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.SuchCode AS [Haupstandort Kunde], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArtiSum.Umlauf AS [Umlaufmenge aktuell], SUM(ISNULL(Liefermenge.Menge, 0)) AS [Liefermenge im Zeitraum], SUM(ISNULL(WegTeile.Menge, 0)) AS MengeWeg, GrundKurz = 
     CASE WegTeile.GrundKurz
@@ -56,6 +56,8 @@ FROM (
       WHEN N'b' THEN N'BORW'
       WHEN N'C' THEN N'CMRW'
       WHEN N'c' THEN N'CORW'
+      WHEN N'E' THEN N'SMRW'
+      WHEN N'e' THEN N'SORW'
     END, WegTeileSumme.Menge AS MengeGesamt, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt, WegTeileSumme.Restwert - WegTeileSumme.RestwertFakt AS Differenz, SUM(ISNULL(TeileRep.AnzReparatur, 0)) AS AnzReparatur
   FROM WegTeile
   JOIN (
@@ -84,6 +86,6 @@ FROM (
   GROUP BY COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat), Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
 ) AS AData
 PIVOT (
-  SUM(MengeWeg) FOR GrundKurz IN ([AORW], [AMRW], [BORW], [BMRW], [CORW], [CMRW], [-])
+  SUM(MengeWeg) FOR GrundKurz IN ([AORW], [AMRW], [BORW], [BMRW], [CORW], [CMRW], [SMRW], [SORW], [-])
 ) AS p
 ORDER BY Monat, KdNr, ArtikelNr;
