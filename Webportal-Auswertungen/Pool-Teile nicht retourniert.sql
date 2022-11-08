@@ -1,19 +1,20 @@
+-- {Liste #38}
 WITH LastScan AS (
-  SELECT Scans.TeileID, MAX(Scans.ID) AS ScanID
+  SELECT Scans.EinzHistID, MAX(Scans.ID) AS ScanID
   FROM Scans
   WHERE Scans.ActionsID = 135  -- Action Ausgabe an Pool-Träger
-  GROUP BY Scans.TeileID
+  GROUP BY Scans.EinzHistID
 )
-SELECT Teile.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, CAST(Scans.[DateTime] AS date) AS Ausgabedatum, Scans.Info AS [Träger laut Webportal]
-FROM Teile
-JOIN Artikel ON Teile.ArtikelID = Artikel.ID
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
-JOIN LastScan ON LastScan.TeileID = Teile.ID
+SELECT EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, CAST(Scans.[DateTime] AS date) AS Ausgabedatum, Scans.Info AS [Träger laut Webportal]
+FROM EinzHist
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+JOIN LastScan ON LastScan.EinzHistID = EinzHist.ID
 JOIN Scans ON LastScan.ScanID = Scans.ID
-JOIN Traeger ON Teile.TraegerID = Traeger.ID
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-WHERE Teile.LastActionsID = 135  -- Action Ausgabe an Pool-Träger
+WHERE EinzHist.LastActionsID = 135  -- Action Ausgabe an Pool-Träger
   AND Kunden.ID = $kundenID
   AND Vsa.ID IN (
     SELECT Vsa.ID
