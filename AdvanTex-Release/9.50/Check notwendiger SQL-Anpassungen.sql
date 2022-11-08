@@ -692,3 +692,86 @@ select @MySQL 'Kopieren und einzeln ausführen';
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+
+SELECT IIF(UPPER(KzDatenSql) LIKE '%TEILEID%' OR KzDatenSql LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], ChartKo.ID, ChartKo.RepNr, ChartKo.ChartKoBez, ChartLog.Zeit AS [letzter Aufruf]
+FROM CHARTKO
+JOIN ChartLog ON ChartLog.ChartKoID = ChartKo.ID
+JOIN (
+        SELECT ChartLog.ChartKoID, MAX(ChartLog.ID) AS MaxID
+        FROM ChartLog
+        GROUP BY ChartLog.ChartKoID
+) AS LastLog ON LastLog.MaxID = ChartLog.ID
+WHERE ChartKo.ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'CHARTKO')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(ChartSQL) LIKE '%TEILEID%' OR ChartSQL LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], ChartKo.ID, ChartKo.RepNr, ChartKo.ChartKoBez, ChartLog.Zeit AS [letzter Aufruf], ChartSQL.Bez AS PipelineBez
+FROM CHARTSQL
+JOIN CHARTKO ON ChartSql.ChartKoID = ChartKo.ID
+JOIN ChartLog ON ChartLog.ChartKoID = ChartKo.ID
+JOIN (
+        SELECT ChartLog.ChartKoID, MAX(ChartLog.ID) AS MaxID
+        FROM ChartLog
+        GROUP BY ChartLog.ChartKoID
+) AS LastLog ON LastLog.MaxID = ChartLog.ID
+WHERE ChartSQL.ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'CHARTSQL')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(LgAusStrSQL) LIKE '%TEILEID%' OR LgAusStrSQL LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM LGAUSSTR
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'LGAUSSTR')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(LsBCDetSQL) LIKE '%TEILEID%' OR LsBCDetSQL LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM LSBCDET
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'LSBCDET')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(BewPatchenSQL) LIKE '%TEILEID%' OR BewPatchenSQL LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM PATCHART
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'PATCHART')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(BkPatchenSQL) LIKE '%TEILEID%' OR BkPatchenSQL LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM PATCHART
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'PATCHART')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(SQLSkript) LIKE '%TEILEID%' OR SQLSkript LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM RKOANLAG
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'RKOANLAG')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(Template) LIKE '%TEILEID%' OR Template LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM RPTREPOR
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'RPTREPOR')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(ValueMemo) LIKE '%TEILEID%' OR ValueMemo LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM SETTINGS
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'SETTINGS')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(Skript) LIKE '%TEILEID%' OR Skript LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM SYSJOB
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'SYSJOB')
+ORDER BY 1 
+
+-------------------
+
+SELECT IIF(UPPER(SqlCode) LIKE '%TEILEID%' OR SqlCode LIKE '%TEILELAG%', '9.50', '9.60') [Korrektur Erforderlich Zu Version], * FROM WEBLISTS
+WHERE ID IN (SELECT TableID FROM #TeileSQLs WHERE TableName = 'WEBLISTS')
+ORDER BY 1 
+
+-------------------
+
