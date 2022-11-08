@@ -3,11 +3,11 @@ DECLARE @daystart datetime2 = DATEFROMPARTS(YEAR(@previousday), MONTH(@previousd
 DECLARE @dayend datetime2 = DATEADD(day, 1, DATEFROMPARTS(YEAR(@previousday), MONTH(@previousday), DAY(@previousday)));
 DECLARE @sqltext nvarchar(max);
 
-SET @sqltext = N'SELECT Teile.Barcode, Teile.RentomatChip, Scans.[DateTime] AS Entnahmezeitpunkt, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, ISNULL(Traeger.Nachname, N'''') + N'' '' + ISNULL(Traeger.Vorname, N'''') + N'' ('' + Traeger.Traeger + N'')'' AS [entnommen von]
+SET @sqltext = N'SELECT EinzHist.Barcode, EinzHist.RentomatChip, Scans.[DateTime] AS Entnahmezeitpunkt, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, ISNULL(Traeger.Nachname, N'''') + N'' '' + ISNULL(Traeger.Vorname, N'''') + N'' ('' + Traeger.Traeger + N'')'' AS [entnommen von]
 FROM Scans
-JOIN Teile ON Scans.TeileID = Teile.ID
-JOIN Vsa ON Teile.VsaID = Vsa.ID
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
+JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
+JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Traeger ON Scans.LastPoolTraegerID = Traeger.ID
 WHERE Vsa.ID = 6140348
