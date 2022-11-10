@@ -35,10 +35,10 @@ SET Abweichung = Liefermenge - Angefordert, AbweichungProzent = CONVERT(numeric(
 
 UPDATE LsKontrolle SET LsKontrolle.AnzahlChips = x.AnzahlChips
 FROM #TmpLsKontrolle888a LsKontrolle, (
-  SELECT COUNT(DISTINCT OPScans.OPTeileID) AS AnzahlChips, OPScans.AnfPoID
-  FROM OPScans, #TmpLsKontrolle888a LSK
-  WHERE OPScans.AnfPoID = LSK.AnfPoID
-  GROUP BY OPScans.AnfPoID
+  SELECT COUNT(DISTINCT Scans.EinzTeilID) AS AnzahlChips, Scans.AnfPoID
+  FROM Scans, #TmpLsKontrolle888a LSK
+  WHERE Scans.AnfPoID = LSK.AnfPoID
+  GROUP BY Scans.AnfPoID
 ) x
 WHERE x.AnfPoID = LsKontrolle.AnfPoID;
 

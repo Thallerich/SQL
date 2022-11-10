@@ -11,31 +11,32 @@ AS (
 Teilestatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
-  WHERE [Status].Tabelle = N'TEILE'
+  WHERE [Status].Tabelle = N'EINZHIST'
 )
-SELECT KdGf.KurzBez AS SGF, Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Mitarbei.Name AS Kundenservice, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger AS [Trägernummer], COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N'') AS [Trägername], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Teilestatus.StatusBez AS Teilestatus, COUNT(DISTINCT Teile.ID) AS Menge, BKo.BestNr AS Bestellnummer, BKo.Datum AS Bestelldatum, MAX(LiefAbPo.Termin) AS [Liefertermin Lieferant], Lagerbestand.BestandNeu AS [Lagerbestand Neuware], Lagerbestand.BestandGebraucht AS [Lagerbestand Gebrauchtware], Lagerbestand.Lager AS Lagerstandort, Einsatz.EinsatzBez$LAN$ AS Einsatzgrund
-FROM Teile
-JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+SELECT KdGf.KurzBez AS SGF, Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Mitarbei.Name AS Kundenservice, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger AS [Trägernummer], COALESCE(RTRIM(Traeger.Nachname), N'') + IIF(RTRIM(Traeger.Nachname) + RTRIM(Traeger.Vorname) IS NOT NULL, N', ', N'') + COALESCE(RTRIM(Traeger.Vorname), N'') AS [Trägername], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Teilestatus.StatusBez AS Teilestatus, COUNT(DISTINCT EinzHist.ID) AS Menge, BKo.BestNr AS Bestellnummer, BKo.Datum AS Bestelldatum, MAX(LiefAbPo.Termin) AS [Liefertermin Lieferant], Lagerbestand.BestandNeu AS [Lagerbestand Neuware], Lagerbestand.BestandGebraucht AS [Lagerbestand Gebrauchtware], Lagerbestand.Lager AS Lagerstandort, Einsatz.EinsatzBez$LAN$ AS Einsatzgrund
+FROM EinzHist
+JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
-JOIN Teilestatus ON Teile.Status = Teilestatus.Status
+JOIN Mitarbei ON VsaBer.ServiceID = Mitarbei.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+JOIN Teilestatus ON EinzHist.Status = Teilestatus.Status
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
 JOIN StandBer ON StandBer.StandKonID = StandKon.ID AND StandBer.BereichID = Artikel.BereichID
-JOIN Einsatz ON Teile.EinsatzGrund = Einsatz.EinsatzGrund
-JOIN TeileBPo ON TeileBPo.TeileID = Teile.ID AND TeileBPo.Latest = 1
+JOIN Einsatz ON EinzHist.EinsatzGrund = Einsatz.EinsatzGrund
+JOIN TeileBPo ON TeileBPo.EinzHistID = EinzHist.ID AND TeileBPo.Latest = 1
 JOIN BPo ON TeileBPo.BPoID = BPo.ID
 JOIN BKo ON BPo.BKoID = BKo.ID
 LEFT OUTER JOIN LiefAbPo ON LiefAbPo.BPoID = BPo.ID
 LEFT OUTER JOIN Lagerbestand ON ArtGroe.ID = Lagerbestand.ArtGroeID AND StandBer.LagerID = Lagerbestand.LagerID
-WHERE Teile.Status IN (N'E', N'G', N'I') -- nur Teile die bestellt wurden oder bestätigt (Auftragsbestätigung vom Lieferanten) wurden
+WHERE EinzHist.Status IN (N'E', N'G', N'I') -- nur Teile die bestellt wurden oder bestätigt (Auftragsbestätigung vom Lieferanten) wurden
   AND KdGf.ID IN ($1$)
   AND Kunden.StandortID IN ($2$)
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)

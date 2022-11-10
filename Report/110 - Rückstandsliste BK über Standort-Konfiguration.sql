@@ -1,14 +1,14 @@
 WITH TeileInProd AS (
-  SELECT Prod.AusTourID AS TourenID, Prod.VsaID, Prod.ZielNrID, Prod.EinDat, Prod.AusDat, Prod.ProduktionID AS ProdStandortID, Teile.ID AS TeileID
+  SELECT Prod.AusTourID AS TourenID, Prod.VsaID, Prod.ZielNrID, Prod.EinDat, Prod.AusDat, Prod.ProduktionID AS ProdStandortID, EinzHist.ID AS TeileID
   FROM Prod
-  JOIN Teile ON Prod.TeileID = Teile.ID
-  WHERE Teile.Status IN (N'N', N'Q')
+  JOIN EinzHist ON Prod.EinzHistID = EinzHist.ID
+  WHERE EinzHist.Status IN (N'N', N'Q')
     AND Prod.VsaID IN (SELECT ID FROM Vsa WHERE Vsa.StandKonID IN ($1$))
 ),
 Teilestatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
-  WHERE [Status].Tabelle = UPPER(N'TEILE')
+  WHERE [Status].Tabelle = N'EINZHIST'
 )
 SELECT Daten.Tour AS Liefertour, Daten.Bez AS [Liefertour-Bezeichnung], Wochentag = 
   CASE Daten.Wochentag
@@ -21,7 +21,7 @@ SELECT Daten.Tour AS Liefertour, Daten.Bez AS [Liefertour-Bezeichnung], Wochenta
     WHEN 7 THEN N'Sonntag'
     ELSE N'WTF?'
   END
-  , Standort.Bez AS Produktionsstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS TrägerNr, Traeger.Nachname, Traeger.Vorname, Teile.Barcode, Teilestatus.StatusBez AS [Status Teil], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Daten.EinDat AS [Abhol-Datum beim Kunden], Daten.AusDat AS [geplantes Lieferdatum], ZielNr.ZielNrBez AS [letzter Scan-Ort]
+  , Standort.Bez AS Produktionsstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS TrägerNr, Traeger.Nachname, Traeger.Vorname, EinzHist.Barcode, Teilestatus.StatusBez AS [Status Teil], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Daten.EinDat AS [Abhol-Datum beim Kunden], Daten.AusDat AS [geplantes Lieferdatum], ZielNr.ZielNrBez$LAN$ AS [letzter Scan-Ort]
 FROM ZielNr
 JOIN (
     SELECT DISTINCT Touren.ID, Touren.Tour, Touren.Bez, Touren.TourPrioID, Touren.Wochentag, Vsa.ID AS VsaID, Vsa.Suchcode AS VsaSuchcode, Vsa.Bez AS VsaBez, BkZiele.TeileID, BkZiele.ZielNrID, BkZiele.EinDat, BkZiele.AusDat, VSA.KundenID, Touren.SDCTour, WLot.Bez AS WLotBez, Touren.ExpeditionID AS TourExpeditionID, BKZiele.ProdStandortID, TourPrio.TourPrioBez AS TourPrioBez, Fahrt.PlanDatum AS FahrtPlanDatum
@@ -36,8 +36,8 @@ JOIN (
       AND BkZiele.VsaID = Vsa.ID
       AND Touren.TourPrioID = TourPrio.ID
 ) AS Daten ON Daten.ZielNrID = ZielNr.ID
-JOIN Teile ON Daten.TeileID = Teile.ID
-JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+JOIN EinzHist ON Daten.TeileID = EinzHist.ID
+JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -45,6 +45,6 @@ JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Standort ON Daten.ProdStandortID = Standort.ID
-JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
+JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 WHERE ZielNr.IstKomplett = 0
   AND Daten.FahrtPlanDatum <= CAST(GETDATE() AS date);

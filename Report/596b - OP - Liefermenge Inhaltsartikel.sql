@@ -114,7 +114,7 @@ USING (
   JOIN @Standort s ON ArbPlatz.StandortID = s.StandortID
   WHERE Scans.ActionsID = 115 --OP erstellt
     AND Scans.[DateTime] BETWEEN @von AND DATEADD(day, 1, @bis)
-    AND Scans.TeileID = -1
+    AND Scans.EinzHistID = -1
   GROUP BY EinzTeil.ArtikelID, s.OPStandortID
 ) AS OPNeu (ArtikelID, StandortID, NeuMenge)
 ON OPStats.ArtikelID = OPNeu.ArtikelID AND OPStats.StandortID = OPNeu.StandortID

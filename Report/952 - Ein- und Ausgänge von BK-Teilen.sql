@@ -10,17 +10,18 @@ DECLARE @Eingangsscan datetime;
 DECLARE @Abholung date;
 
 DECLARE curTeile CURSOR FOR
-SELECT Teile.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, Teile.ID AS TeileID
-FROM Teile
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
+SELECT EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, EinzHist.ID AS TeileID
+FROM EinzHist
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
-JOIN Vsa ON Teile.VsaID = Vsa.ID
+JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.ID = $2$
+  AND EinzHist.IsCurrEinzHist = 1
   AND EXISTS (
     SELECT Scans.*
     FROM Scans
-    WHERE Scans.TeileID = Teile.ID
+    WHERE Scans.EinzHistID = EinzHist.ID
       AND Scans.Menge <> 0
       AND Scans.[DateTime] > @DateSelection
   );
@@ -48,7 +49,7 @@ BEGIN
   DECLARE curEingangsscan CURSOR FOR
     SELECT Scans.ID AS ScanID, Scans.[DateTime] AS Eingangsscan, Scans.EinAusDat AS Abholung
     FROM Scans
-    WHERE Scans.TeileID = @TeileID
+    WHERE Scans.EinzHistID = @TeileID
       AND Scans.DateTime > = @DateSelection
       AND Scans.Menge = 1
     ORDER BY Scans.ID ASC;
@@ -67,7 +68,7 @@ BEGIN
     WHERE Scans.ID = (
       SELECT MIN(Scans.ID)
       FROM Scans
-      WHERE Scans.TeileID = @TeileID
+      WHERE Scans.EinzHistID = @TeileID
         AND Scans.Menge = -1
         AND Scans.ID > @ScanID
     );
