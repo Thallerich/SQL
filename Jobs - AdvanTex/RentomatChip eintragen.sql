@@ -1,21 +1,21 @@
-UPDATE Teile SET RentomatChip = Barcode
+UPDATE EinzHist SET RentomatChip = Barcode
 WHERE ID IN (
-  SELECT Teile.ID
-  FROM Teile
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
+  SELECT EinzHist.ID
+  FROM EinzHist
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
   WHERE Vsa.RentomatID IN (23, 24, 26, 28, 29, 30, 45)  --KHBG-Unimaten
-    AND Teile.RentomatChip IS NULL
-    AND Teile.Status IN ('M', 'N', 'Q')
+    AND EinzHist.RentomatChip IS NULL
+    AND EinzHist.Status IN ('M', 'N', 'Q')
 
   UNION ALL
 
-  SELECT Teile.ID
-  FROM Teile
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
-  JOIN Artikel ON Teile.ArtikelID = Artikel.ID
+  SELECT EinzHist.ID
+  FROM EinzHist
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+  JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
   WHERE Vsa.StandKonID = 202 --Budweis
     AND Artikel.ChipCodes = 1
-    AND Teile.RentomatChip IS NULL
-    AND Teile.Status IN ('M', 'N', 'Q')
-    AND Teile.AltenheimModus = 0
-); 
+    AND EinzHist.RentomatChip IS NULL
+    AND EinzHist.Status IN ('M', 'N', 'Q')
+    AND EinzHist.AltenheimModus = 0
+);

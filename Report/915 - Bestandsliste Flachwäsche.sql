@@ -30,13 +30,13 @@ SELECT (
     AND StandBer.StandKonID IN ($1$) 
     AND StandBer.BereichID = 102
 ) AS Produktion, Artikel.ID AS ArtikelID, Artikel.ArtikelNr, Artikel.EAN, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, 0 AS BestandProduktion, 0 AS Liefermenge, 0 AS Lieferwochen, 0 AS LMMontag, 0 AS LTMontag, 0 AS LMDienstag, 0 AS LTDienstag, 0 AS LMMittwoch, 0 AS LTMittwoch, 0 AS LMDonnerstag, 0 AS LTDonnerstag, 0 AS LMFreitag, 0 AS LTFreitag, 0 AS LMSamstag, 0 AS LTSamstag
-FROM OPTeile, ZielNr, Artikel
-WHERE OPTeile.ZielNrID = ZielNr.ID
-  AND OPTeile.ArtikelID = Artikel.ID
+FROM EinzTeil, ZielNr, Artikel
+WHERE EinzTeil.ZielNrID = ZielNr.ID
+  AND EinzTeil.ArtikelID = Artikel.ID
   AND ZielNr.GeraeteNr IS NOT NULL
   AND ZielNr.ProduktionsID IN (SELECT StandBer.ProduktionID FROM StandBer WHERE StandBer.StandKonID IN ($1$) AND StandBer.BereichID = 102)
-  AND OPTeile.Status IN (N'A', N'Q')  -- Erstellte und aktive Teile
-  AND OPTeile.LastActionsID <> 102  -- zuletzt nicht ausgelesen, also nicht beim Kunden
+  AND EinzTeil.Status IN (N'A', N'Q')  -- Erstellte und aktive Teile
+  AND EinzTeil.LastActionsID <> 102  -- zuletzt nicht ausgelesen, also nicht beim Kunden
   AND Artikel.ID > 0 -- unbekannten Artikel ignorieren
   AND Artikel.EAN IS NOT NULL --nur UHF-Chip-Artikel
   AND Artikel.BereichID <> 104 --keine Eigenwäsche
@@ -45,14 +45,14 @@ GROUP BY Artikel.ID, Artikel.ArtikelNr, Artikel.EAN, Artikel.ArtikelBez$LAN$;
 
 UPDATE Bestandsliste SET BestandProduktion = x.Bestand
 FROM #Bestandsliste915 Bestandsliste, (
-  SELECT Artikel.ID AS ArtikelID, COUNT(OPTeile.ID) AS Bestand
-  FROM OPTeile, ZielNr, Artikel
-  WHERE OPTeile.ZielNrID = ZielNr.ID
-    AND OPTeile.ArtikelID = Artikel.ID
+  SELECT Artikel.ID AS ArtikelID, COUNT(EinzTeil.ID) AS Bestand
+  FROM EinzTeil, ZielNr, Artikel
+  WHERE EinzTeil.ZielNrID = ZielNr.ID
+    AND EinzTeil.ArtikelID = Artikel.ID
     AND ZielNr.GeraeteNr IS NOT NULL
     AND ZielNr.ProduktionsID IN (SELECT StandBer.ProduktionID FROM StandBer WHERE StandBer.StandKonID IN ($1$) AND StandBer.BereichID = 102)
-    AND OPTeile.Status IN (N'A', N'Q')
-    AND OPTeile.LastActionsID <> 102
+    AND EinzTeil.Status IN (N'A', N'Q')
+    AND EinzTeil.LastActionsID <> 102
     AND Artikel.ID > 0
   GROUP BY Artikel.ID
 ) x
