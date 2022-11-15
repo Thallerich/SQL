@@ -10,41 +10,41 @@ WITH Liefermenge AS (
   GROUP BY KdArti.ArtikelID, KdArti.KundenID, FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT')
 ),
 WegTeile AS (
-  SELECT Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund AS GrundKurz, COUNT(Teile.ID) AS Menge, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
-  FROM Teile
-  JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
-  WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
-    AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
-  GROUP BY Teile.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund, FORMAT(Teile.AusdienstDat, N'yyyy-MM', N'de-AT')
+  SELECT EinzHist.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund AS GrundKurz, COUNT(EinzHist.ID) AS Menge, FORMAT(EinzHist.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
+  FROM EinzHist
+  JOIN Einsatz ON EinzHist.AusdienstGrund = Einsatz.EinsatzGrund
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+  WHERE EinzHist.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
+    AND EinzHist.AusdienstDat BETWEEN @DatumVon AND @DatumBis
+  GROUP BY EinzHist.ArtikelID, Vsa.KundenID, Einsatz.EinsatzGrund, FORMAT(EinzHist.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
 WegTeileSumme AS (
   SELECT x.ArtikelID, x.KundenID, COUNT(x.TeileID) AS Menge, SUM(x.AusdRestw) AS Restwert, SUM(IIF(x.HasRech = 1, x.AusdRestw, 0)) AS RestwertFakt, FORMAT(x.AusdienstDat, N'yyyy-MM', N'de-AT') AS Monat
   FROM (
-    SELECT Teile.ArtikelID, Vsa.KundenID, Teile.ID AS TeileID, Teile.AusdRestw, Teile.AusdienstDat, HasRech = CAST(ISNULL((
+    SELECT EinzHist.ArtikelID, Vsa.KundenID, EinzHist.ID AS TeileID, EinzHist.AusdRestw, EinzHist.AusdienstDat, HasRech = CAST(ISNULL((
       SELECT 1
       FROM TeilSoFa
-      WHERE TeilSoFa.TeileID = Teile.ID
+      WHERE TeilSoFa.EinzHistID = EinzHist.ID
         AND TeilSoFa.SoFaArt = N'R'
         AND TeilSoFa.RechPoID > 0
     ), 0) AS bit)
-    FROM Teile
-    JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
-    JOIN Vsa ON Teile.VsaID = Vsa.ID
-    WHERE Teile.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
-      AND Teile.AusdienstDat BETWEEN @DatumVon AND @DatumBis
+    FROM EinzHist
+    JOIN Einsatz ON EinzHist.AusdienstGrund = Einsatz.EinsatzGrund
+    JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+    WHERE EinzHist.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
+      AND EinzHist.AusdienstDat BETWEEN @DatumVon AND @DatumBis
   ) x
   GROUP BY x.ArtikelID, x.KundenID, FORMAT(x.AusdienstDat, N'yyyy-MM', N'de-AT')
 ),
 TeileRep AS (
-  SELECT Teile.ArtikelID, Vsa.KundenID, CAST(SUM(TeilSoFa.Menge) AS int) AS AnzReparatur, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT') AS Monat
+  SELECT EinzHist.ArtikelID, Vsa.KundenID, CAST(SUM(TeilSoFa.Menge) AS int) AS AnzReparatur, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT') AS Monat
   FROM TeilSoFa
   JOIN Artikel ON TeilSoFa.ArtikelID = Artikel.ID
-  JOIN Teile ON TeilSoFa.TeileID = Teile.ID
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
+  JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
   WHERE CAST(TeilSoFa.Zeitpunkt AS date) BETWEEN @DatumVon AND @DatumBis
     AND Artikel.ArtiTypeID = 5  --Reparatur-Artikel
-  GROUP BY Teile.ArtikelID, Vsa.KundenID, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT')
+  GROUP BY EinzHist.ArtikelID, Vsa.KundenID, FORMAT(TeilSoFa.Zeitpunkt, N'yyyy-MM', N'de-AT')
 )
 SELECT [Monat], [KdNr], [Kunde], [Haupstandort Kunde], [ArtikelNr], [Artikelbezeichnung], [Umlaufmenge aktuell], [Liefermenge im Zeitraum], [AORW] AS [Austausch ohne RW-Berechnung], [AMRW] AS [Austausch mit RW-Berechnung], [BORW] AS [Größentausch ohne RW-Berechnung], [BMRW] AS [Größentausch mit RW-Berechnung], [CORW] AS [Artikeltausch ohne RW-Berechnung], [CMRW] AS [Artikeltausch mit RW-Berechnung], [SMRW] AS [Austausch Service mit RW-Berechnung], [SORW] AS [Austausch Service ohne RW-Berechnung], [MengeGesamt] AS [Anzahl gesamt / Kunde], [Restwert] AS [Restwert Austausch], [RestwertFakt] AS [Restwert verrechnet], [Differenz], [AnzReparatur]
 FROM (
@@ -77,10 +77,10 @@ FROM (
     AND Kunden.SichtbarID IN ($SICHTBARIDS$)
     AND KdArtiSum.Umlauf > 0
     AND EXISTS (
-      SELECT Teile.*
-      FROM Teile
-      WHERE Teile.ArtikelID = KdArtiSum.ArtikelID
-        AND Teile.AltenheimModus = 0
+      SELECT EinzHist.*
+      FROM EinzHist
+      WHERE EinzHist.ArtikelID = KdArtiSum.ArtikelID
+        AND EinzHist.AltenheimModus = 0
     )
     AND (Liefermenge.Menge != 0 OR WegTeile.Menge != 0 OR WegTeileSumme.Menge != 0)
   GROUP BY COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat), Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt
