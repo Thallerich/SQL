@@ -36,27 +36,29 @@ WHERE VsaAnf.Status = N'A'
   AND ((KdBer.AnfAusEpo > 1 AND VsaBer.AnfAusEpo = -1) OR VsaBer.AnfAusEpo > 1)
   AND (KdBer.IstBestandAnpass = 1 OR KdArti.IstBestandAnpass = 1)
   AND VsaAnf.Bestand = 0 
-  AND (VsaAnf.BestandIst != 0 OR (VsaAnf.BestandIst - VsaAnf.AusstehendeReduz - ISNULL(ReduzEinmalig.OffeneEinmLief, 0) > 0))
+  AND VsaAnf.AusstehendeReduz < 1 -- Ticket 60325
+  AND ReduzEinmalig.OffeneEinmLief IS NULL -- Ticket 60325
+  AND (VsaAnf.BestandIst != 0 OR (VsaAnf.BestandIst - VsaAnf.AusstehendeReduz - ISNULL(ReduzEinmalig.OffeneEinmLief, 0) > 0)) 
   AND Bereich.Bereich != N'LW'
   AND (
     EXISTS (
-      SELECT OPTeile.*
-      FROM OPTeile
-      WHERE OPTeile.ArtikelID = Artikel.ID
-        AND OPTeile.VsaID = Vsa.ID
-        AND OPTeile.LastActionsID IN (102, 120, 136)
-        AND OPTeile.LastErsatzFuerKdArtiID < 0
-        AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND OPTeile.ArtGroeID = VsaAnf.ArtGroeID))
+      SELECT EinzTeil.*
+      FROM EinzTeil
+      WHERE EinzTeil.ArtikelID = Artikel.ID
+        AND EinzTeil.VsaID = Vsa.ID
+        AND EinzTeil.LastActionsID IN (102, 120, 136)
+        AND EinzTeil.LastErsatzFuerKdArtiID < 0
+        AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND EinzTeil.ArtGroeID = VsaAnf.ArtGroeID))
     )
     OR EXISTS (
-      SELECT OPTeile.*
-      FROM OPTeile
+      SELECT EinzTeil.*
+      FROM EinzTeil
       JOIN KdArti ON LastErsatzFuerKdArtiID = KdArti.ID
       WHERE KdArti.ArtikelID = Artikel.ID
-        AND OPTeile.VsaID = Vsa.ID
-        AND OPTeile.LastActionsID IN (102, 120, 136)
-        AND OPTeile.LastErsatzFuerKdArtiID > 0
-        AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND OPTeile.LastErsatzArtGroeID = VsaAnf.ArtGroeID))
+        AND EinzTeil.VsaID = Vsa.ID
+        AND EinzTeil.LastActionsID IN (102, 120, 136)
+        AND EinzTeil.LastErsatzFuerKdArtiID > 0
+        AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND EinzTeil.LastErsatzArtGroeID = VsaAnf.ArtGroeID))
     )
   )
 ORDER BY KdNr, VsaNr, ArtikelNr, GroePo.Folge;
