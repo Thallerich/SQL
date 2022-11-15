@@ -28,12 +28,12 @@ FROM (
     WHERE AnfPo.AnfKoID = AnfKo.ID
       AND AnfKo.LsKoID IN (SELECT LsKoID FROM #TmpContainer)
   )
-) AS OPScans, AnfPo, AnfKo, OPTeile, Artikel, Contain, #TmpContainer AS x
+) AS OPScans, AnfPo, AnfKo, EinzTeil, Artikel, Contain, #TmpContainer AS x
 WHERE OPScans.AnfPoID = AnfPo.ID
   AND AnfPo.AnfKoID = AnfKo.ID
   AND AnfKo.LsKoID = x.LsKoID
-  AND OPScans.EinzTeilID = OPTeile.ID
-  AND OPTeile.ArtikelID = Artikel.ID
+  AND OPScans.EinzTeilID = EinzTeil.ID
+  AND EinzTeil.ArtikelID = Artikel.ID
   AND OPScans.ContainID = Contain.ID
 GROUP BY Contain.Barcode, x.LsKoID;
 
