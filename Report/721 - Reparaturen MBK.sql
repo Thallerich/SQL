@@ -79,7 +79,7 @@ WHERE RepDaten.TraegerID = Traeger.ID
   AND StandBer.BereichID = RepDaten.BereichID
   AND StandBer.ProduktionID = Standort.ID
   AND RepDaten.RepTypeID = RepType.ID
-  AND Standort.ID IN ($3$)
+  AND Standort.ID IN ($2$)
   AND RepType.ArtiTypeID = 5 --nur Reparaturen
 GROUP BY RepType.ArtikelBez$LAN$, Standort.Bez
 
@@ -104,6 +104,6 @@ WHERE RepDaten.TraegerID = Traeger.ID
   AND StandBer.BereichID = RepDaten.BereichID
   AND StandBer.ProduktionID = Standort.ID
   AND RepDaten.RepTypeID = RepType.ID
-  AND Standort.ID IN ($3$)
+  AND Standort.ID IN ($2$)
   AND RepType.ArtiTypeID = 5 -- nur Reparaturen
 ORDER BY Reparaturgrund, Produktion;
