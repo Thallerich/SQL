@@ -10,6 +10,7 @@ CREATE OR ALTER VIEW [sapbw].[V_BW_Kontrakt] AS
   JOIN Salesianer.dbo.Artikel ON ArtGroe.ArtikelID = Artikel.ID
   JOIN Salesianer.dbo.BPo ON BPo.KontraktBPoID = KontraktPo.ID
   JOIN Salesianer.dbo.BKo ON BPo.BKoID = BKo.ID
-  WHERE BKoArt.Kontrakt = 1;
+  WHERE BKoArt.Kontrakt = 1
+    AND BPo.Menge != 0;
 
 GO
