@@ -78,7 +78,7 @@ USING (
   JOIN LsPo ON Scans.LsPoID = LsPo.ID
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
-  JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+  JOIN Traeger ON Scans.TraegerID = Traeger.ID
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
   JOIN Kunden oN Vsa.KundenID = Kunden.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
