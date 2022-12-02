@@ -76,7 +76,8 @@ BEGIN TRY
       AND AnlageUserID_ = 9012688
       AND CAST(Anlage_ AS date) = N'2022-11-30'
       AND VonDatum = N'2022-11-30'
-      AND BisDatum = N'2022-12-31';
+      AND BisDatum = N'2022-12-31'
+      AND KundenID IN (SELECT KundenID FROM @Kunden);
   
   COMMIT;
 END TRY
