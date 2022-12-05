@@ -1,4 +1,5 @@
 DECLARE @curweek nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE GETDATE() BETWEEN [Week].VonDat AND [Week].BisDat);
+DECLARE @custnr int = 272295;
 DECLARE @sqltext nvarchar(max);
 
 SET @sqltext = N'
@@ -20,11 +21,11 @@ JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-WHERE Kunden.KdNr = 272295 /* Holding.Holding = N''VOES'' */
+WHERE Kunden.KdNr = @custnr
   AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.[Status] IN (N''U'', N''W'')
   AND EinzHist.Einzug IS NULL
   AND EinzHist.AbmeldDat < DATEADD(week, -3, GETDATE());
 ';
 
-EXEC sp_executesql @sqltext, N'@curweek nchar(7)', @curweek;
+EXEC sp_executesql @sqltext, N'@curweek nchar(7), @custnr int', @curweek, @custnr;
