@@ -97,47 +97,47 @@ Kundenstand AS (
     
     UNION ALL
 
-    SELECT Traeger.VsaID, Teile.TraegerID, Teile.KdArtiID, Teile.ArtGroeID, KdArti.ArtikelID, COUNT(Teile.ID) AS Umlauf
-    FROM Teile
-    JOIN Traeger ON Teile.TraegerID = Traeger.ID
-    JOIN KdArti ON Teile.KdArtiID = KdArti.ID
+    SELECT Traeger.VsaID, EinzHist.TraegerID, EinzHist.KdArtiID, EinzHist.ArtGroeID, KdArti.ArtikelID, COUNT(EinzHist.ID) AS Umlauf
+    FROM EinzHist
+    JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+    JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
     WHERE Traeger.Indienst <= @bisWoche
       AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
-      AND Teile.Indienst <= @bisWoche
-      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
-    GROUP BY Traeger.VsaID, Teile.TraegerID, Teile.KdArtiID, Teile.ArtGroeID, KdArti.ArtikelID
+      AND EinzHist.Indienst <= @bisWoche
+      AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
+    GROUP BY Traeger.VsaID, EinzHist.TraegerID, EinzHist.KdArtiID, EinzHist.ArtGroeID, KdArti.ArtikelID
 
     UNION ALL
 
-    SELECT Traeger.VsaID, Teile.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
-    FROM Teile
-    JOIN Traeger ON Teile.TraegerID = Traeger.ID
-    JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
+    SELECT Traeger.VsaID, EinzHist.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
+    FROM EinzHist
+    JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+    JOIN TeilAppl ON TeilAppl.EinzHistID = EinzHist.ID
     JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
     WHERE Traeger.Indienst <= @bisWoche
       AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
-      AND Teile.Indienst <= @bisWoche
-      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
+      AND EinzHist.Indienst <= @bisWoche
+      AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
       AND TeilAppl.ArtiTypeID = 3  --Emblem
       AND TeilAppl.Bearbeitung = N'-' --erledigt, Emblem aufgebracht
-    GROUP BY Traeger.VsaID, Teile.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
+    GROUP BY Traeger.VsaID, EinzHist.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
 
-    SELECT Traeger.VsaID, Teile.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
-    FROM Teile
-    JOIN Traeger ON Teile.TraegerID = Traeger.ID
-    JOIN TeilAppl ON TeilAppl.TeileID = Teile.ID
+    SELECT Traeger.VsaID, EinzHist.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(TeilAppl.ID) AS Umlauf
+    FROM EinzHist
+    JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+    JOIN TeilAppl ON TeilAppl.EinzHistID = EinzHist.ID
     JOIN KdArti ON TeilAppl.ApplKdArtiID = KdArti.ID
     LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
     WHERE Traeger.Indienst <= @bisWoche
       AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
-      AND Teile.Indienst <= @bisWoche
-      AND ISNULL(Teile.Ausdienst, N'2099/52') >= @vonWoche
+      AND EinzHist.Indienst <= @bisWoche
+      AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
       AND TeilAppl.ArtiTypeID = 2 --Namenschild
       AND TeilAppl.Bearbeitung = N'-' --ereledigt, Namenschild aufgebracht
-    GROUP BY Traeger.VsaID, Teile.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
+    GROUP BY Traeger.VsaID, EinzHist.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
   ) AS x
   JOIN Vsa ON x.VsaID = Vsa.ID
   JOIN KdArti ON x.KdArtiID = KdArti.ID
