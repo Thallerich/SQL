@@ -13,9 +13,10 @@ WHERE LagerBew.BestandID = Bestand.ID
   AND LagerArt.LagerID = Standort.ID
   AND LagerBew.LgBewCodID = LgBewCod.ID
   AND Lagerart.FirmaID = Firma.ID
-  AND (Firma.SuchCode = N'FA14' OR Firma.SuchCode = N'BUDA')
-  AND (LagerArt.ArtiTypeID = 1 OR (Lagerart.ArtiTypeID = 3 AND (Standort.SuchCode = N'SMZL' OR Firma.SuchCode = N'BUDA')))  /* alle Bewegungen zu textilen Artikeln, sowie Bewegungen zu Emblem-Artikeln wenn der Lagerstandort SMZL ist oder das Lager zur Firma BUDA gehört */
-  AND ((Bereich.Bereich = N'HW' AND (Standort.SuchCode = N'SMZL' OR Firma.SuchCode = N'BUDA')) OR Bereich.Bereich != N'HW') /* Bewegungen zu Artikeln aus dem Bereich Handelsware nur wenn der Lagerstandort SMZL ist oder die Firma BUDA ist. Handelswaren-Bewegungen aus den Betriebslägern nicht übertragen */
+  AND LagerArt.BestandZu = 0
+  AND Standort.SuchCode IN (N'SMZL', N'BUDA')
+  AND Lagerart.ArtiTypeID IN (1, 3) /* Textile Artikel und Eblem-Artikel */
+  AND Lagerart.Neuwertig = 1
   AND LgBewCod.Code != N'IN??'
   AND LagerBew.Differenz != 0
   AND LagerBew.ID > @MinLagerBewID;
