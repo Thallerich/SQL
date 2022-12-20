@@ -3,16 +3,7 @@ ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE;
 
 GO
 
-ALTER DATABASE Salesianer_Test SET COMPATIBILITY_LEVEL = 150;
-/* ALTER DATABASE dbSystem SET COMPATIBILITY_LEVEL = 150; */
-
-GO
-
 USE Salesianer_Test;
-GO
-
-ALTER DATABASE SCOPED CONFIGURATION SET LEGACY_CARDINALITY_ESTIMATION = OFF;
-
 GO
 
 BEGIN TRANSACTION;
@@ -62,7 +53,7 @@ BEGIN TRANSACTION;
     WHERE [Parameter] = N'WEB_EXPORT_UPLOAD_PATH';
 
   UPDATE Settings
-    SET [ValueMemo] = N'\\salsvattsamig1.sal.co.at\AdvanTex\Data\Logo\Salesianer_LogoMigTest.bmp'
+    SET [ValueMemo] = N'\\salsvattsamig1.sal.co.at\AdvanTex\Data\Logo\Salesianer_LogoAdvanTex.bmp'
     WHERE [Parameter] = N'LOGO1_PATH_UND_DATEINAME';
 
   UPDATE Settings
