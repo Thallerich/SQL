@@ -9,6 +9,7 @@ WHERE LsKo.Status >= N'Q'
   AND ((Firma.SuchCode = N'FA14' AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB', N'SAEU')) OR (Firma.SuchCode != N'FA14'))
   AND Kunden.FirmaID IN ($2$)
   AND LsKo.SentToSAP = 0
+  AND (LEFT(LsKo.Referenz, 7) != N'INTERN_' OR LsKo.Referenz IS NULL)
   AND LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EXISTS (
     SELECT LsPo.*
