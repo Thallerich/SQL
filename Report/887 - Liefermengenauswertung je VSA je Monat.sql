@@ -17,19 +17,19 @@ SET @lastdate = @basedate;
 SET @offset = 1;
 SET @maxmonths = DATEDIFF(month, @basedate, @maxdate);
 
-INSERT INTO @CalendarMonths ([Month]) VALUES (FORMAT(@basedate, N''yyyy-MM'', N''de-AT''));
+INSERT INTO @CalendarMonths ([Month]) VALUES (FORMAT(@basedate, N'yyyy-MM', N'de-AT'));
 
 WHILE (@offset <= @maxmonths)
 BEGIN
   SET @lastdate = DATEADD(month, 1, @lastdate);
 
   INSERT INTO @CalendarMonths ([Month])
-  VALUES (FORMAT(@lastdate, N''yyyy-MM'', N''de-AT''));
+  VALUES (FORMAT(@lastdate, N'yyyy-MM', N'de-AT'));
 
   SET @offset = @offset + 1;
 END;
 
-SELECT @pivotcolumns = COALESCE(@pivotcolumns + '', '','''') + QUOTENAME(CalMon.[Month])
+SELECT @pivotcolumns = COALESCE(@pivotcolumns + ', ','') + QUOTENAME(CalMon.[Month])
 FROM (
   SELECT [Month]
   FROM @CalendarMonths
@@ -39,34 +39,37 @@ ORDER BY CalMon.[Month] ASC;
 DROP TABLE IF EXISTS #LiefermengeVSA;
 
 WITH LiefermengeMonatlich AS (
-  SELECT FORMAT(LsKo.Datum, N''yyyy-MM'', N''de-AT'') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID, SUM(LsPo.Menge) AS Liefermenge
+  SELECT FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
   WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
-    AND LsKo.Status >= N''Q''
+    AND LsKo.Status >= N'Q'
     AND Vsa.KundenID = $ID$
     AND LsPo.Menge != 0
     AND NOT EXISTS (
       SELECT Scans.*
       FROM Scans
+      JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
       WHERE Scans.LsPoID = LsPo.ID
+        AND EinzHist.TraeArtiID > 0
     )
-  GROUP BY FORMAT(LsKo.Datum, N''yyyy-MM'', N''de-AT''), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID
+  GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, LsPo.ArtGroeID
 
   UNION ALL
 
-  SELECT FORMAT(LsKo.Datum, N''yyyy-MM'', N''de-AT'') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID, COUNT(Scans.ID) AS Liefermenge
+  SELECT FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT') AS Monat, LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID, COUNT(Scans.ID) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
   JOIN Scans ON Scans.LsPoID = LsPo.ID
   JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
   WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
-    AND LsKo.Status >= N''Q''
+    AND LsKo.Status >= N'Q'
     AND Vsa.KundenID = $ID$
     AND LsPo.Menge != 0
-  GROUP BY FORMAT(LsKo.Datum, N''yyyy-MM'', N''de-AT''), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID
+    AND EinzHist.TraeArtiID > 0
+  GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID
 )
 SELECT ProdBetrieb.SuchCode AS [produzierender Betrieb], IntProdBetrieb.SuchCode AS [intern produzierender Betrieb], Holding.Holding AS Kette, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Artikel.StueckGewicht AS Stückgewicht, LiefArt.LiefArt AS Auslieferart, LiefermengeMonatlich.Monat, LiefermengeMonatlich.Liefermenge
 INTO #LiefermengeVSA
@@ -91,6 +94,6 @@ JOIN Standort AS ProdBetrieb ON StandBer.ExpeditionID = ProdBetrieb.ID
 JOIN Standort AS IntProdBetrieb ON StandBer.ProduktionID = IntProdBetrieb.ID
 WHERE Kunden.ID = $ID$;
 
-SET @pivotsql = N''SELECT [produzierender Betrieb], [intern produzierender Betrieb], Kette, Kundennummer, Kundenname, [VSA-Nummer], [VSA-Bezeichnung], Kostenstelle, Kostenstellenbezeichnung, Produktbereich, Artikelgruppe, Artikelnummer, Artikelbezeichnung, Größe, Stückgewicht, Auslieferart, '' + @pivotcolumns + '' FROM #LiefermengeVSA AS LiefermengeVSA PIVOT ( SUM(LiefermengeVSA.Liefermenge) FOR LiefermengeVSA.Monat IN ('' + @pivotcolumns + '')) AS PivotResult ORDER BY Kundennummer, [VSA-Nummer],Artikelnummer'';
+SET @pivotsql = N'SELECT [produzierender Betrieb], [intern produzierender Betrieb], Kette, Kundennummer, Kundenname, [VSA-Nummer], [VSA-Bezeichnung], Kostenstelle, Kostenstellenbezeichnung, Produktbereich, Artikelgruppe, Artikelnummer, Artikelbezeichnung, Größe, Stückgewicht, Auslieferart, ' + @pivotcolumns + ' FROM #LiefermengeVSA AS LiefermengeVSA PIVOT ( SUM(LiefermengeVSA.Liefermenge) FOR LiefermengeVSA.Monat IN (' + @pivotcolumns + ')) AS PivotResult ORDER BY Kundennummer, [VSA-Nummer],Artikelnummer';
 
 EXEC (@pivotsql);
