@@ -14,6 +14,9 @@ ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE;
 
 GO
 
+DBCC SHRINKFILE (Salesianer_Test_log, 10240);
+GO
+
 ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer, NEWNAME = Salesianer_Test);
 ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer_log, NEWNAME = Salesianer_Test_log);
 
