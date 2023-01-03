@@ -1,7 +1,21 @@
+USE master;
+GO
+
+RESTORE DATABASE Salesianer_Test
+  FROM DISK = N'\\10.10.203.16\mssql_backup\_temp\Salesianer.bak'
+  WITH RECOVERY, REPLACE, STATS = 10,
+    MOVE N'Salesianer' TO N'D:\SQL Server\UserDB\Salesianer_Test.mdf',
+    MOVE N'Salesianer_Log' TO N'D:\SQL Server\TransactionLog\Salesianer_Test_Log.ldf';
+
+GO
+
 ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE;
 /* ALTER DATABASE dbSystem SET RECOVERY SIMPLE; */
 
 GO
+
+ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer, NEWNAME = Salesianer_Test);
+ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer_log, NEWNAME = Salesianer_Test_log);
 
 USE Salesianer_Test;
 GO
