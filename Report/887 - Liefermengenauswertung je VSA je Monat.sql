@@ -43,10 +43,12 @@ WITH LiefermengeMonatlich AS (
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
+  JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
   WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
     AND LsKo.Status >= N'Q'
     AND Vsa.KundenID = $ID$
     AND LsPo.Menge != 0
+    AND ((Vsa.RentomatID > 0 AND Rentomat.LsKoArtScanOutID > 0 AND LsKo.LsKoArtID != Rentomat.LsKoArtScanOutID) OR (1 = 1))
     AND NOT EXISTS (
       SELECT Scans.*
       FROM Scans
@@ -64,11 +66,13 @@ WITH LiefermengeMonatlich AS (
   JOIN Vsa ON LsKo.VsaID = Vsa.ID
   JOIN Scans ON Scans.LsPoID = LsPo.ID
   JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
+  JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
   WHERE LsKo.Datum BETWEEN @basedate AND @maxdate
     AND LsKo.Status >= N'Q'
     AND Vsa.KundenID = $ID$
     AND LsPo.Menge != 0
     AND EinzHist.TraeArtiID > 0
+    AND ((Vsa.RentomatID > 0 AND Rentomat.LsKoArtScanOutID > 0 AND LsKo.LsKoArtID != Rentomat.LsKoArtScanOutID) OR (1 = 1))
   GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID
 )
 SELECT ProdBetrieb.SuchCode AS [produzierender Betrieb], IntProdBetrieb.SuchCode AS [intern produzierender Betrieb], Holding.Holding AS Kette, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Artikel.StueckGewicht AS Stückgewicht, LiefArt.LiefArt AS Auslieferart, LiefermengeMonatlich.Monat, LiefermengeMonatlich.Liefermenge
