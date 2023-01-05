@@ -14,7 +14,7 @@ DECLARE @LsKo TABLE (
 INSERT INTO @LsKo (ID, [Status], VsaID)
 SELECT LsKo.ID, LsKo.[Status], LsKo.VsaID
 FROM LsKo
-WHERE LsKo.[Status] = N'Q'
+WHERE LsKo.[Status] >= N'Q'
   AND LsKo.SentToSAP = 0
   AND LsKo.InternKalkFix = 1
   AND LEFT(LsKo.Referenz, 7) != N'INTERN_' /* Umlagerungs-LS ausnehmen, diese werden vom Modul SAPSENDSTOCKTRANSACTION übertragen */
