@@ -1,9 +1,14 @@
+SET NOCOUNT ON;
+
 DECLARE @EndTime datetime2(3) = DATEADD(hour, 8, GETDATE());
+DECLARE @IsError bit = 0;
+DECLARE @RunCounter int = 1;
+DECLARE @Msg nvarchar(100);
 
 WHILE @EndTime > GETDATE()
 BEGIN
-
-  BEGIN TRANSACTION;
+  SET @Msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' - Beginning run ' + CAST(@RunCounter AS nvarchar) + '!';
+  RAISERROR(@Msg, 0, 1) WITH NOWAIT;
 
   DROP TABLE IF EXISTS #TmpEinzTeilID;
   DROP TABLE IF EXISTS #TmpEinzHistID;
@@ -19,14 +24,41 @@ BEGIN
   FROM EinzHist
   WHERE EinzHist.EinzTeilID = #TmpEinzHistID.EinzTeilID;
 
-  UPDATE Scans SET EinzTeilID = x.EinzTeilID
-  FROM #TmpEinzTeilID x
-  WHERE x.ID = Scans.ID;
+  BEGIN TRY
+    BEGIN TRANSACTION
+    
+      UPDATE Scans SET EinzTeilID = x.EinzTeilID
+      FROM #TmpEinzTeilID x
+      WHERE x.ID = Scans.ID;
 
-  UPDATE Scans SET EinzHistID = x.EinzHistID
-  FROM #TmpEinzHistID x
-  WHERE x.ID = Scans.ID;
+      SET @Msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' - EinzTeilID: ' + CAST(@@ROWCOUNT AS nvarchar) + N' rows updated!';
+      RAISERROR(@Msg, 0, 1) WITH NOWAIT;
 
-  COMMIT TRANSACTION;
+      UPDATE Scans SET EinzHistID = x.EinzHistID
+      FROM #TmpEinzHistID x
+      WHERE x.ID = Scans.ID;
+
+      SET @Msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' - EinzHistID: ' + CAST(@@ROWCOUNT AS nvarchar) + N' rows updated!';
+      RAISERROR(@Msg, 0, 1) WITH NOWAIT;
+
+    COMMIT;
+  END TRY
+  BEGIN CATCH
+    DECLARE @Message nvarchar(max) = ERROR_MESSAGE();
+    DECLARE @Severity int = ERROR_SEVERITY();
+    DECLARE @State smallint = ERROR_STATE();
+
+    SET @IsError = 1;
+
+    IF XACT_STATE() != 0
+      ROLLBACK TRANSACTION;
+  
+    RAISERROR(@Message, @Severity, @State);
+  END CATCH;
+
+  IF @IsError = 1
+    BREAK;
+  
+  SET @RunCounter += 1;
 
 END;
