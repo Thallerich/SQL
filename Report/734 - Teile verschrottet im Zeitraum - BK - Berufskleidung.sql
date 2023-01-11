@@ -50,6 +50,7 @@ LEFT JOIN Scans ON Scans.EinzHistID = EinzHist.ID AND Scans.ActionsID = 7
 LEFT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
 WHERE Kunden.KdGfID IN ($4$)
   AND EinzHist.[Status] = N'Y'
+  AND EinzHist.EinzHistTyp = 3 /* ausgeschieden */
   AND WegGrund.ID IN ($3$)
   AND EinzHist.AusDienstDat BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Produktion.ID in ($6$)
