@@ -44,8 +44,8 @@ JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID = @RechKoID
-  AND EinzHist.IndienstDat <= RechKo.BisDatum
-  AND ISNULL(EinzHist.AusdienstDat, N'2099-12-31') >= RechKo.VonDatum
+  AND EinzHist.EinzHistVon <= RechKo.BisDatum
+  AND ISNULL(EinzHist.EinzHistBis, N'2099-12-31') >= RechKo.VonDatum
 GROUP BY Artikel.ID,
   Traeger.ID,
   RechKo.RechNr,
