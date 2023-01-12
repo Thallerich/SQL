@@ -51,7 +51,7 @@ WITH EinzHistStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N''EINZHIST''
 )
-SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, EinzHist.Barcode, EinzHistStatus.StatusBez AS Teilestatus, EinzHist.AbmeldDat AS [Datum Abmeldung], EinzHist.AlterInfo AS [Alter in Wochen], KdArti.BasisRestwert AS [Basis-Restwert], fRW.RestwertInfo [Restwert KW ' + @curweek + N']
+SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, KdArtiLeasWo.LeasPreisProWo AS [Leasingpreis wöchentlich], EinzHist.Barcode, EinzHistStatus.StatusBez AS Teilestatus, EinzHist.AbmeldDat AS [Datum Abmeldung], EinzHist.AlterInfo AS [Alter in Wochen], KdArti.BasisRestwert AS [Basis-Restwert], fRW.RestwertInfo [Restwert KW ' + @curweek + N']
 FROM EinzHist
 CROSS APPLY funcGetRestwert(EinzHist.ID, @CurWeek, 1) AS fRW
 JOIN EinzHistStatus ON EinzHist.[Status] = EinzHistStatus.[Status]
@@ -62,6 +62,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID  /* nur falls über ganze Holding */
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+CROSS APPLY advfunc_GetLeasPreisProWo(KdArti.ID) AS KdArtiLeasWo
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 WHERE (Holding.Holding = @H1 OR Holding.Holding = @H2)
