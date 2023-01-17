@@ -11,7 +11,7 @@ BEGIN
   CREATE TABLE #EinzTeilProd (
     EinzTeilID int PRIMARY KEY,
     ArtikelID int NOT NULL,
-    LastScanID int DEFAULT -1
+    LastScanID bigint DEFAULT -1
   );
 END ELSE BEGIN
   TRUNCATE TABLE #EinzTeilProd;
