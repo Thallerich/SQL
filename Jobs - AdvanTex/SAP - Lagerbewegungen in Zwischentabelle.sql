@@ -17,6 +17,6 @@ WHERE LagerBew.BestandID = Bestand.ID
   AND Standort.SuchCode IN (N'SMZL', N'BUDA')
   AND Lagerart.ArtiTypeID IN (1, 3) /* Textile Artikel und Eblem-Artikel */
   AND Lagerart.Neuwertig = 1
-  AND LgBewCod.Code != N'IN??'
+  AND LgBewCod.Code NOT IN (N'IN??', N'WKOR')
   AND LagerBew.Differenz != 0
   AND LagerBew.ID > @MinLagerBewID;
