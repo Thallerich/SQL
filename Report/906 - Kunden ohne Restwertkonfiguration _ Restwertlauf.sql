@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, RwConfig.RwConfigBez$LAN$ AS Restwertkonfiguration, RwLauf.RwLaufBez$LAN$ AS Restwertlauf, Kunden.FakFehlteil AS [Fehlteile abrechnen?], [Kundenservice-Mitarbeiter] = (
+SELECT Firma.SuchCode AS Firma, Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, RwConfig.RwConfigBez$LAN$ AS Restwertkonfiguration, RwLauf.RwLaufBez$LAN$ AS Restwertlauf, Kunden.FakFehlteil AS [Fehlteile abrechnen?], [Kundenservice-Mitarbeiter] = (
   SELECT TOP 1 Mitarbei.Name
   FROM KdBer
   JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
@@ -13,9 +13,11 @@ JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
 JOIN RwLauf ON Kunden.RwLaufID = RwLauf.ID
+JOIN Firma ON Kunden.FirmaID = Firma.ID
 WHERE Kunden.SichtbarID IN ($SICHTBARIDS$)
-  AND (($1$ = 1 AND Kunden.RWConfigID < 0) OR $1$ = 0)
-  AND (($2$ = 1 AND Kunden.RWLaufID < 0) OR $2$ = 0)
+  AND Kunden.FirmaID IN ($1$)
+  AND (($2$ = 1 AND Kunden.RWConfigID < 0) OR $2$ = 0)
+  AND (($3$ = 1 AND Kunden.RWLaufID < 0) OR $2$ = 0)
   AND EXISTS (
     SELECT Traeger.*
     FROM Traeger
