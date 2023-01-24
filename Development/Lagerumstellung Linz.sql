@@ -72,6 +72,14 @@ WHERE EinzHist.IsCurrEinzHist = 1
       AND Scans.[DateTime] > N'2023-01-23 13:00:00'
       AND Scans.ActionsID = 45
       AND Scans.AnlageUserID_ = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST')
+  )
+  AND NOT EXISTS (
+    SELECT Scans.*
+    FROM Scans
+    WHERE Scans.EinzHistID = EinzHist.ID
+      AND Scans.[DateTime] > N'2023-01-23 13:00:00'
+      AND Scans.ActionsID = 46
+      AND Scans.AnlageUserID_ = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST')
   );
 
 GO
