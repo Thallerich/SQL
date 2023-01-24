@@ -25,8 +25,9 @@ Kundenstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'KUNDEN'
 )
-SELECT Firma.SuchCode AS Firma, KdGf.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS [Status Kunde], Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Vsastatus.StatusBez AS [Status VSA], Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Traegerstatus.StatusBez AS [Status Träger], EinzHist.Barcode, Teilestatus.StatusBez AS [Status Barcode], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.RuecklaufG AS [Waschzyklen gesamt], EinzHist.RuecklaufK AS [Waschzyklen aktueller Träger], EinzHist.AnzRepairG AS [Reparaturen gesamt], EinzHist.AnzRepair AS [Reparaturen aktueller Träger], Produktion.SuchCode AS Produktion, Produktion.Bez AS [Produktions-Standort]
+SELECT Firma.SuchCode AS Firma, KdGf.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS [Status Kunde], Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Vsastatus.StatusBez AS [Status VSA], Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Traegerstatus.StatusBez AS [Status Träger], EinzHist.Barcode, Teilestatus.StatusBez AS [Status Barcode], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.RuecklaufG AS [Waschzyklen gesamt], EinzHist.RuecklaufK AS [Waschzyklen aktueller Träger], EinzHist.AnzRepairG AS [Reparaturen gesamt], EinzHist.AnzRepair AS [Reparaturen aktueller Träger], EinzTeil.AlterInfo AS [Einsatz-Wochen], EinzTeil.AnzTageImLager AS [Anzahl Tage im Lager], Produktion.SuchCode AS Produktion, Produktion.Bez AS [Produktions-Standort]
 FROM EinzHist
+JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
