@@ -42,6 +42,10 @@ WHERE EinzHist.IsCurrEinzHist = 1
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 GO
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ ♨︎_♨︎  Lenzing muss nur erneut buchen ausgeführt werden!                                                                   ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DECLARE @LagerID int = (SELECT ID FROM Standort WHERE SuchCode = N'SMZL' AND Lager = 1);
 DECLARE @LokalLagerID int = (SELECT ID FROM Standort WHERE SuchCode = N'WOEN' AND Lager = 1);
 DECLARE @TargetLagerArtID int = (SELECT ID FROM Lagerart WHERE Lagerart = N'WOLIBKNU');
