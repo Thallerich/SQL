@@ -28,7 +28,7 @@ WITH BaseData AS (
 )
 UPDATE Vsa SET StandKonID = BaseData.StandKonID, ServTypeID = BaseData.ServTypeID, Vsa.Name3 = BaseData.Name3
 OUTPUT deleted.ID, deleted.StandKonID, deleted.ServTypeID, deleted.Name3
-INTO __IT63097_Vsa (VsaID, StandKonID, ServTypeID, Name3)
+INTO _IT67442_Vsa (VsaID, StandKonID, ServTypeID, Name3)
 FROM BaseData
 WHERE BaseData.VsaID = Vsa.ID;
 
@@ -46,8 +46,22 @@ WITH BaseData AS (
 )
 UPDATE VsaTour SET MinBearbTage = BaseData.Bearbeitungstage
 OUTPUT deleted.ID, deleted.MinBearbTage
-INTO __IT63097_VsaTour (VsaTourID, MinBearbTage)
+INTO _IT67442_VsaTour (VsaTourID, MinBearbTage)
 FROM BaseData
 WHERE BaseData.VsaTourID = VsaTour.ID;
+
+GO
+
+UPDATE AnfKo SET ProduktionID = x.ProduktionID
+FROM (
+  SELECT Vsa.ID AS VsaID, StandBer.ProduktionID
+  FROM Vsa
+  JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
+  WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
+    AND Vsa.ID IN (SELECT _IT67442_Vsa.VsaID FROM _IT67442_Vsa)
+) AS x
+WHERE x.VsaID = AnfKo.VsaID
+  AND AnfKo.LieferDatum > GETDATE()
+  AND AnfKo.Status <= N'I';
 
 GO
