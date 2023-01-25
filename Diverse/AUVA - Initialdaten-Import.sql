@@ -31,6 +31,7 @@ ALTER TABLE _auvainitial ALTER COLUMN Kostenstelle nchar(6) COLLATE Latin1_Gener
 /* Import über SSMS in Tabelle _auvainitial - Struktur siehe oben */
 
 SELECT * FROM _auvainitial;
+UPDATE _auvainitial SET Kartennummer = RIGHT(REPLICATE(N'0', 8) + RTRIM(Kartennummer), 8) WHERE LEN(Kartennummer) != 8;
 -- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM _auvainitial WHERE Standort IS NULL;
 -- SELECT DISTINCT Standort FROM _auvainitial;
 
@@ -148,7 +149,7 @@ WHERE NOT EXISTS (
   SELECT Traeger.ID
   FROM Traeger
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
-  JOIN Abteil ON Vsa.AbteilID = Abteil.ID
+  JOIN Abteil ON Traeger.AbteilID = Abteil.ID
   WHERE Vsa.RentomatID = ImportData.RentomatID
     AND Traeger.PersNr = ImportData.PersNr 
     AND Abteil.Abteilung = ImportData.Kostenstelle
@@ -161,15 +162,15 @@ JOIN Vsa ON Traeger.VsaID = Vsa.ID
 WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
   AND Traeger.Status = N'A'
   AND Traeger.RentomatKarte IS NOT NULL
-  AND Traeger.Update_ > N'2022-11-29 12:35:00';
+  AND Traeger.Update_ > N'2023-01-25 09:30:00';
 
 SELECT Traeger.RentomatKarte
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport)
   AND Traeger.Status = N'I'
-  AND Traeger.Update_ > N'2022-11-29 09:00:00'
-  AND Traeger.UserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE UserName = N'STHA');
+  AND Traeger.Update_ > N'2023-01-25 09:30:00'
+  AND Traeger.UserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE UserName = N'THALST');
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Einzeltests                                                                                                               ++ */
@@ -192,7 +193,7 @@ JOIN Kunden oN Vsa.KundenID = Kunden.ID
 JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
 JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-WHERE Rentomat.SchrankNr LIKE N'%UM%'
+WHERE Rentomat.SchrankNr LIKE N'%RW%'
   AND Traeger.Status = N'A'
   AND Traeger.RentomatKarte IS NOT NULL;
 
@@ -208,21 +209,57 @@ WITH doublewearer AS (
   JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
   JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
   JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-  WHERE Rentomat.SchrankNr LIKE N'%UM%'
+  WHERE Rentomat.SchrankNr LIKE N'%RW%'
     AND Traeger.Status = N'A'
     AND Traeger.RentomatKarte IS NOT NULL
   GROUP BY Traeger.RentomatKarte
   HAVING COUNT(Traeger.ID) > 1
 )
-SELECT Traeger.Traeger, Traeger.PersNr, Traeger.Vorname, Traeger.Nachname, Traeger.Titel
+SELECT Traeger.Traeger, Traeger.PersNr, Traeger.Vorname, Traeger.Nachname, Traeger.Titel, Traeger.RentomatKarte AS MifareID
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden oN Vsa.KundenID = Kunden.ID
 JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
 JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-WHERE Rentomat.SchrankNr LIKE N'%UM%'
+WHERE Rentomat.SchrankNr LIKE N'%RW%'
   AND Traeger.Status = N'A'
   AND Traeger.RentomatKarte IS NOT NULL
   AND Traeger.RentomatKarte IN (SELECT RentomatKarte FROM doublewearer)
 ORDER BY PersNr ASC;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Rollback - reactivate deactivated wearers                                                                                 ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/* 
+DECLARE @RecativateWearer TABLE (
+  TraegerID int PRIMARY KEY NOT NULL,
+  RentomatKarte nvarchar(25) COLLATE Latin1_General_CS_AS
+);
+
+INSERT INTO @RecativateWearer (TraegerID, RentomatKarte)
+SELECT Traeger.ID, tt.RentomatKarte
+FROM Traeger
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Salesianer_Test.dbo.Traeger tt ON tt.ID = Traeger.ID
+WHERE Vsa.RentomatID = 38
+  AND Traeger.Update_ > N'2023-01-25 09:30:00'
+  --AND Traeger.UserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE UserName = N'THALST')
+  AND Traeger.[Status] = N'I'
+  AND NOT EXISTS (
+    SELECT t.*
+    FROM Salesianer_Test.dbo.Traeger t
+    JOIN Salesianer_Test.dbo.Vsa v ON t.VsaID = v.ID
+    WHERE v.RentomatID = 38
+      AND t.[Status] = N'I'
+      AND t.ID = Traeger.ID
+  );
+
+UPDATE Traeger SET Status = N'A', RentomatKarte = [@RecativateWearer].RentomatKarte
+FROM @RecativateWearer
+WHERE [@RecativateWearer].TraegerID = Traeger.ID
+
+GO
+*/
+
