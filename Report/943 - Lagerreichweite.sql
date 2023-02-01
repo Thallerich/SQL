@@ -2,7 +2,7 @@ WITH Entnahmen AS (
   SELECT LagerBew.BestandID, COUNT(LagerBew.ID) AS AnzEntnahmen
   FROM LagerBew
   WHERE DATEDIFF(year, LagerBew.Zeitpunkt, GETDATE()) <= 12
-    AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)
+    AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE (LgBewCod.IstEntnahme = 1 OR LgBewCod.Code = N'UMZL'))
   GROUP BY LagerBew.BestandID
 )
 SELECT Bereich.BereichBez AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Standort.Bez AS Lagerstandort, LagerArt.Neuwertig AS IstNeuware, SUM(Bestand.Bestand) AS Lagerbestand, ISNULL(SUM(Entnahmen.AnzEntnahmen), 0) AS [Entnahmen letzte 12 Monate], CAST(ROUND(CAST(ISNULL(SUM(Entnahmen.AnzEntnahmen), 0) AS float) / 12, 0) AS int) AS [Durschnittliche monatliche Entnahmen], SUM(Bestand.Umlauf) AS Umlaufmenge
