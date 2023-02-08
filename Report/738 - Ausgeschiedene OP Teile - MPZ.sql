@@ -33,16 +33,16 @@ CREATE TABLE #OPSchrott (
 );
 
 INSERT INTO #OPSchrott (EinzTeilID, [Code], ArtikelID, WegGrundID, WegDatum, VsaID, Erstwoche, RuecklaufG, ProduktionID)
-SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, EinzTeil.Erstwoche, EinzTeil.RuecklaufG, ProduktionID = (
+SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, EinzTeil.Erstwoche, EinzTeil.RuecklaufG, ProduktionID = ISNULL((
     SELECT TOP 1 COALESCE(IIF(ZielNr.ProduktionsID < 0, NULL, ZielNr.ProduktionsID), IIF(ArbPlatz.StandortID < 0, NULL, ArbPlatz.StandortID), IIF(Mitarbei.StandortID < 0, NULl, Mitarbei.StandortID), -1)
     FROM Scans
     JOIN ZielNr ON Scans.ZielNrID = ZielNr.ID
     JOIN ArbPlatz ON Scans.ArbPlatzID = ArbPlatz.ID
     JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
     WHERE Scans.EinzTeilID = EinzTeil.ID
-      AND Scans.ActionsID = 108
+      AND Scans.ActionsID IN (7, 108)
     ORDER BY Scans.[DateTime] DESC
-  )
+  ), -1)
 FROM EinzTeil
 WHERE EinzTeil.WegDatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzTeil.WegGrundID IN ($3$)
