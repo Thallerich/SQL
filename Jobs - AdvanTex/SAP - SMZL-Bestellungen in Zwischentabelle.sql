@@ -10,7 +10,7 @@ BEGIN
 END;
 
 INSERT INTO __BKoSMZL (ID)
-SELECT BKo.ID
+SELECT BKo.ID, BKo.BestNr
 FROM BKo
 JOIN BKoArt ON BKo.BKoArtID = BKoArt.ID
 JOIN Lagerart ON BKo.LagerArtID = Lagerart.ID
@@ -26,4 +26,10 @@ WHERE BKo.Datum <= CAST(GETDATE() AS date)
   AND Standort.SuchCode = N'SMZL'
   AND (LiefType.InternerLief = 0 OR (Lagerart.FirmaID != COALESCE(LiefLagerart.FirmaID, -1) AND COALESCE(LiefLagerart.FirmaID, -1) > -1))
   AND BKo.SentToSAP = 0
-  AND BKo.ID > 0;
+  AND BKo.ID > 0
+  AND EXISTS (
+    SELECT BPo.*
+    FROM BPo
+    WHERE BPo.BKoID = BKo.ID
+      AND BPo.Pos > 0
+  );
