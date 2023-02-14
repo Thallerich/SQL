@@ -10,7 +10,7 @@ BEGIN
 END;
 
 INSERT INTO __BKoSMZL (ID)
-SELECT BKo.ID, BKo.BestNr
+SELECT BKo.ID
 FROM BKo
 JOIN BKoArt ON BKo.BKoArtID = BKoArt.ID
 JOIN Lagerart ON BKo.LagerArtID = Lagerart.ID
