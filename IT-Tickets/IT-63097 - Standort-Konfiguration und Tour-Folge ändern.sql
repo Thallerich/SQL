@@ -65,3 +65,45 @@ WHERE x.VsaID = AnfKo.VsaID
   AND AnfKo.Status <= N'I';
 
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Fehlende Artikel zu bestehenden Packzetteln hinzufügen                                                                    ++ */
+/* ++ Separater Schritt - erst nach GO von Larissa!                                                                             ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/*
+DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+DECLARE @NewAnfPo TABLE (
+  AnfKoID int,
+  AbteilID int,
+  KdArtiID int,
+  ArtGroeID int,
+  AnlageUserID_ int,
+  UserID_ int
+);
+
+INSERT INTO @NewAnfPo (AnfKoID, AbteilID, KdArtiID, ArtGroeID, AnlageUserID_, UserID_)
+SELECT AnfKo.ID AS AnfKoID, VsaAnf.AbteilID, VsaAnf.KdArtiID, IIF(Bereich.VsaAnfGroe = 1, VsaAnf.ArtGroeID, -1) AS ArtGroeID, @UserID AS AnlageUserID_, @UserID AS UserID_
+FROM AnfKo
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN VsaAnf ON VsaAnf.VsaID = Vsa.ID
+JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Bereich ON KdBer.BereichID = Bereich.ID
+JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
+WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
+  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230215.VsaID FROM _IT68183_Vsa_20230215)
+  AND AnfKo.LieferDatum > GETDATE()
+  AND AnfKo.Status < N'I'
+  AND VsaAnf.[Status] IN (N'A', N'C')
+  AND NOT EXISTS (
+    SELECT AnfPo.*
+    FROM AnfPo
+    WHERE AnfPo.AnfKoID = AnfKo.ID
+      AND AnfPo.KdArtiID = VsaAnf.KdArtiID
+  );
+
+INSERT INTO AnfPo (AnfKoID, AbteilID, KdArtiID, ArtGroeID, AnlageUserID_, UserID_)
+SELECT AnfKoID, AbteilID, KdArtiID, ArtGroeID, AnlageUserID_, UserID_
+FROM @NewAnfPo;
+*/
