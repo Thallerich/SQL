@@ -107,3 +107,41 @@ INSERT INTO AnfPo (AnfKoID, AbteilID, KdArtiID, ArtGroeID, AnlageUserID_, UserID
 SELECT AnfKoID, AbteilID, KdArtiID, ArtGroeID, AnlageUserID_, UserID_
 FROM @NewAnfPo;
 */
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ "Zu viel" Artikel von bestehenden Packzetteln entfernen                                                                   ++ */
+/* ++ Separater Schritt - erst nach GO von Larissa!                                                                             ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/* 
+DROP TABLE IF EXISTS #AnfPoNurEB;
+GO
+
+SELECT AnfPo.ID
+INTO #AnfPoNurEB
+FROM AnfPo
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Bereich ON KdBer.BereichID = Bereich.ID
+JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
+JOIN VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = AnfPo.KdArtiID AND AnfPo.ArtGroeID = IIF(Bereich.VsaAnfGroe = 1, VsaAnf.ArtGroeID, -1)
+WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
+  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230216.VsaID FROM _IT68183_Vsa_20230216)
+  AND AnfKo.LieferDatum > GETDATE()
+  AND AnfKo.Status < N'I'
+  AND VsaAnf.[Status] IN (N'E')
+  AND AnfPo.Angefordert != 0;
+
+GO
+
+UPDATE AnfPo SET Angefordert = 0
+WHERE ID IN (
+  SELECT ID
+  FROM #AnfPoNurEB
+);
+
+GO
+*/
