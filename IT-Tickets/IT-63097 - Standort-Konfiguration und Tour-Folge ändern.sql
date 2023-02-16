@@ -92,7 +92,7 @@ JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
 WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
-  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230215.VsaID FROM _IT68183_Vsa_20230215)
+  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230216.VsaID FROM _IT68183_Vsa_20230216)
   AND AnfKo.LieferDatum > GETDATE()
   AND AnfKo.Status < N'I'
   AND VsaAnf.[Status] IN (N'A', N'C')
