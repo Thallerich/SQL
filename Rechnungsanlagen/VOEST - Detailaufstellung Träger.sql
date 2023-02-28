@@ -25,12 +25,12 @@ SELECT Artikel.ID AS ArtikelID,
   Artikel.ArtikelBez AS ArtikelBez,
   KdArti.VariantBez AS Variante,
   0 AS Waschzyklen,
-  EinzHist.RuecklaufK AS WaschzyklenGesamt,
+  SUM(EinzHist.RuecklaufK) AS WaschzyklenGesamt,
   SUM(AbtKdArW.EPreis) AS Mietkosten,
   CAST(0 AS money) AS Waschkosten,
   CAST(0 AS money) AS Gesamt,
   EinzHist.Barcode,
-  EinzHist.IndienstDat AS Erstausgabedatum
+  MIN(EinzHist.IndienstDat) AS Erstausgabedatum
 INTO #TmpVOESTRechnung
 FROM RechPo
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -69,13 +69,11 @@ GROUP BY Artikel.ID,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
   KdArti.VariantBez,
-  EinzHist.RuecklaufK,
-  EinzHist.Barcode,
-  EinzHist.IndienstDat;
+  EinzHist.Barcode;
 
 MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
 USING (
-  SELECT EinzHist.ArtikelID, EinzHist.TraegerID, EinzHist.Barcode, EinzHist.IndienstDat AS Erstausgabedatum, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.ID AS AbteilID, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Traeger.Traeger AS TraegerNr, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS ArtikelBez, KdArti.VariantBez AS Variante, LsPo.EPreis, COUNT(Scans.ID) AS Waschzyklen, EinzHist.RuecklaufK
+  SELECT EinzHist.ArtikelID, Scans.TraegerID, EinzHist.Barcode, MIN(EinzHist.IndienstDat) AS Erstausgabedatum, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.ID AS AbteilID, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Traeger.Traeger AS TraegerNr, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS ArtikelBez, KdArti.VariantBez AS Variante, LsPo.EPreis, COUNT(Scans.ID) AS Waschzyklen, SUM(EinzHist.RuecklaufK) AS RuecklaufK
   FROM Scans
   JOIN LsPo ON Scans.LsPoID = LsPo.ID
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
@@ -90,7 +88,7 @@ USING (
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   WHERE RechKo.ID = @RechKoID
     AND Scans.EinzHistID > 0
-  GROUP BY EinzHist.ArtikelID, EinzHist.TraegerID, EinzHist.Barcode, EinzHist.IndienstDat, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Vsa.GebaeudeBez, Vsa.Name2, Abteil.ID, Abteil.Abteilung, Abteil.Bez, Traeger.Traeger, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArti.VariantBez, LsPo.EPreis, EinzHist.RuecklaufK
+  GROUP BY EinzHist.ArtikelID, Scans.TraegerID, EinzHist.Barcode, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Vsa.GebaeudeBez, Vsa.Name2, Abteil.ID, Abteil.Abteilung, Abteil.Bez, Traeger.Traeger, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArti.VariantBez, LsPo.EPreis
 ) AS Bearbeitung
 ON Bearbeitung.ArtikelID = VOESTRechnung.ArtikelID AND Bearbeitung.TraegerID = VOESTRechnung.TraegerID AND Bearbeitung.Variante = VOESTRechnung.Variante AND Bearbeitung.Barcode = VOESTRechnung.Barcode AND Bearbeitung.AbteilID = VOESTRechnung.AbteilID AND Bearbeitung.VsaID = VOESTRechnung.VsaID
 WHEN MATCHED THEN
