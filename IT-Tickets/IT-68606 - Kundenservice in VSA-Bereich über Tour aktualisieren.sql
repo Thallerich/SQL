@@ -66,3 +66,38 @@ JOIN Vsa ON VsaBer.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID;
 
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #KSUpdate;
+
+GO
+
+CREATE TABLE #KSUpdate (
+  VsaBerID int NOT NULL,
+  ServiceID int NOT NULL
+);
+
+ALTER TABLE #KSUpdate
+  ADD CONSTRAINT PK_KSUpdate PRIMARY KEY CLUSTERED (VsaBerID, ServiceID);
+
+GO
+
+INSERT INTO #KSUpdate (VsaBerID, ServiceID)
+SELECT VsaBer.ID, Mitarbei.ID
+FROM VsaBer
+JOIN Vsa ON VsaBer.VsaID = Vsa.ID
+JOIN Kunden oN Vsa.KundenID = Kunden.ID
+JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
+JOIN Bereich ON KdBer.BereichID = Bereich.ID
+JOIN _IT68606_2 ON Kunden.KdNr = _IT68606_2.KdNr AND Vsa.VsaNr = _IT68606_2.VsaNr AND Bereich.BereichBez = _IT68606_2.BereichBez
+JOIN Mitarbei ON _IT68606_2.Kundenservice = Mitarbei.Name;
+
+GO
+
+UPDATE VsaBer SET ServiceID = KSUpdate.ServiceID
+FROM #KSUpdate KSUpdate
+WHERE KSUpdate.VsaBerID = VsaBer.ID;
+
+GO
