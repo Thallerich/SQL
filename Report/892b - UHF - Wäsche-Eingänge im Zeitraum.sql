@@ -1,31 +1,53 @@
-DECLARE @KundenID int = $ID$;
-DECLARE @EingelesenVon datetime = CAST($1$ AS datetime);
-DECLARE @EingelesenBis datetime = CAST(DATEADD(day, 1, $2$) AS datetime);
+DECLARE @KundenID int = $0$;
+DECLARE @EingelesenVon datetime = $1$;
+DECLARE @EingelesenBis datetime = $2$;
+
+DROP TABLE IF EXISTS #InScan;
+
+CREATE TABLE #InScan (
+  ScansID bigint PRIMARY KEY,
+  EinzTeilID int,
+  [DateTime] datetime2
+);
+
+CREATE INDEX InScan_EinzTeilID ON #InScan (EinzTeilID);
+
+INSERT INTO #InScan (ScansID, EinzTeilID, [DateTime])
+SELECT Scans.ID AS ScansID, Scans.EinzTeilID, Scans.[DateTime]
+FROM Scans
+WHERE Scans.[DateTime] BETWEEN @EingelesenVon AND @EingelesenBis
+  AND Scans.Menge = 1
+  AND Scans.EinzTeilID IN (
+    SELECT DISTINCT Scans.EinzTeilID
+    FROM Scans
+    JOIN AnfPo ON Scans.AnfPoID = AnfPo.ID
+    JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+    JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+    WHERE Vsa.KundenID = @KundenID
+      AND AnfKo.Lieferdatum >= @EingelesenVon
+  );
 
 WITH Eingangsscans AS (
-  SELECT MAX(Ausgangsscan.ID) AS OPScansID_Out, Ausgangsscan.OPTeileID, Eingangsscan.OPScansID AS OPScansID_In
-  FROM OPScans AS Ausgangsscan
-  JOIN (
-    SELECT OPScans.ID AS OPScansID, OPScans.OPTeileID, OPScans.Zeitpunkt
-    FROM OPScans
-    WHERE OPScans.Zeitpunkt BETWEEN @EingelesenVon AND @EingelesenBis
-      AND OPScans.Menge = 1
-  ) AS Eingangsscan ON Ausgangsscan.OPTeileID = Eingangsscan.OPTeileID
+  SELECT MAX(Ausgangsscan.ID) AS ScansID_Out, Ausgangsscan.EinzTeilID, Eingangsscan.ScansID AS ScansID_In
+  FROM Scans AS Ausgangsscan
+  JOIN #InScan AS Eingangsscan ON Ausgangsscan.EinzTeilID = Eingangsscan.EinzTeilID
   WHERE Ausgangsscan.Menge = -1
-    AND Ausgangsscan.Zeitpunkt > Eingangsscan.Zeitpunkt
-  GROUP BY Ausgangsscan.OPTeileID, Eingangsscan.OPScansID
+    AND Ausgangsscan.[DateTime] > Eingangsscan.[DateTime]
+  GROUP BY Ausgangsscan.EinzTeilID, Eingangsscan.ScansID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, OPScans_In.Zeitpunkt AS [Einlesezeitpunkt], ZielNr.ZielNrBez AS [Einlese-Ort], LsKo.LsNr AS [geliefert mit LsNr], LsKo.Datum AS [geliefert am], OPTeile.Code AS Chipcode, CAST(IIF(OPTeile.VsaOwnerID > 0, 1, 0) AS bit) AS [Eigenwäsche?]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Scans_In.[DateTime] AS [Einlese-Zeitpunkt], ZielNr.ZielNrBez AS [Einlese-Ort], LsKo.LsNr AS [geliefert mit LsNr], LsKo.Datum AS [geliefert am], EINZTEIL.Code AS Chipcode, CAST(IIF(EinzTeil.VsaOwnerID > 0, 1, 0) AS bit) AS [Eigenwäsche?]
 FROM Eingangsscans
-JOIN OPTeile ON Eingangsscans.OPTeileID = OPTeile.ID
-JOIN Artikel ON OPTeile.ArtikelID = Artikel.ID
-JOIN OPScans AS OPScans_Out ON Eingangsscans.OPScansID_Out = OPScans_Out.ID
-JOIN OPScans AS OPScans_In ON Eingangsscans.OPScansID_In = OPScans_In.ID
-JOIN ZielNr ON OPScans_In.ZielNrID = ZielNr.ID
-JOIN AnfPo ON OPScans_Out.AnfPoID = AnfPo.ID
+JOIN EinzTeil ON Eingangsscans.EinzTeilID = EinzTeil.ID
+JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
+JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+JOIN Scans AS Scans_Out ON Eingangsscans.ScansID_Out = Scans_Out.ID
+JOIN Scans AS Scans_In ON Eingangsscans.ScansID_In = Scans_In.ID
+JOIN ZielNr ON Scans_In.ZielNrID = ZielNr.ID
+JOIN AnfPo ON Scans_Out.AnfPoID = AnfPo.ID
 JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN LsKo ON AnfKo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.ID = @KundenID
-  AND (($3$ = 1 AND OPTeile.VsaOwnerID > 0) OR ($3$ = 0));
+  AND (($3$ = 1 AND EinzTeil.VsaOwnerID > 0) OR ($3$ = 0));
+;
