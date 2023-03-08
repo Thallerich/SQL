@@ -1,5 +1,5 @@
-IF OBJECT_ID('_IT68183_Vsa_20230216') IS NULL
-  CREATE TABLE _IT68183_Vsa_20230216 (
+IF OBJECT_ID('_IT68943_Vsa_20230309') IS NULL
+  CREATE TABLE _IT68943_Vsa_20230309 (
     VsaID int PRIMARY KEY,
     StandKonID int,
     ServTypeID int,
@@ -9,8 +9,8 @@ IF OBJECT_ID('_IT68183_Vsa_20230216') IS NULL
 
 GO
 
-IF OBJECT_ID('_IT68183_VsaTour_20230216') IS NULL
-  CREATE TABLE _IT68183_VsaTour_20230216 (
+IF OBJECT_ID('_IT68934_VsaTour_20230309') IS NULL
+  CREATE TABLE _IT68934_VsaTour_20230309 (
     VsaTourID int PRIMARY KEY,
     MinBearbTage int,
     Zeitpunkt datetime DEFAULT GETDATE()
@@ -19,36 +19,37 @@ IF OBJECT_ID('_IT68183_VsaTour_20230216') IS NULL
 GO
 
 WITH BaseData AS (
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.Bez, StandKon.ID AS StandKonID, StandKon.StandKonBez, ServType.ID AS ServTypeID, ServType.ServTypeBez, LEFT(_IT68183_StandKon_20230216.VsaName3 COLLATE Latin1_General_CS_AS + ISNULL(N' - ' + Vsa.Name3, N''), 40) AS Name3
-  FROM Salesianer.dbo._IT68183_StandKon_20230216
-  JOIN Kunden ON _IT68183_StandKon_20230216.KdNr = Kunden.KdNr
-  JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = _IT68183_StandKon_20230216.VsaNr
-  JOIN StandKon ON StandKon.StandKonBez = _IT68183_StandKon_20230216.StandKon COLLATE Latin1_General_CS_AS
-  JOIN ServType ON ServType.ServTypeBez = _IT68183_StandKon_20230216.ServType COLLATE Latin1_General_CS_AS
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.Bez, StandKon.ID AS StandKonID, StandKon.StandKonBez, ServType.ID AS ServTypeID, ServType.ServTypeBez, LEFT(_IT68943_StandKon_20230309.VsaName3 + ISNULL(N' - ' + Vsa.Name3, N''), 40) AS Name3
+  FROM Salesianer.dbo._IT68943_StandKon_20230309
+  JOIN Kunden ON _IT68943_StandKon_20230309.KdNr = Kunden.KdNr
+  JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = _IT68943_StandKon_20230309.VsaNr
+  JOIN StandKon ON StandKon.StandKonBez = _IT68943_StandKon_20230309.StandKon
+  JOIN ServType ON ServType.ServTypeBez = _IT68943_StandKon_20230309.ServType
 )
 UPDATE Vsa SET StandKonID = BaseData.StandKonID, ServTypeID = BaseData.ServTypeID, Vsa.Name3 = BaseData.Name3
 OUTPUT deleted.ID, deleted.StandKonID, deleted.ServTypeID, deleted.Name3
-INTO _IT68183_Vsa_20230216 (VsaID, StandKonID, ServTypeID, Name3)
+INTO _IT68943_Vsa_20230309 (VsaID, StandKonID, ServTypeID, Name3)
 FROM BaseData
 WHERE BaseData.VsaID = Vsa.ID;
 
 GO
 
 WITH BaseData AS (
-  SELECT VsaTour.ID AS VsaTourID, _IT68183_TourTage_20230216.Bearbeitungstage
-  FROM Salesianer.dbo._IT68183_TourTage_20230216
-  JOIN Touren ON _IT68183_TourTage_20230216.Tour COLLATE Latin1_General_CS_AS = Touren.Tour
-  JOIN Kunden ON _IT68183_TourTage_20230216.KdNr = Kunden.KdNr
-  JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = _IT68183_TourTage_20230216.VsaNr
+  SELECT VsaTour.ID AS VsaTourID, _IT68943_TourTage_20230309.Bearbeitungstage
+  FROM Salesianer.dbo._IT68943_TourTage_20230309
+  JOIN Touren ON _IT68943_TourTage_20230309.Tour = Touren.Tour
+  JOIN Kunden ON _IT68943_TourTage_20230309.KdNr = Kunden.KdNr
+  JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = _IT68943_TourTage_20230309.VsaNr
   JOIN VsaTour ON VsaTour.TourenID = Touren.ID AND VsaTour.VsaID = Vsa.ID AND VsaTour.BisDatum > CAST(GETDATE() AS date)
   JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
-  JOIN Bereich ON KdBer.BereichID = Bereich.ID AND _IT68183_TourTage_20230216.Bereich COLLATE Latin1_General_CS_AS = Bereich.BereichBez
+  JOIN Bereich ON KdBer.BereichID = Bereich.ID AND _IT68943_TourTage_20230309.Bereich = Bereich.BereichBez
 )
 UPDATE VsaTour SET MinBearbTage = BaseData.Bearbeitungstage
 OUTPUT deleted.ID, deleted.MinBearbTage
-INTO _IT68183_VsaTour_20230216 (VsaTourID, MinBearbTage)
+INTO _IT68934_VsaTour_20230309 (VsaTourID, MinBearbTage)
 FROM BaseData
-WHERE BaseData.VsaTourID = VsaTour.ID;
+WHERE BaseData.VsaTourID = VsaTour.ID
+  AND VsaTour.MinBearbTage != BaseData.Bearbeitungstage;
 
 GO
 
@@ -58,11 +59,12 @@ FROM (
   FROM Vsa
   JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
   WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
-    AND Vsa.ID IN (SELECT _IT68183_Vsa_20230216.VsaID FROM _IT68183_Vsa_20230216)
+    AND Vsa.ID IN (SELECT _IT68943_Vsa_20230309.VsaID FROM _IT68943_Vsa_20230309)
 ) AS x
 WHERE x.VsaID = AnfKo.VsaID
   AND AnfKo.LieferDatum > GETDATE()
-  AND AnfKo.Status <= N'I';
+  AND AnfKo.Status <= N'I'
+  AND AnfKo.ProduktionID != x.ProduktionID;
 
 GO
 
@@ -92,7 +94,7 @@ JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
 WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
-  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230216.VsaID FROM _IT68183_Vsa_20230216)
+  AND Vsa.ID IN (SELECT _IT68943_Vsa_20230309.VsaID FROM _IT68943_Vsa_20230309)
   AND AnfKo.LieferDatum > GETDATE()
   AND AnfKo.Status < N'I'
   AND VsaAnf.[Status] IN (N'A', N'C')
@@ -129,7 +131,7 @@ JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID
 JOIN VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = AnfPo.KdArtiID AND AnfPo.ArtGroeID = IIF(Bereich.VsaAnfGroe = 1, VsaAnf.ArtGroeID, -1)
 WHERE StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
-  AND Vsa.ID IN (SELECT _IT68183_Vsa_20230216.VsaID FROM _IT68183_Vsa_20230216)
+  AND Vsa.ID IN (SELECT _IT68943_Vsa_20230309.VsaID FROM _IT68943_Vsa_20230309)
   AND AnfKo.LieferDatum > GETDATE()
   AND AnfKo.Status < N'I'
   AND VsaAnf.[Status] IN (N'E')
