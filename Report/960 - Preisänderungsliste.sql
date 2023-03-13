@@ -3,7 +3,33 @@ WITH KdArtiStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'KDARTI'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Standort.Bez AS Haupstandort, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.Variante, KdArtiStatus.StatusBez AS [Kundenartikel-Status], PrArchiv.Datum AS [Änderung effektiv ab], KdArti.WaschPreis AS [Bearbeitung aktuell], KdArtiLeasProWoche.LeasPreis AS [Leasing aktuell], KdArti.LeasPreis AS [Periodenpreis aktuell], Coalesce(PeKo.Bez, N'') AS Preiserhöhung, Coalesce(Mitarbei.Name, N'') AS [PE-Durchführungs-Mitarbeiter], KdArti.ID AS KdArtiID
+SELECT Kunden.KdNr,
+  Kunden.SuchCode AS Kunde,
+  Standort.Bez AS Haupstandort,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  KdArti.Variante,
+  KdArtiStatus.StatusBez AS [Kundenartikel-Status],
+  [Bearbeitung vor Anpassung] = (
+    SELECT TOP 1 pa.WaschPreis
+    FROM PrArchiv pa
+    WHERE pa.KdArtiID = PrArchiv.KdArtiID
+      AND pa.Aktivierungszeitpunkt < PrArchiv.Aktivierungszeitpunkt
+    ORDER BY pa.Aktivierungszeitpunkt DESC
+  ),
+  [Leasing vor Anpassung] = (
+    SELECT TOP 1 pa.LeasPreis
+    FROM PrArchiv pa
+    WHERE pa.KdArtiID = PrArchiv.KdArtiID
+      AND pa.Aktivierungszeitpunkt < PrArchiv.Aktivierungszeitpunkt
+    ORDER BY pa.Aktivierungszeitpunkt DESC
+  ),
+  PrArchiv.Datum AS [Änderung effektiv ab],
+  PrArchiv.WaschPreis AS [Bearbeitung nach Anpassung],
+  PrArchiv.LeasPreis AS [Leasing nach Anpassung],
+  COALESCE(PeKo.Bez, N'') AS Preiserhöhung,
+  COALESCE(Mitarbei.Name, N'') AS [PE-Durchführungs-Mitarbeiter],
+  KdArti.ID AS KdArtiID
 FROM PrArchiv
 JOIN KdArti ON PrArchiv.KdArtiID = KdArti.ID
 CROSS APPLY advFunc_GetLeasPreisProWo(KdArti.ID) AS KdArtiLeasProWoche
