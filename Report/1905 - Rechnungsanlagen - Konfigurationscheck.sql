@@ -2,10 +2,11 @@
 /* ++ Pipeline: Mit Mail ohne Empfänger                                                                                    ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, RKoAnlag.RkoAnlagBez$LAN$ AS Rechnungsanlage, KdRKoAnl.Drucken AS [wird auch gedruckt?]
+SELECT Standort.SuchCode AS Hauptstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, RKoAnlag.RkoAnlagBez$LAN$ AS Rechnungsanlage, KdRKoAnl.Drucken AS [wird auch gedruckt?]
 FROM KdRKoAnl
 JOIN RKoAnlag ON KdRKoAnl.RKoAnlagID = RKoAnlag.ID
 JOIN Kunden ON KdRKoAnl.KundenID = Kunden.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
 WHERE (KdRKoAnl.PDF = 1 OR KdRKoAnl.CSV = 1)
   AND NOT EXISTS (
     SELECT RKoMail.*
@@ -30,10 +31,11 @@ WHERE (KdRKoAnl.PDF = 1 OR KdRKoAnl.CSV = 1)
 /* ++ Pipeline: Ohne Mail mit Empfänger                                                                                    ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, RKoAnlag.RkoAnlagBez$LAN$ AS Rechnungsanlage, KdRKoAnl.Drucken AS [wird gedruckt?]
+SELECT Standort.SuchCode AS Hauptstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, RKoAnlag.RkoAnlagBez$LAN$ AS Rechnungsanlage, KdRKoAnl.Drucken AS [wird gedruckt?]
 FROM KdRKoAnl
 JOIN RKoAnlag ON KdRKoAnl.RKoAnlagID = RKoAnlag.ID
 JOIN Kunden ON KdRKoAnl.KundenID = Kunden.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
 WHERE (
   EXISTS (
     SELECT RKoMail.*
