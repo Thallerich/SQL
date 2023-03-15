@@ -5,7 +5,7 @@ WITH Entnahmen AS (
     AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE (LgBewCod.IstEntnahme = 1 OR LgBewCod.Code = N'UMZL'))
   GROUP BY LagerBew.BestandID
 )
-SELECT Bereich.BereichBez AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Standort.Bez AS Lagerstandort, LagerArt.Neuwertig AS IstNeuware, SUM(Bestand.Bestand) AS Lagerbestand, Bestand.EntnahmeJahr, CAST(ROUND(CAST(ISNULL(SUM(Bestand.EntnahmeJahr), 0) AS float) / 12, 0) AS int) AS [Durschnittliche monatliche Entnahmen], SUM(Bestand.Umlauf) AS Umlaufmenge, ArtGroe.Umlauf as 'Gesamtumlauf'
+SELECT Bereich.BereichBez AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, Standort.Bez AS Lagerstandort, LagerArt.Neuwertig AS IstNeuware, SUM(Bestand.Bestand) AS Lagerbestand, Bestand.EntnahmeJahr, CAST(ROUND(CAST(ISNULL(SUM(Bestand.EntnahmeJahr), 0) AS float) / 12, 0) AS int) AS [Durchschnittliche monatliche Entnahmen], SUM(Bestand.Umlauf) AS Umlaufmenge, ArtGroe.Umlauf as 'Gesamtumlauf'
 FROM Bestand
 JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
