@@ -1,4 +1,4 @@
-SELECT EinzTeil.ID AS EinzTeilID, Vsa.ID AS VsaID, LsPo.ID AS LsPoID, AnfPo.ID AS AnfPoID, DATEADD(hour, 21, __CITScan.ConsignmentTime) AS ConsignmentTime
+SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.CurrEinzHistID AS EinzHistID, Vsa.ID AS VsaID, LsPo.ID AS LsPoID, AnfPo.ID AS AnfPoID, DATEADD(hour, 21, __CITScan.ConsignmentTime) AS ConsignmentTime
 INTO #TmpScanToWrite
 FROM EinzTeil
 JOIN __CITScan ON __CITScan.HexCode = EinzTeil.Code
@@ -26,8 +26,8 @@ DECLARE @ZielNr int = 287; /* einfach alles auf GP Kabine 1 rein (Tagsys) ausles
 DECLARE @ActionsID int = 102; /* OP auslesen */
 DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
-INSERT INTO Scans (EinzTeilID, [DateTime], ActionsID, ZielNrID, Menge, LsPoID, AnfPoID, AnlageUserID_, UserID_)
-SELECT EinzTeilID, ConsignmentTime, @ActionsID, @ZielNr, -1, LsPoID, AnfPoID, @UserID, @UserID
+INSERT INTO Scans (EinzTeilID, EinzHistID, [DateTime], ActionsID, ZielNrID, Menge, LsPoID, AnfPoID, AnlageUserID_, UserID_)
+SELECT EinzTeilID, EinzHistID, ConsignmentTime, @ActionsID, @ZielNr, -1, LsPoID, AnfPoID, @UserID, @UserID
 FROM #TmpScanToWrite;
 
 GO
