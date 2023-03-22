@@ -13,13 +13,14 @@ CREATE TABLE #AdvUHF (
 );
 
 CREATE TABLE #AdvUHF2 (
-  Code nvarchar(33),
+  Code nchar(33),
+  Code2 nchar(33),
   ArtikelNr nchar(15),
   Groesse nchar(12)
 );
 
-INSERT INTO #AdvUHF2 (Code, ArtikelNr, Groesse)
-SELECT EinzTeil.Code COLLATE Latin1_General_CI_AS AS Code, Artikel.ArtikelNr COLLATE Latin1_General_CI_AS AS ArtikelNr, ArtGroe.Groesse
+INSERT INTO #AdvUHF2 (Code, Code2, ArtikelNr, Groesse)
+SELECT EinzTeil.Code COLLATE Latin1_General_CI_AS AS Code, EinzTeil.Code2 COLLATE Latin1_General_CI_AS AS Code2, Artikel.ArtikelNr COLLATE Latin1_General_CI_AS AS ArtikelNr, ArtGroe.Groesse COLLATE Latin1_General_CI_AS AS Groesse
 FROM [SALADVPSQLC1A1.salres.com].Salesianer.dbo.EinzTeil
 JOIN [SALADVPSQLC1A1.salres.com].Salesianer.dbo.ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
 JOIN [SALADVPSQLC1A1.salres.com].Salesianer.dbo.Artikel ON ArtGroe.ArtikelID = Artikel.ID
@@ -27,9 +28,9 @@ WHERE EinzTeil.Update_ > DATEADD(hour, -1, GETDATE())
   AND EinzTeil.ArtikelID > 0;
 
 INSERT INTO #AdvUHF (Code, ArtikelNr, Groesse)
-SELECT AdvTeile.Code, AdvTeile.ArtikelNr, AdvTeile.Groesse
+SELECT IIF(LEN(AdvTeile.Code) = 24, AdvTeile.Code, AdvTeile.Code2) AS Code, AdvTeile.ArtikelNr, AdvTeile.Groesse
 FROM #AdvUHF2 AdvTeile
-WHERE LEN(AdvTeile.Code) = 24
+WHERE (LEN(AdvTeile.Code) = 24 OR LEN(AdvTeile.Code2) = 24)
   AND NOT EXISTS (
     SELECT SalesianerChip.Sgtin96HexCode
     FROM LaundryAutomation.dbo.SalesianerChip
