@@ -27,6 +27,15 @@ JOIN [SALADVPSQLC1A1.salres.com].Salesianer.dbo.Artikel ON ArtGroe.ArtikelID = A
 WHERE EinzTeil.Update_ > DATEADD(hour, -1, GETDATE())
   AND EinzTeil.ArtikelID > 0;
 
+/* remove parts where code2 is also present as code */
+DELETE
+FROM #AdvUHF2
+WHERE Code2 IN (
+    SELECT Code
+    FROM #AdvUHF2
+  )
+  AND Code2 != Code;
+
 INSERT INTO #AdvUHF (Code, ArtikelNr, Groesse)
 SELECT IIF(LEN(AdvTeile.Code) = 24, AdvTeile.Code, AdvTeile.Code2) AS Code, AdvTeile.ArtikelNr, AdvTeile.Groesse
 FROM #AdvUHF2 AdvTeile
