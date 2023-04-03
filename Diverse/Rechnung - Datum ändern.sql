@@ -1,12 +1,17 @@
-DECLARE @RechNr int = 30082660;
-DECLARE @CorrDate date = N'2021-02-21';
+DECLARE @RechNr int = 1210000001;
+DECLARE @CorrDate date = N'2023-03-31';
+DECLARE @sqltext nvarchar(max);
 
-UPDATE RechKo SET RechDat = @CorrDate, 
-  FaelligDat = DATEADD(day, ZahlZiel.NettoTage, @CorrDate),
-  SteuerDat = DATEADD(day, ZahlZiel.NettoTage, @CorrDate),
-  MwStDat = @CorrDate
+SET @sqltext = N'
+UPDATE RechKo SET RechDat = @rechdat, 
+  FaelligDat = DATEADD(day, ZahlZiel.NettoTage, @rechdat),
+  SteuerDat = DATEADD(day, ZahlZiel.NettoTage, @rechdat),
+  MwStDat = @rechdat
 FROM RechKo
 JOIN ZahlZiel ON RechKo.ZahlZielID = ZahlZiel.ID
-WHERE RechKo.RechNr = @RechNr;
+WHERE RechKo.RechNr = @rechnr;
+';
+
+EXEC sp_executesql @sqltext, N'@rechnr int, @rechdat date', @RechNr, @CorrDate;
 
 GO
