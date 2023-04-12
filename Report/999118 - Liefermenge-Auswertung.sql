@@ -31,9 +31,10 @@ CREATE TABLE #Result999118 (
   RechNr int
 );
 
-SELECT x.value AS ID
+SELECT Kunden.ID
 INTO #Customers999118
-FROM STRING_SPLIT(N'$1$', N',') AS x;
+FROM Kunden
+WHERE Kunden.ID IN ($1$);
 
 DECLARE @startdate date = $STARTDATE$;
 DECLARE @enddate date = $ENDDATE$;
