@@ -164,6 +164,11 @@ BEGIN TRY
         AND VsaLeas.AbteilID != @abteilid
     );
 
+    UPDATE Abteil SET [Status] = N'I'
+    WHERE Abteil.KundenID = @kundenid
+      AND Abteil.ID != @abteilid
+      AND Abteil.[Status] != N'I';
+
   COMMIT;
 END TRY
 BEGIN CATCH
