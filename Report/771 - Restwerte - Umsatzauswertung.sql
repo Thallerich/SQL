@@ -9,5 +9,6 @@ WHERE Firma.ID IN ($1$)
   AND RechKo.RechDat BETWEEN $STARTDATE$ AND $ENDDATE$
   AND KdGf.ID IN ($2$)
   AND RPoType.StatistikGruppe = N'Restwerte'
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$)
 GROUP BY KdGf.KurzBez, Firma.SuchCode, Kunden.KdNr, Kunden.SuchCode, RechKo.Rechnr, RechKo.RechDat, RPoType.RPoTypeBez$LAN$
 ORDER BY Firma, KdNr, Rechnungsdatum;
