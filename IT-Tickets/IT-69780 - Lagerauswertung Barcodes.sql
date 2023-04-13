@@ -9,11 +9,16 @@ CREATE TABLE #ReportingStandort (
 
 GO
 
-INSERT INTO #ReportingStandort (StandortID, SuchCode)
+/* INSERT INTO #ReportingStandort (StandortID, SuchCode)
 SELECT Standort.ID, Standort.SuchCode
 FROM Standort
 WHERE Standort.SuchCode LIKE N'WOL_'
-  AND Standort.SuchCode != N'WOLI'
+  AND Standort.SuchCode != N'WOLI'; */
+
+INSERT INTO #ReportingStandort (StandortID, SuchCode)
+SELECT Standort.ID, Standort.SuchCode
+FROM Standort
+WHERE Standort.SuchCode = N'SAWR';
 
 GO
 
