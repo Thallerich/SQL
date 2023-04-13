@@ -9,12 +9,22 @@ DECLARE @AnfDelete TABLE (
 );
 
 WITH OldGeneratedDate AS (
-  SELECT ChgLog.TableID AS VsaID, CAST(ChgLog.OldValue AS date) AS OldValue
+  SELECT ChgLog.TableID AS VsaID, MIN(CAST(ChgLog.OldValue AS date)) AS OldValue
   FROM ChgLog
   WHERE ChgLog.TableName = N'VSA'
     AND ChgLog.FieldName = N'VsaAnfBis'
-    AND ChgLog.AnlageUserID_ = 9015291
-    AND ChgLog.[Timestamp] > N'2023-03-27 12:00:00'
+    AND ChgLog.AnlageUserID_ = 9116039
+    AND ChgLog.[Timestamp] > N'2023-04-12 11:00:00'
+    AND NOT EXISTS (
+      SELECT c.*
+      FROM ChgLog c
+      WHERE c.TableName = ChgLog.TableName
+        AND c.FieldName = ChgLog.FieldName
+        AND c.TableID = ChgLog.TableID
+        AND c.ID > ChgLog.ID
+        AND c.AnlageUserID_ != ChgLog.AnlageUserID_
+    )
+  GROUP BY ChgLog.TableID
 )
 INSERT INTO @AnfReset
 SELECT AnfPo.ID AS AnfPoID, AnfPo.AnfKoID, AnfKo.VsaID
@@ -23,11 +33,12 @@ JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN Vsa ON AnfKo.VsaID = Vsa.ID
 JOIN ServType ON Vsa.ServTypeID = ServType.ID
 JOIN VsaAnf ON VsaAnf.KdArtiID = AnfPo.KdArtiID AND VsaAnf.VsaID = AnfKo.VsaID AND VsaAnf.ArtGroeID = AnfPo.ArtGroeID
-WHERE AnfKo.LieferDatum = N'2023-03-31'
+WHERE AnfKo.LieferDatum > N'2023-04-12'
+  AND Vsa.ID = 6147902
   AND UPPER(VsaAnf.Art) <> N'M'
   AND AnfKo.[Status] < N'I'
-  --AND AnfKo.ProduktionID IN (SELECT ID FROM Standort WHERE SuchCode = N'SAWR')
-  AND (AnfKo.AnlageUserID_ = 9015291 OR AnfPo.UserID_ = 9015291)
+  AND AnfKo.ProduktionID NOT IN (SELECT ID FROM Standort WHERE SuchCode LIKE N'UKL_')
+  AND (AnfKo.AnlageUserID_ = 9116039 OR AnfPo.UserID_ = 9116039)
   AND NOT EXISTS (
     SELECT Scans.*
     FROM Scans
@@ -81,14 +92,24 @@ BEGIN TRANSACTION;
 COMMIT;
 
 WITH OldGeneratedDate AS (
-  SELECT ChgLog.TableID AS VsaID, CAST(ChgLog.OldValue AS date) AS OldValue
+  SELECT ChgLog.TableID AS VsaID, MIN(CAST(ChgLog.OldValue AS date)) AS OldValue
   FROM ChgLog
   WHERE ChgLog.TableName = N'VSA'
     AND ChgLog.FieldName = N'VsaAnfBis'
-    AND ChgLog.AnlageUserID_ = 9015291
-    AND ChgLog.[Timestamp] > N'2023-03-27 12:00:00'
+    AND ChgLog.AnlageUserID_ = 9116039
+    AND ChgLog.[Timestamp] > N'2023-04-12 11:00:00'
+    AND NOT EXISTS (
+      SELECT c.*
+      FROM ChgLog c
+      WHERE c.TableName = ChgLog.TableName
+        AND c.FieldName = ChgLog.FieldName
+        AND c.TableID = ChgLog.TableID
+        AND c.ID > ChgLog.ID
+        AND c.AnlageUserID_ != ChgLog.AnlageUserID_
+    )
+  GROUP BY ChgLog.TableID
 )
 UPDATE Vsa SET VsaAnfBis = OldGeneratedDate.OldValue
-FROM OldGeneratedDate
+FROM OldGeneratedDate, Vsa
 WHERE OldGeneratedDate.VsaID = Vsa.ID
-  AND Vsa.ID IN (SELECT VsaID FROM @AnfReset);
+  AND Vsa.VsaAnfBis != OldGeneratedDate.OldValue;
