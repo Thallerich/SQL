@@ -30,7 +30,7 @@ SELECT SetArtikel.ArtikelNr AS [Set-ArtikelNr],
     CASE
       WHEN OPEtiPo.EinzTeilID > 0 THEN InhaltTeil.StueckGewicht
       WHEN OPEtiPo.OPEinwegID > 0 THEN InhaltEinweg.StueckGewicht
-      ELSE N'WTF!?!'
+      ELSE -1
     END,
   [Inhalt-Barcode] = 
     CASE
@@ -46,7 +46,7 @@ SELECT SetArtikel.ArtikelNr AS [Set-ArtikelNr],
       ELSE N'who knows man!'
     END,
   EinzTeil.Erstwoche,
-  EinzTeil.AnzWasch AS [Anzahl Wäschen],
+  EinzTeil.RuecklaufG AS [Anzahl Wäschen],
   [Anzahl Nachwäschen] = (
     SELECT COUNT(Scans.ID)
     FROM Scans
@@ -62,9 +62,9 @@ JOIN SetStatus ON OPEtiKo.[Status] = SetStatus.[Status]
 JOIN Mitarbei AS PackMitarbei ON OPEtiKo.PackMitarbeiID = PackMitarbei.ID
 JOIN OPEtiPo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
 JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
-LEFT OUTER JOIN EinzTeil ON OPEtiPo.EinzTeilID = EinzTeil.ID AND OPEtiPo.EinzTeilID > 0
-LEFT OUTER JOIN Artikel AS InhaltTeil ON EinzTeil.ArtikelID = InhaltTeil.ID
-LEFT OUTER JOIN OPEinweg ON OPEtiPo.OPEinwegID = OPEinweg.ID AND OPEtiPo.OPEinwegID > 0
-LEFT OUTER JOIN Artikel AS InhaltEinweg ON OPEinweg.ArtikelID = InhaltEinweg.ID
+LEFT JOIN EinzTeil ON OPEtiPo.EinzTeilID = EinzTeil.ID AND OPEtiPo.EinzTeilID > 0
+LEFT JOIN Artikel AS InhaltTeil ON EinzTeil.ArtikelID = InhaltTeil.ID
+LEFT JOIN OPEinweg ON OPEtiPo.OPEinwegID = OPEinweg.ID AND OPEtiPo.OPEinwegID > 0
+LEFT JOIN Artikel AS InhaltEinweg ON OPEinweg.ArtikelID = InhaltEinweg.ID
 WHERE OPEtiKo.ProduktionID IN ($1$)
   AND OPEtiKo.PackZeitpunkt BETWEEN @from AND @to;
