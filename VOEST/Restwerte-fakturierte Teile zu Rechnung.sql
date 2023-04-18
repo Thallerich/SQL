@@ -9,6 +9,23 @@ JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Einsatz ON EinzHist.AusdienstGrund = Einsatz.EinsatzGrund
 JOIN RPoType ON TeilSoFa.RPoTypeID = RPoType.ID
-WHERE RechKo.RechNr = 30303276;
+WHERE RechKo.RechNr = 30303276
+  AND EinzHist.Barcode IN (SELECT Barcode COLLATE Latin1_General_CS_AS FROM Salesianer.dbo._VOEST_KVPTeile);
 
 GO
+
+/*
+UPDATE TeilSoFa SET TeilSoFa.Status = N'T'
+WHERE TeilSoFa.ID IN (
+    SELECT TeilSoFa.ID
+    FROM TeilSoFa
+    JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
+    JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+    JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
+    WHERE RechKo.RechNr = 30303276
+      AND EinzHist.Barcode IN (SELECT Barcode COLLATE Latin1_General_CS_AS FROM Salesianer.dbo._VOEST_KVPTeile)
+  )
+  AND TeilSoFa.Status = N'P';
+
+GO
+*/
