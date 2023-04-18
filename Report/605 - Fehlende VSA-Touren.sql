@@ -1,49 +1,97 @@
-BEGIN TRY
-  DROP TABLE #TmpCheck148;
-END TRY
-BEGIN CATCH
-END CATCH;
+DROP TABLE IF EXISTS #TmpCheck148;
+DROP TABLE IF EXISTS #TmpCheck148b;
 
-SELECT DISTINCT KdArtiID, VsaID
+SELECT DISTINCT Schrank.KdArtiID, Schrank.VsaID
 INTO #TmpCheck148
-FROM Schrank, Week
-WHERE Week.VonDat >= GETDATE()
-  AND Week.BisDat <= GETDATE()
-  AND ISNULL(Schrank.Ausdienst,'2099/52') > Week.Woche
+FROM Schrank, [Week]
+WHERE [Week].VonDat <= CAST(GETDATE() AS date)
+  AND [Week].BisDat >= CAST(GETDATE() AS date)
+  AND ISNULL(Schrank.Ausdienst, N'2099/52') > Week.Woche
+  AND Schrank.ID > 0
 
 UNION
 
-SELECT DISTINCT KdArtiID, VsaID
-FROM VsaLeas, Week
-WHERE Week.VonDat >= GETDATE()
-  AND Week.BisDat <= GETDATE()
-  AND ISNULL(VsaLeas.Ausdienst,'2099/52') > Week.Woche
+SELECT DISTINCT VsaLeas.KdArtiID, VsaLeas.VsaID
+FROM VsaLeas, [Week]
+WHERE Week.VonDat <= CAST(GETDATE() AS date)
+  AND Week.BisDat >= CAST(GETDATE() AS date)
+  AND ISNULL(VsaLeas.Ausdienst, N'2099/52') > Week.Woche
+  AND VsaLeas.ID > 0
 
 UNION
 
-SELECT DISTINCT KdArtiID, VsaID
+SELECT DISTINCT VsaAnf.KdArtiID, VsaAnf.VsaID
 FROM VsaAnf
+WHERE VsaAnf.Art != N'm'
+  AND VsaAnf.[Status] < N'I'
+  aND VsaAnf.ID > 0
 
 UNION
 
-SELECT DISTINCT KdArtiID, VsaID
+SELECT DISTINCT Strumpf.KdArtiID, Strumpf.VsaID
 FROM Strumpf
+WHERE Strumpf.[Status] < N'X'
+  AND Strumpf.ID > 0
 
 UNION
 
-SELECT DISTINCT KdArtiID, VsaID
-FROM Teile
-WHERE Status >= 'A'
-  AND Status <= 'Q';
+SELECT DISTINCT EinzHist.KdArtiID, EinzHist.VsaID
+FROM EinzHist
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+WHERE EinzHist.[Status] BETWEEN N'A' AND N'Q'
+  AND Traeger.[Status] != N'I'
+  AND EinzHist.ID > 0
+  
+UNION
 
-BEGIN TRY
-  DROP TABLE #TmpCheck148B;
-END TRY
-BEGIN CATCH
-END CATCH;
+SELECT DISTINCT KdArti.ID AS KdArtiID, Contain.HistVsaID AS VsaID
+FROM Contain
+JOIN KdArti ON Contain.HistKundenID = KdArti.KundenID
+WHERE KdArti.ArtikelID = (SELECT ISNULL(CAST(Settings.ValueMemo AS int), -1) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_CONTNICHTABGEGEBEN')
+  AND KdArti.LeasPreis != 0
+  
+UNION
+
+SELECT DISTINCT KdArti.ID AS KdArtiID, Vsa.ID AS VsaID
+FROM KdArti
+JOIN Vsa ON Vsa.KundenID = KdArti.KundenID
+WHERE KdArti.ArtikelID = (SELECT ISNULL(CAST(Settings.ValueMemo AS int), -1) FROM Settings WHERE Settings.Parameter = N'ID_ARTIKEL_FACHMIETE')
+  AND KdArti.ArtikelID > 0
+  AND KdArti.Status = N'A'
+  AND EXISTS( -- Nur VSAs mit Fachbelegungen mit gleicher Schrank.KdArti.Variante
+    SELECT TOP 1 TraeFach.ID 
+    FROM TraeFach
+    JOIN Traeger ON TraeFach.TraegerID = Traeger.ID
+    JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
+    JOIN KdArti SchrankKdArti ON Schrank.KdArtiID = SchrankKdArti.ID
+    WHERE TraeFach.TraegerID > 0 
+      AND Traeger.VsaID = Vsa.ID 
+      AND Traeger.Status = N'A'
+      AND SchrankKdArti.Variante = KdArti.Variante
+  )
+
+UNION
+
+SELECT DISTINCT KdArti.ID AS KdArtiID, Vsa.ID AS VsaID
+FROM KdArti
+JOIN Vsa ON Vsa.KundenID = KdArti.KundenID
+WHERE KdArti.ArtikelID = (SELECT ISNULL(CAST(Settings.ValueMemo AS int), -1) FROM Settings WHERE Settings.Parameter = 'ID_ARTIKEL_FACHSERVICE')
+  AND KdArti.ArtikelID > 0
+  AND KdArti.Status = N'A'
+  AND EXISTS( -- Nur VSAs mit Fachbelegungen mit gleicher Schrank.KdArti.Variante
+    SELECT TOP 1 TraeFach.ID 
+    FROM TraeFach
+    JOIN Traeger ON TraeFach.TraegerID = Traeger.ID
+    JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
+    JOIN KdArti SchrankKdArti ON Schrank.KdArtiID = KdArti.ID
+    WHERE TraeFach.TraegerID > 0 
+      AND Traeger.VsaID = Vsa.ID 
+      AND Traeger.Status = N'A'
+      AND SchrankKdArti.Variante = KdArti.Variante
+  );
 
 SELECT DISTINCT x.VsaID, KdArti.KdBerID, 1 FehlModus
-INTO #TmpCheck148B
+INTO #TmpCheck148b
 FROM #TmpCheck148 x, Vsa, KdArti
 WHERE x.KdArtiID = KdArti.ID
   AND x.VsaID = Vsa.ID
@@ -56,7 +104,7 @@ FROM #TmpCheck148 x, Vsa, KdArti
 WHERE x.KdArtiID = KdArti.ID
   AND x.VsaID = Vsa.ID
   AND EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID)
-  AND NOT EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID AND VsaTour.Holen = $TRUE$)
+  AND NOT EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID AND VsaTour.Holen = 1)
 
 UNION
 
@@ -65,7 +113,7 @@ FROM #TmpCheck148 x, Vsa, KdArti
 WHERE x.KdArtiID = KdArti.ID
   AND x.VsaID = Vsa.ID
   AND EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID)
-  AND NOT EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID AND VsaTour.Bringen = $TRUE$);
+  AND NOT EXISTS (SELECT ID FROM VsaTour WHERE VsaTour.VsaID = Vsa.ID AND VsaTour.KdBerID = KdArti.KdBerID AND VsaTour.Bringen = 1);
 
 SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS Stichwort, Vsa.Bez AS [VSA-Bezeichnung], Bereich.BereichBez$LAN$ AS Bereich,
   CASE x.FehlModus
@@ -73,7 +121,7 @@ SELECT DISTINCT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode A
   WHEN 2 THEN 'keine VSA-Tour (holen)'
   WHEN 3 THEN 'keine VSA-Tour (bringen)'
   END AS Fehler,
-  (ISNULL(RTRIM(Mitarbei.Vorname), '') + IIF(Mitarbei.Vorname is not null, ' ', '') + ISNULL(RTRIM(Mitarbei.Nachname), '')) Kundenservice
+  (Coalesce(RTRIM(Mitarbei.Vorname), '') + IIF(Mitarbei.Vorname is not null, ' ', '') + Coalesce(RTRIM(Mitarbei.Nachname), '')) Kundenservice
 FROM #TmpCheck148B x, Vsa, Kunden, KdBer, VsaBer, Bereich, Mitarbei
 WHERE x.KdBerID = KdBer.ID
   AND x.VsaID = Vsa.ID
