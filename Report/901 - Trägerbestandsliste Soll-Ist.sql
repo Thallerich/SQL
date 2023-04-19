@@ -7,15 +7,19 @@ SET @CurrentWeek = (
 );
 
 WITH Umlaufteile AS (
-  SELECT Teile.TraeArtiID, COUNT(Teile.ID) AS inBerechnung
-  FROM Teile
-  JOIN Vsa ON Teile.VsaID = Vsa.ID
+  SELECT EinzHist.TraeArtiID, COUNT(EinzHist.ID) AS inBerechnung
+  FROM EinzHist
+  JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
   WHERE Vsa.KundenID IN ($1$)
-    AND Teile.Kostenlos = 0
-    AND Teile.AltenheimModus = 0
-    AND ISNULL(Teile.Indienst, N'2099/52') <= @CurrentWeek
-    AND ISNULL(Teile.Ausdienst, N'2099/52') > @CurrentWeek
-  GROUP BY Teile.TraeArtiID
+    AND EinzHist.Kostenlos = 0
+    AND EinzTeil.AltenheimModus = 0
+    AND EinzHist.IsCurrEinzHist = 1
+    AND EinzHist.EinzHistTyp = 1
+    AND EinzHist.PoolFkt = 0
+    AND ISNULL(EinzHist.Indienst, N'2099/52') <= @CurrentWeek
+    AND ISNULL(EinzHist.Ausdienst, N'2099/52') > @CurrentWeek
+  GROUP BY EinzHist.TraeArtiID
 )
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS [Träger-Nummer], Traeger.Nachname, Traeger.Vorname, Traeger.Titel, Traeger.PersNr AS Personalnummer, Traeger.Indienst AS Indienststellungswoche, Traeger.Ausdienst AS Außerdienststellungswoche, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, TraeArti.Menge AS Sollmenge, ISNULL(Umlaufteile.inBerechnung, 0) AS Umlauf
 FROM TraeArti
