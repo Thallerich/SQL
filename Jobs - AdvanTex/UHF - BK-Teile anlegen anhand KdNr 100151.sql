@@ -1,33 +1,30 @@
 DROP TABLE IF EXISTS #OpTeileBKAnlage;
 
-SELECT DISTINCT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, - 1 KundenID, EinzTeil.ArtikelID, EinzTeil.ArtGroeID, '-' Variante, 0 VariantNum, '' VariantBez, 'A' STATUS, 0 NurKundenEigen, isnull(KdBer.ID, - 1) KdberID, Artikel.BereichID, 0 Leasingpreis, 0 WAschpreis, 0 VkPreis, 0 Vorlaeufig, - 1 WaschPrgID, - 1 LiefArtID, - 1 FinishingMethod_ID, 1 EigentumID, 0 KaufwareModus, - 1 FolgeKdArtiID, 156 AfaWochen, 0 AusblendenVsaAnfEingang, 0 AusblendenVsaAnfAusgang, 1 ArtiZwingendBarcodiert, - 1 KdArtiID, - 1 VsaID, - 1 TraegerID, - 1 TraeArtiID
+SELECT DISTINCT EinzTeil.ID AS EinzTeilID, EinzHist.ID EinzHistID, EinzHist.Barcode, - 1 KundenID, EinzHist.ArtikelID, EinzHist.ArtGroeID, isnull(KdBer.ID, - 1) KdberID, Artikel.BereichID, - 1 KdArtiID, - 1 VsaID, - 1 TraegerID, - 1 TraeArtiID
 INTO #OpTeileBKAnlage
 FROM EinzTeil
-JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
 LEFT JOIN Vsa ON EinzTeil.VsaOwnerID = Vsa.ID
 LEFT JOIN KdBer ON KdBer.KundenID = Vsa.KundenID AND KdBer.BereichID = Artikel.BereichID
 WHERE Artikel.ID IN (
     SELECT DISTINCT ArtikelID
-    FROM KdArti
-    WHERE KundenID = (
+    FROM KdArti, Artikel, Bereich
+    WHERE KdArti.KundenID = (
         SELECT ID
         FROM Kunden
         WHERE KdNr = 100151
         )
       AND KdArti.Status = N'A'
+      AND KdArti.ArtikelID = Artikel.ID
+      AND Artikel.BereichID = Bereich.ID
+      AND (Bereich.Bereich = 'BK' OR Artikel.ID IN (SELECT ArtikelID from __FW_Artikel_fuer_SDC))
     )
-  AND NOT EXISTS (
-    SELECT *
-    FROM Teile
-    WHERE EinzTeilID = EinzTeil.ID
-    )
-  AND NOT EXISTS (
-    SELECT *
-    FROM Teile
-    WHERE Barcode = EinzTeil.Code
-    )
-  AND EinzTeil.VsaOwnerID = -1
-  AND EinzTeil.Status IN (N'Q', N'A');
+AND EinzHist.EinzHistTyp = 1
+AND EinzHist.TraeArtiID = -1
+AND EinzHist.PoolFkt = 1
+AND EinzTeil.VsaOwnerID = -1
+AND EinzTeil.Status IN (N'Q', N'A');
 
 UPDATE #OpTeileBKAnlage SET KdberID = KdBer.ID, KundenID = Kunden.ID
 FROM Kunden, KdBer
@@ -69,11 +66,31 @@ WHERE #OpTeileBKAnlage.TraegerID = TraeArti.TraegerID
   AND #OpTeileBKAnlage.KdArtiID = TraeArti.KdArtiID
   AND #OpTeileBKAnlage.ArtGroeID = TraeArti.ArtGroeID;
 
-INSERT INTO Teile (Barcode, STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, IndienstDat, Indienst, ErstDatum, PatchDatum, EinsatzGrund)
-SELECT op.Code Barcode, 'Q' STATUS, TraegerID, TraeArtiID, ArtikelID, ArtGroeID, KdArtiID, VsaID, EinzTeilID, CAST(N'1980-01-01' AS date) AS Indienstdat, dbo.WeekOfDate(CAST(N'1980-01-01' AS date)) AS Indienst, CAST(N'1980-01-01' AS date) AS Erstdatum, CAST(N'1980-01-01' AS date) AS PatchDatum, N'5' AS EinsatzGrund
-FROM #OpTeileBKAnlage op
-WHERE NOT EXISTS (
-    SELECT ID
-    FROM Teile
-    WHERE op.Code = Teile.Barcode
-  );
+-- Vor dem Einfügen das Offsett für die RepQueue erhöhen. Die neuen Teile hier können auch später verarbeitet werden.
+IF OBJECT_ID('tempdb..#AdvSession') IS NOT NULL 
+BEGIN 
+  UPDATE #AdvSession SET OffSet = 100000;
+END;
+
+-- Absichern, falls das SQL knallt (Blockierung etc.), damit das Offset auf jeden Fall wieder zurückgesetzt wird
+BEGIN TRY
+UPDATE EinzHist SET
+KundenID = op.KundenID, 
+VsaID = op.VsaID, 
+TraegerID = op.TraegerID, 
+KdArtiID = op.KdArtiID, 
+TraeArtiID = op.TraeArtiID  
+FROM #OpTeileBKAnlage op 
+WHERE op.EinzHistID = EinzHist.ID;
+-- Update auf das EinzTeil, damit dies auch an die SDCs übertragen wird
+UPDATE EinzTeil SET Code = EinzTeil.Code
+FROM #OpTeileBKAnlage op 
+WHERE op.EinzTeilID = EinzTeil.ID;
+END TRY
+BEGIN CATCH
+END CATCH;
+-- Offset wieder auf 0 setzen.
+IF OBJECT_ID('tempdb..#AdvSession') IS NOT NULL 
+BEGIN 
+  UPDATE #AdvSession SET OffSet = 0;
+END;
