@@ -17,6 +17,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND ActionName LIKE ('%ACTMASSENUEBERSETZUNG%')
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDMassenUebersetzung
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -39,6 +46,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND FormClass LIKE ('%TFORMARTIKEL%')
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDArtikelBearbeiten
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -61,6 +75,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND formclass LIKE ('%TFORMWAAGEEINGANG%')
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDProduktion
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -87,6 +108,13 @@ WHERE rights.id = (
     OR formclass LIKE ('%TFORMQUERY%')
     OR formclass LIKE ('%TFORMTABLEDEF%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDIT
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -130,6 +158,13 @@ WHERE rights.id = (
     OR actionname LIKE ('%ACTEXPFRIST%')
     OR actionname LIKE ('%ACTEDITUMLAUFMENGE%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtId_oB
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -143,7 +178,7 @@ SET @RechtIDContainerverfolgung = (
     )
 
 INSERT INTO MODACT (FormActID, RightsID)
-SELECT FormActID, @RechtId_oB
+SELECT FormActID, @RechtIDContainerverfolgung
 FROM RIGHTS
 JOIN MODACT ON MODACT.RightsID = Rights.ID
 JOIN FORMACT ON MODACT.FormActID = FormAct.ID
@@ -159,6 +194,13 @@ WHERE rights.id = (
       AND actionname LIKE ('%ACTCONTAINERVORBEREITEN%')
       )
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDContainerverfolgung
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -188,6 +230,13 @@ WHERE rights.id = (
     OR Formclass LIKE ('%TFORMLIEFFIRM%')
     OR FORMCLASS LIKE ('%TTABARGRLIEF%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDLager
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -224,6 +273,13 @@ WHERE rights.id = (
       )
     AND formclass LIKE ('%TFORMRWCONFIG%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDFaktura
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -240,7 +296,7 @@ SET @RechtIDWeblinks = (
     )
 
 INSERT INTO MODACT (FormActID, RightsID)
-SELECT FormActID, @RechtIDFaktura
+SELECT FormActID, @RechtIDWeblinks
 FROM RIGHTS
 JOIN MODACT ON MODACT.RightsID = Rights.ID
 JOIN FORMACT ON MODACT.FormActID = FormAct.ID
@@ -250,6 +306,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND formclass LIKE ('%TFORMWEBLINKS%')
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDWeblinks
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -277,6 +340,13 @@ WHERE rights.id = (
     OR formclass LIKE ('%TFORMQUERY%')
     OR FORMCLASS LIKE ('%TTABSYSJOB%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIdIT
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -289,7 +359,7 @@ SET @RechtIdFuhrpark = (
     )
 
 INSERT INTO MODACT (FormActID, RightsID)
-SELECT FormActID, @RechtIdIT
+SELECT FormActID, @RechtIdFuhrpark
 FROM RIGHTS
 JOIN MODACT ON MODACT.RightsID = Rights.ID
 JOIN FORMACT ON MODACT.FormActID = FormAct.ID
@@ -299,6 +369,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND (formclass LIKE ('%TFORMFAHRTLEITSTAND%'))
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIdFuhrpark
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -322,6 +399,13 @@ WHERE rights.id = (
     WHERE RIGHTSBEZ LIKE ('%#_NeueFunktionen%')
     )
   AND ACTIONname LIKE ('%ACTABSATZCHDASHBOARD%')
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDSales
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -352,6 +436,13 @@ WHERE rights.id = (
     OR actionname LIKE ('%ACTLIEFPROT%')
     OR formclass LIKE ('%TFORMARTISTAN%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDKS
+      AND m.SichtKatID = -1
+  );
 
 GO
 
@@ -365,7 +456,7 @@ SET @RechtIDMICRONCLEAN = (
     )
 
 INSERT INTO MODACT (FormActID, RightsID)
-SELECT FormActID, @RechtIDKS
+SELECT FormActID, @RechtIDMICRONCLEAN
 FROM RIGHTS
 JOIN MODACT ON MODACT.RightsID = Rights.ID
 JOIN FORMACT ON MODACT.FormActID = FormAct.ID
@@ -378,5 +469,12 @@ WHERE rights.id = (
     formclass LIKE ('%TTABOPPSEUDOCHARGE%')
     OR formclass LIKE ('%TTABWASCHCH%')
     )
+  AND NOT EXISTS (
+    SELECT m.*
+    FROM ModAct m
+    WHERE m.FormActID = ModAct.FormActID
+      AND m.RightsID = @RechtIDMICRONCLEAN
+      AND m.SichtKatID = -1
+  );
 
 GO
