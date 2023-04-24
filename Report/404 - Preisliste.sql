@@ -15,4 +15,5 @@ JOIN FakFreq ON KdBer.FakFreqID = FakFreq.ID
 JOIN KdArtiStatus ON KdArti.[Status] = KdArtiStatus.[Status]
 WHERE KdArti.KundenID IN ($2$)
   AND KdArtiStatus.ID IN ($3$)
+  AND KdArti._HidePrListReport = 0
 ORDER BY Holding, KdNr, Artikelbezeichnung;
