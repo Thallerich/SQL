@@ -29,8 +29,8 @@ INSERT INTO #TmpSichtbar (SichtbarID)
 SELECT x.value AS SichtbarID
 FROM STRING_SPLIT(N'$SICHTBARIDS$', N',') AS x;
 
-DECLARE @fromtime datetime = CAST(CAST(CAST(N'2023-04-18' AS date) AS nchar(10)) + N' ' + N'06:00:00' AS datetime);
-DECLARE @totime datetime = CAST(CAST(CAST(N'2023-04-18' AS date) AS nchar(10)) + N' ' + N'15:00:00' AS datetime);
+DECLARE @fromtime datetime = CAST(CAST($1$ AS nchar(10)) + N' ' + $2$ AS datetime);
+DECLARE @totime datetime = CAST(CAST($1$ AS nchar(10)) + N' ' + $3$ AS datetime);
 DECLARE @sqltext nvarchar(max);
 
 SET @sqltext = N'
