@@ -8,7 +8,7 @@ JOIN RKoAnlag ON KdRKoAnl.RKoAnlagID = RKoAnlag.ID
 JOIN Kunden ON KdRKoAnl.KundenID = Kunden.ID
 JOIN RKoOut ON Kunden.RKoOutID = RKoOut.ID
 JOIN Standort ON Kunden.StandortID = Standort.ID
-WHERE (KdRKoAnl.PDF = 1 OR KdRKoAnl.CSV = 1)
+WHERE ((KdRKoAnl.PDF = 1 OR KdRKoAnl.CSV = 1) AND KdRKoAnl.IncludeInInvoicePDF = 0)
   AND NOT EXISTS (
     SELECT RKoMail.*
     FROM RKoMail
