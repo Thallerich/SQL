@@ -13,8 +13,10 @@ GROUP BY SdcDev.Bez
 
 UNION ALL
 
-SELECT N'Z_UHF Einlesen' AS Sortieranlage, COUNT(SdcPools.ID) AS [Queue-Länge]
+SELECT N'Z_' + SdcDev.Bez AS Sortieranlage, COUNT(SdcPools.ID) AS [Queue-Länge]
 FROM SdcPools
+JOIN SdcDev ON SdcPools.AdvInstID = SdcDev.ID
 WHERE SdcPools.Processed = 0
+GROUP BY SdcDev.Bez
 
 ORDER BY Sortieranlage ASC;
