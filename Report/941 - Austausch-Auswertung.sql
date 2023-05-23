@@ -79,8 +79,9 @@ FROM (
     AND EXISTS (
       SELECT EinzHist.*
       FROM EinzHist
+      JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
       WHERE EinzHist.ArtikelID = KdArtiSum.ArtikelID
-        AND EinzHist.AltenheimModus = 0
+        AND EinzTeil.AltenheimModus = 0
     )
     AND (Liefermenge.Menge != 0 OR WegTeile.Menge != 0 OR WegTeileSumme.Menge != 0)
   GROUP BY COALESCE(Liefermenge.Monat, WegTeile.Monat, WegTeileSumme.Monat), Kunden.KdNr, Kunden.SuchCode, Standort.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArtiSum.Umlauf, WegTeile.GrundKurz, WegTeileSumme.Menge, WegTeileSumme.Restwert, WegTeileSumme.RestwertFakt

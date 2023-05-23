@@ -1,4 +1,4 @@
-SELECT Firma.Bez, KdGF.KdGfBez$LAN$ AS SGF, Kunden.KdNr, Kunden.Name1 AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, y.AnzGebr, y.AnzNeu, y.WertNeu, y.AnzNeuNeukunde, y.WertNeuNeukunde, Mitarbei.Nachname AS Betreuer, y.Barcode, y.EinsatzGrund
+SELECT Firma.Bez, KdGF.KurzBez$LAN$ AS SGF, Kunden.KdNr, Kunden.Name1 AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, y.AnzGebr, y.AnzNeu, y.WertNeu, y.AnzNeuNeukunde, y.WertNeuNeukunde, Mitarbei.Nachname AS Betreuer, y.Barcode, y.EinsatzGrund
 FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
   SELECT KundenID, ArtikelID, x.Barcode, x.EinsatzGrund,
     IIF(Neukunde = 1, IIf(Neu = 1, Anzahl, 0), 0) AnzNeuNeukunde,
@@ -7,14 +7,17 @@ FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
     CONVERT(money, IIF(Neukunde = 0, IIF(Neu = 1, Anzahl * ArtGroe.EkPreis, 0), 0)) WertNeu,
     CONVERT(money, IIF(Neukunde = 1, IIF(Neu = 1, Anzahl * ArtGroe.EkPreis, 0), 0)) WertNeuNeukunde
   FROM Vsa, ArtGroe, (
-    SELECT VsaID, ArtGroeID, Teile.Barcode, Teile.EinsatzGrund,
-      IIF(LagerartID IN (1, 1006), 1, 0) as Neu,
-      IIF(EinsatzGrund IN ('1', '2'), 1, 0) as Neukunde,
+    SELECT EinzHist.VsaID, EinzHist.ArtGroeID, EinzHist.Barcode, EinzHist.EinsatzGrund,
+      IIF(EinzHist.LagerartID IN (1, 1006), 1, 0) as Neu,
+      IIF(EinzHist.EinsatzGrund IN ('1', '2'), 1, 0) as Neukunde,
       1 AS Anzahl
-    FROM Teile
-    WHERE Patchdatum BETWEEN $1$ and $2$
-      and LagerArtID > 0
-      and KaufwareModus NOT IN (1, 2)
+    FROM EinzHist
+    WHERE EinzHist.IsCurrEinzHist = 1
+      AND EinzHist.EinzHistTyp = 1
+      AND EinzHist.PoolFkt = 0
+      AND EinzHist.Patchdatum BETWEEN $STARTDATE$ AND $ENDDATE$
+      AND EinzHist.LagerArtID > 0
+      AND EinzHist.KaufwareModus NOT IN (1, 2)
   ) as x
   WHERE x.ArtGroeID = ArtGroe.ID
     AND x.VsaID = Vsa.ID

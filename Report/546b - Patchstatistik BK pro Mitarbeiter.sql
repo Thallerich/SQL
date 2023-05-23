@@ -1,12 +1,15 @@
 WITH Patchteile AS (
-  SELECT Teile.ID AS TeileID, 
-    Teile.PatchDatum,
-    Teile.ArtikelID,
-    Teile.LagerArtID,
-    LastPatchScanID = (SELECT TOP 1 Scans.ID FROM Scans WHERE ActionsID = 23 AND Scans.TeileID = Teile.ID ORDER BY Anlage_ DESC)   -- ActionsID 23 -> Patchen
-  FROM Teile
-  WHERE Teile.PatchDatum BETWEEN $1$ AND $2$
-    AND Teile.LagerArtID IN (
+  SELECT EinzHist.ID AS TeileID, 
+    EinzHist.PatchDatum,
+    EinzHist.ArtikelID,
+    EinzHist.LagerArtID,
+    LastPatchScanID = (SELECT TOP 1 Scans.ID FROM Scans WHERE ActionsID = 23 AND Scans.EinzHistID = EinzHist.ID ORDER BY Anlage_ DESC)   -- ActionsID 23 -> Patchen
+  FROM EinzHist
+  WHERE EinzHist.IsCurrEinzHist = 1
+    AND EinzHist.EinzHistTyp = 1
+    AND EinzHist.PoolFkt = 0
+    AND EinzHist.Patchdatum BETWEEN $STARTDATE$ AND $ENDDATE$
+    AND EinzHist.LagerArtID IN (
       SELECT LagerArt.ID
       FROM LagerArt
       WHERE LagerArt.LagerID IN ($3$)
