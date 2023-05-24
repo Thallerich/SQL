@@ -34,7 +34,7 @@ WHERE Standort.SuchCode = N'SAWR'
     JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
     JOIN KdBer ON KdArti.KdBerID = KdBer.ID
     WHERE EinzHist.VsaID = Vsa.ID
-      AND KdBer.BereichID = (SELECT ID FROM Bereich WHERE Bereich = N'CR')
+      AND (KdBer.BereichID = (SELECT ID FROM Bereich WHERE Bereich = N'CR') OR LEN(EinzHist.Barcode) = 24)
       AND EinzHist.EinzHistTyp = 1
       AND EinzHist.PoolFkt = 0
       AND EinzHist.IsCurrEinzHist = 1
