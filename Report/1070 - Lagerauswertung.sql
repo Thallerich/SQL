@@ -105,6 +105,7 @@ Kundenstand AS (
       AND ISNULL(Traeger.Ausdienst, N'2099/52') >= @vonWoche
       AND EinzHist.Indienst <= @bisWoche
       AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
+      AND Einzhist.Status in ('Q','W') -- IT 66134 - CM
     GROUP BY Traeger.VsaID, EinzHist.TraegerID, EinzHist.KdArtiID, EinzHist.ArtGroeID, KdArti.ArtikelID
 
     UNION ALL
@@ -121,6 +122,7 @@ Kundenstand AS (
       AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
       AND TeilAppl.ArtiTypeID = 3  --Emblem
       AND TeilAppl.Bearbeitung = N'-' --erledigt, Emblem aufgebracht
+      AND Einzhist.Status in ('Q','W') -- IT 66134 - CM
     GROUP BY Traeger.VsaID, EinzHist.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
 
     UNION ALL
@@ -137,13 +139,14 @@ Kundenstand AS (
       AND ISNULL(EinzHist.Ausdienst, N'2099/52') >= @vonWoche
       AND TeilAppl.ArtiTypeID = 2 --Namenschild
       AND TeilAppl.Bearbeitung = N'-' --ereledigt, Namenschild aufgebracht
+      AND Einzhist.Status in ('Q','W') -- IT 66134 - CM
     GROUP BY Traeger.VsaID, EinzHist.TraegerID, KdArti.ID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
   ) AS x
   JOIN Vsa ON x.VsaID = Vsa.ID
   JOIN KdArti ON x.KdArtiID = KdArti.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
-  WHERE ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)
+  WHERE (($3$ = 0 AND ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)) OR ($3$ = 1))
   GROUP BY x.ArtGroeID
 ),
 Artikelstatus AS (
