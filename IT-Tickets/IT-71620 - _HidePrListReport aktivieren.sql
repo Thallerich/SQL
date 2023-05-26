@@ -1,0 +1,41 @@
+DECLARE @ArtiList TABLE (
+  ArtikelID int PRIMARY KEY CLUSTERED
+);
+
+DECLARE @KdArti TABLE (
+  KdArtiID int PRIMARY KEY CLUSTERED
+);
+
+INSERT INTO @ArtiList (ArtikelID)
+SELECT Artikel.ID
+FROM Artikel
+WHERE Artikel.ArtikelNr IN (N'891000100000', N'891000120000', N'891000160000', N'891000191000', N'892000000000', N'897000170001', N'IGRIA3', N'VMISS1', N'891000102000', N'891000140000', N'891009200500');
+
+INSERT INTO @KdArti (KdArtiID)
+SELECT KdArti.ID
+FROM KdArti
+JOIN Kunden ON KdArti.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGFID = KdGf.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
+WHERE KdArti.ArtikelID IN (SELECT ArtikelID FROM @ArtiList)
+  AND KdGf.KurzBez = N'MED'
+  AND Standort.SuchCode IN (N'WOEN', N'WOLI')
+  AND KdArti._HidePrListReport = 0;
+
+BEGIN TRY
+  BEGIN TRANSACTION;
+  
+    UPDATE KdArti SET _HidePrListReport = 1 WHERE KdArti.ID IN (SELECT KdArtiID FROM @KdArti);
+  
+  COMMIT;
+END TRY
+BEGIN CATCH
+  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
+  DECLARE @Severity int = ERROR_SEVERITY();
+  DECLARE @State smallint = ERROR_STATE();
+  
+  IF XACT_STATE() != 0
+    ROLLBACK TRANSACTION;
+  
+  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+END CATCH;
