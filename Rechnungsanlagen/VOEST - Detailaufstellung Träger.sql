@@ -47,6 +47,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID = @RechKoID
   AND EinzHist.EinzHistVon <= RechKo.BisDatum
   AND ISNULL(EinzHist.EinzHistBis, N'2099-12-31') >= RechKo.VonDatum
+  AND EinzHist.Indienst IS NOT NULL
 GROUP BY Artikel.ID,
   Traeger.ID,
   RechKo.RechNr,
