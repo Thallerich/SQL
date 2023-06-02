@@ -1,3 +1,32 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ getData                                                                                                                   ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #Result281;
+
+CREATE TABLE #Result281 (
+  [Letzter Scan] datetime2,
+  [Letztes Ziel] nvarchar(60),
+  EinzHistID int,
+  KdNr int,
+  Name2 nvarchar(40),
+  Name3 nvarchar(40),
+  Kunde nvarchar(40),
+  Seriennummer nvarchar(33),
+  Artikel nvarchar(60),
+  [Status] nchar(2),
+  Eingang1 date,
+  Ausgang1 date,
+  Träger nvarchar(61),
+  ZimmerNr nvarchar(10),
+  SuchCode nvarchar(40),
+  Bez nvarchar(40),
+  Vsa nvarchar(40),
+  Vsa2 nvarchar(40),
+  Vsa3 nvarchar(40),
+  Fach int
+);
+
 DECLARE @sqltext nvarchar(max),
   @kundenid int,
   @maxscantime datetime;
@@ -35,4 +64,12 @@ SET @sqltext = N'
   ORDER BY SuchCode, Träger;
 ';
 
+INSERT INTO #Result281 ([Letzter Scan], [Letztes Ziel], EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, [Status], Eingang1, Ausgang1, Träger, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach)
 EXEC sp_executesql @sqltext, N'@kundenid int, @maxscantime datetime', @kundenid, @maxscantime;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Teile                                                                                                                     ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+SELECT "Letzter Scan", "Letztes Ziel", EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, Status, Eingang1, Ausgang1, Träger, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach
+FROM #Result281;
