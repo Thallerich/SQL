@@ -2,8 +2,8 @@ SELECT Priority, TableName, ISNULL([11], 0) AS Enns, ISNULL([3], 0) AS [Enns 2],
 FROM (
   SELECT SdcDev.ID AS SdcDevID, RepQueue.Priority, RepQueue.TableName, COUNT(DISTINCT RepQueue.TableID) AS AnzahlDS
   FROM RepQueue WITH (NOLOCK)
-  JOIN SdcDev ON RepQueue.SdcDevID = SdcDev.ID
-  WHERE RepQueue.Priority < 900
+  JOIN SdcDev WITH (NOLOCK) ON RepQueue.SdcDevID = SdcDev.ID
+  --WHERE RepQueue.Priority < 900
   GROUP BY SdcDev.ID, RepQueue.TableName, RepQueue.Priority
 ) AS RepQueueData
 PIVOT (
