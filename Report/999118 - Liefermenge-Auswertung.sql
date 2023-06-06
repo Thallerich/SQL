@@ -46,7 +46,7 @@ DECLARE @sqltext nvarchar(max);
 DECLARE @filtercond nvarchar(max);
 
 IF @useliefdat = 0
-  SET @filtercond = N' AND RechKo.RechDat BETWEEN @startdate AND @enddate';
+  SET @filtercond = N' AND RechKo.RechDat BETWEEN @startdate AND @enddate AND RechKo.ID > 0';
 ELSE
   SET @filtercond = N' AND LsKo.Datum BETWEEN @startdate AND @enddate';
 
