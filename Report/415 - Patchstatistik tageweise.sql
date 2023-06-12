@@ -33,19 +33,19 @@ WHERE Standort.Lager = 1
 OPTION (MAXRECURSION 31);
 
 INSERT INTO @PatchData
-SELECT LagerArt.LagerID, Teile.Patchdatum, 
+SELECT LagerArt.LagerID, EinzHist.Patchdatum, 
   AnzahlBestellung = COUNT(CASE WHEN LagerArt.Zustand = N'W' THEN 1 ELSE NULL END),
   AnzahlNeu = COUNT(CASE WHEN LagerArt.Zustand = N'N' THEN 1 ELSE NULL END),
   AnzahlGebraucht = COUNT(CASE WHEN LagerArt.Zustand IN (N'G', N'S') THEN 1 ELSE NULL END),
   AnzahlGesamt = COUNT(*)
-FROM Teile
-JOIN LagerArt ON Teile.LagerArtID = LagerArt.ID
-JOIN Artikel ON Teile.ArtikelID = Artikel.ID
-WHERE Teile.Patchdatum BETWEEN $1$ AND $2$
+FROM EinzHist
+JOIN LagerArt ON EinzHist.LagerArtID = LagerArt.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+WHERE EinzHist.Patchdatum BETWEEN $1$ AND $2$
   AND Artikel.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'BK', N'FW'))
-  AND Teile.LagerArtID > 0
+  AND EinzHist.LagerArtID > 0
   AND LagerArt.SichtbarID IN ($SICHTBARIDS$)
-GROUP BY LagerArt.LagerID, Teile.Patchdatum
+GROUP BY LagerArt.LagerID, EinzHist.Patchdatum
 
 UPDATE Patch SET Bestellung = PatchData.AnzahlBestellung, Neu = PatchData.AnzahlNeu, Gebraucht = PatchData.AnzahlGebraucht, Gesamt = PatchData.AnzahlGesamt
 FROM @Patch AS Patch
