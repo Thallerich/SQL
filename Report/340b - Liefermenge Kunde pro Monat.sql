@@ -28,7 +28,7 @@ JOIN ArtGroe ON LsPo.ArtGroeID = ArtGroe.ID
 JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Abteil ON LsPo.AbteilID = Abteil.ID
-WHERE Kunden.ID IN ($3$)
+WHERE Kunden.ID IN ($4$)
   AND LsKo.Datum BETWEEN @vonDatum AND @bisDatum
   AND Vsa.SichtbarID IN ($SICHTBARIDS$)
 GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Vsa.Name1, Vsa.Name2, Vsa.GebaeudeBez, Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, ArtGroe.Groesse, LsPo.EPreis
@@ -60,7 +60,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Abteil ON AbtKdArW.AbteilID = Abteil.ID
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN Week ON Wochen.Woche = Week.Woche
-WHERE Kunden.ID IN ($3$)
+WHERE Kunden.ID IN ($4$)
   AND Wochen.Woche BETWEEN @vonWoche AND @bisWoche
   AND Vsa.SichtbarID IN ($SICHTBARIDS$)
 GROUP BY AbtKdArW.Monat, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Vsa.Name1, Vsa.Name2, Vsa.GebaeudeBez, Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AbtKdArW.EPreis;
