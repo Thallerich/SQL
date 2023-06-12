@@ -8,6 +8,7 @@ CREATE TABLE #Result999146 (
   StandortID int NOT NULL,
   KundenID int NOT NULL,
   VsaID int DEFAULT NULL,
+  VorsortierGrp nvarchar(15) COLLATE Latin1_General_CS_AS DEFAULT NULL,
   BewohnerAnz int NOT NULL
 );
 
@@ -24,7 +25,7 @@ DECLARE @sqltext nvarchar(max);
 
 IF $2$ = 0
   SET @sqltext = N'
-    SELECT Kunden.StandortID, Kunden.ID AS KundenID, NULL AS VsaID, COUNT(Traeger.ID) AS [Anzahl Bewohner]
+    SELECT Kunden.StandortID, Kunden.ID AS KundenID, NULL AS VsaID, Traeger.SortKey AS VorsortierGrp, COUNT(Traeger.ID) AS [Anzahl Bewohner]
     FROM Traeger
     JOIN Vsa ON Traeger.VsaID = Vsa.ID
     JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -33,11 +34,11 @@ IF $2$ = 0
       AND Vsa.[Status] = N''A''
       AND Traeger.[Status] != N''I''
       AND Traeger.Altenheim = 1
-    GROUP BY Kunden.StandortID, Kunden.ID;
+    GROUP BY Kunden.StandortID, Kunden.ID, Traeger.SortKey;
   ';
 ELSE
   SET @sqltext = N'
-    SELECT Kunden.StandortID, Kunden.ID AS KundenID, Vsa.ID AS VsaID, COUNT(Traeger.ID) AS [Anzahl Bewohner]
+    SELECT Kunden.StandortID, Kunden.ID AS KundenID, Vsa.ID AS VsaID, Traeger.SortKey AS VorsortierGrp, COUNT(Traeger.ID) AS [Anzahl Bewohner]
     FROM Traeger
     JOIN Vsa ON Traeger.VsaID = Vsa.ID
     JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -46,17 +47,17 @@ ELSE
       AND Vsa.[Status] = N''A''
       AND Traeger.[Status] != N''I''
       AND Traeger.Altenheim = 1
-    GROUP BY Kunden.StandortID, Kunden.ID, Vsa.ID;
+    GROUP BY Kunden.StandortID, Kunden.ID, Vsa.ID, Traeger.SortKey;
   ';
 
-INSERT INTO #Result999146 (StandortID, KundenID, VsaID, BewohnerAnz)
+INSERT INTO #Result999146 (StandortID, KundenID, VsaID, VorsortierGrp, BewohnerAnz)
 EXEC sp_executesql @sqltext;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Report                                                                                                                    ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Standort.Bez AS [Haupstandort Kunde], Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], #Result999146.BewohnerAnz AS [Anzahl Bewohner]
+SELECT Standort.Bez AS [Haupstandort Kunde], Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], #Result999146.VorsortierGrp AS Vorsortiergruppe, #Result999146.BewohnerAnz AS [Anzahl Bewohner]
 FROM #Result999146
 LEFT JOIN Vsa ON #Result999146.VsaID = Vsa.ID
 JOIN Kunden ON #Result999146.KundenID = Kunden.ID
