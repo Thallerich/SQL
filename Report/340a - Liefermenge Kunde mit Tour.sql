@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Bereich.BereichBez$LAN$ AS Produktbereich, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Touren.Tour, Touren.Bez AS Tourbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsPo.EPreis AS Bearbeitungspreis, SUM(LsPo.Menge) AS Liefermenge, SUM(LsPo.Menge * LsPo.EPreis * IIF(LsPo.Kostenlos = 1, 0, 1)) AS Umsatz
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Bereich.BereichBez$LAN$ AS Produktbereich, Vsa.ID AS VsaID, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Vsa.Name1 AS [Adresszeile 1], Vsa.Name2 AS [Adresszeile 2], Vsa.Name3 AS [Adresszeile 3], Vsa.Strasse, Vsa.Land, Vsa.PLZ, Vsa.Ort, Touren.Tour, Touren.Bez AS Tourbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, LsPo.EPreis AS Bearbeitungspreis, SUM(LsPo.Menge) AS Liefermenge, SUM(LsPo.Menge * LsPo.EPreis * IIF(LsPo.Kostenlos = 1, 0, 1)) AS Umsatz
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
@@ -14,4 +14,4 @@ WHERE LsKo.Datum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Touren.ID IN ($3$)
   AND Vsa.SichtbarID IN ($SICHTBARIDS$)
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)
-GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Vsa.VsaNr, Vsa.Bez, Touren.Tour, Touren.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, LsPo.EPreis;
+GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Vsa.ID, Vsa.VsaNr, Vsa.Bez, Vsa.Name1, Vsa.Name2, Vsa.Name3, Vsa.Strasse, Vsa.Land, Vsa.PLZ, Vsa.Ort, Touren.Tour, Touren.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, LsPo.EPreis;
