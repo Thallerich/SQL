@@ -1,5 +1,9 @@
+DECLARE @von date = $1$;
+DECLARE @bis date = $2$;
+
 DROP TABLE IF EXISTS #EinzTeilProd;
 DROP TABLE IF EXISTS #OPStats;
+DROP TABLE IF EXISTS #OPDaten;
 DROP TABLE IF EXISTS #LS;
 DROP TABLE IF EXISTS #Standort;
 
@@ -8,6 +12,8 @@ CREATE TABLE #EinzTeilProd (
   ArtikelID int NOT NULL,
   LastScanID bigint DEFAULT -1
 );
+
+CREATE INDEX IX_TmpEinzTeilProd_LastScan ON #EinzTeilProd (LastScanID);
 
 CREATE TABLE #OPStats (
   StandortID int NOT NULL,
@@ -18,15 +24,26 @@ CREATE TABLE #OPStats (
   InProd int NOT NULL DEFAULT 0
 );
 
+CREATE TABLE #OPDaten (
+  StandortID int NOT NULL,
+  OPEtiPoID int PRIMARY KEY CLUSTERED,
+  ArtikelID int,
+  EinzTeilID int,
+  OPEinwegID int,
+  Artikel1ID int,
+  Artikel2ID int,
+  LsMenge numeric(18,4),
+  PackmengeSet int,
+  Ersatzartikel bit
+);
+CREATE INDEX IX_TmpOPDaten_EinzTeilID ON #OPDaten (EinzTeilID);
+
 CREATE TABLE #LS (
   LsPoID int PRIMARY KEY,
   StandortID int NOT NULL,
   Menge numeric(18,4) NOT NULL,
   KdArtiID int NOT NULL
 );
-
-DECLARE @von date = $1$;
-DECLARE @bis date = $2$;
 
 CREATE TABLE #Standort (
   StandortID int,
@@ -64,39 +81,40 @@ JOIN #Standort s ON LsPo.ProduktionID = s.StandortID
 WHERE LsKo.Datum BETWEEN @von AND @bis
   AND LsKo.[Status] >= N'Q';
 
-INSERT INTO #OPStats (StandortID, ArtikelID, Liefermenge)
-SELECT #LS.StandortID, EinzTeil.ArtikelID, COUNT(OPEtiPo.ID) AS Liefermenge
+INSERT INTO #OPDaten (StandortID, OPEtiPoID, ArtikelID, EinzTeilID, OPEinwegID, Artikel1ID, Artikel2ID, LsMenge, PackmengeSet, Ersatzartikel)
+SELECT #LS.StandortID, OPEtiPo.ID AS OPEtiPoID, OPEtiKo.ArtikelID, OPEtiPo.EinzTeilID, OPEtiPo.OPEinwegID, OPSets.Artikel1ID, OPSets.Artikel2ID, #LS.Menge AS LsMenge, OPSets.Menge AS PackmengeSet, OPEtiPo.Ersatzartikel
 FROM OPEtiPo
 JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
 JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
-JOIN EinzTeil ON OPEtiPo.EinzTeilID = EinzTeil.ID
-JOIN #LS ON OPEtiKo.LsPoID = #LS.LsPoID
-WHERE OPEtiPo.EinzTeilID > 0
-  AND OPEtiPo.OPEinwegID = -1
+JOIN #LS ON OPEtiKo.LsPoID = #LS.LsPoID;
+
+INSERT INTO #OPStats (StandortID, ArtikelID, Liefermenge)
+SELECT #OPDaten.StandortID, EinzTeil.ArtikelID, COUNT(#OPDaten.OPEtiPoID) AS Liefermenge
+FROM #OPDaten
+JOIN EinzTeil ON #OPDaten.EinzTeilID = EinzTeil.ID
+WHERE #OPDaten.EinzTeilID > 0
+  AND #OPDaten.OPEinwegID = -1
   AND NOT EXISTS (
     SELECT SiS.*
     FROM OPSets AS SiS
-    WHERE Sis.ArtikelID = OPSets.Artikel1ID
+    WHERE Sis.ArtikelID = #OPDaten.Artikel1ID
   )
-GROUP BY #LS.StandortID, EinzTeil.ArtikelID;
+GROUP BY #OPDaten.StandortID, EinzTeil.ArtikelID;
 
 MERGE INTO #OPStats AS OPStats
 USING (
-  SELECT #LS.StandortID AS StandortID, OPEinweg.ArtikelID, SUM(CAST(#LS.Menge AS int) * (OPSets.Menge / SetArti.Packmenge)) AS Liefermenge
-  FROM OPEtiPo
-  JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
-  JOIN Artikel SetArti ON OPEtiKo.ArtikelID = SetArti.ID
-  JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
-  JOIN OPEinweg ON OPEtiPo.OPEinwegID = OPEinweg.ID
-  JOIN #LS ON OPEtiKo.LsPoID = #LS.LsPoID
-  WHERE OPEtiPo.EinzTeilID = -1
-    AND OPEtiPo.OPEinwegID > 0
+  SELECT #OPDaten.StandortID AS StandortID, OPEinweg.ArtikelID, SUM(CAST(#OPDaten.LsMenge AS int) * (#OPDaten.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  FROM #OPDaten
+  JOIN Artikel SetArti ON #OPDaten.ArtikelID = SetArti.ID
+  JOIN OPEinweg ON #OPDaten.OPEinwegID = OPEinweg.ID
+  WHERE #OPDaten.EinzTeilID = -1
+    AND #OPDaten.OPEinwegID > 0
     AND NOT EXISTS (
       SELECT SiS.*
       FROM OPSets AS SiS
-      WHERE Sis.ArtikelID = OPSets.Artikel1ID
+      WHERE Sis.ArtikelID = #OPDaten.Artikel1ID
     )
-  GROUP BY #LS.StandortID, OPEinweg.ArtikelID
+  GROUP BY #OPDaten.StandortID, OPEinweg.ArtikelID
 ) AS NoScanLiefermenge (StandortID, ArtikelID, Liefermenge)
 ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID
 WHEN MATCHED THEN
@@ -106,21 +124,18 @@ WHEN NOT MATCHED THEN
 
 MERGE INTO #OPStats AS OPStats
 USING (
-  SELECT #LS.StandortID AS StandortID, OPSets.Artikel1ID AS ArtikelID, SUM(CAST(#LS.Menge AS int) * (OPSets.Menge / SetArti.Packmenge)) AS Liefermenge
-  FROM OPEtiPo
-  JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
-  JOIN Artikel SetArti ON OPEtiKo.ArtikelID = SetArti.ID
-  JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
-  JOIN #LS ON OPEtiKo.LsPoID = #LS.LsPoID
-  WHERE OPEtiPo.EinzTeilID = -1
-    AND OPEtiPo.OPEinwegID = -1
-    AND OPEtiPo.Ersatzartikel = 0
+  SELECT #OPDaten.StandortID AS StandortID, #OPDaten.Artikel1ID AS ArtikelID, SUM(CAST(#OPDaten.LsMenge AS int) * (#OPDaten.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  FROM #OPDaten
+  JOIN Artikel SetArti ON #OPDaten.ArtikelID = SetArti.ID
+  WHERE #OPDaten.EinzTeilID = -1
+    AND #OPDaten.OPEinwegID = -1
+    AND #OPDaten.Ersatzartikel = 0
     AND NOT EXISTS (
       SELECT SiS.*
       FROM OPSets AS SiS
-      WHERE Sis.ArtikelID = OPSets.Artikel1ID
+      WHERE Sis.ArtikelID = #OPDaten.Artikel1ID
     )
-  GROUP BY #LS.StandortID, OPSets.Artikel1ID
+  GROUP BY #OPDaten.StandortID, #OPDaten.Artikel1ID
 ) AS NoScanLiefermenge (StandortID, ArtikelID, Liefermenge)
 ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID
 WHEN MATCHED THEN
@@ -130,21 +145,18 @@ WHEN NOT MATCHED THEN
 
 MERGE INTO #OPStats AS OPStats
 USING (
-  SELECT #LS.StandortID AS StandortID, OPSets.Artikel2ID AS ArtikelID, SUM(CAST(#LS.Menge AS int) * (OPSets.Menge / SetArti.Packmenge)) AS Liefermenge
-  FROM OPEtiPo
-  JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
-  JOIN Artikel SetArti ON OPEtiKo.ArtikelID = SetArti.ID
-  JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
-  JOIN #LS ON OPEtiKo.LsPoID = #LS.LsPoID
-  WHERE OPEtiPo.EinzTeilID = -1
-    AND OPEtiPo.OPEinwegID = -1
-    AND OPEtiPo.Ersatzartikel = 1
+  SELECT #OPDaten.StandortID AS StandortID, #OPDaten.Artikel2ID AS ArtikelID, SUM(CAST(#OPDaten.LsMenge AS int) * (#OPDaten.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  FROM #OPDaten
+  JOIN Artikel SetArti ON #OPDaten.ArtikelID = SetArti.ID
+  WHERE #OPDaten.EinzTeilID = -1
+    AND #OPDaten.OPEinwegID = -1
+    AND #OPDaten.Ersatzartikel = 1
     AND NOT EXISTS (
       SELECT SiS.*
       FROM OPSets AS SiS
-      WHERE Sis.ArtikelID = OPSets.Artikel1ID
+      WHERE Sis.ArtikelID = #OPDaten.Artikel1ID
     )
-  GROUP BY #LS.StandortID, OPSets.Artikel2ID
+  GROUP BY #OPDaten.StandortID, #OPDaten.Artikel2ID
 ) AS NoScanLiefermenge (StandortID, ArtikelID, Liefermenge)
 ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID
 WHEN MATCHED THEN
@@ -209,21 +221,24 @@ WHEN NOT MATCHED THEN
 INSERT INTO #EinzTeilProd (EinzTeilID, ArtikelID)
 SELECT EinzTeil.ID, EinzTeil.ArtikelID
 FROM EinzTeil
-WHERE ISNULL(EinzTeil.LastScanTime, N'1980-01-01 00:00:00') > DATEADD(year, -1, GETDATE())
-    AND EinzTeil.LastActionsID NOT IN (102, 107, 108);
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+WHERE EinzTeil.LastScanTime IS NOT NULL
+  AND EinzTeil.LastScanTime > DATEADD(year, -1, GETDATE())
+  AND EinzTeil.LastActionsID NOT IN (102, 107, 108)
+  AND EinzTeil.[Status] IN (N'A', N'Q')
+  AND EinzHist.PoolFkt = 1;
 
 UPDATE #EinzTeilProd SET LastScanID = LastScan.LastScanID
 FROM (
-  SELECT EinzTeilProd.EinzTeilID, MAX(Scans.ID) AS LastScanID
-  FROM #EinzTeilProd AS EinzTeilProd
-  JOIN Scans ON Scans.EinzTeilID = EinzTeilProd.EinzTeilID
-  GROUP BY EinzTeilProd.EinzTeilID
+  SELECT Scans.EinzTeilID, MAX(Scans.ID) AS LastScanID
+  FROM Scans
+  GROUP BY Scans.EinzTeilID
 ) LastScan
 WHERE LastScan.EinzTeilID = #EinzTeilProd.EinzTeilID;
 
 MERGE INTO #OPStats AS OPStats
 USING (
-  SELECT EinzTeilProd.ArtikelID, s.OPStandortID AS StandortID, COUNT(DISTINCT EinzTeilProd.EinzTeilID) AS NeuMenge
+  SELECT EinzTeilProd.ArtikelID, s.OPStandortID AS StandortID, COUNT(EinzTeilProd.EinzTeilID) AS NeuMenge
   FROM #EinzTeilProd AS EinzTeilProd
   JOIN Scans ON EinzTeilProd.LastScanID = Scans.ID
   JOIN ArbPlatz ON Scans.ArbPlatzID = ArbPlatz.ID
