@@ -8,7 +8,7 @@ WITH Umlaufteile AS (
     AND EinzHist.Einzug IS NULL
   GROUP BY EinzHist.TraeArtiID
 )
-SELECT CAST(GETDATE() AS date) AS Auswertungsdatum, Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.Bez AS Kostenstelle, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.VariantBez AS Verrechnungsart, ArtGroe.Groesse AS Größe, TraeArti.Menge AS [Soll-Menge], ISNULL(Umlaufteile.Menge, 0) AS [Ist-Menge]
+SELECT Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.Bez AS Kostenstelle, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.VariantBez AS Verrechnungsart, ArtGroe.Groesse AS Größe, TraeArti.Menge AS [Soll-Menge], ISNULL(Umlaufteile.Menge, 0) AS [Ist-Menge]
 FROM TraeArti
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID

@@ -1,4 +1,4 @@
-SELECT CAST(GETDATE() AS date) AS Auswertungsdatum, Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.Bez AS Kostenstelle, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.VariantBez AS Verrechnungsart, ArtGroe.Groesse AS Größe, EinzHist.Barcode, EinzHist.RuecklaufK AS [Anzahl Wäschen aktueller Träger]
+SELECT Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.Bez AS Kostenstelle, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.VariantBez AS Verrechnungsart, ArtGroe.Groesse AS Größe, EinzHist.Barcode, EinzHist.RuecklaufK AS [Anzahl Wäschen aktueller Träger]
 FROM EinzHist
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
