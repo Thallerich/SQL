@@ -103,7 +103,7 @@ GROUP BY #OPDaten.StandortID, EinzTeil.ArtikelID;
 
 MERGE INTO #OPStats AS OPStats
 USING (
-  SELECT #OPDaten.StandortID AS StandortID, OPEinweg.ArtikelID, SUM(CAST(#OPDaten.LsMenge AS int) * (#OPDaten.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  SELECT #OPDaten.StandortID AS StandortID, OPEinweg.ArtikelID, COUNT(#OPDaten.OPEtiPoID) AS Liefermenge
   FROM #OPDaten
   JOIN Artikel SetArti ON #OPDaten.ArtikelID = SetArti.ID
   JOIN OPEinweg ON #OPDaten.OPEinwegID = OPEinweg.ID
