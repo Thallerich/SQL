@@ -9,9 +9,28 @@ FROM (
   FROM RechKo
   JOIN DrLauf ON RechKo.DrLaufID = DrLauf.ID
   JOIN Mitarbei ON RechKo.DruckMitarbeiID = Mitarbei.ID
-  WHERE RechKo.DruckZeitpunkt > N'2023-01-03 08:38:00'
-    AND RechKo.DrLaufID = (SELECT DrLaufID FROM RechKo WHERE RechNr = 30287942)
+  WHERE RechKo.DruckZeitpunkt > N'2023-06-20 11:00:00'
+    AND RechKo.DrLaufID = (SELECT DrLaufID FROM RechKo WHERE RechNr = 30336338)
 ) AS x
 RIGHT JOIN Rechnungsanlagen ON Rechnungsanlagen.KundenID = x.KundenID
 WHERE x.RechKoID IS NOT NULL
 ORDER BY Drucklauf, DruckMitarbeiter, DruckZeitpunkt;
+
+GO
+
+SELECT COUNT(RechKo.ID) AS [Anzahl Rechnungen noch zu Drucken]
+FROM RechKo
+WHERE RechKo.DrLaufID = (SELECT DrLaufID FROM RechKo WHERE RechNr = 30336338)
+  AND RechKo.[Status] < N'F'
+  AND RechKo.RechChkID = -1;
+
+GO
+
+SELECT CAST(LogItem.Anlage_ AS date) AS Datum, LogItem.[Version], LogItem.Memo, CONVERT(datetime, SUBSTRING(LogItem.Memo, 1, 23), 104) AS Starttime, CONVERT(datetime, SUBSTRING(LogItem.Memo, LEN(LogItem.Memo) - 38, 23), 104) AS EndTime, DATEDIFF(minute, CONVERT(datetime, SUBSTRING(LogItem.Memo, 1, 23), 104), CONVERT(datetime, SUBSTRING(LogItem.Memo, LEN(LogItem.Memo) - 38, 23), 104)) AS Duration
+FROM LogItem
+WHERE LogItem.LogCaseID = (SELECT ID FROM LogCase WHERE Bez = N'RechnungsdruckAnalyse')
+  AND LogItem.[Version] LIKE N'SVOBKU %'
+  AND LogItem.Version LIKE N'% (9.60.%)'
+ORDER BY ID DESC;
+
+GO
