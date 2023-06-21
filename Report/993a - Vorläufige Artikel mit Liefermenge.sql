@@ -10,5 +10,5 @@ WHERE KdArti.Vorlaeufig = 1
   AND LsKo.Status < N'W'
   AND Artikel.ID > 0
   AND Kunden.FirmaID IN ($1$)
-GROUP BY Firma.Bez, Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArti.Vorlaeufig, KdArti.WaschPreis, KdArti.LeasPreis, KdArti.ID
+GROUP BY Firma.Bez, Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdArti.Vorlaeufig, KdArti.WaschPreis, KdArti.LeasPreis, KdArti.ID
 ORDER BY Firma, KdNr;
