@@ -2,16 +2,16 @@ DROP TABLE IF EXISTS #AnfForEnns;
 
 GO
 
-DECLARE @KdNr int = 272936;
-DECLARE @DateFrom date = N'2023-06-19';
+DECLARE @KdNr int = 202899;
+DECLARE @DateFrom date = N'2023-06-26';
 
-SELECT AnfKo.ID, AnfKo.AuftragsNr
+SELECT AnfKo.ID, AnfKo.AuftragsNr, AnfKo.[Status]
 INTO #AnfForEnns
 FROM AnfKo
 JOIN Vsa ON AnfKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.KdNr = @KdNr
-  AND Vsa.StandKonID = (SELECT ID FROM StandKon WHERE StandKonBez = N'Produktion GP Enns')
+  AND Vsa.StandKonID IN (SELECT ID FROM StandKon WHERE StandKonBez LIKE N'Produktion GP Enns%')
   AND AnfKo.LieferDatum >= @DateFrom
   AND AnfKo.Status <= N'I'
   AND AnfKo.PZArtID != (SELECT ID FROM PzArt WHERE Kuerzel = N'CITUHF');
@@ -28,6 +28,7 @@ GO
 
 INSERT INTO AnfExpQ (Typ, AnfKoID, BearbSys, AuftragsNr)
 SELECT N'U', #AnfForEnns.ID, 2, #AnfForEnns.AuftragsNr
-FROM #AnfForEnns;
+FROM #AnfForEnns
+WHERE #AnfForEnns.[Status] = N'I';
 
 GO
