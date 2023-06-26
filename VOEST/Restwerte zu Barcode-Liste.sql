@@ -1,6 +1,5 @@
 DECLARE @currentweek nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
-DECLARE @customernumber int = 272606;
-DECLARE @barcodetable nvarchar(20) = N'_IT70234';
+DECLARE @barcodetable nvarchar(20) = N'_IT72464';
 
 DECLARE @sqltext nvarchar(max);
 
@@ -10,7 +9,7 @@ WITH Teilestatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N''EINZHIST''
 )
-SELECT Holding.Holding, Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Schrank.SchrankNr AS Schrank, TraeFach.Fach, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, EinzHist.Eingang1 AS [letzter Eingang], EinzHist.Ausgang1 AS [letzter Ausgang], Teilestatus.StatusBez AS Teilestatus, EinzHist.AlterInfo AS [Alter in Wochen], CAST(TeileRestwert.RestwertInfo AS float) AS Restwert
+SELECT Holding.Holding, Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Schrank.SchrankNr AS Schrank, TraeFach.Fach, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, EinzHist.Eingang1 AS [letzter Eingang], EinzHist.Ausgang1 AS [letzter Ausgang], Teilestatus.StatusBez AS Teilestatus, EinzTeil.AlterInfo AS [Alter in Wochen], CAST(TeileRestwert.RestwertInfo AS float) AS Restwert
 FROM EinzHist
 JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
@@ -30,8 +29,7 @@ CROSS APPLY funcGetRestwert(EinzHist.ID, @currentweek, 1) AS TeileRestwert
 WHERE EinzHist.Barcode IN (SELECT Barcode COLLATE Latin1_General_CS_AS FROM ' + @barcodetable + ')
   AND EinzHist.Status BETWEEN N''Q'' AND N''W''
   AND EinzHist.Einzug IS NULL
-  AND EinzHist.IsCurrEinzHist = 1
-  /*AND Kunden.KdNr = @customernumber*/;
+  AND EinzHist.IsCurrEinzHist = 1;
 ';
 
-EXEC sp_executesql @sqltext, N'@currentweek nchar(7), @customernumber int', @currentweek, @customernumber;
+EXEC sp_executesql @sqltext, N'@currentweek nchar(7)', @currentweek;
