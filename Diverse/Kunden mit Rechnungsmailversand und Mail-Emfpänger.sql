@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, RkoOut.EMailVersand, Rechnungsempfänger = STUFF((
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.Debitor, RKoOut.RkoOutBez AS Rechnungsausgabetyp, RkoOut.EMailVersand, Rechnungsempfänger = STUFF((
   SELECT DISTINCT N'; ' + Sachbear.eMail
   FROM RKoMail
   JOIN Sachbear ON RKoMail.SachbearID = Sachbear.ID
