@@ -26,8 +26,9 @@ WHERE Artikel.ArtikelNr IN ('U10','U11','U12','U31','U32','U33','U34','U37','U41
   AND EinzTeil.Code2 IS NULL
   AND EinzHist.RentomatChip IS NULL
   AND EinzTeil.LastActionsID NOT IN (108, 116) /* Verschrotte und verschwundene Teile ausschließen -- 108 OP Schrott, 116 OP Schwund */
-  AND EXISTS (SELECT * FROM Scans WHERE Scans.EinzHistID = EinzHist.ID AND Scans.ActionsID IN (2, 102, 120, 129, 130, 136)) /* Nur Teile nehmen, die bereits min. einmal aktiv waren */
-;
+  AND EinzHist.[Status] BETWEEN N'M' AND N'W';
+
+DELETE FROM #PoolTeilToBK WHERE LEN(Barcode) != 24;
 
 CREATE TABLE #BKTeileBarcodeVergabe (
   EinzHistID int PRIMARY KEY CLUSTERED,
