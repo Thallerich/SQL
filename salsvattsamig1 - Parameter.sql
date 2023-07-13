@@ -1,21 +1,26 @@
 USE master;
 GO
 
+IF DB_ID(N'Salesianer_Test') IS NOT NULL AND DATABASEPROPERTYEX(N'Salesianer_Test', N'Status') = N'ONLINE'
+  ALTER DATABASE Salesianer_Test
+    SET SINGLE_USER
+  WITH ROLLBACK IMMEDIATE;
+
 RESTORE DATABASE Salesianer_Test
   FROM DISK = N'\\10.10.203.16\mssql_backup\_temp\Salesianer.bak'
   WITH RECOVERY, REPLACE, STATS = 10,
     MOVE N'Salesianer' TO N'D:\SQL Server\UserDB\Salesianer_Test.mdf',
     MOVE N'Salesianer_Log' TO N'D:\SQL Server\TransactionLog\Salesianer_Test_Log.ldf';
 
-GO
-
-ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE;
-/* ALTER DATABASE dbSystem SET RECOVERY SIMPLE; */
-
-GO
+ALTER DATABASE Salesianer_Test SET RECOVERY SIMPLE WITH NO_WAIT;
 
 ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer, NEWNAME = Salesianer_Test);
 ALTER DATABASE Salesianer_Test MODIFY FILE (NAME = Salesianer_log, NEWNAME = Salesianer_Test_log);
+
+IF (SELECT DATABASEPROPERTYEX(N'Salesianer_Test', 'UserAccess')) = N'SINGLE_USER'
+  ALTER DATABASE Salesianer_Test
+    SET MULTI_USER
+  WITH ROLLBACK AFTER 60 SECONDS;
 
 GO
 
