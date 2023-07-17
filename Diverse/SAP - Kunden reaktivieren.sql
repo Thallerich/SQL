@@ -67,6 +67,28 @@ WHERE Vsa.KundenID IN (SELECT CustomerID FROM @Customer)
       AND History.Anlage_ > N'2023-07-13 10:00:00'
   );
 
+UPDATE VsaBer SET [Status] = N'A'
+FROM KdBer
+WHERE VsaBer.KdBerID = KdBer.ID
+  AND KdBer.[Status] = N'A'
+  AND VsaBer.[Status] = N'I'
+  AND VsaBer.Update_ > N'2023-07-13 10:00:00'
+  AND VsaBer.UserID_ = (SELECT ID FROM Mitarbei WHERE UserName = N'SAP')
+  AND VsaBer.VsaID IN (
+    SELECT Vsa.ID
+    FROM Vsa
+    WHERE Vsa.KundenID IN (SELECT CustomerID FROM @Customer)
+      AND Vsa.[Status] = N'I'
+      AND EXISTS (
+        SELECT History.*
+        FROM History
+        WHERE History.TableID = Vsa.ID
+          AND History.TableName = N'VSA'
+          AND History.AnlageUserID_ = (SELECT ID FROM Mitarbei WHERE UserName = N'SAP')
+          AND History.Anlage_ > N'2023-07-13 10:00:00'
+      )
+  );
+
 SELECT KdNr
 FROM @Reactivated;
 
