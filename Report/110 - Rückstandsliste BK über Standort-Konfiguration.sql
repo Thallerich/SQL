@@ -46,5 +46,4 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN Standort ON Daten.ProdStandortID = Standort.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
-WHERE ZielNr.IstKomplett = 0
-  AND Daten.FahrtPlanDatum <= CAST(GETDATE() AS date);
+WHERE Daten.FahrtPlanDatum <= CAST(GETDATE() AS date);
