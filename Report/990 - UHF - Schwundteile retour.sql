@@ -7,6 +7,6 @@ JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
 WHERE EinzTeil.[Status] < N'W'
   AND EinzTeil.RechPoID > 0
-  AND EinzTeil.FirstScanAfterInvoice IS NOT NULL
+  AND ISNULL(EinzTeil.FirstScanAfterInvoice, CAST(N'2099-12-31 00:00:00' AS datetime2)) > RechKo.RechDat
   AND RechPo.RPoTypeID = 23
   AND Kunden.ID IN ($2$);
