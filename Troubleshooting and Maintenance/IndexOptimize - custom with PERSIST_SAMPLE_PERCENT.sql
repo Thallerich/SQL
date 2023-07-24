@@ -1,9 +1,13 @@
-/****** Object:  StoredProcedure [dbo].[IndexOptimize]    Script Date: 12.10.2022 13:07:23 ******/
-SET ANSI_NULLS ON
+﻿SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE OR ALTER PROCEDURE [dbo].[IndexOptimize]
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[IndexOptimize]') AND type in (N'P', N'PC'))
+BEGIN
+EXEC dbo.sp_executesql @statement = N'CREATE PROCEDURE [dbo].[IndexOptimize] AS'
+END
+GO
+ALTER PROCEDURE [dbo].[IndexOptimize]
 
 @Databases nvarchar(max) = NULL,
 @FragmentationLow nvarchar(max) = NULL,
@@ -50,7 +54,7 @@ BEGIN
   --// Source:  https://ola.hallengren.com                                                        //--
   --// License: https://ola.hallengren.com/license.html                                           //--
   --// GitHub:  https://github.com/olahallengren/sql-server-maintenance-solution                  //--
-  --// Version: 2022-01-02 13:58:13                                                               //--
+  --// Version: 2022-12-03 17:23:44                                                               //--
   ----------------------------------------------------------------------------------------------------
 
   SET NOCOUNT ON
@@ -2025,7 +2029,7 @@ BEGIN
 
         SET @CurrentStatisticsSample = @StatisticsSample
         SET @CurrentStatisticsResample = @StatisticsResample
-		SET @CurrentStatisticsPersistSample = @StatisticsPersistSample
+        SET @CurrentStatisticsPersistSample = @StatisticsPersistSample
 
         -- Memory-optimized tables only supports FULLSCAN and RESAMPLE in SQL Server 2014
         IF @CurrentIsMemoryOptimized = 1 AND NOT (@Version >= 13 OR SERVERPROPERTY('EngineEdition') IN (5,8)) AND (@CurrentStatisticsSample <> 100 OR @CurrentStatisticsSample IS NULL)
@@ -2245,11 +2249,11 @@ BEGIN
             SELECT 'RESAMPLE'
           END
 
-		  IF @CurrentStatisticsPersistSample = 'Y'
-		  BEGIN
-			INSERT INTO @CurrentUpdateStatisticsWithClauseArguments (Argument)
-			SELECT 'PERSIST_SAMPLE_PERCENT = ON'
-		  END
+          IF @CurrentStatisticsPersistSample = 'Y'
+          BEGIN
+            INSERT INTO @CurrentUpdateStatisticsWithClauseArguments (Argument)
+            SELECT 'PERSIST_SAMPLE_PERCENT = ON'
+          END
 
           IF @CurrentNoRecompute = 1
           BEGIN
@@ -2353,7 +2357,7 @@ BEGIN
         SET @CurrentUpdateStatistics = NULL
         SET @CurrentStatisticsSample = NULL
         SET @CurrentStatisticsResample = NULL
-		SET @CurrentStatisticsPersistSample = NULL
+        SET @CurrentStatisticsPersistSample = NULL
         SET @CurrentAlterIndexArgumentID = NULL
         SET @CurrentAlterIndexArgument = NULL
         SET @CurrentAlterIndexWithClause = NULL
@@ -2438,4 +2442,6 @@ BEGIN
   ----------------------------------------------------------------------------------------------------
 
 END
+
+GO
 
