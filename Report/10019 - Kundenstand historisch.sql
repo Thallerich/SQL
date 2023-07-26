@@ -4,9 +4,10 @@ WITH Kundenstand AS (
   WHERE _Umlauf.Datum = DATEADD(day, ((15 - @@DATEFIRST) - DATEPART(weekday, $1$)) % 7, $1$)
   GROUP BY _Umlauf.Datum, _Umlauf.KdArtiID
 )
-SELECT Kundenstand.Datum AS Stichtag, Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Kundenstand.Kundenstand
+SELECT Kundenstand.Datum AS Stichtag, Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, Kundenstand.Kundenstand
 FROM Kundenstand
 JOIN KdArti ON Kundenstand.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
 WHERE Kunden.ID IN ($3$);
