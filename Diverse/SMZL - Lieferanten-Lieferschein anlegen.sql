@@ -48,7 +48,7 @@ GO
 /* ++                                                                                                                           ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @IntBestNr int = 412009822;
+DECLARE @IntBestNr bigint = 412024223;
 
 DECLARE @LiefLs TABLE (
   BestNr bigint,
@@ -57,6 +57,8 @@ DECLARE @LiefLs TABLE (
   BPoID int,
   LiefLsKoID int
 );
+
+UPDATE BKo SET [Status] = N'F' WHERE BestNr = @IntBestNr AND [Status] = N'D';
 
 INSERT INTO @LiefLs (BestNr, LiefID, BKoID, BPoID, LiefLsKoID)
 SELECT DISTINCT BKo.BestNr, BKo.LiefID, BKo.ID AS BKoID, BPo.ID AS BPoID, -1 AS LiefLsKoID
