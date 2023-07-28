@@ -3,6 +3,7 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DROP TABLE IF EXISTS #Customers999118;
+DROP TABLE IF EXISTS #ProductArea999118;
 DROP TABLE IF EXISTS #Result999118;
 
 CREATE TABLE #Result999118 (
@@ -35,7 +36,12 @@ CREATE TABLE #Result999118 (
 SELECT Kunden.ID
 INTO #Customers999118
 FROM Kunden
-WHERE Kunden.ID IN ($1$);
+WHERE Kunden.ID IN ($6$);
+
+SELECT Bereich.ID
+INTO #ProductArea999118
+FROM Bereich
+WHERE Bereich.iD IN ($7$);
 
 DECLARE @startdate date = $STARTDATE$;
 DECLARE @enddate date = $ENDDATE$;
@@ -67,7 +73,7 @@ IF @onlyUHF = 0
   JOIN Abteil ON RechPo.AbteilID = Abteil.ID
   JOIN RechKo ON RechPo.RechKoID = RechKo.ID
   WHERE Kunden.ID IN (SELECT ID FROM #Customers999118)
-  '
+    AND Bereich.ID IN (SELECT ID FROM #ProductArea999118) '
   + @filtercond + ';
   ';
 ELSE
@@ -86,7 +92,8 @@ ELSE
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
   JOIN Abteil ON RechPo.AbteilID = Abteil.ID
   JOIN RechKo ON RechPo.RechKoID = RechKo.ID
-  WHERE Kunden.ID IN (SELECT ID FROM #Customers999118)'
+  WHERE Kunden.ID IN (SELECT ID FROM #Customers999118)
+    AND Bereich.ID IN (SELECT ID FROM #ProductArea999118) '
   + @filtercond + '
     AND EXISTS (
       SELECT Scans.*
