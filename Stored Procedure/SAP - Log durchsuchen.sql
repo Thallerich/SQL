@@ -1,14 +1,17 @@
 CREATE PROCEDURE _sali_searchsaplog
   @function nvarchar(40) = N'???', /* Possible functions: StockTransaction, Invoice, AveragePrice, PayedWash, PoLineStat, Supplier, Customer, Article, ExchangeRate, PackingNote, PurchaseOrder, AveragePrice_verbose */
-  @searchstring nvarchar(40) = NULL
+  @searchstring nvarchar(40) = NULL,
+  @datetimefilter datetime2 = NULL
 AS
 
   SET NOCOUNT ON;
 
-  DECLARE @datetimefilter datetime2 = DATEADD(day, -7, DATETIME2FROMPARTS(DATEPART(year, GETDATE()), DATEPART(month, GETDATE()), DATEPART(day, GETDATE()), 0, 0, 0, 0, 0)); /* look at the last 7 days */
   DECLARE @errorflag tinyint = 0;
   DECLARE @xmlfiltertext nvarchar(300);
   DECLARE @sqltext nvarchar(max);
+
+  IF @datetimefilter IS NULL
+    SET @datetimefilter = DATEADD(day, -7, DATETIME2FROMPARTS(DATEPART(year, GETDATE()), DATEPART(month, GETDATE()), DATEPART(day, GETDATE()), 0, 0, 0, 0, 0)); /* look at the last 7 days */
 
   IF @searchstring IS NULL
     SET @errorflag = 1;
