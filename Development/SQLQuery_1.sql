@@ -36,8 +36,8 @@ END;
 SELECT #WorkTable.Jahr, #WorkTable.Monat, #WorkTable.LetzterSonntag, KdArti.ID AS KdArtiID, KdArti.KundenID, KdArti.ArtikelID, KdArti.Variante, CAST(0 AS bigint) AS Umlaufmenge, CAST(0 AS float) AS Liefermenge, CAST(0 AS money) AS Umsatz, CAST(0 AS int) AS Einsatzmenge
 INTO #ResultSet
 FROM KdArti
-WHERE KdArti.ID > 0
-CROSS JOIN #WorkTable;
+CROSS JOIN #WorkTable
+WHERE KdArti.ID > 0;
 
 UPDATE #ResultSet SET Umlaufmenge = x.Umlaufmenge
 FROM (
