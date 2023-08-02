@@ -48,7 +48,8 @@ RAISERROR(N'Pre-Select done', 0, 1) WITH NOWAIT;
 IF OBJECT_ID('_VsaCodeType') IS NULL
   CREATE TABLE _VsaCodeType (
     VsaID int PRIMARY KEY CLUSTERED,
-    CodeType1ID int
+    CodeType1ID int,
+    ChangedStamp datetime2 DEFAULT GETDATE()
   );
 
 GO
