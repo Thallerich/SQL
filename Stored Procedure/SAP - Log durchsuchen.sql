@@ -35,6 +35,8 @@ AS
           THEN N'TRY_CAST(SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<DeliveryNoteNumber>'', SalExLog.HTTPRequest, 1) + 20, CHARINDEX(N''</DeliveryNoteNumber>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<DeliveryNoteNumber>'', SalExLog.HTTPRequest, 1) + 20)) AS int) = TRY_CAST(@searchstring AS int)'
         WHEN N'PurchaseOrder'
           THEN N'TRY_CAST(SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<PurchaseOrderNumber>'', SalExLog.HTTPRequest, 1) + 21, CHARINDEX(N''</PurchaseOrderNumber>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<PurchaseOrderNumber>'', SalExLog.HTTPRequest, 1) + 21)) AS int) = TRY_CAST(@searchstring AS int)'
+        WHEN N'Supplier'
+          THEN N'TRY_CAST(SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<Number>'', SalExLog.HTTPRequest, 1) + 8, CHARINDEX(N''</Number>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<Number>'', SalExLog.HTTPRequest, 1) + 8)) AS int) = TRY_CAST(@searchstring AS int)'
         ELSE NULL
     END;
 
