@@ -14,7 +14,7 @@ ErstAuslesen AS (
   WHERE Scans.Menge = -1
   GROUP BY Scans.EinzHistID
 )
-SELECT Kunden.Kdnr, Kunden.Suchcode as Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez AS Einsatzgrund, EinzHist.Anlage_ AS [Teil angelegt am], IIF(EinzHist.Status = N'E' AND TeileBPo.ID IS NOT NULL, Lief.SuchCode, NULL) AS [bestellt bei Lieferant], Lager.SuchCode AS [lieferndes Lager], EntnKo.ID AS EntnahmelistenNr, EntnKo.Anlage_ AS [Entnahmeliste angelegt am], EntnKo.DruckDatum AS [Druckdatum Entnahmeliste], [Entnahme-Datum] = (
+SELECT Kunden.Kdnr, Kunden.Suchcode as Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez AS Einsatzgrund, EinzHist.Anlage_ AS [Teil angelegt am], Auftrag.AuftragsNr AS [Auftrags-Nummer], IIF(EinzHist.Status = N'E' AND TeileBPo.ID IS NOT NULL, Lief.SuchCode, NULL) AS [bestellt bei Lieferant], BKo.BestNr AS [Bestell-Nr], BKo.Datum AS Bestelldatum, Lager.SuchCode AS [lieferndes Lager], EntnKo.ID AS EntnahmelistenNr, EntnKo.Anlage_ AS [Entnahmeliste angelegt am], EntnKo.DruckDatum AS [Druckdatum Entnahmeliste], [Entnahme-Datum] = (
   SELECT MAX(Scans.[DateTime])
   FROM Scans
   WHERE Scans.EinzHistID = EinzHist.ID
@@ -32,6 +32,7 @@ JOIN Traegerstatus ON Traeger.[Status] = Traegerstatus.[Status]
 JOIN Einsatz ON EinzHist.EinsatzGrund = Einsatz.EinsatzGrund
 JOIN Lagerart ON EinzHist.LagerartID = Lagerart.ID
 JOIN Standort AS Lager ON Lagerart.LagerID = Lager.ID
+JOIN Auftrag ON EinzHist.StartAuftragID = Auftrag.ID
 LEFT JOIN EntnPo ON EinzHist.EntnPoID = EntnPo.ID AND EinzHist.EntnPoID > 0 AND EinzHist.Status >= N'K'
 LEFT JOIN EntnKo ON EntnPo.EntnKoID = EntnKo.ID
 LEFT JOIN TeileBPo ON TeileBPo.EinzHistID = EinzHist.ID AND TeileBPo.Latest = 1
@@ -47,4 +48,5 @@ WHERE Artikel.BereichID = 100
   AND Kunden.KdGfID IN ($1$)
   AND Kunden.StandortID IN ($3$)
   AND EinzHist.Anlage_ BETWEEN $STARTDATE$ AND $ENDDATE$
+  AND EinzHist.IsCurrEinzHist = 1 
 ORDER BY [Entnahmeliste angelegt am];
