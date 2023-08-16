@@ -1,4 +1,4 @@
-SELECT SdcDev.Bez AS Sortieranlage, COUNT(RepQueue.Seq) AS [Queue-Länge]
+SELECT SdcDev.Bez AS Sortieranlage, COUNT(DISTINCT RepQueue.TableName + N' -- ' + CAST(RepQueue.TableID AS nvarchar)) AS [Queue-Länge]
 FROM RepQueue
 RIGHT OUTER JOIN SdcDev ON RepQueue.SdcDevID = sdcDev.ID
 WHERE SdcDev.IsTriggerDest = 1
