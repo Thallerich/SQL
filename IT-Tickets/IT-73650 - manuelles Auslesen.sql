@@ -1,4 +1,4 @@
-DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+/* DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
 DECLARE @LsKoReturn TABLE (
   LsKoID int,
@@ -119,4 +119,33 @@ WHERE EinzHist.Barcode = E_IT73650.Barcode AND CAST(E_IT73650.Abholtag AS dateti
   AND EinzHist.EinzHistTyp = 1
   AND E_IT73650.LsPoID IS NOT NULL
   AND EinzHist.Eingang2 > E_IT73650.Eingang
-  AND EinzHist.Eingang3 < E_IT73650.Eingang;
+  AND EinzHist.Eingang3 < E_IT73650.Eingang; */
+
+
+DROP TABLE IF EXISTS #TmpReport;
+GO
+
+SELECT EinzHist.Barcode, _IT73650.Abholtag, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VSA, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, NächsteScanID = (
+  SELECT MIN(Scans.ID)
+  FROM Scans
+  WHERE Scans.EinzTeilID = EinzHist.EinzTeilID
+    AND Scans.[DateTime] > CAST(_IT73650.Abholtag AS datetime2)
+)
+INTO #TmpReport
+FROM EinzHist
+JOIN _IT73650 ON EinzHist.Barcode = _IT73650.Barcode AND CAST(_IT73650.Abholtag AS datetime2) BETWEEN EinzHist.EinzHistVon AND EinzHist.EinzHistBis
+JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID;
+
+GO
+
+SELECT #TmpReport.Barcode, #TmpReport.Abholtag, #TmpReport.KdNr, #TmpReport.Kunde, #TmpReport.VsaNr, #TmpReport.VSA, #TmpReport.ArtikelNr, #TmpReport.Artikelbezeichnung, #TmpReport.Größe, Scans.[DateTime] AS [nächster Scan], Actions.ActionsBez AS Aktion, Mitarbei.Name AS Benutzer, Traeger.Traeger, Traeger.Nachname, Traeger.Vorname
+FROM #TmpReport
+JOIN Scans ON #TmpReport.NächsteScanID = Scans.ID
+JOIN Actions ON Scans.ActionsID = Actions.ID
+JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
+JOIN Traeger ON IIF(Scans.LastPoolTraegerID > 0, Scans.LastPoolTraegerID, Scans.TraegerID) = Traeger.ID;
+
+GO
