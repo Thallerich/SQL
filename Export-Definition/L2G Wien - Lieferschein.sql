@@ -34,7 +34,7 @@ BEGIN
       JOIN VPSPo ON Scans.VPSPoID = VPSPo.ID
       WHERE Scans.EinzTeilID = EinzTeil.ID
         AND Scans.ActionsID = 126
-        AND Scans.ID BETWEEN ScanHistory.BeforeLastAusgangScanID AND ScanHistory.LastAusgangScanID
+        AND Scans.ID BETWEEN ISNULL(ScanHistory.BeforeLastAusgangScanID, 1) AND ScanHistory.LastAusgangScanID
       ORDER BY Scans.ID DESC
     ),
     EinzTeil.Code,
