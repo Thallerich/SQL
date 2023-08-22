@@ -15,16 +15,15 @@ JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN VsaBer ON VsaBer.VsaID = VsaAnf.VsaID AND VsaBer.KdBerID = KdBer.ID
-JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 WHERE VsaAnf.Art IN (N'M', N'm')
   AND VsaAnf.Status IN (N'A', N'C')
-  AND Bereich.Bereich IN (N'SH', N'TW', 'IK')
+  AND KdBer.BereichID IN ($2$)
   AND VsaAnf.Bestand = 0
   AND KdArti.Vertragsartikel = 1
-  AND VsaAnf.BestandIst <> 0
+  AND VsaAnf.BestandIst != 0
   AND Vsa.Status = N'A'
   AND Kunden.Status = N'A'
   AND (KdBer.AnfAusEpo > 0 OR VsaBer.AnfAusEpo > 0)
