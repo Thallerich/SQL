@@ -50,11 +50,16 @@ Import-Module dbatools;
 
 Set-DbaToolsInsecureConnection -SessionOnly
 
+Set-Location '.\Downloads\AWS Förderung\csv\'
+
+$infiles = @(Get-ChildItem -Filter MSEGSplit*.csv)
+
 foreach ($file in $infiles) {
     $DataTable = Import-Csv $file.FullName -Delimiter ";"
     Write-DbaDbTableData -SqlInstance SQL1FCIHQ22.sal.co.at -InputObject $DataTable -Database AWSInvest -Table AWSInvest.dbo.MSEG_Import -AutoCreateTable
     Write-Host "File $($file.Name) processed"
-    Remove-Variable $DataTable
+    Move-Item $file.FullName .\done\
+    Remove-Variable DataTable
     [GC]::Collect()
 }
 
@@ -62,10 +67,10 @@ foreach ($file in $infiles) {
 
 <#
 
-DROP TABLE IF EXISTS MSEGFinal;
+DROP TABLE IF EXISTS MSEG;
 GO
 
-CREATE TABLE MSEGFinal (
+CREATE TABLE MSEG (
   ID int IDENTITY(1, 1) PRIMARY KEY CLUSTERED,
   Materialbeleg char(15),
   Materialbelegjahr smallint,
@@ -116,7 +121,7 @@ CREATE TABLE MSEGFinal (
   Belegpositon2 smallint,
   Reservierung bigint,
   ReservierungPosition smallint,
-  Endausgefasst int,
+  Endausgefasst bit,
   Menge2 int,
   StatistikRelevant tinyint,
   MaterialEmfpänger nchar(15),
