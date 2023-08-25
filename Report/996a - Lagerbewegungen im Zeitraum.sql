@@ -75,7 +75,7 @@ WHERE Lagerbewegung.ArtGroeID = ArtGroe.ID
   AND Lagerbewegung.Preis = 0
   AND Lagerbewegung.PreisVormonat = 0;
 
-SELECT FORMAT(@Beginn, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, @Ende), 'd', 'de-at') AS Zeitraum, Lagerart, ArtikelNr, Artikelbezeichnung, Groesse, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn, MengeZugang, MengeAbgang, BestandEnde , (MengeZugang + MengeAbgang) * Preis AS [Wert Lagerbewegung], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Lagerbestand Zeitraum-Ende]
+SELECT FORMAT(@Beginn, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, @Ende), 'd', 'de-at') AS Zeitraum, Lagerart, ArtikelNr, Artikelbezeichnung, Groesse, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn AS [Bestand Zeitraum-Beginn], MengeZugang AS [Menge Zugang], MengeAbgang AS [Menge Abgang], BestandEnde AS [Bestand Zeitraum-Ende], BestandBeginn * PreisVormonat AS [Wert Zeitraum-Beginn], MengeZugang * Preis AS [Wert Zugang], MengeAbgang * Preis AS [Wert Abgang], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Zeitraum-Ende]
 FROM #TmpLagerbewegung
 WHERE ArtikelID > 0
   AND (BestandBeginn > 0 OR BestandEnde > 0 OR MengeZugang > 0 OR MengeAbgang < 0)
