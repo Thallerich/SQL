@@ -13,9 +13,9 @@ CREATE TABLE ##DBA_SProcs (
 );
 
 EXEC sys.sp_MSforeachDB
-     @replacechar = N'¬',
+     @replacechar = N'Æ¤',
      @command1 = N'
-USE[¬];
+USE[Æ¤];
 
 DECLARE @VersionKeyword nvarchar(max) = ''--// Version: '';
 
@@ -51,9 +51,9 @@ CREATE TABLE ##DBA_SProcs (
 );
 
 EXEC sys.sp_MSforeachdb
-     @replacechar = N'¬'
+     @replacechar = N'Æ¤'
     ,@command1 = N'
-USE[¬];
+USE[Æ¤];
 
 INSERT INTO ##DBA_SProcs
 SELECT
