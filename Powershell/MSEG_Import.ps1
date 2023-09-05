@@ -50,13 +50,13 @@ Import-Module dbatools;
 
 Set-DbaToolsInsecureConnection -SessionOnly
 
-Set-Location '.\Downloads\AWS Förderung\csv\'
+Set-Location '.\Downloads\EKBE\Split\'
 
-$infiles = @(Get-ChildItem -Filter MSEGSplit*.csv)
+$infiles = @(Get-ChildItem -Filter EKBESplit*.csv)
 
 foreach ($file in $infiles) {
     $DataTable = Import-Csv $file.FullName -Delimiter ";"
-    Write-DbaDbTableData -SqlInstance SQL1FCIHQ22.sal.co.at -InputObject $DataTable -Database AWSInvest -Table AWSInvest.dbo.MSEG_Import -AutoCreateTable
+    Write-DbaDbTableData -SqlInstance SQL1FCIHQ22.sal.co.at -InputObject $DataTable -Database AWSInvest -Table AWSInvest.dbo.EKBE_Import -AutoCreateTable
     Write-Host "File $($file.Name) processed"
     Move-Item $file.FullName .\done\
     Remove-Variable DataTable
