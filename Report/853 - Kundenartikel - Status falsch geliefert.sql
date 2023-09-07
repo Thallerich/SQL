@@ -10,4 +10,5 @@ FROM KdArti
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE Kunden.ID IN ($10$)
+  AND (($11$ = 1 AND KdArti.WaschPreis = 0 AND KdArti.LeasPreis = 0) OR ($11$ = 0))
   AND KdArti.Status = N'F';
