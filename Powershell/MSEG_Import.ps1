@@ -50,9 +50,9 @@ Import-Module dbatools;
 
 Set-DbaToolsInsecureConnection -SessionOnly
 
-Set-Location '.\Downloads\EKBE\Split\'
+Set-Location 'C:\Users\thalst.SAL\Downloads\csv\EKBE\'
 
-$infiles = @(Get-ChildItem -Filter EKBESplit*.csv)
+$infiles = @(Get-ChildItem -Filter EKBESplit*.csv | Select-Object -First 6)
 
 foreach ($file in $infiles) {
     $DataTable = Import-Csv $file.FullName -Delimiter ";"
@@ -61,6 +61,7 @@ foreach ($file in $infiles) {
     Move-Item $file.FullName .\done\
     Remove-Variable DataTable
     [GC]::Collect()
+    $counter++
 }
 
 # Final MSEG-Table for SQL
