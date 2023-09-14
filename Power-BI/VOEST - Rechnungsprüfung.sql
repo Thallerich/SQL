@@ -3,6 +3,13 @@ DROP TABLE IF EXISTS #TmpVOESTRechnung;
 GO
 
 DECLARE @RechKoID int = (SELECT RechKo.ID FROM RechKo WHERE RechKo.RechNr = 30355381);
+DECLARE @firstweek nchar(7), @lastweek nchar(7);
+
+SELECT @firstweek = MIN(Wochen.Woche), @lastweek = MAX(Wochen.Woche)
+FROM TraeArch
+JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
+JOIN Wochen ON TraeArch.WochenID = Wochen.ID
+WHERE AbtKdArW.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID);
 
 /* BK-Leasing */
 
@@ -28,10 +35,22 @@ SELECT Artikel.ID AS ArtikelID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
+  COALESCE(ArtGroe.Groesse, NULL) AS Größe,
   KdArti.VariantBez AS Variante,
-  AbtKdArW.EPreis AS Kosten,
+  AbtKdArW.EPreis AS Einzelpreis,
   SUM(TraeArch.Menge) AS Menge,
-  CAST(NULL AS nvarchar(33)) AS Barcode,
+  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
+  Barcodes = STUFF((
+    SELECT N', ' + EinzHist.Barcode
+    FROM EinzHist
+    JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+    WHERE EinzHist.TraeArtiID = TraeArch.TraeArtiID
+      AND EinzTeil.AltenheimModus = 0
+      AND EinzHist.EinzHistTyp = 1
+      AND ISNULL(EinzHist.Indienst, N'2099/52') <= @firstweek
+      AND ISNULL(EinzHist.Ausdienst, N'2099/52') > @lastweek
+    FOR XML PATH('')
+  ), 1, 2, N''),
   CAST(N'L' AS nchar(1)) AS Art
 INTO #TmpVOESTRechnung
 FROM TraeArch
@@ -45,6 +64,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 WHERE RechKo.ID = @RechKoID
 GROUP BY Artikel.ID,
   Traeger.ID,
@@ -68,12 +88,14 @@ GROUP BY Artikel.ID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
+  ArtGroe.Groesse,
   KdArti.VariantBez,
-  AbtKdArW.EPreis;
+  AbtKdArW.EPreis,
+  TraeArch.TraeArtiID;
 
 /* Leasing sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Kosten, Menge, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -93,8 +115,9 @@ SELECT Artikel.ID AS ArtikelID,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
   KdArti.VariantBez AS Variante,
-  AbtKdArW.EPreis AS Kosten,
+  AbtKdArW.EPreis AS Einzelpreis,
   SUM(AbtKdArW.Menge) AS Menge,
+  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
   CAST(N'S' AS nchar(1)) AS Art
 FROM AbtKdArW
 JOIN RechPo ON ABtKdArW.RechPoID = RechPo.ID
@@ -132,7 +155,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung BK */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Kosten, Menge, Barcode, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Einzelpreis, Menge, Kosten, Barcodes, Art)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -155,9 +178,11 @@ SELECT Artikel.ID AS ArtikelID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
+  ArtGroe.Groesse AS Größe,
   KdArti.VariantBez AS Variante,
-  LsPo.EPreis AS Kosten,
+  LsPo.EPreis AS Einzelpreis,
   COUNT(Scans.ID) AS Menge,
+  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten,
   EinzHist.Barcode,
   N'B' AS Art
 FROM LsPo
@@ -171,6 +196,7 @@ JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Scans ON Scans.LsPoID = LsPo.ID
 JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 WHERE RechKo.ID = @RechKoID
 GROUP BY Artikel.ID,
@@ -195,13 +221,14 @@ GROUP BY Artikel.ID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
+  ArtGroe.Groesse,
   KdArti.VariantBez,
   LsPo.EPreis,
   EinzHist.Barcode;
 
 /* Bearbeitung sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Kosten, Menge, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -221,8 +248,9 @@ SELECT Artikel.ID AS ArtikelID,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
   KdArti.VariantBez AS Variante,
-  LsPo.EPreis AS Kosten,
+  LsPo.EPreis AS Einzelpreis,
   SUM(LsPo.Menge) AS Menge,
+  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten,
   N'F' AS Art
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
@@ -261,7 +289,7 @@ GROUP BY Artikel.ID,
 
 /* Restwert-fakturierte Teile */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Kosten, Menge, Barcode, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Einzelpreis, Menge, Kosten, Barcodes, Art)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -284,9 +312,11 @@ SELECT Artikel.ID AS ArtikelID,
   Traeger.Vorname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
+  ArtGroe.Groesse AS Größe,
   KdArti.VariantBez AS Variante,
-  TeilSoFa.EPreis AS Kosten,
+  TeilSoFa.EPreis AS Einzelpreis,
   RechPo.Menge,
+  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten,
   EinzHist.Barcode,
   N'R' AS Art
 FROM TeilSoFa
@@ -296,14 +326,17 @@ JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 WHERE RechKo.ID = @RechKoID;
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Kosten, Menge, Barcode, Art
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Kosten, Menge, Barcodes, Art
 FROM #TmpVOESTRechnung
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
 
-SELECT SUM(Menge * Kosten) FROM #TmpVOESTRechnung;
+SELECT N'Auswertung' AS Source, SUM(Kosten) FROM #TmpVOESTRechnung
+UNION ALL
+SELECT N'Rechnung' AS Source, RechKo.NettoWert FROM RechKo WHERE RechKo.ID = @RechKoID;
