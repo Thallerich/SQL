@@ -1,6 +1,9 @@
 USE AWSInvest;
 GO
 
+TRUNCATE TABLE EKPO;
+GO
+
 INSERT INTO EKPO (Einkaufsbeleg, Position, Löschkennzeichen, LetzteÄnderung, Kurztext, Material, Material2, Buchungskreis, Werk, Lagerort, Warengruppe, Einkaufsinfosatz, Lieferantenmaterialnr, Zielmenge, Bestellmenge, Bestellmengeneinheit, BestellpreisME, Mengenumrechnung, Mengenumrechnung2, entspricht, Nenner, Bestellnettopreis, Preiseinheit, Bestellnettowert, Bruttobestellwert, Steuerkennzeichen, InfoUpdate, Anzahl_Mahnungen, Mahnung1, Mahnung2, Mahnung3, Tol_Überlieferung, Unbegrenzte_Überl, Tol_Unterlieferung, Bewertungsart, Bewertungstyp, Absagekennzeichen, Endlieferung, Endrechnung, Positionstyp, Kontierungstyp, Verbrauch, Verteilungskennz, Teilrechnung, Wareneingang, WEunbewertet, Rechnungseingang, Webez_RechnPrüfung, Bestätigungspflicht, Auftragsbestätigung, Rahmenvertrag, Pos_d_überg_Vertrags, Basismengeneinheit, Zielwert_Rahmenvertr, Nicht_abzugsfähig, Normalabrufmenge, Preisdatum, Einkaufsbelegtyp, Effektivwert, Obligorelevant, Kunde, Adresse, FortschreibGruppe, Planlieferzeit, Nettogewicht, Gewichtseinheit, EAN_UPC_Code, BestätigSteuerung, Bruttogewicht, Volumen, Volumeneinheit, Incoterms, Incoterms2, Bestellnettowert2, Statistisch, Lieferant, LBLieferant, Werksüberg_konf_Mat, Materialtyp, Adresse2, InterneObjektnummer, Bestellanforderung, BanfPosition, Materialart, Zwischensumme1, Zwischensumme2, Zwischensumme3, Naturalrabattfähig, Bonusbasis, Anforderer, Dispobereich, Bedarfsdringlichkeit, Bedarfspriorität, Anlegedatum, Anlegeuhrzeit, EinbehaltProzent, Anzahlung, Anzahlungsprozentsatz, Anzahlungsbetrag, Fälligkeitsdatum_Anzahlung, Reservierung, PosNr_UmlagReservierung, Pool_einzelcodiert_gestattet, Bestellposition_ID_Advantex)
 SELECT
   CAST(Einkaufsbeleg AS bigint),
