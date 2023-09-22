@@ -1,8 +1,33 @@
 DROP TABLE IF EXISTS #TmpKdInfo;
 
-SELECT KdGf.KurzBez AS SGF, Kunden.KdNr, Kunden.SuchCode AS Kunde, 0 AS [Anzahl Träger], 0 AS [Anzahl Teile], 0 AS [Anzahl Pool-Träger], 0 AS [Anzahl Pool-Teile]
+SELECT KdGf.KurzBez AS SGF,
+  Standort.SuchCode AS Hauptstandort,
+  Kunden.KdNr,
+  Kunden.SuchCode AS Kunde,
+  Kundenservice = (
+    SELECT TOP 1 Mitarbei.Name
+    FROM KdBer
+    JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
+    WHERE KdBer.KundenID = Kunden.ID
+    GROUP BY Mitarbei.Name
+    ORDER BY COUNT(KdBer.ID) DESC
+  ),
+  Betreuer = (
+    SELECT TOP 1 Mitarbei.Name
+    FROM KdBer
+    JOIN Mitarbei ON KdBer.BetreuerID = Mitarbei.ID
+    WHERE KdBer.KundenID = Kunden.ID
+    GROUP BY Mitarbei.Name
+    ORDER BY COUNT(KdBer.ID) DESC
+  ),
+  CAST(0 AS int) AS [Anzahl Träger],
+  CAST(0 AS int) AS [Anzahl Teile],
+  CAST(0 AS int) AS [Anzahl Pool-Träger], 
+  CAST(0 AS int) AS [Anzahl Pool-Teile]
 INTO #TmpKdInfo
-FROM Kunden, KdGf
+FROM Kunden
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
 WHERE Kunden.KdGfID = KdGf.ID
   AND KdGf.ID IN ($1$)
   AND Kunden.ID IN ($2$);
@@ -54,16 +79,16 @@ FROM #TmpKdInfo AS KdInfo, (
     AND EinzHist.IsCurrEinzHist = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.EinzHistTyp = 1
-    AND (UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%POOL%'        OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%GRÖßENSATZ%'  OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%RESERVE%'     OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%OVERALL%'     OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%ÜBERSTIEFEL%' OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%HAUBE%'       OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%RR%'          OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%ABDECKUNG%'   OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%T-SHIRT%'     OR 
-         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%STERIL%'      OR 
+    AND (UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%POOL%'          OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%GRÖßENSATZ%'    OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%RESERVE%'       OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%OVERALL%'       OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%ÜBERSTIEFEL%'   OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%HAUBE%'         OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%RR%'            OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%ABDECKUNG%'     OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%T-SHIRT%'       OR 
+         UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%STERIL%'        OR 
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%STERILFÄLLUNG%' OR 
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%STUDIE%'        OR 
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%BEREICH%'       OR 
@@ -74,6 +99,6 @@ FROM #TmpKdInfo AS KdInfo, (
 ) AS TraeData
 WHERE TraeData.KdNr = KdInfo.KdNr;
 
-SELECT SGF, KdNr, Kunde, [Anzahl Träger], [Anzahl Teile], [Anzahl Pool-Träger], [Anzahl Pool-Teile]
+SELECT SGF, Hauptstandort, KdNr, Kunde, Kundenservice, Betreuer, [Anzahl Träger], [Anzahl Teile], [Anzahl Pool-Träger], [Anzahl Pool-Teile]
 FROM #TmpKdInfo
 ORDER BY SGF, KdNr;
