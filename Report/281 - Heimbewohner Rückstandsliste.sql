@@ -45,7 +45,7 @@ SET @sqltext = N'
   FROM (
     SELECT EinzHist.ID AS EinzHistID, Kunden.KdNr, Kunden.Name2, Kunden.Name3, Kunden.Name1 AS Kunde, EinzHist.Barcode AS Seriennummer, Artikel.ArtikelBez$LAN$ AS Artikel, EinzHist.Status, EinzHist.Eingang1, EinzHist.Ausgang1, ISNULL(RTRIM(Traeger.Nachname), '''') + '' '' + ISNULL(RTRIM(Traeger.Vorname), '''') AS Träger, Traeger.PersNr AS ZimmerNr, VSA.SuchCode, VSA.Bez AS Bez, VSA.Name1 AS Vsa, VSA.Name2 AS VSA2, VSA.Name3 AS VSA3, (SELECT TOP 1 Fach FROM ScanFach WHERE ScanFach.VsaID = Vsa.ID AND ScanFach.TraegerID = Traeger.ID) AS Fach
     FROM EinzHist
-    JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+    JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
     JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
     JOIN Vsa ON Traeger.VsaID = Vsa.ID
     JOIN Kunden ON Vsa.KundenID = Kunden.ID
