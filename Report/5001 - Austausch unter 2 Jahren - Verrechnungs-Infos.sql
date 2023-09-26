@@ -12,10 +12,9 @@ CREATE TABLE #Result (
   Ausdienst char(7),
   Preis money,
   PreisPotentiell money,
-  faktKZ bit,
-  gutschrKZ bit,
-  fakturiert nvarchar(30),
-  keineBerechnungGrund nvarchar(75),
+  faktKZ tinyint,
+  gutschrKZ tinyint,
+  faktStatus tinyint,
   AlterWochen int,
   AnzahlWäschen int
 );
@@ -37,7 +36,7 @@ FROM Firma
 WHERE Firma.ID IN ($2$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, fakturiert, keineBerechnungGrund, AlterWochen, AnzahlWäschen)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, AlterWochen, AnzahlWäschen)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
@@ -48,37 +47,18 @@ SET @sqltext = N'
     EinzHist.Ausdienst,
     IIF(TeilSoFa.OhneBerechGrund > 0, 0, TeilSoFa.EPreis) AS Preis,
     TeilSoFa.EPreis AS [potentieller Preis],
-    CAST(IIF(TeilSoFa.RechPoID > 0 OR TeilSoFa.Status = N''L'', 1, 0) AS bit) AS faktKZ,
-    CAST(IIF(TeilSoFa.RechPoGutschriftID > 0 OR TeilSoFa.Status = N''T'', 1, 0) AS bit) AS gutschrKZ,
-    fakturiert = 
-      CASE
-        WHEN TeilSoFa.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID < 0 THEN N''verrechnet''
-        WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''L'' THEN N''wird noch verrechnet''
-        WHEN TeilSoFa.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID > 0 THEN N''gutgeschrieben''
-        WHEN TeilSoFA.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID < 0 AND TeilSoFa.[Status] = N''T'' THEN N''wird noch gutgeschrieben''
-        WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''P'' THEN N''Rechnungsposition gelöscht''
-        WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''D'' THEN N''keine Verrechnung vorgesehen''
-        ELSE N''<<unbekannt>>''
-      END,
-    [keine Berechnung weil] =
-      CASE TeilSoFA.OhneBerechGrund
-        WHEN 0 THEN NULL
-        WHEN 1 THEN N''inklusive RW-Kontingent''
-        WHEN 2 THEN N''vertraglich nicht vorgesehen''
-        WHEN 3 THEN N''Kunden-Austausch-Regeln nicht erfüllt''
-        WHEN 4 THEN N''frühzeitiger Größentausch kostenlos ''
-        WHEN 5 THEN N''Restwert 0''
-        WHEN 6 THEN N''Restwert unter Min.''
-        WHEN 7 THEN N''Teil ist Pool-Teil''
-        WHEN 8 THEN N''Benutzer hat Restwert-Faktura verneint''
-        WHEN 9 THEN N''Restwert-Berechnung nicht zutreffend (Außerdienststellung ohne RW-Berech.)''
-        WHEN 10 THEN N''Verschrottung mit Grund ohne RW-Berechnung''
-        WHEN 11 THEN N''Eigentum sieht keine RW-Berech. vor''
-        WHEN 12 THEN N''Teil schon für Restwert-Berechnung markiert''
-        WHEN 13 THEN N''Teil wurde schon vorher als Kaufware ausgegeben''
-        WHEN 14 THEN N''Berechnung nachträglich verhindert''
-        ELSE N''<<unknown>>''
-      END,
+    CAST(IIF(TeilSoFa.RechPoID > 0 OR TeilSoFa.Status = N''L'', 1, 0) AS tinyint) AS faktKZ,
+    CAST(IIF(TeilSoFa.RechPoGutschriftID > 0 OR TeilSoFa.Status = N''T'', 1, 0) AS tinyint) AS gutschrKZ,
+    faktStatus =
+    CASE
+      WHEN TeilSoFa.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID < 0 THEN 3
+      WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''L'' THEN 2
+      WHEN TeilSoFa.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID > 0 THEN 5
+      WHEN TeilSoFA.RechPoID > 0 AND TeilSoFa.RechPoGutschriftID < 0 AND TeilSoFa.[Status] = N''T'' THEN 4
+      WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''P'' THEN 1
+      WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''D'' THEN 0
+      ELSE 255
+    END,
     TeilSoFa.AlterWochen AS [Alter in Wochen],
     TeilSoFa.AnzWaeschen AS [Anzahl Wäschen]
   FROM TeilSoFa
@@ -98,29 +78,46 @@ EXEC sp_executesql @sqltext, N'@fromweek char(7), @toweek char(7)', @fromweek, @
 
 GO
 
-SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], fakturiert, keineBerechnungGrund AS [keine Berechechnung weil], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen]
-FROM #Result;
+SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], fakturiert =
+    CASE
+        WHEN faktStatus = 3 THEN N'verrechnet'
+        WHEN faktStatus = 2 THEN N'wird noch verrechnet'
+        WHEN faktStatus = 5 THEN N'gutgeschrieben'
+        WHEN faktStatus = 4 THEN N'wird noch gutgeschrieben'
+        WHEN faktStatus = 1 THEN N'Rechnungsposition gelöscht'
+        WHEN faktStatus = 0 THEN N'keine Verrechnung vorgesehen'
+        ELSE N'<<unbekannt>>'
+      END
+FROM (
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, MAX(faktStatus) AS faktStatus
+  FROM #Result
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
+) AS x;
 
 GO
 
 SELECT Hauptstandort,
   SUM(IIF(AlterWochen <= 104, 1, 0)) AS [Teile gesamt (<= 104 Wochen)],
-  SUM(IIF(AlterWochen <= 104 AND faktKZ = 1 AND gutschrKZ = 0, 1, 0)) AS [Teile fakturiert (<= 104 Wochen)],
+  SUM(IIF(AlterWochen <= 104 AND faktKZ = 1, 1, 0)) AS [Teile fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 1 AND gutschrKZ = 1, 1, 0)) AS [Teile gutgeschrieben (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 0, 1, 0)) AS [Teile nicht fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104, PreisPotentiell, 0)) AS [Summe potentiell (<= 104 Wochen)],
-  SUM(IIF(AlterWochen <= 104 AND faktKZ = 1 AND gutschrKZ = 0, Preis, 0)) AS [Summe fakturiert (<= 104 Wochen)],
+  SUM(IIF(AlterWochen <= 104 AND faktKZ = 1, Preis, 0)) AS [Summe fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 1 AND gutschrKZ = 1, Preis, 0)) AS [Summe gutgeschrieben (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen > 104, 1, 0)) AS [Teile gesamt (> 104 Wochen)],
-  SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 0, 1, 0)) AS [Teile fakturiert (> 104 Wochen)],
+  SUM(IIF(AlterWochen > 104 AND faktKZ = 1, 1, 0)) AS [Teile fakturiert (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 1, 1, 0)) AS [Teile gutgeschrieben (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 0, 1, 0)) AS [Teile nicht fakturiert (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104, PreisPotentiell, 0)) AS [Summe potentiell (> 104 Wochen)],
-  SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 0, Preis, 0)) AS [Summe fakturiert (> 104 Wochen)],
+  SUM(IIF(AlterWochen > 104 AND faktKZ = 1, Preis, 0)) AS [Summe fakturiert (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 1, Preis, 0)) AS [Summe gutgeschrieben (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (> 104 Wochen)]
-FROM #Result
+FROM (
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, MAX(faktKZ) AS faktKZ, MAX(gutschrKZ) AS gutschrKZ, AlterWochen, AnzahlWäschen
+  FROM #Result
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
+) AS x
 GROUP BY Hauptstandort;
 
 GO
