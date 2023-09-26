@@ -24,11 +24,7 @@ CREATE TABLE #Firma (
 );
 
 DECLARE @from date = $STARTDATE$, @to date = $ENDDATE$;
-DECLARE @fromweek char(7), @toweek char(7);
 DECLARE @sqltext nvarchar(max);
-
-SELECT @fromweek = [Week].Woche FROM [Week] WHERE @from BETWEEN [Week].VonDat AND [Week].BisDat;
-SELECT @toweek = [Week].Woche FROM [Week] WHERE @to BETWEEN [Week].VonDat AND [Week].BisDat;
 
 INSERT INTO #Firma (FirmaID)
 SELECT Firma.ID
@@ -63,18 +59,17 @@ SET @sqltext = N'
     TeilSoFa.AnzWaeschen AS [Anzahl Wäschen]
   FROM TeilSoFa
   JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
-  JOIN Einsatz ON TeilSoFa.AusdienstGrund = Einsatz.EinsatzGrund
   JOIN Kunden ON EinzHist.KundenID = Kunden.ID
   JOIN Firma ON Kunden.FirmaID = Firma.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
-  WHERE EinzHist.Ausdienst BETWEEN @fromweek AND @toweek
+  WHERE TeilSoFa.Zeitpunkt BETWEEN CAST(@from AS datetime2) AND CAST(@to AS datetime2)
     AND Firma.ID IN (SELECT #Firma.FirmaID FROM #Firma)
-    AND TeilSoFa.AusdienstGrund IN (N''A'', N''a'', N''E'', N''e'');
+    AND TeilSoFa.RwArtID IN (2, 3, 4, 11);
 ';
 
-EXEC sp_executesql @sqltext, N'@fromweek char(7), @toweek char(7)', @fromweek, @toweek;
+EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 
 GO
 
