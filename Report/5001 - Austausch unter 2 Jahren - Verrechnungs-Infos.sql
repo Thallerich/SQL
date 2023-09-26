@@ -66,7 +66,7 @@ SET @sqltext = N'
   JOIN Standort ON Kunden.StandortID = Standort.ID
   WHERE TeilSoFa.Zeitpunkt BETWEEN CAST(@from AS datetime2) AND CAST(@to AS datetime2)
     AND Firma.ID IN (SELECT #Firma.FirmaID FROM #Firma)
-    AND TeilSoFa.RwArtID IN (2, 3, 4, 11);
+    AND TeilSoFa.SoFaArt = N''R'';
 ';
 
 EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
