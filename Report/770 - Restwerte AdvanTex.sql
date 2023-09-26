@@ -1,18 +1,36 @@
-DECLARE @Woche char(7);
+DECLARE @Woche nchar(7);
 
-SET @Woche = (SELECT Week.Woche FROM Week WHERE Week.vonDat < CONVERT(date, GETDATE()) AND Week.bisDat > CONVERT(date, GETDATE()));
+SELECT @Woche = [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat;
 
-SELECT Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung, Vsa.VsaNr, Vsa.Bez AS VSA, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, Artikel.EKPreis, Teile.Barcode, Teile.Eingang1, Teile.Ausgang1, Teile.Indienst, Week.Woche AS Erstwoche, IIF(Teile.Status IN ('Z', 'V', 'X', 'Y', 'U') OR (Teile.Einzug < CONVERT(date, GETDATE())), 0, IIF((Teile.AusDienst = '' OR Teile.AusDienst IS NULL), Teile.RestWertInfo, IIF(@Woche < Teile.AusDienst, Teile.RestWertInfo, Teile.AusDRestW))) AS RestWert, DATEDIFF(day, ISNULL(Teile.Ausgang1, CONVERT(date, GETDATE())), CONVERT(date, GETDATE())) AS BeimKundeSeitTagen
-FROM Teile, Traeger, Vsa, Kunden, Abteil, Artikel, ArtGroe, Week
-WHERE Teile.TraegerID = Traeger.ID
-  AND Traeger.VsaID = Vsa.ID
-  AND Vsa.KundenID = Kunden.ID
-  AND Traeger.AbteilID = Abteil.ID
-  AND Teile.ArtikelID = Artikel.ID
-  AND Teile.ArtGroeID = ArtGroe.ID
-  AND DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
-  AND Kunden.ID = $ID$
-  AND Artikel.Status <> 'B'
-  AND (Teile.Ausdienst = '' OR Teile.Ausdienst IS NULL)
-  AND Teile.Status <> '5'
-  AND Traeger.Altenheim = 0;
+SELECT Traeger.Vorname,
+  Traeger.Nachname,
+  Abteil.Abteilung,
+  Vsa.VsaNr,
+  Vsa.Bez AS VSA,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  ArtGroe.Groesse AS Größe,
+  Artikel.EKPreis,
+  EinzHist.Barcode,
+  EinzHist.Eingang1,
+  EinzHist.Ausgang1,
+  EinzHist.Indienst,
+  EinzTeil.Erstwoche,
+  RwCalc.RestWertInfo AS Restwert,
+  DATEDIFF(day, ISNULL(einzhist.Ausgang1, CONVERT(DATE, GETDATE())), CONVERT(DATE, GETDATE())) AS BeimKundeSeitTagen
+FROM EinzHist
+CROSS APPLY funcGetRestwert(EinzHist.ID, @Woche, 1) AS RwCalc
+JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Abteil ON Traeger.AbteilID = Abteil.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+WHERE Kunden.ID = $ID$
+  AND Artikel.Status != N'B'
+  AND EinzHist.Ausdienst IS NULL
+  AND EinzHist.Status != N'5'
+  AND EinzHist.EinzHistTyp = 1
+  AND EinzHist.PoolFkt = 0
+  AND EinzTeil.AltenheimModus = 0;

@@ -3,9 +3,8 @@ DROP TABLE IF EXISTS #EinzHistReport;
 SELECT EinzHist.VsaID, EinzHist.ArtGroeID, EinzHist.LagerartID, EinzHist.Indienst, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum, EinzHist.EinsatzGrund
 INTO #EinzHistReport
 FROM EinzHist
-JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
-WHERE EinzHist.IsCurrEinzHist = 1
-  AND EinzHist.EinzHistTyp = 1
+JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
+WHERE EinzHist.EinzHistTyp = 1
   AND EinzHist.PoolFkt = 0
   AND EinzHist.Patchdatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzHist.LagerArtID > 0

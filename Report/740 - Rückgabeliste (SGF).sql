@@ -50,7 +50,7 @@ SELECT KdGf.KurzBez AS SGF,
   Einsatz.EinsatzBez$LAN$ AS [Außerdienststellungs-Grund],
   WegGrund.WegGrundBez$LAN$ AS [Schrott-Grund]
 FROM EinzHist
-JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN Traeger on EinzHist.TraegerID = Traeger.ID
 JOIN ArtGroe on EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel on EinzHist.ArtikelID = Artikel.ID
@@ -69,7 +69,6 @@ WHERE Kunden.ID IN ($4$)
   AND EinzHist.Status BETWEEN N'U' AND N'W'
   AND EinzHist.AbmeldDat BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzHist.Einzug IS NULL
-  AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.PoolFkt = 0
   AND (EinzTeil.AltenheimModus = 0 OR Artikel.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Sack = 1))
