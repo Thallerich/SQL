@@ -122,12 +122,14 @@ JOIN PrLauf ON Vertrag.PrLaufID = PrLauf.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
 JOIN Wae AS RechWae ON Kunden.RechWaeID = RechWae.ID
 LEFT JOIN WebInfo ON WebInfo.KundenID = Kunden.ID
-WHERE Kundenstatus.ID IN ($3$)
+WHERE Kundenstatus.ID IN ($4$)
   AND Kunden.AdrArtID = 1
   AND Firma.ID IN ($1$)
   AND KdGf.ID IN ($2$)
-  AND Kunden.StandortID IN ($4$)
-  AND Kunden.SichtbarID IN ($SICHTBARIDS$);
+  AND [Zone].ID IN ($3$)
+  AND Kunden.StandortID IN ($5$)
+  AND Kunden.SichtbarID IN ($SICHTBARIDS$)
+  AND (($6$ = 1 AND Vertrag.VertragKuendZum >= CAST(GETDATE() AS date)) OR ($6$ = 0));
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++                                                                                                                           ++ */
