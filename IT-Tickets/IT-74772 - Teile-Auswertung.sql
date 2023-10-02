@@ -7,11 +7,18 @@ WITH Teilestatus AS (
 )
 SELECT EinzHist.Barcode,
   Teilestatus.StatusBez AS [aktueller Status],
+  Vsa.VsaNr AS [Vsa-Nr],
+  Vsa.Bez AS [Vsa-Bezeichnung],
+  Traeger.Traeger AS [Träger-Nr],
+  Traeger.Vorname,
+  Traeger.Nachname,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
   ArtGroe.Groesse AS Größe,
   EinzHist.IndienstDat AS [Datum Indienststellung aktueller Träger],
-  DATEDIFF(day, EinzHist.IndienstDat, CAST(GETDATE() AS date)) AS [Tage im Einsatz],
+  EinzHist.AbmeldDat AS [Datum Abmeldung],
+  EinzHist.AusdienstDat AS [Datum Außerdienststellung],
+  DATEDIFF(day, EinzHist.IndienstDat, ISNULL(EinzHist.AusdienstDat, CAST(GETDATE() AS date))) AS [Tage im Einsatz],
   EinzHist.RuecklaufK AS [Waschzyklen aktueller Träger],
   EinzTeil.RuecklaufG AS [Waschzyklen gesamt],
   [an Wäscherei retourniert] = CAST(
@@ -51,8 +58,8 @@ SELECT EinzHist.Barcode,
     GROUP BY Artikel.ArtikelBez
     FOR XML PATH ('')
   ), 1, 2, N'')
-FROM EinzHist
-JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
 JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
@@ -61,7 +68,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 WHERE Kunden.KdNr = 272295
-  AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.Archiv = 0
   AND EinzTeil.AltenheimModus = 0
