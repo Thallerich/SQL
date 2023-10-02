@@ -1,15 +1,14 @@
 DROP TABLE IF EXISTS #TmpVOESTRechnung;
 
-GO
+DECLARE @RechKo TABLE (
+  RechKoID int
+);
 
-DECLARE @RechKoID int = (SELECT RechKo.ID FROM RechKo WHERE RechKo.RechNr = 30355381);
-DECLARE @firstweek nchar(7), @lastweek nchar(7);
-
-SELECT @firstweek = MIN(Wochen.Woche), @lastweek = MAX(Wochen.Woche)
-FROM TraeArch
-JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
-JOIN Wochen ON TraeArch.WochenID = Wochen.ID
-WHERE AbtKdArW.RechPoID IN (SELECT RechPo.ID FROM RechPo WHERE RechPo.RechKoID = @RechKoID);
+INSERT INTO @RechKo (RechKoID)
+SELECT RechKo.ID
+FROM RechKo
+WHERE RechKo.RechDat >= DATEADD(year, -1, GETDATE())
+  AND RechKo.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 272295);
 
 /* BK-Leasing */
 
@@ -40,39 +39,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(TraeArch.Menge) AS Menge,
-  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
-  Barcodes = STUFF((
-    SELECT N', ' + EinzHist.Barcode
-    FROM EinzHist
-    JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
-    LEFT JOIN [Week] AS AusdienstWeek ON EinzHist.AusdienstDat BETWEEN AusdienstWeek.VonDat AND AusdienstWeek.BisDat
-    WHERE EinzHist.TraeArtiID = TraeArch.TraeArtiID
-      AND EinzTeil.AltenheimModus = 0
-      AND EinzHist.EinzHistTyp = 1
-      AND (ISNULL(EinzHist.Indienst, N'2099/52') <= [Week].Woche AND EinzHist.EinzHistVon < [Week].BisDat)
-      AND (
-        (CAST(EinzHist.EinzHistBis AS date) = N'2099-12-31' AND IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst != AusdienstWeek.Woche, AusdienstWeek.Woche, ISNULL(EinzHist.Ausdienst, N'2099/52')) > [Week].Woche)
-        OR
-        (CAST(EinzHist.EinzHistBis AS date) < N'2099-12-31' AND (IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst <= [Week].Woche AND EinzHist.Ausdienst != AusdienstWeek.Woche, AusdienstWeek.Woche, EinzHist.Ausdienst) > [Week].Woche OR (EinzHist.Ausdienst IS NULL AND EinzHist.EinzHistBis > [Week].BisDat)))
-      )
-    FOR XML PATH('')
-  ), 1, 2, N''),
-  BarcodeAnzahl = (
-    SELECT COUNT(EinzHist.ID)
-    FROM EinzHist
-    JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
-    LEFT JOIN [Week] AS AusdienstWeek ON EinzHist.AusdienstDat BETWEEN AusdienstWeek.VonDat AND AusdienstWeek.BisDat
-    WHERE EinzHist.TraeArtiID = TraeArch.TraeArtiID
-      AND EinzTeil.AltenheimModus = 0
-      AND EinzHist.EinzHistTyp = 1
-      AND (ISNULL(EinzHist.Indienst, N'2099/52') <= [Week].Woche AND EinzHist.EinzHistVon < [Week].BisDat)
-      AND (
-        (CAST(EinzHist.EinzHistBis AS date) = N'2099-12-31' AND IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst != AusdienstWeek.Woche, AusdienstWeek.Woche, ISNULL(EinzHist.Ausdienst, N'2099/52')) > [Week].Woche)
-        OR
-        (CAST(EinzHist.EinzHistBis AS date) < N'2099-12-31' AND (IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst <= [Week].Woche AND EinzHist.Ausdienst != AusdienstWeek.Woche, AusdienstWeek.Woche, EinzHist.Ausdienst) > [Week].Woche OR (EinzHist.Ausdienst IS NULL AND EinzHist.EinzHistBis > [Week].BisDat)))
-      )
-  ),
-  CAST(N'L' AS nchar(1)) AS Art
+  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten
 INTO #TmpVOESTRechnung
 FROM TraeArch
 JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
@@ -88,7 +55,7 @@ JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-WHERE RechKo.ID = @RechKoID
+WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
 GROUP BY Artikel.ID,
   Traeger.ID,
   RechPo.ID,
@@ -121,7 +88,7 @@ GROUP BY Artikel.ID,
 
 /* Leasing sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -144,8 +111,7 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(AbtKdArW.Menge) AS Menge,
-  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
-  CAST(N'S' AS nchar(1)) AS Art
+  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten
 FROM AbtKdArW
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN RechPo ON ABtKdArW.RechPoID = RechPo.ID
@@ -155,7 +121,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-WHERE RechKo.ID = @RechKoID
+WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
   AND NOT EXISTS (
     SELECT TraeArch.*
     FROM TraeArch
@@ -184,7 +150,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung BK */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Barcodes, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -212,9 +178,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   COUNT(Scans.ID) AS Menge,
-  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten,
-  EinzHist.Barcode,
-  N'B' AS Art
+  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -229,7 +193,7 @@ JOIN Scans ON Scans.LsPoID = LsPo.ID
 JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
-WHERE RechKo.ID = @RechKoID
+WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
 GROUP BY Artikel.ID,
   Traeger.ID,
   RechPo.ID,
@@ -260,7 +224,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -283,8 +247,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   SUM(LsPo.Menge) AS Menge,
-  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten,
-  N'F' AS Art
+  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -295,7 +258,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-WHERE RechKo.ID = @RechKoID
+WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
   AND NOT EXISTS (
     SELECT Scans.*
     FROM Scans
@@ -324,7 +287,7 @@ GROUP BY Artikel.ID,
 
 /* Restwert-fakturierte Teile */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Barcodes, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -352,9 +315,7 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   TeilSoFa.EPreis AS Einzelpreis,
   RechPo.Menge,
-  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten,
-  EinzHist.Barcode,
-  N'R' AS Art
+  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten
 FROM TeilSoFa
 JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -368,93 +329,8 @@ JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
-WHERE RechKo.ID = @RechKoID;
+WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo);
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Abrechnungswoche, Kosten, Menge, Barcodes, BarcodeAnzahl AS BarcodeLeasingMenge, Art
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Abrechnungswoche, Kosten, Menge
 FROM #TmpVOESTRechnung
-WHERE BarcodeAnzahl != Menge
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
-
-SELECT N'Auswertung' AS Source, SUM(Kosten) FROM #TmpVOESTRechnung
-UNION ALL
-SELECT N'Rechnung' AS Source, RechKo.NettoWert FROM RechKo WHERE RechKo.ID = @RechKoID;
-
-
-
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++                                                                                                                           ++ */
-/* ++ Data checking queries                                                                                                     ++ */
-/* ++                                                                                                                           ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-/*
-DECLARE @tnr nchar(8) = N'0162';
-DECLARE @pnr nchar(10) = N'7122420';
-DECLARE @artikelnr nchar(15) = N'26VH';
-DECLARE @woche nchar(7) = N'2023/29';
-
-DECLARE @vondat date, @bisdat date, @sqltext nvarchar(max);
-
-SELECT @vondat = [Week].VonDat,@bisdat = [Week].BisDat
-FROM [Week] 
-WHERE [Week].Woche = @woche;
-
-SET @sqltext = N'
-  SELECT EinzHist.Barcode, EinzHist.[Status], EinzHist.Indienst, EinzHist.Ausdienst, EinzHist.EinzHistVon, EinzHist.EinzHistBis, EinzHist.Archiv, EinzHist.EinzHistTyp, @vondat AS VonDat, @bisdat AS BisDat
-  FROM EinzHist
-  JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
-  LEFT JOIN [Week] ON EinzHist.AusdienstDat BETWEEN [Week].VonDat AND [Week].BisDat
-  WHERE EinzHist.TraeArtiID IN (
-      SELECT DISTINCT TraeArch.TraeArtiID
-      FROM TraeArch
-      JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
-      JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-      JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-      JOIN Wochen ON TraeArch.WochenID = Wochen.ID
-      JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-      JOIN Vsa ON Traeger.VsaID = Vsa.ID
-      JOIN Kunden ON Vsa.KundenID = Kunden.ID
-      WHERE Kunden.KdNr = 272295
-        AND Traeger.Traeger = @tnr
-        AND Traeger.PersNr = @pnr
-        AND Artikel.ArtikelNr = @artikelnr
-        AND Wochen.Woche = @woche
-    )
-    AND EinzTeil.AltenheimModus = 0
-    AND EinzHist.EinzHistTyp = 1
-    AND (ISNULL(EinzHist.Indienst, N''2099/52'') <= @woche AND EinzHist.EinzHistVon < @bisdat)
-    AND (
-      (CAST(EinzHist.EinzHistBis AS date) = N''2099-12-31'' AND IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst != [Week].Woche, [Week].Woche, ISNULL(EinzHist.Ausdienst, N''2099/52'')) > @woche)
-      OR
-      (CAST(EinzHist.EinzHistBis AS date) < N''2099-12-31'' AND (IIF(EinzHist.Ausdienst IS NOT NULL AND EinzHist.Ausdienst <= [Week].Woche AND EinzHist.Ausdienst != [Week].Woche, [Week].Woche, EinzHist.Ausdienst) > @woche OR (EinzHist.Ausdienst IS NULL AND EinzHist.EinzHistBis > @bisdat)))
-    );
-';
-
-EXEC sp_executesql @sqltext, N'@woche nchar(7), @tnr nchar(8), @pnr nchar(10), @artikelnr nchar(15), @vondat date, @bisdat date', @woche, @tnr, @pnr, @artikelnr, @vondat, @bisdat;
-
-SET @sqltext = N'
-  SELECT EinzHist.Barcode, EinzHist.[Status], EinzHist.VsaID, EinzHist.Indienst, EinzHist.Ausdienst, EinzHist.AusdienstDat, EinzHist.EinzHistVon, EinzHist.EinzHistBis, EinzHist.Archiv, EinzHist.EinzHistTyp, @vondat AS VonDat, @bisdat AS BisDat, [Week].Woche, EinzHist.TraeArtiID
-  FROM EinzHist
-  LEFT JOIN [Week] ON EinzHist.AusdienstDat BETWEEN [Week].VonDat AND [Week].BisDat
-  WHERE EinzHist.TraeArtiID IN (
-    SELECT DISTINCT TraeArch.TraeArtiID
-    FROM TraeArch
-    JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
-    JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-    JOIN Wochen ON TraeArch.WochenID = Wochen.ID
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN Vsa ON Traeger.VsaID = Vsa.ID
-    JOIN Kunden ON Vsa.KundenID = Kunden.ID
-    WHERE Kunden.KdNr = 272295
-      AND Traeger.Traeger = @tnr
-      AND Traeger.PersNr = @pnr
-      AND Artikel.ArtikelNr = @artikelnr
-      AND Wochen.Woche = @woche
-  );
-';
-
-EXEC sp_executesql @sqltext, N'@woche nchar(7), @tnr nchar(8), @pnr nchar(10), @artikelnr nchar(15), @vondat date, @bisdat date', @woche, @tnr, @pnr, @artikelnr, @vondat, @bisdat;
-
-GO
-*/
