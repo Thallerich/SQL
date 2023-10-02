@@ -1,6 +1,6 @@
 SET NOCOUNT ON;
 
-DECLARE @msg nvarchar(100), @maxcount int, @lastcount int = 1, @deletedcount int = 0, @cutoffdate datetime2;
+DECLARE @maxcount int, @lastcount int = 1, @cutoffdate datetime2;
 
 SET @cutoffdate = DATEADD(day, DATEDIFF(day, 0, DATEADD(day, -180, GETDATE())), 0); /* 180 Tage von heute zurück um 00:00 Uhr */
 
@@ -11,6 +11,7 @@ WHERE Logs.[Timestamp] < @cutoffdate;
 IF @maxcount = 0
   PRINT N'Nothing to do!';
 ELSE
+BEGIN
   WHILE @lastcount > 0
   BEGIN
     BEGIN TRY
@@ -37,11 +38,9 @@ ELSE
       SET @lastcount = 0;
     END CATCH;
 
-    SET @deletedcount += @lastcount;
-
-    SET @msg = FORMAT(@deletedcount, N'N0', N'de-AT') + N' / ' + FORMAT(@maxcount, N'N0', N'de-AT') + N' rows deleted. ' + FORMAT((CAST(@deletedcount AS float) / CAST(@maxcount AS float)), N'#0.00 %', N'de-AT') + N' completed!';
-
-    RAISERROR(N'%s', 0, 1, @msg) WITH NOWAIT;
-
     WAITFOR DELAY N'00:00:01';
   END
+
+  PRINT N'Deleted ' + CAST(@maxcount AS nvarchar) + N' rows!';
+
+END;
