@@ -8,10 +8,15 @@ WITH Teilestatus AS (
 SELECT EinzHist.Barcode,
   Teilestatus.StatusBez AS [aktueller Status],
   Vsa.VsaNr AS [Vsa-Nr],
+  Vsa.SuchCode AS [VSA-Stichwort],
   Vsa.Bez AS [Vsa-Bezeichnung],
+  Vsa.GebaeudeBez AS Abteilung,
+  Vsa.Name2 AS Bereich,
   Traeger.Traeger AS [Träger-Nr],
   Traeger.Vorname,
   Traeger.Nachname,
+  Abteil.Abteilung AS Kostenstelle,
+  Abteil.Bez AS Kostenstellenbezeichnung,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS Artikelbezeichnung,
   ArtGroe.Groesse AS Größe,
@@ -66,6 +71,7 @@ JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 WHERE Kunden.KdNr = 272295
   AND EinzHist.EinzHistTyp = 1
