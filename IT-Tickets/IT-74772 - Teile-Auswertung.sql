@@ -7,6 +7,9 @@ WITH Teilestatus AS (
 )
 SELECT EinzHist.Barcode,
   Teilestatus.StatusBez AS [aktueller Status],
+  Holding.Holding,
+  Kunden.KdNr,
+  Kunden.SuchCode AS Kunde,
   Vsa.VsaNr AS [Vsa-Nr],
   Vsa.SuchCode AS [VSA-Stichwort],
   Vsa.Bez AS [Vsa-Bezeichnung],
