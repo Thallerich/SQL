@@ -70,10 +70,11 @@ JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
-WHERE Kunden.KdNr = 272295
+WHERE Holding.Holding IN (N'VOES', N'VOESAN', N'VOESLE')
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.Archiv = 0
   AND EinzTeil.AltenheimModus = 0
