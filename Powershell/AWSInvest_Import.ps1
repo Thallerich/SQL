@@ -46,7 +46,7 @@ function Split-Content {
 
 # Get-Content -ReadCount 1000 .\MSEG.csv | Split-Content -Path .\MSEGSplit.csv -HeadSize 1 -DataSize 100000
 
-$processtype = "EKKO"
+$processtype = "BSEG"
 
 Clear-Host
 Import-Module dbatools;
