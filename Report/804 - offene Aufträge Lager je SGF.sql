@@ -14,7 +14,7 @@ ErstAuslesen AS (
   WHERE Scans.Menge = -1
   GROUP BY Scans.EinzHistID
 )
-SELECT Kunden.Kdnr, Kunden.Suchcode as Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez AS Einsatzgrund, EinzHist.Anlage_ AS [Teil angelegt am], Auftrag.AuftragsNr AS [Auftrags-Nummer], IIF(EinzHist.Status = N'E' AND TeileBPo.ID IS NOT NULL, Lief.SuchCode, NULL) AS [bestellt bei Lieferant], BKo.BestNr AS [Bestell-Nr], BKo.Datum AS Bestelldatum, Lager.SuchCode AS [lieferndes Lager], EntnKo.ID AS EntnahmelistenNr, EntnKo.Anlage_ AS [Entnahmeliste angelegt am], EntnKo.DruckDatum AS [Druckdatum Entnahmeliste], [Entnahme-Datum] = (
+SELECT Kunden.Kdnr, Kunden.Suchcode as Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez AS Einsatzgrund, EinzHist.Anlage_ AS [Teil angelegt am], Auftrag.AuftragsNr AS [Auftrags-Nummer], IIF(EinzHist.Status = N'E' AND TeileBPo.ID IS NOT NULL, Lief.SuchCode, NULL) AS [bestellt bei Lieferant], BKo.BestNr AS [Bestell-Nr], BKo.Datum AS Bestelldatum, LiefAbPo.Termin AS [Termin Auftragsbestätigung], Lager.SuchCode AS [lieferndes Lager], EntnKo.ID AS EntnahmelistenNr, EntnKo.Anlage_ AS [Entnahmeliste angelegt am], EntnKo.DruckDatum AS [Druckdatum Entnahmeliste], [Entnahme-Datum] = (
   SELECT MAX(Scans.[DateTime])
   FROM Scans
   WHERE Scans.EinzHistID = EinzHist.ID
@@ -38,6 +38,7 @@ LEFT JOIN EntnKo ON EntnPo.EntnKoID = EntnKo.ID
 LEFT JOIN TeileBPo ON TeileBPo.EinzHistID = EinzHist.ID AND TeileBPo.Latest = 1
 LEFT JOIN BPo ON TeileBPo.BPoID = BPo.ID
 LEFT JOIN BKo ON BPo.BKoID = BKo.ID
+LEFT JOIN LiefAbPo ON BPo.LatestLiefABKoID = LiefAbPo.LiefABKoID AND BPo.ID = LiefAbPo.BPoID
 LEFT JOIN Lief ON BKo.LiefID = Lief.ID
 LEFT JOIN ErstAuslesen ON ErstAuslesen.EinzHistID = EinzHist.ID
 WHERE Artikel.BereichID = 100
