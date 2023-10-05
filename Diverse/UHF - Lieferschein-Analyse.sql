@@ -1,10 +1,6 @@
-DECLARE @LsNr int = 26462080;
+DECLARE @LsNr int = 50093832;
 
-WITH CTE_Teile AS (
-  SELECT OPTeile.ID, OPTeile.LastScanTime
-  FROM OPTeile
-) 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, LsKo.LsNr, FORMAT(LsKo.Datum, N'd', N'de-AT') AS Lieferdatum, AnfKo.AuftragsNr AS PackzettelNr, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, AnfPo.Angefordert, AnfPo.UrAngefordert, AnfPo.Geliefert AS [Liefermenge laut Packzettel], LsPo.Menge AS [Liefermenge laut LS], COUNT(DISTINCT OPScans.OpTeileID) AS [Anzahl gescannter Einzelteile], SUM(IIF(CTE_Teile.[LastScanTime] > OPScans.Zeitpunkt, 1, 0)) AS [Anzahl Teile bereits retour]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, LsKo.LsNr, FORMAT(LsKo.Datum, N'd', N'de-AT') AS Lieferdatum, AnfKo.AuftragsNr AS PackzettelNr, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, AnfPo.Angefordert, AnfPo.UrAngefordert, AnfPo.Geliefert AS [Liefermenge laut Packzettel], LsPo.Menge AS [Liefermenge laut LS], COUNT(DISTINCT EinzTeil.ID) AS [Anzahl gescannter Einzelteile], SUM(IIF(EinzTeil.LastScanTime > Scans.[DateTime], 1, 0)) AS [Anzahl Teile bereits retour]
 FROM AnfPo
 JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN LsKo ON AnfKo.LsKoID = LsKo.ID
@@ -13,8 +9,8 @@ JOIN Vsa ON AnfKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-JOIN OPScans ON OPScans.AnfPoID = AnfPo.ID
-LEFT OUTER JOIN CTE_Teile ON CTE_Teile.ID = OPScans.OPTeileID
+LEFT JOIN Scans ON Scans.AnfPoID = AnfPo.ID
+LEFT JOIN EinzTeil ON Scans.EinzTeilID = EinzTeil.ID
 WHERE LsKo.LsNr = @LsNr
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, LsKo.LsNr, FORMAT(LsKo.Datum, N'd', N'de-AT'), AnfKo.AuftragsNr, Artikel.ArtikelNr, Artikel.ArtikelBez, AnfPo.Angefordert, AnfPo.UrAngefordert, AnfPo.Geliefert, LsPo.Menge;
 
