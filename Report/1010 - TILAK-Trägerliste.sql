@@ -1,9 +1,10 @@
 WITH TeileIst AS (
-  SELECT Teile.TraeArtiID, COUNT(Teile.ID) AS IstMenge
-  FROM Teile
-  WHERE Teile.Status BETWEEN N'Q' AND N'W'
-    AND Teile.Einzug IS NULL
-  GROUP BY Teile.TraeArtiID
+  SELECT einzhist.TraeArtiID, COUNT(einzhist.ID) AS IstMenge
+  FROM EinzTeil
+  JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+  WHERE einzhist.Status BETWEEN N'Q' AND N'W'
+    AND einzhist.Einzug IS NULL
+  GROUP BY einzhist.TraeArtiID
 ),
 Traegerstatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez

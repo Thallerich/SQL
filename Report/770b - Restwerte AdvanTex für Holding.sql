@@ -21,16 +21,17 @@ SELECT Holding.Holding,
   Artikel.ArtikelBez' + @Lang + ' AS Artikelbezeichnung,
   ArtGroe.Groesse AS Größe,
   Artikel.EKPreis,
-  Teile.Barcode,
-  Teile.Eingang1 AS [letzter Eingang],
-  Teile.Ausgang1 AS [letzter Ausgang],
-  Teile.Indienst AS [Indienststellungswoche],
-  Teile.Ausdienst AS [Abmeldungswoche],
+  EinzHist.Barcode,
+  EinzHist.Eingang1 AS [letzter Eingang],
+  EinzHist.Ausgang1 AS [letzter Ausgang],
+  EinzHist.Indienst AS [Indienststellungswoche],
+  EinzHist.Ausdienst AS [Abmeldungswoche],
   Week.Woche AS [Ersteinsatzwoche],
   fRW.RestwertInfo AS [Restwert ' + FORMAT(@Stichtag, N'dd.MM.yyyy', N'de-AT') + '],
-  DATEDIFF(day, ISNULL(Teile.Ausgang1, GETDATE()), GETDATE()) AS BeimKundeSeitTagen
-FROM Teile
-JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+  DATEDIFF(day, ISNULL(EinzHist.Ausgang1, GETDATE()), GETDATE()) AS BeimKundeSeitTagen
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -39,13 +40,15 @@ JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
-JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
-CROSS APPLY funcGetRestwert(Teile.ID, N''' + @Woche + ''', 1) AS fRW
+JOIN Week ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
+CROSS APPLY funcGetRestwert(EinzHist.ID, N''' + @Woche + ''', 1) AS fRW
 WHERE Holding.ID = ' + CAST(@HoldingID AS nvarchar) + '
   AND Artikel.Status != N''B''
-  AND (Teile.Ausdienst = N'''' OR Teile.Ausdienst IS NULL)
-  AND Teile.Status BETWEEN N''Q'' AND N''W''
-  AND Teile.Einzug IS NULL
+  AND (EinzHist.Ausdienst = N'''' OR EinzHist.Ausdienst IS NULL)
+  AND EinzHist.Status BETWEEN N''Q'' AND N''W''
+  AND EinzHist.Einzug IS NULL
+  AND EinzHist.EinzHistTyp = 1
+  AND EinzHist.PoolFkt = 0
   AND Traeger.Altenheim = 0;
 ';
 

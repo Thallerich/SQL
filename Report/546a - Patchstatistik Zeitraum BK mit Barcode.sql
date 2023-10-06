@@ -11,9 +11,9 @@ FROM KdGF, Kunden, Artikel, KdBer, Mitarbei, Firma, (
       IIF(EinzHist.LagerartID IN (1, 1006), 1, 0) as Neu,
       IIF(EinzHist.EinsatzGrund IN ('1', '2'), 1, 0) as Neukunde,
       1 AS Anzahl
-    FROM EinzHist
-    WHERE EinzHist.IsCurrEinzHist = 1
-      AND EinzHist.EinzHistTyp = 1
+    FROM EinzTeil
+    JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+    WHERE EinzHist.EinzHistTyp = 1
       AND EinzHist.PoolFkt = 0
       AND EinzHist.Patchdatum BETWEEN $STARTDATE$ AND $ENDDATE$
       AND EinzHist.LagerArtID > 0

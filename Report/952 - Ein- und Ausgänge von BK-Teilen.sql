@@ -11,13 +11,13 @@ DECLARE @Abholung date;
 
 DECLARE curTeile CURSOR FOR
 SELECT EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, EinzHist.ID AS TeileID
-FROM EinzHist
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.ID = $2$
-  AND EinzHist.IsCurrEinzHist = 1
   AND EXISTS (
     SELECT Scans.*
     FROM Scans

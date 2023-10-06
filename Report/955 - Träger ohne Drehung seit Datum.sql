@@ -1,19 +1,21 @@
 DECLARE @beforeDate date = $2$;
 
 WITH CTE_AltTeile AS (
-  SELECT Teile.*
-  FROM Teile
-  WHERE Teile.Status IN (N'Q', N'S', N'T', N'U', N'W')
-    AND (Teile.Ausgang1 < @beforeDate OR Teile.Ausgang1 IS NULL)
-    AND (Teile.Eingang1 < @beforeDate OR Teile.Eingang1 IS NULL)
+  SELECT EinzHist.*
+  FROM EinzTeil
+  JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+  WHERE EinzHist.Status IN (N'Q', N'S', N'T', N'U', N'W')
+    AND (EinzHist.Ausgang1 < @beforeDate OR EinzHist.Ausgang1 IS NULL)
+    AND (EinzHist.Eingang1 < @beforeDate OR EinzHist.Eingang1 IS NULL)
     AND NOT EXISTS (
-      SELECT x.*
-      FROM Teile AS x
-      WHERE x.TraegerID = Teile.TraegerID
-        AND (x.Eingang1 >= @beforeDate OR x.Ausgang1 >= @beforeDate)
+      SELECT h.*
+      FROM EinzTeil AS e
+      JOIN EinzHist AS h ON e.CurrEinzHistID = h.ID
+      WHERE h.TraegerID = EinzHist.TraegerID
+        AND (h.Eingang1 >= @beforeDate OR h.Ausgang1 >= @beforeDate)
     )
 )
-SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.ID AS TraegerID, Traeger.Traeger, [Status].StatusBez AS TraegerStatus, Traeger.Nachname, Traeger.Vorname, ISNULL(Traeger.Indienst, N'') AS [Zeitraum von], ISNULL(Traeger.Ausdienst, N'') AS [Zeitraum bis], MAX(IIF(ISNULL(CTE_AltTeile.Eingang1, N'1980-01-01') > ISNULL(CTE_AltTeile.Ausgang1, N'1980-01-01'), CTE_AltTeile.Eingang1, CTE_AltTeile.Ausgang1)) AS [letzte Teile-Bewegung]
+SELECT Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez AS Vsa, Traeger.ID AS TraegerID, Traeger.Traeger, [Status].StatusBez AS TraegerStatus, Traeger.Nachname, Traeger.Vorname, Coalesce(Traeger.Indienst, N'') AS [Zeitraum von], Coalesce(Traeger.Ausdienst, N'') AS [Zeitraum bis], MAX(IIF(Coalesce(CTE_AltTeile.Eingang1, N'1980-01-01') > Coalesce(CTE_AltTeile.Ausgang1, N'1980-01-01'), CTE_AltTeile.Eingang1, CTE_AltTeile.Ausgang1)) AS [letzte Teile-Bewegung]
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID

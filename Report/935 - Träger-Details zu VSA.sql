@@ -9,7 +9,8 @@ Teilestatus AS (
   WHERE [Status].Tabelle = UPPER(N'EINZHIST')
 )
 SELECT DISTINCT Traeger.ID AS TraegerID, Traeger.Traeger, Traeger.Nachname, Traeger.Vorname, Traeger.Titel, Traeger.PersNr, Traegerstatus.StatusBez AS Traegerstatus, CAST(IIF(TraeAppl.ArtiTypeID = 2, 1, 0) AS bit) AS NS, Traeger.Namenschild1, Traeger.Namenschild2, Traeger.Namenschild3, Traeger.SchrankInfo, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, TraeArti.Menge, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, EinzHist.Eingang1, EinzHist.Ausgang1
-FROM EinzHist
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -24,7 +25,6 @@ LEFT JOIN TraeAppl ON TraeAppl.TraeArtiID = TraeArti.ID AND TraeAppl.ArtiTypeID 
 WHERE Vsa.ID = $ID$
   AND EinzHist.Status IN (N'A', N'E', N'G', N'I', N'K', N'L', N'M', N'O', N'C', N'Q', N'S', N'N')
   AND Traeger.Status <> N'I'
-  AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.PoolFkt = 0
   AND EinzHist.EinzHistTyp = 1
 ORDER BY Traeger.Nachname, Traeger.Vorname, Artikelbezeichnung, ArtGroe.Groesse, EinzHist.Ausgang1 DESC;

@@ -6,13 +6,14 @@ SELECT Abteilung, AbteilBez, ArtikelNr, Bez, Woche, Traeger, PersNr, TraegerName
   LsNr = STUFF(
     (
       SELECT ',' + CAST(LsKo.LsNr AS VARCHAR) LsNr
-      FROM LsKo, LsPo, KdArti, Teile
+      FROM LsKo, LsPo, KdArti, EinzHist, EinzTeil
       WHERE LsPo.LsKoID = LsKo.ID
         AND LsPo.KdArtiID = KdArti.ID
         AND LsPo.ID > 0
-        AND CASE WHEN SUM(Daten.MengenDiff) > 0 THEN Teile.FirstLsPoID WHEN SUM(Daten.MengenDiff) < 0 THEN Teile.EinzugLsPoID END = LsPo.ID
-        AND CASE WHEN SUM(Daten.MengenDiff) > 0 THEN Teile.Indienst WHEN SUM(Daten.MengenDiff) < 0 THEN Teile.Abmeldung END = Daten.Woche
-        AND Teile.TraegerID = Daten.TraegerID
+        AND CASE WHEN SUM(Daten.MengenDiff) > 0 THEN EinzHist.FirstLsPoID WHEN SUM(Daten.MengenDiff) < 0 THEN EinzHist.EinzugLsPoID END = LsPo.ID
+        AND CASE WHEN SUM(Daten.MengenDiff) > 0 THEN EinzHist.Indienst WHEN SUM(Daten.MengenDiff) < 0 THEN EinzHist.Abmeldung END = Daten.Woche
+        AND EinzHist.TraegerID = Daten.TraegerID
+        AND EinzTeil.CurrEinzHistID = EinzHist.ID
         AND KdArti.ArtikelID = Daten.ArtikelID
       GROUP BY LsKo.LsNr
       ORDER BY LsKo.LsNr

@@ -1,7 +1,7 @@
 WITH Teilestatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez AS StatusBez
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$lan$ AS StatusBez
   FROM [Status]
-  WHERE [Status].Tabelle = UPPER(N'TEILE')
+  WHERE [Status].Tabelle = N'EINZHIST'
 )
 SELECT Holding.Holding,
   Kunden.KdNr,
@@ -9,49 +9,67 @@ SELECT Holding.Holding,
   VSA.VsaNr,
   Vsa.SuchCode AS [VSA-Stichwort],
   Vsa.Bez AS [VSA-Bezeichnung],
+  Vsa.Name1 AS [VSA-Adresszeile 1],
+  Vsa.Name2 AS [VSA-Adresszeile 2],
+  Vsa.GebaeudeBez AS Gebäudebezeichnung,
+  Abteil.Abteilung AS Stammkostenstelle,
+  Abteil.Bez AS [Bezeichnung Stammkostenstelle],
   Schrank.SchrankNr,
   TraeFach.Fach,
-  Traeger.Traeger,
+  Traeger.Traeger AS [Träger-Nr],
   Traeger.Nachname,
   Traeger.Vorname,
-  Traeger.PersNr,
+  Traeger.PersNr AS Personalnummer,
+  TraeAbteil.Abteilung AS [Abteilung Träger],
+  TraeAbteil.Bez AS [Stammkostenstelle Träger],
   Artikel.ArtikelNr,
-  Artikel.ArtikelBez AS Artikelbezeichnung,
-  ArtGroe.Groesse,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  ArtGroe.Groesse AS Größe,
   KdArti.Variante,
   KdArti.VariantBez AS Variantenbezeichnung,
   TraeArti.Menge AS [Max. Bestand],
-  Teile.Barcode,
-  CAST(IIF(Teile.Status > N'Q', 1, 0) AS bit) AS Stilllegung,
+  EinzHist.Barcode,
+  CAST(IIF(EinzHist.Status > N'Q', 1, 0) AS bit) AS Stilllegung,
   Teilestatus.StatusBez AS Teilestatus,
-  Teile.Eingang1,
-  Teile.Ausgang1,
-  Teile.IndienstDat AS [Letztes Einsatzdatum],
-  Teile.RuecklaufG AS [Waschzyklen]
-FROM Teile
-JOIN TraeArti ON Teile.TraeArtiID = TraeArti.ID
+  EinzHist.Eingang1,
+  EinzHist.Ausgang1,
+  EinzHist.IndienstDat AS [Letztes Einsatzdatum],
+  EinzTeil.RuecklaufG AS [Waschzyklen]
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Abteil ON Vsa.AbteilID = Abteil.ID
+JOIN Abteil AS TraeAbteil ON Traeger.AbteilID = TraeAbteil.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID
-LEFT OUTER JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
-LEFT OUTER JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
-JOIN Teilestatus ON Teile.Status = Teilestatus.Status
+LEFT JOIN TraeFach ON TraeFach.TraegerID = Traeger.ID
+LEFT JOIN Schrank ON TraeFach.SchrankID = Schrank.ID
+JOIN Teilestatus ON EinzHist.Status = Teilestatus.Status
 WHERE Kunden.HoldingID IN ($1$)
   AND Kunden.ID IN ($2$)
   AND Vsa.ID IN ($3$)
-  AND Teile.Status BETWEEN N'Q' AND N'W'
-  AND Teile.Einzug IS NULL
+  AND EinzHist.Status BETWEEN N'Q' AND N'W'
+  AND EinzHist.Einzug IS NULL
+  AND EinzHist.PoolFkt = 0
 GROUP BY Holding.Holding,
   Kunden.KdNr,
   Kunden.SuchCode,
   Vsa.VsaNr,
   Vsa.SuchCode,
   Vsa.Bez,
+  Vsa.Name1,
+  Vsa.Name2,
+  Vsa.GebaeudeBez,
+  Abteil.Abteilung,
+  Abteil.Bez,
+  TraeAbteil.Abteilung,
+  TraeAbteil.Bez,
   Schrank.SchrankNr,
   TraeFach.Fach,
   Traeger.Traeger,
@@ -59,16 +77,16 @@ GROUP BY Holding.Holding,
   Traeger.Vorname,
   Traeger.PersNr,
   Artikel.ArtikelNr,
-  Artikel.ArtikelBez,
+  Artikel.ArtikelBez$LAN$,
   ArtGroe.Groesse,
   KdArti.Variante,
   KdArti.VariantBez,
   TraeArti.Menge,
-  Teile.Barcode,
-  CAST(IIF(Teile.Status > N'Q', 1, 0) AS bit),
+  EinzHist.Barcode,
+  CAST(IIF(EinzHist.Status > N'Q', 1, 0) AS bit),
   Teilestatus.Statusbez,
-  Teile.Eingang1,
-  Teile.Ausgang1,
-  Teile.IndienstDat,
-  Teile.RuecklaufG
+  EinzHist.Eingang1,
+  EinzHist.Ausgang1,
+  EinzHist.IndienstDat,
+  EinzTeil.RuecklaufG
 ORDER BY KdNr, VsaNr, Traeger, ArtikelNr, Groesse;

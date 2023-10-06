@@ -69,10 +69,9 @@ SELECT Firma.Bez AS Firma,
   ),
   [Anzahl kundeneigene Teile] = (
     SELECT COUNT(EinzHist.ID)
-    FROM EinzHist
-    JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+    FROM EinzTeil
+    JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
     WHERE EinzHist.KundenID = Kunden.ID
-      AND EinzHist.IsCurrEinzHist = 1
       AND EinzHist.PoolFkt = 0
       AND EinzHist.EinzHistTyp = 1
       AND EinzTeil.AltenheimModus = 0

@@ -65,20 +65,20 @@ SELECT Holding.Holding,
   TraeArti.Menge AS [Max. Bestand],
   Umlauf = (
     SELECT COUNT(T.ID)
-    FROM EinzHist AS T
+    FROM EinzTeil AS E
+    JOIN EinzHist AS T ON E.CurrEinzHistID = T.ID
     WHERE T.TraeArtiID = EinzHist.TraeArtiID
       AND T.Status BETWEEN N'Q' AND N'W'
       AND T.Einzug IS NULL
-      AND T.IsCurrEinzHist = 1
   ),
   Kostenlos = (
     SELECT COUNT(T.ID)
-    FROM EinzHist AS T
+    FROM EinzTeil AS E
+    JOIN EinzHist AS T ON E.CurrEinzHistID = T.ID
     WHERE T.TraeArtiID = EinzHist.TraeArtiID
       AND T.Status BETWEEN N'Q' AND N'W'
       AND T.Einzug IS NULL
       AND T.Kostenlos = 1
-      AND T.IsCurrEinzHist = 1
   ),
   EinzHist.Barcode,
   CAST(IIF(EinzHist.Status > N'Q', 1, 0) AS bit) AS Stilllegung,
@@ -94,8 +94,8 @@ SELECT Holding.Holding,
   CAST(ROUND(EinzTeil.AlterInfo / 4.33, 0) AS int) as [Alter in Monaten],
   Actions.ActionsBez$LAN$ AS [letzte Aktion],
   ZielNr.ZielNrBez$LAN$ AS [letzter Ort]
-FROM EinzHist
-JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -123,7 +123,6 @@ WHERE Kunden.ID IN (SELECT ID FROM #Customer)
   AND StandBer.ProduktionID IN (SELECT ID FROM #ProductionLocation)
   AND EinzHist.Status BETWEEN N'Q' AND N'W'
   AND EinzHist.Einzug IS NULL
-  AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.PoolFkt = 0
 ORDER BY KdNr, [VSA-Nummer], [Träger-Nummer], ArtikelNr, Groesse;

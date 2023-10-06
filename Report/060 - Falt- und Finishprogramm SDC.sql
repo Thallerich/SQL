@@ -52,7 +52,8 @@ WHERE (($2$ = 1 AND (FaltProg.ID < 0 OR FinishPr.ID < 0 OR Prozess.ID < 0)) OR (
   AND Artikel.ArtiTypeID = 1
   AND EXISTS (
     SELECT EinzHist.*
-    FROM EinzHist
+    FROM EinzTeil
+    JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
     JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
     JOIN KdBer ON KdArti.KdBerID = KdBer.ID
     JOIN Vsa ON EinzHist.VsaID = Vsa.ID
@@ -61,7 +62,6 @@ WHERE (($2$ = 1 AND (FaltProg.ID < 0 OR FinishPr.ID < 0 OR Prozess.ID < 0)) OR (
     WHERE EinzHist.ArtikelID = Artikel.ID
       AND EinzHist.Status BETWEEN N'E' AND N'W'
       AND EinzHist.EinzHistTyp = 1
-      AND EinzHist.IsCurrEinzHist = 1
       AND EinzHist.PoolFkt = 0
       AND StandBer.ProduktionID = @ProduktionID
       AND StBerSDC.SdcDevID = (

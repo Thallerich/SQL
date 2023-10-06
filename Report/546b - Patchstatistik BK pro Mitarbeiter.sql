@@ -4,9 +4,9 @@ WITH Patchteile AS (
     EinzHist.ArtikelID,
     EinzHist.LagerArtID,
     LastPatchScanID = (SELECT TOP 1 Scans.ID FROM Scans WHERE ActionsID = 23 AND Scans.EinzHistID = EinzHist.ID ORDER BY Anlage_ DESC)   -- ActionsID 23 -> Patchen
-  FROM EinzHist
-  WHERE EinzHist.IsCurrEinzHist = 1
-    AND EinzHist.EinzHistTyp = 1
+  FROM EinzTeil
+  JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+  WHERE EinzHist.EinzHistTyp = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.Patchdatum BETWEEN $STARTDATE$ AND $ENDDATE$
     AND EinzHist.LagerArtID IN (

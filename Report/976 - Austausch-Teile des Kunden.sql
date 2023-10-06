@@ -1,48 +1,17 @@
-WITH AustauschScan AS (
-  SELECT Scans.TeileID, MAX(Scans.ID) AS ScanID
-  FROM Scans
-  WHERE Scans.ActionsID = 4
-    AND Scans.TeileID > 0
-  GROUP BY Scans.TeileID
-),
-Teilestatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
-  FROM [Status]
-  WHERE [Status].Tabelle = UPPER(N'TEILE')
-)
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr.], Vsa.Bez AS [VSA-Bezeichnung], Teile.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Teile.AusdienstDat, CONVERT(nvarchar(60), NULL) AS AusdienstGrund, WegGrund.WeggrundBez$LAN$ AS Tauschgrund, Teile.RestwertInfo AS Restwert, Week.Woche AS ErstWoche, Teile.IndienstDat, Teile.Kostenlos, Teile.RuecklaufG AS [Anzahl Wäschen gesamt], Teile.RuecklaufK AS [Anzahl Wäschen Kunde], Mitarbei.Name AS [Mitarbeiter Austausch-Scan]
-FROM Teile
-JOIN Vsa ON Teile.VsaID = Vsa.ID
-JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN Artikel ON Teile.ArtikelID = Artikel.ID
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
-JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
-JOIN WegGrund ON Teile.WegGrundID = WegGrund.ID
-LEFT JOIN AustauschScan ON AustauschScan.TeileID = Teile.ID
-LEFT JOIN Scans ON AustauschScan.ScanID = Scans.ID
-LEFT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
-JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
-WHERE Teile.AltenheimModus = 0
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.Bez AS Vsa, EinzHist.Barcode, Status.StatusBez$LAN$ AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, EinzHist.AusdienstDat, Einsatz.EinsatzBez$LAN$ AS AusdienstGrund, WegGrund.WegGrundBez$LAN$ AS Tauschgrund, EinzHist.AusdRestw AS Restwert
+FROM EinzHist, EinzTeil, Vsa, Kunden, Einsatz, Artikel, ArtGroe, Status, WegGrund
+WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
+  AND EinzHist.VsaID = Vsa.ID
+  AND Vsa.KundenID = Kunden.ID
+  AND EinzHist.AusdienstGrund = Einsatz.EinsatzGrund
+  AND EinzHist.ArtikelID = Artikel.ID
+  AND EinzHist.ArtGroeID = ArtGroe.ID
+  AND EinzHist.Status = Status.Status
+  AND Status.Tabelle = 'EINZHIST'
+  AND EinzHist.WegGrundID = WegGrund.ID
   AND Kunden.ID = $ID$
-  AND Teile.[Status] = N'S'
-
-UNION ALL
-
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr.], Vsa.Bez AS [VSA-Bezeichnung], Teile.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, Teile.AusdienstDat, Einsatz.EinsatzBez$LAN$ AS AusdienstGrund, WegGrund.WegGrundBez$LAN$ AS Tauschgrund, Teile.AusdRestw AS Restwert, Week.Woche AS Erstwoche, Teile.IndienstDat, Teile.Kostenlos, Teile.RuecklaufG AS [Anzahl Wäschen gesamt], Teile.RuecklaufK AS [Anzahl Wäschen Kunde], Mitarbei.Name AS [Mitarbeiter Austausch-Scan]
-FROM Teile
-JOIN Vsa ON Teile.VsaID = Vsa.ID
-JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN Einsatz ON Teile.AusdienstGrund = Einsatz.EinsatzGrund
-JOIN Artikel ON Teile.ArtikelID = Artikel.ID
-JOIN ArtGroe ON Teile.ArtGroeID = ArtGroe.ID
-JOIN Teilestatus ON Teile.[Status] = Teilestatus.[Status]
-JOIN WegGrund ON Teile.WegGrundID = WegGrund.ID
-LEFT JOIN AustauschScan ON AustauschScan.TeileID = Teile.ID
-LEFT JOIN Scans ON AustauschScan.ScanID = Scans.ID
-LEFT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID
-JOIN Week ON DATEADD(day, Teile.AnzTageImLager, Teile.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
-WHERE Teile.AltenheimModus = 0
-  AND Teile.AusdienstGrund IN ('A', 'a', 'B', 'b', 'C', 'c')
-  AND Teile.AusdienstDat BETWEEN $STARTDATE$ AND $ENDDATE$
-  AND Teile.[Status] > N'S'
-  AND Kunden.ID = $ID$;
+  AND EinzHist.AusdienstGrund IN ('d', 'D')
+  AND EinzTeil.AltenheimModus = 0
+  AND EinzHist.AusdienstDat BETWEEN $1$ AND $2$
+  AND EinzHist.PoolFkt = 0
+  AND EinzHist.EinzHistTyp = 1;

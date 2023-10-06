@@ -35,14 +35,14 @@ WHERE Kunden.KdGfID = KdGf.ID
 UPDATE KdInfo SET KdInfo.[Anzahl Träger] = TraeData.AnzTrae, KdInfo.[Anzahl Teile] = TraeData.AnzTeil
 FROM #TmpKdInfo AS KdInfo, (
   SELECT Kunden.KdNr, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
-  FROM #TmpKdInfo AS KdInfo, EinzHist, Traeger, Vsa, Kunden
-  WHERE EinzHist.TraegerID = Traeger.ID
+  FROM #TmpKdInfo AS KdInfo, EinzTeil, EinzHist, Traeger, Vsa, Kunden
+  WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
+    AND EinzHist.TraegerID = Traeger.ID
     AND Traeger.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
     AND Kunden.KdNr = KdInfo.KdNr
     AND EinzHist.Status IN ('Q', 'S')
     AND Traeger.Status <> 'I'
-    AND EinzHist.IsCurrEinzHist = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.EinzHistTyp = 1
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%POOL%' 
@@ -61,7 +61,6 @@ FROM #TmpKdInfo AS KdInfo, (
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%EW%'
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%BESUCHER%'
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%MOP%'
-
   GROUP BY Kunden.KdNr
 ) AS TraeData
 WHERE TraeData.KdNr = KdInfo.KdNr;
@@ -69,14 +68,14 @@ WHERE TraeData.KdNr = KdInfo.KdNr;
 UPDATE KdInfo SET KdInfo.[Anzahl Pool-Träger] = TraeData.AnzTrae, KdInfo.[Anzahl Pool-Teile] = TraeData.AnzTeil
 FROM #TmpKdInfo AS KdInfo, (
   SELECT Kunden.KdNr, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
-  FROM #TmpKdInfo AS KdInfo, EinzHist, Traeger, Vsa, Kunden
-  WHERE EinzHist.TraegerID = Traeger.ID
+  FROM #TmpKdInfo AS KdInfo, EinzTeil, EinzHist, Traeger, Vsa, Kunden
+  WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
+    AND EinzHist.TraegerID = Traeger.ID
     AND Traeger.VsaID = Vsa.ID
     AND Vsa.KundenID = Kunden.ID
     AND Kunden.KdNr = KdInfo.KdNr
     AND EinzHist.Status IN ('Q', 'S')
     AND Traeger.Status <> 'I'
-    AND EinzHist.IsCurrEinzHist = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.EinzHistTyp = 1
     AND (UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%POOL%'          OR 

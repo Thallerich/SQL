@@ -20,7 +20,8 @@ SELECT Kunden.Kdnr, Kunden.Suchcode as Kunde, Holding.Holding, Traeger.Nachname,
   WHERE Scans.EinzHistID = EinzHist.ID
     AND Scans.ActionsID = 57
 ), EntnKo.PatchDatum AS [Patchdatum Entnahmeliste], IIF(EinzHist.IndienstDat < ISNULL(ErstAuslesen.LiefDat, N'2099-12-31'), EinzHist.IndienstDat, ErstAuslesen.LiefDat) AS [Lieferdatum zum Kunden]
-FROM EinzHist
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
@@ -49,5 +50,4 @@ WHERE Artikel.BereichID = 100
   AND Kunden.KdGfID IN ($1$)
   AND Kunden.StandortID IN ($3$)
   AND EinzHist.Anlage_ BETWEEN $STARTDATE$ AND $ENDDATE$
-  AND EinzHist.IsCurrEinzHist = 1 
 ORDER BY [Entnahmeliste angelegt am];

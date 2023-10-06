@@ -10,14 +10,15 @@ SET @todate = $2$;
  
 DROP TABLE IF EXISTS #TmpFinal;
 
-SELECT Teile.Barcode, Status.Teilestatus, Traeger.Vorname, Traeger.Nachname, Vsa.Bez AS Vsa, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, 0 AS Waschzyklen, Teile.ID AS TeileID
+SELECT EinzHist.Barcode, Status.Teilestatus, Traeger.Vorname, Traeger.Nachname, Vsa.Bez AS Vsa, Abteil.Bez AS Kostenstelle, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse, 0 AS Waschzyklen, EinzHist.ID AS EinzHistID
 INTO #TmpFinal
-FROM Teile, TraeArti, Traeger, Vsa, Kunden, KdArti, Artikel, ArtGroe, Abteil, (
+FROM EinzTeil, EinzHist, TraeArti, Traeger, Vsa, Kunden, KdArti, Artikel, ArtGroe, Abteil, (
   SELECT Status.Status, Status.StatusBez$LAN$ AS Teilestatus
   FROM Status
-  WHERE Status.Tabelle = 'TEILE'
+  WHERE Status.Tabelle = 'EINZHIST'
 ) AS Status
-WHERE Teile.TraeArtiID = TraeArti.ID
+WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
+  AND EinzHist.TraeArtiID = TraeArti.ID
   AND TraeArti.TraegerID = Traeger.ID
   AND Traeger.VsaID = Vsa.ID
   AND Vsa.KundenID = Kunden.ID
@@ -25,11 +26,13 @@ WHERE Teile.TraeArtiID = TraeArti.ID
   AND KdArti.ArtikelID = Artikel.ID
   AND TraeArti.ArtGroeID = ArtGroe.ID
   AND Traeger.AbteilID = Abteil.ID
-  AND Teile.Status = Status.Status
+  AND EinzHist.Status = Status.Status
   AND Kunden.ID = $ID$
-  AND Teile.IndienstDat <= @todate
-  AND Teile.IndienstDat IS NOT NULL
-  AND ISNULL(Teile.AusdienstDat, CONVERT(date, '2099-12-31')) > @fromdate;
+  AND EinzHist.IndienstDat <= @todate
+  AND EinzHist.IndienstDat IS NOT NULL
+  AND EinzHist.PoolFkt = 0
+  AND EinzHist.EinzHistTyp = 1
+  AND Coalesce(EinzHist.AusdienstDat, CONVERT(date, '2099-12-31')) > @fromdate;
   
 DROP TABLE IF EXISTS #TmpScans;
 
@@ -37,20 +40,20 @@ SELECT Scans.*
 INTO #TmpScans
 FROM Scans
 WHERE Scans.DateTime BETWEEN @fromtime AND @totime
-  AND Scans.TeileID IN (SELECT TeileID FROM #TmpFinal)
+  AND Scans.EinzHistID IN (SELECT EinzHistID FROM #TmpFinal)
   AND Scans.Menge = -1;
 
 UPDATE x SET x.Waschzyklen = Waschen.Waschzyklen
 FROM #TmpFinal AS x, (
-  SELECT Scans.TeileID, COUNT(Scans.ID) AS Waschzyklen
+  SELECT Scans.EinzHistID, COUNT(Scans.ID) AS Waschzyklen
   FROM #TmpScans AS Scans
   WHERE EXISTS (
-    SELECT Final.TeileID
+    SELECT Final.EinzHistID
     FROM #TmpFinal AS Final
-    WHERE Final.TeileID = Scans.TeileID)
-  GROUP BY Scans.TeileID
+    WHERE Final.EinzHistID = Scans.EinzHistID)
+  GROUP BY Scans.EinzHistID
 ) AS Waschen
-WHERE x.TeileID = Waschen.TeileID;
+WHERE x.EinzHistID = Waschen.EinzHistID;
 
 SELECT Final.Vorname, Final.Nachname, Final.Vsa, Final.Kostenstelle, Final.ArtikelNr, Final.Artikelbezeichnung, Final.Groesse, SUM(Final.Waschzyklen) AS Waschzyklen
 FROM #TmpFinal AS Final
