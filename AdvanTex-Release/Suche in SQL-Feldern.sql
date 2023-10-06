@@ -1,3 +1,5 @@
+SET NOCOUNT ON;
+
 -- Zuerst hier die Suchbegriffe eingeben, die in SQL-Feldern gesucht werden sollen
 -- Groß-/Klein-Schreibung wird nicht berücksichtigt
 DECLARE @search_terms TABLE (search_term VARCHAR(40))
@@ -114,11 +116,14 @@ DECLARE @MySQL VARCHAR(max) = ''
 WHILE @TableNo <= @LastTab
 BEGIN
   SET @MySQL = @MySQL + (
-      SELECT DISTINCT 'SELECT  ''' + tab.SearchTerm + ''' Suchbegriff, ' + tab.TableName + '.*' + CHAR(10) + 'FROM ' + tab.TableName + CHAR(10) + 'WHERE ID IN (SELECT TableID FROM #check_sql_result WHERE TableName = ''' + tab.TableName + ''' AND SearchTerm = ''' + tab.SearchTerm + ''')' + CHAR(10) + 'ORDER BY 1 ' + CHAR(10) + CHAR(10) + CHAR(10) + CHAR(10)
+      SELECT DISTINCT 'SELECT  ''' + tab.SearchTerm + ''' Suchbegriff, ' + tab.TableName + '.*' + CHAR(10) + 'FROM ' + tab.TableName + CHAR(10) + 'WHERE ID IN (SELECT TableID FROM #check_sql_result WHERE TableName = ''' + tab.TableName + ''' AND SearchTerm = ''' + tab.SearchTerm + ''')' + CHAR(10) + 'ORDER BY 1; ' + CHAR(10) + CHAR(10) + CHAR(10) + CHAR(10)
       FROM #teiletab tab, #check_sql_result x
       WHERE tab.TableNo = @TableNo
       )
   SET @TableNo = @TableNo + 1;
 END;
 
-EXEC (@MySQL);
+IF @MySQL = N''
+  PRINT(N'Nothing to do 😊');
+ELSE
+  EXEC (@MySQL);
