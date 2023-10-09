@@ -41,7 +41,9 @@ SELECT Firma.Bez AS Firma,
   Sichtbar.Bez AS Sichtbarkeit,
   ABC.ABCBez$LAN$ AS [ABC-Klasse],
   Kunden.UStIdNr,
+  BrLauf.BrLaufBez$LAN$ AS Bearbeitungsrechnungslauf,
   Bereich.BereichBez$LAN$ AS Produktbereich,
+  FakFreq.FakFreqBez$LAN$ AS Fakturafrequenz,
   Adressgruppe = STUFF((
     SELECT N', ' + AdrGrp.AdrGrpBez + N' (' + AdrGrp.Nr + N')'
     FROM KdGru
@@ -110,6 +112,7 @@ JOIN KdBer oN KdBer.KundenID = Kunden.ID
 JOIN Mitarbei AS BetreuerKdBer ON KdBer.BetreuerID = BetreuerKdBer.ID
 JOIN Mitarbei AS VertriebKdBer ON KdBer.VertreterID = VertriebKdBer.ID
 JOIN Mitarbei AS ServiceKdBer ON KdBer.ServiceID = ServiceKdBer.ID
+JOIN FakFreq ON KdBer.FakFreqID = FakFreq.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN Kundenstatus ON Kundenstatus.Status = Kunden.Status
 JOIN Standort ON Kunden.StandortID = Standort.ID
@@ -119,6 +122,7 @@ JOIN Vertrag ON KdBer.VertragID = Vertrag.ID
 JOIN Vertragstatus ON Vertrag.[Status] = Vertragstatus.[Status]
 JOIN PrLauf ON Vertrag.PrLaufID = PrLauf.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
+JOIN BrLauf ON Kunden.BRLaufID = BrLauf.ID
 JOIN Wae AS RechWae ON Kunden.RechWaeID = RechWae.ID
 LEFT JOIN WebInfo ON WebInfo.KundenID = Kunden.ID
 WHERE Kundenstatus.ID IN ($4$)
