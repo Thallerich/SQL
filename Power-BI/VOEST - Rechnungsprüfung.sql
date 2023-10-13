@@ -4,11 +4,30 @@ DECLARE @RechKo TABLE (
   RechKoID int
 );
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Zu Testzwecken nur die Haupt-Kundennummer verwenden                                                                       ++ */
+/* ++ Darunter das Query für alle Kunden der Holdings VOES / VOESAN                                                             ++ */
+/* ++ Diese einfach tauschen, um entsprechend alle Kunden auszuwerten                                                           ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 INSERT INTO @RechKo (RechKoID)
 SELECT RechKo.ID
 FROM RechKo
 WHERE RechKo.RechDat >= DATEADD(year, -1, GETDATE())
   AND RechKo.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 272295);
+
+/* 
+INSERT INTO @RechKo (RechKoID)
+SELECT RechKo.ID
+FROM RechKo
+WHERE RechKo.RechDat >= DATEADD(year, -1, GETDATE())
+  AND RechKo.KundenID IN (
+    SELECT Kunden.ID
+    FROM Kunden
+    JOIN Holding ON Kunden.HoldingID = Holding.ID
+    WHERE Holding.Holding IN (N'VOES', N'VOESAN')
+  );
+ */
 
 /* BK-Leasing */
 
@@ -23,8 +42,8 @@ SELECT Artikel.ID AS ArtikelID,
   Vsa.VsaNr,
   Vsa.SuchCode AS VsaStichwort,
   Vsa.Bez AS VsaBezeichnung,
-  Vsa.GebaeudeBez AS Abteilung,
-  Vsa.Name2 AS Bereich,
+  Vsa.Name2 AS Abteilung,
+  Vsa.GebaeudeBez AS Bereich,
   Abteil.ID AS AbteilID,
   Abteil.Abteilung AS Kostenstelle,
   Abteil.Bez AS Kostenstellenbezeichnung,
@@ -39,7 +58,8 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(TraeArch.Menge) AS Menge,
-  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten
+  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
+  CAST(N'Leasing BK' AS nchar(20)) AS Art
 INTO #TmpVOESTRechnung
 FROM TraeArch
 JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
@@ -88,7 +108,7 @@ GROUP BY Artikel.ID,
 
 /* Leasing sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -100,8 +120,8 @@ SELECT Artikel.ID AS ArtikelID,
   Vsa.VsaNr,
   Vsa.SuchCode AS VsaStichwort,
   Vsa.Bez AS VsaBezeichnung,
-  Vsa.GebaeudeBez AS Abteilung,
-  Vsa.Name2 AS Bereich,
+  Vsa.Name2 AS Abteilung,
+  Vsa.GebaeudeBez AS Bereich,
   Abteil.ID AS AbteilID,
   Abteil.Abteilung AS Kostenstelle,
   Abteil.Bez AS Kostenstellenbezeichnung,
@@ -111,7 +131,8 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(AbtKdArW.Menge) AS Menge,
-  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten
+  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
+  N'Leasing sonstige' AS Art
 FROM AbtKdArW
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN RechPo ON ABtKdArW.RechPoID = RechPo.ID
@@ -150,7 +171,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung BK */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -162,8 +183,8 @@ SELECT Artikel.ID AS ArtikelID,
   Vsa.VsaNr,
   Vsa.SuchCode AS VsaStichwort,
   Vsa.Bez AS VsaBezeichnung,
-  Vsa.GebaeudeBez AS Abteilung,
-  Vsa.Name2 AS Bereich,
+  Vsa.Name2 AS Abteilung,
+  Vsa.GebaeudeBez AS Bereich,
   Abteil.ID AS AbteilID,
   Abteil.Abteilung AS Kostenstelle,
   Abteil.Bez AS Kostenstellenbezeichnung,
@@ -178,7 +199,8 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   COUNT(Scans.ID) AS Menge,
-  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten
+  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten,
+  N'Bearbeitung BK' AS Art
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -224,7 +246,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, ArtikelBez, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   CAST(-1 AS int) AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -236,8 +258,8 @@ SELECT Artikel.ID AS ArtikelID,
   Vsa.VsaNr,
   Vsa.SuchCode AS VsaStichwort,
   Vsa.Bez AS VsaBezeichnung,
-  Vsa.GebaeudeBez AS Abteilung,
-  Vsa.Name2 AS Bereich,
+  Vsa.Name2 AS Abteilung,
+  Vsa.GebaeudeBez AS Bereich,
   Abteil.ID AS AbteilID,
   Abteil.Abteilung AS Kostenstelle,
   Abteil.Bez AS Kostenstellenbezeichnung,
@@ -247,7 +269,8 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   SUM(LsPo.Menge) AS Menge,
-  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten
+  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten,
+  N'Bearbeitung sonstige' AS Art
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -287,7 +310,7 @@ GROUP BY Artikel.ID,
 
 /* Restwert-fakturierte Teile */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
   RechPo.ID AS RechPoID,
@@ -299,8 +322,8 @@ SELECT Artikel.ID AS ArtikelID,
   Vsa.VsaNr,
   Vsa.SuchCode AS VsaStichwort,
   Vsa.Bez AS VsaBezeichnung,
-  Vsa.GebaeudeBez AS Abteilung,
-  Vsa.Name2 AS Bereich,
+  Vsa.Name2 AS Abteilung,
+  Vsa.GebaeudeBez AS Bereich,
   Abteil.ID AS AbteilID,
   Abteil.Abteilung AS Kostenstelle,
   Abteil.Bez AS Kostenstellenbezeichnung,
@@ -315,7 +338,8 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   TeilSoFa.EPreis AS Einzelpreis,
   RechPo.Menge,
-  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten
+  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten,
+  N'Restwert/Verkauf' AS Art
 FROM TeilSoFa
 JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -331,6 +355,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo);
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Abrechnungswoche, Kosten, Menge
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Abrechnungswoche, Kosten, Menge, Art
 FROM #TmpVOESTRechnung
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
