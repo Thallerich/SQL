@@ -42,7 +42,7 @@ LEFT JOIN BKo ON BPo.BKoID = BKo.ID
 LEFT JOIN LiefAbPo ON BPo.LatestLiefABKoID = LiefAbPo.LiefABKoID AND BPo.ID = LiefAbPo.BPoID
 LEFT JOIN Lief ON BKo.LiefID = Lief.ID
 LEFT JOIN ErstAuslesen ON ErstAuslesen.EinzHistID = EinzHist.ID
-WHERE Artikel.BereichID = 100
+WHERE Artikel.BereichID IN ($4$)
   AND Kunden.Status = N'A'
   AND Vsa.Status = N'A'
   AND Traeger.Status != N'I'

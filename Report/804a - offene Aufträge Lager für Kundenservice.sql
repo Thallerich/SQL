@@ -71,7 +71,7 @@ LEFT JOIN BPo ON TeileBPo.BPoID = BPo.ID
 LEFT JOIN BKo ON BPo.BKoID = BKo.ID
 LEFT JOIN LiefAbPo ON BPo.LatestLiefABKoID = LiefAbPo.LiefABKoID AND BPo.ID = LiefAbPo.BPoID
 WHERE EinzHist.Anlage_ > CAST(N'2019-04-01 00:00:00' AS datetime2)
-  AND Artikel.BereichID = 100
+  AND Artikel.BereichID IN ($6$)
   AND Kunden.Status = N'A'
   AND Vsa.Status = N'A'
   AND Traeger.Status != N'I'
