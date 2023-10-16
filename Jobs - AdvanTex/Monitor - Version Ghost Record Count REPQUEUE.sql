@@ -5,5 +5,5 @@ DECLARE @vgr_count bigint;
 SELECT @vgr_count = sum(version_ghost_record_count)
 FROM sys.dm_db_index_physical_stats (@db_id, @object_id, 0, NULL, 'detailed');
 
-IF @vgr_count > 200000
+IF @vgr_count > 1000000
   SELECT N'Version ghost record count in REPQUEUE is at ' + FORMAT(@vgr_count, N'##,#', N'de-AT') + N'!' AS [Alert];
