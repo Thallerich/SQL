@@ -10,6 +10,7 @@ SELECT Kunden.KdNr,
   VsaAnfStatus.StatusBez AS [Status AnfArti],
   VsaAnf.Bestand AS Vertragsbestand,
   VsaAnf.BestandIst AS [Ist-Bestand live],
+  VsaAnf.VomIstBestandErsatz AS [Anzahl Ersatz],
   [Ist-Bestand Testmandant] = (
     SELECT TVsaAnf.BestandIst
     FROM Salesianer_Test.dbo.VsaAnf AS TVsaAnf
@@ -21,7 +22,7 @@ SELECT Kunden.KdNr,
     WHERE EinzTeil.VsaID = Vsa.ID
       AND EinzTeil.ArtikelID = Artikel.ID
       AND EinzTeil.Status != N'Z'
-      AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 154)
+      AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154)
   ), 
   [Anzahl Teile Testmandant] = (
     SELECT COUNT(EinzTeil.ID)
@@ -29,7 +30,7 @@ SELECT Kunden.KdNr,
     WHERE EinzTeil.VsaID = Vsa.ID
       AND EinzTeil.ArtikelID = Artikel.ID
       AND EinzTeil.Status != N'Z'
-      AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 154)
+      AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154)
   ),
   [Anzahl Teile zuletzt heute gescannt] = (
     SELECT COUNT(EinzTeil.ID)
@@ -40,7 +41,7 @@ SELECT Kunden.KdNr,
       WHERE TEinzTeil.VsaID = Vsa.ID
         AND TEinzTeil.ArtikelID = Artikel.ID
         AND TEinzTeil.Status != N'Z'
-        AND TEinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 154)
+        AND TEinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154)
     )
     AND EinzTeil.LastScanTime > DATEADD(day, DATEDIFF(day, 0, GETDATE()), 0)
   )
@@ -52,6 +53,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaAnfStatus ON VsaAnf.Status = VsaAnfStatus.Status
 WHERE Kunden.KdNr = 10001826
   AND Vsa.VsaNr = 18
-  AND Artikel.ArtikelNr = N'110620010001'
+  --AND Artikel.ArtikelNr = N'110620010001'
 
 GO
