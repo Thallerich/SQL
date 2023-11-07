@@ -34,7 +34,7 @@ EXEC sp_executesql @sqltext, N'@from datetime2, @to datetime2', @from, @to;
 /* ++ Reportdaten                                                                                                               ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, #EinAusScan.Eingang AS [Abholung], #EinAusScan.Ausgang AS [Anlieferung], #EinAusScan.WochenInProd AS [Wochen bei Salesianer]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, #EinAusScan.Eingang AS [Abholung], #EinAusScan.Ausgang AS [Anlieferung], #EinAusScan.WochenInProd AS [Wochen bei Salesianer]
 FROM #EinAusScan
 JOIN EinzHist ON #EinAusScan.EinzHistID = EinzHist.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
