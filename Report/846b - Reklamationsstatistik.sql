@@ -9,7 +9,7 @@ SELECT Kunden.KdNr,
   Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
   Liefermenge = SUM(IIF(LsPo.Menge > 0, LsPo.Menge, 0)),
   Reklamationsmenge = (SUM(IIF(LsPo.Menge > 0, 0, LsPo.Menge)) * -1),
-  [Reklamationsquote in %] = CONCAT(CAST(ROUND(CAST(SUM(IIF(LsPo.Menge > 0, 0, LsPo.Menge)) * -1 AS float) / CAST(IIF(SUM(IIF(LsPo.Menge > 0, LsPo.Menge, 0)) = 0, 1, SUM(IIF(LsPo.Menge > 0, LsPo.Menge, 0))) AS float) * 100, 4) AS float), '%')
+  [Reklamationsquote in %] = CAST(ROUND(CAST(SUM(IIF(LsPo.Menge > 0, 0, LsPo.Menge)) * -1 AS float) / CAST(IIF(SUM(IIF(LsPo.Menge > 0, LsPo.Menge, 0)) = 0, 1, SUM(IIF(LsPo.Menge > 0, LsPo.Menge, 0))) AS float) * 100, 4) AS float)
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
