@@ -1,9 +1,6 @@
 USE AWSInvest;
 GO
 
-TRUNCATE TABLE EKKO;
-GO
-
 INSERT INTO EKKO (Einkaufsbeleg, Buchungskreis, Einkaufsbelegtyp, Einkaufsbelegart, [Status], AnlageDatum, AnlageUser, Positionsintervall, LetztePosition, Lieferant, Zahlungsbedingung, Währung, Währungskurs, KursFixiert, Belegdatum, Laufzeitbeginn, Laufzeitende, Bewerbungsfrist, Angebotsfrist, Bindefrist, Angebot, Angebotsdatum, Rahmenvertrag, WENachricht, Incoterms, Incoterms2, BelegkonditionNr, Rechnungssteller, AußenhandelsdatenNr, KonditionenZeitabhängig, Adressnummer)
 SELECT CAST(Einkaufsbeleg AS bigint),
   CAST(Buchungskreis AS smallint),
@@ -38,4 +35,7 @@ SELECT CAST(Einkaufsbeleg AS bigint),
   CAST(Adressnummer AS int)
 FROM EKKO_Import;
 
+GO
+
+DROP TABLE EKKO_Import;
 GO

@@ -90,3 +90,6 @@ SELECT CAST(Materialbeleg AS char(15)) AS Materialbeleg,
 FROM MSEG_Import;
 
 GO
+
+DROP TABLE MSEG_Import;
+GO
