@@ -12,7 +12,10 @@ CREATE TABLE #PWSCleanup (
   TraeArtiID int,
   KdArtiID int,
   ArtikelID int,
-  ArtGroeID int
+  ArtGroeID int,
+  Ausdienst varchar(7),
+  AusdienstDat date,
+  AusdienstGrund varchar(1)
 );
 
 GO
@@ -48,8 +51,8 @@ UPDATE @Artikel SET ArtikelID = Artikel.ID
 FROM Artikel
 WHERE Artikel.ArtikelNr = [@Artikel].ArtikelNr;
 
-INSERT INTO #PWSCleanup (EinzHistID, EinzTeilID, Barcode, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID)
-SELECT EinzHist.ID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.KundenID, EinzHist.VsaID, EinzHist.TraegerID, EinzHist.TraeArtiID, EinzHist.KdArtiID, EinzHist.ArtikelID, EinzHist.ArtGroeID
+INSERT INTO #PWSCleanup (EinzHistID, EinzTeilID, Barcode, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Ausdienst, AusdienstDat, AusdienstGrund)
+SELECT EinzHist.ID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.KundenID, EinzHist.VsaID, EinzHist.TraegerID, EinzHist.TraeArtiID, EinzHist.KdArtiID, EinzHist.ArtikelID, EinzHist.ArtGroeID, EinzHist.Ausdienst, EinzHist.AusdienstDat, EinzHist.AusdienstGrund
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN Kunden ON EinzHist.KundenID = Kunden.ID
@@ -65,8 +68,11 @@ WHERE Kunden.KdGFID = @kdgfid
 GO
 
 DECLARE @weggrundid int = 167; /* IT -> Schrott */
+DECLARE @curdatetime datetime2 = GETDATE();
+DECLARE @returntime datetime2 = DATEADD(millisecond, -10, @curdatetime);
 DECLARE @ausdienstweek varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
-DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST')
+DECLARE @arbplatzid int = (SELECT ID FROM ArbPlatz WHERE ComputerName = HOST_NAME());
 
 DECLARE @MapTable TABLE (
   EinzTeilID int,
@@ -80,10 +86,10 @@ BEGIN TRY
     /* ++ Neuen EinzHist-Eintrag (Typ 3 - ausgeschieden) erstellen und in Temp-Table eintragen                                      ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    INSERT INTO EinzHist (EinzTeilID, Barcode, EinzHistTyp, [Status], EinzHistVon, IsCurrEinzHist, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Ausdienst, AusdienstDat, WegGrundID, UserID_, AnlageUserID_)
+    INSERT INTO EinzHist (EinzTeilID, Barcode, EinzHistTyp, [Status], EinzHistVon, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Ausdienst, AusdienstDat, WegGrundID, UserID_, AnlageUserID_)
     OUTPUT inserted.EinzTeilID, inserted.ID
     INTO @MapTable (EinzTeilID, EinzHistID)
-    SELECT EinzTeilID, Barcode, CAST(3 AS int) AS EinzHistTyp, CAST('Y' AS varchar(2)) AS [Status], GETDATE() AS EinzHistVon, CAST(1 AS bit) AS IsCurrEinzHist, KundenID, VsaID, TraegerID, CAST(-1 AS int) AS TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, @ausdienstweek AS Ausdienst, CAST(GETDATE() AS date) AS AusdienstDat, @weggrundid AS WegGrundID, @userid AS UserID_, @userid AS AnlageUserID_
+    SELECT EinzTeilID, Barcode, CAST(3 AS int) AS EinzHistTyp, CAST('Y' AS varchar(2)) AS [Status], @curdatetime AS EinzHistVon, KundenID, VsaID, TraegerID, CAST(-1 AS int) AS TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, ISNULL(Ausdienst, @ausdienstweek) AS Ausdienst, ISNULL(AusdienstDat, CAST(@curdatetime AS date)) AS AusdienstDat, @weggrundid AS WegGrundID, @userid AS UserID_, @userid AS AnlageUserID_
     FROM #PWSCleanup;
 
     UPDATE #PWSCleanup SET EinzHistID_Schrott = [@MapTable].EinzHistID
@@ -94,18 +100,30 @@ BEGIN TRY
     /* ++ Alten Umlauf-Datensatz anpassen                                                                                           ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-
+    UPDATE EinzHist SET [Status] = N'Y', WegGrundID = @weggrundid, Ausdienst = ISNULL(#PWSCleanup.Ausdienst, @ausdienstweek), AusdienstDat = ISNULL(#PWSCleanup.AusdienstDat, CAST(@curdatetime AS date)), AusdienstGrund = ISNULL(#PWSCleanup.AusdienstGrund, N'Z'), Einzug = ISNULL(EinzHist.Einzug, CAST(@curdatetime AS date)), EinzHistBis = @curdatetime, UserID_ = @userid
+    FROM #PWSCleanup
+    WHERE #PWSCleanup.EinzHistID = EinzHist.ID;
 
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     /* ++ EinzTeil-Datensatz anpassen                                                                                               ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-
+    UPDATE EinzTeil SET [Status] = N'Z', CurrEinzHistID = [@MapTable].EinzHistID, LastScanTime = @curdatetime, LastActionsID = 7, ZielNrID = 19, WegGrundID = @weggrundid, WegDatum = CAST(@curdatetime AS date), UserID_ = @userid
+    FROM #PWSCleanup
+    JOIN @MapTable ON #PWSCleanup.EinzTeilID = [@MapTable].EinzTeilID
+    WHERE #PWSCleanup.EinzTeilID = EinzTeil.ID
 
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     /* ++ Scans schreiben (Rückgabe und Schrott - jeweils auf alten Umlauf-Datensatz)                                               ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+    INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, TraegerID, VsaID, AnlageUserID_, UserID_)
+    SELECT [#PWSCleanup].EinzHistID, [#PWSCleanup].EinzTeilID, @returntime, CAST(6 AS int) AS ActionsID, CAST(6 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, #PWSCleanup.TraegerID, #PWSCleanup.VsaID, @userid AS AnlageUserID_, @userid AS UserID_
+    FROM #PWSCleanup;
+
+    INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, TraegerID, VsaID, AnlageUserID_, UserID_)
+    SELECT [#PWSCleanup].EinzHistID, [#PWSCleanup].EinzTeilID, @curdatetime, CAST(7 AS int) AS ActionsID, CAST(19 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, #PWSCleanup.TraegerID, #PWSCleanup.VsaID, @userid AS AnlageUserID_, @userid AS UserID_
+    FROM #PWSCleanup;
 
   
   COMMIT;
