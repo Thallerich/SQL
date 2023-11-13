@@ -1,4 +1,4 @@
-SELECT Firma.SuchCode AS FirmenNr, Firma.Bez AS Firma, Kunden.KdNr, Kunden.Debitor, Kunden.SuchCode AS Kunde,BRLauf.BrLaufBez AS Berechnungslauf ,Standort.Bez AS Kundenstandort, KdGf.KurzBez AS Geschäftsbereich, RKoType.RKoTypeBez AS Rechnungstyp, RechKo.Art, RechKo.RechNr, RechKo.RechDat AS Rechnungsdatum, RechKo.BruttoWert AS Brutto, RechKo.NettoWert AS Netto, RechKo.MwStBetrag AS MwSt, RechKo.SkontoBetrag AS Skonto
+SELECT Firma.SuchCode AS FirmenNr, Firma.Bez AS Firma, Kunden.KdNr, Kunden.Debitor, Kunden.SuchCode AS Kunde,BRLauf.BrLaufBez AS Berechnungslauf ,Standort.Bez AS Kundenstandort, KdGf.KurzBez AS Geschäftsbereich, RKoType.RKoTypeBez AS Rechnungstyp, RechKo.Art, RechKo.RechNr, RechKo.RechDat AS Rechnungsdatum, RechKo.BruttoWert AS Brutto, RechKo.RechWaeID AS Brutto_WaeID, RechKo.NettoWert AS Netto, RechKo.RechWaeID AS Netto_WaeID, RechKo.MwStBetrag AS MwSt, RechKo.RechWaeID AS MwSt_WaeID, RechKo.SkontoBetrag AS Skonto, RechKo.RechWaeID AS Skonto_WaeID
 FROM Salesianer_Test.dbo.RechKo
 JOIN Salesianer_Test.dbo.Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Salesianer_Test.dbo.Firma ON Kunden.FirmaID = Firma.ID
