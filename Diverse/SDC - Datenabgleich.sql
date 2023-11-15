@@ -1,46 +1,39 @@
-SELECT Touren.*
-FROM Touren
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.Touren AS SDCTouren ON Touren.ID = SDCTouren.ID
-WHERE Touren.Tour <> SDCTouren.Tour;
+DROP TABLE IF EXISTS #CompareSdcSoll;
+DROP TABLE IF EXISTS #CompareSdcJoin;
 
-SELECT Vsa.*
-FROM Vsa
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.Vsa AS SDCVsa ON Vsa.ID = SDCVsa.ID
-WHERE Vsa.VsaNr <> SDCVsa.VsaNr OR Vsa.KundenID <> SDCVsa.KundenID;
+GO
 
-SELECT VsaTour.*
-FROM VsaTour
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.VsaTour AS SDCVsaTour ON VsaTour.ID = SDCVsaTour.ID
-WHERE VsaTour.VsaID <> SDCVsaTour.VsaID OR VsaTour.KdBerID <> SDCVsaTour.KdBerID OR VsaTour.TourenID <> SDCVsaTour.TourenID OR VsaTour.VonDatum <> SDCVsaTour.VonDatum;
+SELECT Daten.*
+INTO #CompareSdcSoll
+FROM (
+  SELECT DISTINCT EinzTeil.ID
+  FROM Vsa, StandBer, StBerSdc, EinzTeil, EinzHist, KdArti, KdBer
+  WHERE EinzHist.EinzTeilID = EinzTeil.ID
+    AND Vsa.StandKonID = StandBer.StandKonID
+    AND EinzHist.VsaID = Vsa.ID
+    AND EinzHist.KdArtiID = KdArti.ID
+    AND KdArti.KdBerID = KdBer.ID
+    AND KdBer.BereichID = StandBer.BereichID
+    AND StandBer.ID = StBerSdc.StandBerID
+    AND StBerSdc.Modus = 0
+    AND StBerSdc.SdcDevID = 51
+    AND EinzHist.Status >= N'M'
+    AND EinzTeil.AltenheimModus = IIF(0 = 1, EinzTeil.AltenheimModus, 0)
+  ) AS Daten;
 
-SELECT Traeger.*
-FROM Traeger
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.Traeger AS SDCTraeger ON Traeger.ID = SDCTraeger.ID
-WHERE Traeger.VsaID <> SDCTraeger.VsaID OR Traeger.Traeger <> SDCTraeger.Traeger;
+SELECT Daten.*
+INTO #CompareSdcJoin
+FROM (
+  SELECT COALESCE(t1.id, - 1) AS AdvID, COALESCE(t2.id, - 1) AS SdcID
+  FROM #CompareSdcSoll AS t1
+  FULL OUTER JOIN [SVATSAWRSQL1.sal.co.at].[Salesianer_SAWR].dbo.EinzTeil AS t2 ON (t1.id = t2.id)
+) AS Daten;
 
-SELECT TraeArti.*
-FROM TraeArti
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.TraeArti AS SDCTraeArti ON TraeArti.ID = SDCTraeArti.ID
-WHERE TraeArti.TraegerID <> SDCTraeArti.TraegerID OR TraeArti.KdArtiID <> SDCTraeArti.KdArtiID OR TraeArti.ArtGroeID <> SDCTraeArti.ArtGroeID;
+SELECT * FROM #CompareSdcJoin WHERE AdvID > 0 AND SdcID < 0
 
-SELECT Teile.ID AS TeileID, Teile.Status AS WozStatus, SDCTeile.Status AS SDCStatus
--- UPDATE Teile SET [Status] = Teile.[Status]
-FROM Teile
-JOIN Vsa ON Teile.VsaID = Vsa.ID
-JOIN KdArti ON Teile.KdArtiID = KdArti.ID
-JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.Teile AS SDCTeile ON Teile.ID = SDCTeile.ID
-WHERE Teile.Status <> SDCTeile.Status
-  AND StandBer.SdcDevID = 2;
-
-SELECT Hinweis.*
-FROM Hinweis
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.Hinweis AS SDCHinweis ON Hinweis.ID = SDCHinweis.ID
-WHERE Hinweis.Aktiv <> SDCHinweis.Aktiv;
-
-SELECT JahrLief.*
--- UPDATE JahrLief SET Lieferwochen = JahrLief.Lieferwochen
-FROM JahrLief
-JOIN [SRVATLESDC01.WOZABAL.INT\ADVANTEX].Wozabal_Lenzing_2.dbo.JahrLief AS SDCJahrLief ON JahrLief.ID = SDCJahrLief.ID
-WHERE JahrLief.Lieferwochen <> SDCJahrLief.LieferWochen OR JahrLief.TableName <> SDCJahrLief.TableName OR JahrLief.TableID <> SDCJahrLief.TableID;
+INSERT INTO RepQueue ( Typ, TableName, TableID, ApplicationID, SdcDevID, Priority)
+SELECT IIF(AdvID > -1, 'INSERT', 'DELETE') AS Typ, 'EINZTEIL' AS Tablename, IIF(AdvID > -1, AdvID, SdcID) AS TableID, N'THALST (9.70.02.16)' AS ApplicationID, 51 AS SdcDevID, 9999 AS Priority
+FROM #CompareSdcJoin
+WHERE AdvID > 0
+  AND SdcID < 0
+  AND NOT EXISTS (SELECT RepQueue.* FROM RepQueue WHERE RepQueue.TableID = #CompareSdcJoin.AdvID AND RepQueue.TableName = N'EINZTEIL' AND RepQueue.SdcDevID = 51);
