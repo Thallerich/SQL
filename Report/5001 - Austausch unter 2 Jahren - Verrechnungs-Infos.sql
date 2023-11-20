@@ -96,6 +96,7 @@ SET @sqltext = N'
     AND [Zone].ID IN (SELECT #Vertriebszone.VertriebszoneID FROM #Vertriebszone)
     AND TeilSoFa.SoFaArt = N''R''
     AND (EinzHist.Status = N''Y'' OR (EinzHist.Status = N''S'' AND EinzHist.WegGrundID > 0))
+    AND Kunden.KdNr NOT IN (10005396, 100151)
 ';
 
 IF @onlybk = 1
