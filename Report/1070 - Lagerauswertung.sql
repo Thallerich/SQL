@@ -5,7 +5,7 @@ DECLARE @vonWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @von BETWEEN Wee
 DECLARE @bisWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @bis BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH BestandNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(LastLagerBew.BestandNeu) AS Bestand
+  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand
   FROM Bestand
   OUTER APPLY (
     SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
@@ -15,12 +15,12 @@ WITH BestandNeu AS (
     ORDER BY LagerBew.Zeitpunkt DESC, LagerBew.ID DESC
   ) AS LastLagerBew
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
-  WHERE Lagerart.LagerID = @LagerID
+  WHERE Lagerart.ID IN ($3$)
     AND Lagerart.Neuwertig = 1
   GROUP BY Bestand.ArtGroeID
 ),
 BestandGebraucht AS (
-  SELECT Bestand.ArtGroeID, SUM(LastLagerBew.BestandNeu) AS Bestand
+  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand
   FROM Bestand
   OUTER APPLY (
     SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
@@ -30,27 +30,27 @@ BestandGebraucht AS (
     ORDER BY LagerBew.Zeitpunkt DESC, LagerBew.ID DESC
   ) AS LastLagerBew
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
-  WHERE Lagerart.LagerID = @LagerID
+  WHERE Lagerart.ID IN ($3$)
     AND Lagerart.Neuwertig = 0
   GROUP BY Bestand.ArtGroeID
 ),
 LagerBewNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(LagerBew.Differenz) AS Lagerabgang
+  SELECT Bestand.ArtGroeID, SUM(CAST(LagerBew.Differenz AS bigint)) AS Lagerabgang
   FROM LagerBew
   JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
-  WHERE Lagerart.LagerID = @LagerID
+  WHERE Lagerart.ID IN ($3$)
     AND Lagerart.Neuwertig = 1
     AND LagerBew.Zeitpunkt BETWEEN @von AND @bis
     AND LagerBew.Differenz < 0
   GROUP BY Bestand.ArtGroeID
 ),
 LagerBewGebraucht AS (
-  SELECT Bestand.ArtGroeID, SUM(LagerBew.Differenz) AS Lagerabgang
+  SELECT Bestand.ArtGroeID, SUM(CAST(LagerBew.Differenz AS bigint)) AS Lagerabgang
   FROM LagerBew
   JOIN Bestand ON LagerBew.BestandID = Bestand.ID
   JOIN Lagerart ON Bestand.LagerArtID = Lagerart.ID
-  WHERE Lagerart.LagerID = @LagerID
+  WHERE Lagerart.ID IN ($3$)
     AND Lagerart.Neuwertig = 0
     AND LagerBew.Zeitpunkt BETWEEN @von AND @bis
     AND LagerBew.Differenz < 0
@@ -146,7 +146,7 @@ Kundenstand AS (
   JOIN KdArti ON x.KdArtiID = KdArti.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
-  WHERE (($3$ = 0 AND ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)) OR ($3$ = 1))
+  WHERE (($4$ = 0 AND ((StandBer.LagerID = @LagerID AND StandBer.LokalLagerID < 0) OR StandBer.LokalLagerID = @LagerID)) OR ($4$ = 1))
   GROUP BY x.ArtGroeID
 ),
 Artikelstatus AS (
