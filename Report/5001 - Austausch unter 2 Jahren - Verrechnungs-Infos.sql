@@ -1,3 +1,7 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: PrepareData                                                                                                     ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DROP TABLE IF EXISTS #Result;
 DROP TABLE IF EXISTS #Firma;
 DROP TABLE IF EXISTS #KdGf;
@@ -20,7 +24,8 @@ CREATE TABLE #Result (
   gutschrKZ tinyint,
   faktStatus tinyint,
   AlterWochen int,
-  AnzahlWäschen int
+  AnzahlWäschen int,
+  Schrottgrund nvarchar(60)
 );
 
 CREATE TABLE #Firma (
@@ -55,7 +60,7 @@ FROM [Zone]
 WHERE [Zone].ID IN ($5$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, AlterWochen, AnzahlWäschen)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, AlterWochen, AnzahlWäschen, Schrottgrund)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
@@ -64,7 +69,7 @@ SET @sqltext = N'
     Kunden.SuchCode AS Kunde,
     EinzHist.Barcode,
     Artikel.ArtikelNr,
-    Artikel.ArtikelBez,
+    Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
     EinzHist.Ausdienst,
     IIF(TeilSoFa.OhneBerechGrund > 0, 0, TeilSoFa.EPreis) AS Preis,
     TeilSoFa.EPreis AS [potentieller Preis],
@@ -81,7 +86,8 @@ SET @sqltext = N'
       ELSE 255
     END,
     TeilSoFa.AlterWochen AS [Alter in Wochen],
-    TeilSoFa.AnzWaeschen AS [Anzahl Wäschen]
+    TeilSoFa.AnzWaeschen AS [Anzahl Wäschen],
+    WegGrund.WegGrundBez$LAN$ AS Schrottgrund
   FROM TeilSoFa
   JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
   JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
@@ -90,6 +96,7 @@ SET @sqltext = N'
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
   JOIN Standort ON Kunden.StandortID = Standort.ID
+  JOIN WegGrund ON EinzHist.WegGrundID = WegGrund.ID
   WHERE TeilSoFa.Zeitpunkt BETWEEN CAST(@from AS datetime2) AND CAST(@to AS datetime2)
     AND Firma.ID IN (SELECT #Firma.FirmaID FROM #Firma)
     AND KdGf.ID IN (SELECT #KdGf.KdGfID FROM #KdGf)
@@ -106,9 +113,11 @@ SET @sqltext += N';';
 
 EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 
-GO
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: Details                                                                                                         ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], fakturiert =
+SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
     CASE
         WHEN faktStatus = 3 THEN N'verrechnet'
         WHEN faktStatus = 2 THEN N'wird noch verrechnet'
@@ -119,12 +128,14 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barc
         ELSE N'<<unbekannt>>'
       END
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, MAX(faktStatus) AS faktStatus
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus
   FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
 ) AS x;
 
-GO
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: Summen                                                                                                          ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT Hauptstandort,
   Geschäftsbereich,
@@ -152,5 +163,3 @@ FROM (
   GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
 ) AS x
 GROUP BY Hauptstandort, Geschäftsbereich, Vertriebszone, Kunde + N' (' + CAST(KdNr AS nvarchar) + N')';
-
-GO
