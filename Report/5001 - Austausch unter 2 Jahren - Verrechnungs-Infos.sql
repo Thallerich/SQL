@@ -23,6 +23,7 @@ CREATE TABLE #Result (
   faktKZ tinyint,
   gutschrKZ tinyint,
   faktStatus tinyint,
+  noFaktReason int,
   AlterWochen int,
   AnzahlWäschen int,
   Schrottgrund nvarchar(60)
@@ -60,7 +61,7 @@ FROM [Zone]
 WHERE [Zone].ID IN ($5$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, AlterWochen, AnzahlWäschen, Schrottgrund)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
@@ -85,6 +86,7 @@ SET @sqltext = N'
       WHEN TeilSoFa.RechPoID < 0 AND TeilSoFa.[Status] = N''D'' THEN 0
       ELSE 255
     END,
+    TeilSoFa.OhneBerechGrund,
     TeilSoFa.AlterWochen AS [Alter in Wochen],
     TeilSoFa.AnzWaeschen AS [Anzahl Wäschen],
     WegGrund.WegGrundBez$LAN$ AS Schrottgrund
@@ -126,9 +128,28 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barc
         WHEN faktStatus = 1 THEN N'Rechnungsposition gelöscht'
         WHEN faktStatus = 0 THEN N'keine Verrechnung vorgesehen'
         ELSE N'<<unbekannt>>'
-      END
+      END,
+  [Grund für ausgebliebene Berechnung] = 
+    CASE
+      WHEN faktStatus != 0 OR noFaktReason = 0  THEN NULL
+      WHEN faktStatus = 0 AND noFaktReason = 1  THEN N'im RW-Kontingent inkludiert'
+      WHEN faktStatus = 0 AND noFaktReason = 2  THEN N'vertraglich nicht vorgesehen'
+      WHEN faktStatus = 0 AND noFaktReason = 3  THEN N'Kunden-Austausch-Regel nicht erfüllt'
+      WHEN faktStatus = 0 AND noFaktReason = 4  THEN N'frühzeitiger Größentausch kostenlos'
+      WHEN faktStatus = 0 AND noFaktReason = 5  THEN N'Restwert ist null'
+      WHEN faktStatus = 0 AND noFaktReason = 6  THEN N'Restwert unter Minimum'
+      WHEN faktStatus = 0 AND noFaktReason = 7  THEN N'Pool-Teil'
+      WHEN faktStatus = 0 AND noFaktReason = 8  THEN N'Benutzer hat Restwert-Faktura verneint'
+      WHEN faktStatus = 0 AND noFaktReason = 9  THEN N'Restwert-Berechnung nicht zutreffend'
+      WHEN faktStatus = 0 AND noFaktReason = 10 THEN N'Verschrottet mit Grund ohne Restwert-Berechnung'
+      WHEN faktStatus = 0 AND noFaktReason = 11 THEN N'Eigentum sieht keine Restwert-Berechnung vor'
+      WHEN faktStatus = 0 AND noFaktReason = 12 THEN N'Teil bereits für Restwert-Berechnung vorgesehen'
+      WHEN faktStatus = 0 AND noFaktReason = 13 THEN N'Teil wurde schon als Kaufware ausgegeben'
+      WHEN faktStatus = 0 AND noFaktReason = 14 THEN N'Restwert-Berechnung nachträglich abgebrochen'
+      ELSE N'<<unbekannt>>'
+    END
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
   FROM #Result
   GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
 ) AS x;
