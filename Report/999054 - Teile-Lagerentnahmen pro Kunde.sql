@@ -17,7 +17,7 @@ SELECT WegGrund.WegGrundBez$LAN$ AS Schrottgrund, EinzHist.Barcode, Teilestatus.
       JOIN Lief ON ArtiLief.LiefID = Lief.ID
       WHERE ArGrLief.ArtGroeID = EinzHist.ArtGroeID
         AND ArGrLief.VonDatum <= CAST(LagerBew.Zeitpunkt AS date)
-        AND ArtiLief.StandortID = 5313
+        AND ArtiLief.StandortID = Lagerart.LagerID
         AND IIF(COALESCE(ArtGroePrio.ID, ArtikelPrio.ID, 0) > 0, CAST(1 AS bit), CAST(0 AS bit)) = 1
       ORDER BY ArGrLief.VonDatum DESC
     ),
