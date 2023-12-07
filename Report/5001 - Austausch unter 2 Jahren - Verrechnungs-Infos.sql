@@ -92,12 +92,16 @@ SET @sqltext = N'
     WegGrund.WegGrundBez$LAN$ AS Schrottgrund
   FROM TeilSoFa
   JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
-  JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
-  JOIN Kunden ON EinzHist.KundenID = Kunden.ID
+  JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN Firma ON Kunden.FirmaID = Firma.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
-  JOIN Standort ON Kunden.StandortID = Standort.ID
+  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
+  JOIN Standort ON StandBer.ProduktionID = Standort.ID
   JOIN WegGrund ON EinzHist.WegGrundID = WegGrund.ID
   WHERE TeilSoFa.Zeitpunkt BETWEEN CAST(@from AS datetime2) AND CAST(@to AS datetime2)
     AND Firma.ID IN (SELECT #Firma.FirmaID FROM #Firma)
