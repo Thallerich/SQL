@@ -1,3 +1,7 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ PrepareData                                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DROP TABLE IF EXISTS #TmpKdInfo;
 
 SELECT KdGf.KurzBez AS SGF,
@@ -20,6 +24,9 @@ SELECT KdGf.KurzBez AS SGF,
     GROUP BY Mitarbei.Name
     ORDER BY COUNT(KdBer.ID) DESC
   ),
+  Abteil.ID AS AbteilID,
+  Abteil.Abteilung AS Kostenstelle,
+  Abteil.Bez AS Kostenstellenbezeichnung,
   CAST(0 AS int) AS [Anzahl Träger],
   CAST(0 AS int) AS [Anzahl Teile],
   CAST(0 AS int) AS [Anzahl Pool-Träger], 
@@ -28,13 +35,12 @@ INTO #TmpKdInfo
 FROM Kunden
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Standort ON Kunden.StandortID = Standort.ID
-WHERE Kunden.KdGfID = KdGf.ID
-  AND KdGf.ID IN ($1$)
-  AND Kunden.ID IN ($2$);
+JOIN Abteil ON Abteil.KundenID = Kunden.ID
+WHERE Kunden.ID IN ($2$);
   
 UPDATE KdInfo SET KdInfo.[Anzahl Träger] = TraeData.AnzTrae, KdInfo.[Anzahl Teile] = TraeData.AnzTeil
 FROM #TmpKdInfo AS KdInfo, (
-  SELECT Kunden.KdNr, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
+  SELECT Kunden.KdNr, Traeger.AbteilID, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
   FROM #TmpKdInfo AS KdInfo, EinzTeil, EinzHist, Traeger, Vsa, Kunden
   WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
     AND EinzHist.TraegerID = Traeger.ID
@@ -61,13 +67,14 @@ FROM #TmpKdInfo AS KdInfo, (
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%EW%'
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%BESUCHER%'
     AND UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) NOT LIKE '%MOP%'
-  GROUP BY Kunden.KdNr
+  GROUP BY Kunden.KdNr, Traeger.AbteilID
 ) AS TraeData
-WHERE TraeData.KdNr = KdInfo.KdNr;
+WHERE TraeData.KdNr = KdInfo.KdNr
+  AND TraeData.AbteilID = KdInfo.AbteilID;
 
 UPDATE KdInfo SET KdInfo.[Anzahl Pool-Träger] = TraeData.AnzTrae, KdInfo.[Anzahl Pool-Teile] = TraeData.AnzTeil
 FROM #TmpKdInfo AS KdInfo, (
-  SELECT Kunden.KdNr, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
+  SELECT Kunden.KdNr, Traeger.AbteilID, COUNT(DISTINCT Traeger.ID) AS AnzTrae, COUNT(DISTINCT EinzHist.ID) AS AnzTeil
   FROM #TmpKdInfo AS KdInfo, EinzTeil, EinzHist, Traeger, Vsa, Kunden
   WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
     AND EinzHist.TraegerID = Traeger.ID
@@ -94,10 +101,27 @@ FROM #TmpKdInfo AS KdInfo, (
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%EW%'            OR 
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%BESUCHER%'      OR 
          UPPER(Coalesce(Vorname, '')) + UPPER(Coalesce(Nachname, '')) LIKE '%MOP%')
-  GROUP BY Kunden.KdNr
+  GROUP BY Kunden.KdNr, Traeger.AbteilID
 ) AS TraeData
-WHERE TraeData.KdNr = KdInfo.KdNr;
+WHERE TraeData.KdNr = KdInfo.KdNr
+  AND TraeData.AbteilID = KdInfo.AbteilID;
 
-SELECT SGF, Hauptstandort, KdNr, Kunde, Kundenservice, Betreuer, [Anzahl Träger], [Anzahl Teile], [Anzahl Pool-Träger], [Anzahl Pool-Teile]
-FROM #TmpKdInfo
-ORDER BY SGF, KdNr;
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Reportdaten                                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @showksst bit = $3$;
+
+IF @showksst = 0
+BEGIN
+  SELECT SGF, Hauptstandort, KdNr, Kunde, Kundenservice, Betreuer, SUM([Anzahl Träger]) AS [Anzahl Träger], SUM([Anzahl Teile]) AS [Anzahl Teile], SUM([Anzahl Pool-Träger]) AS [Anzahl Pool-Träger], SUM([Anzahl Pool-Teile]) AS [Anzahl Pool-Teile]
+  FROM #TmpKdInfo
+  GROUP BY SGF, Hauptstandort, KdNr, Kunde, Kundenservice, Betreuer
+  ORDER BY SGF, KdNr;
+END
+ELSE
+BEGIN
+  SELECT SGF, Hauptstandort, KdNr, Kunde, Kundenservice, Betreuer, Kostenstelle, Kostenstellenbezeichnung, [Anzahl Träger], [Anzahl Teile], [Anzahl Pool-Träger], [Anzahl Pool-Teile]
+  FROM #TmpKdInfo
+  ORDER BY SGF, KdNr;
+END;
