@@ -17,3 +17,32 @@ WHERE Firma.SuchCode = N'FA14'
   )
 
 GO
+
+SELECT Firma.Bez AS Firma, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, InKalk.InKalkWaschPreis AS [Bearbeitung fest], InKalk.InKalkWaschProzent AS [Bearbeitung %], InKalk.InKalkLeasPreis AS [Leasing fest], InKalk.InKalkLeasProzent AS [Leasing %], InKalk.InKalkSplitPreis AS [Split fest], InKalk.InKalkSplitProzent AS [Split %], CAST(80 AS tinyint) AS [Split % neu]
+FROM InKalk
+JOIN Firma ON InKalk.FirmaID = Firma.ID
+JOIN Artikel ON InKalk.ArtikelID = Artikel.ID
+WHERE Firma.SuchCode = N'FA14'
+  AND InKalk.KundenID < 0
+  AND Artikel.ID > 0
+  AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'BK')
+  AND InKalk.InKalkSplitPreis = 0
+  AND InKalk.InKalkSplitProzent = 0;
+
+GO
+
+UPDATE InKalk SET InKalkSplitProzent = 80
+WHERE ID IN (
+  SELECT InKalk.ID
+  FROM InKalk
+  JOIN Firma ON InKalk.FirmaID = Firma.ID
+  JOIN Artikel ON InKalk.ArtikelID = Artikel.ID
+  WHERE Firma.SuchCode = N'FA14'
+    AND InKalk.KundenID < 0
+    AND Artikel.ID > 0
+    AND Artikel.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'BK')
+    AND InKalk.InKalkSplitPreis = 0
+    AND InKalk.InKalkSplitProzent = 0
+);
+
+GO
