@@ -18,7 +18,7 @@ JOIN (
   WHERE Scans.EinzTeilID > 0  /* nur Poolteile */
     AND Scans.Menge != 0
     AND Scans.ActionsID IN (1, 100, 2, 102)
-    AND Scans.[DateTime] >= N'2019-01-01 00:00:00'
+    AND Scans.[DateTime] >= N'2022-01-01 00:00:00'
 ) AS Poolscan ON Poolscan.EinzTeilID = EinzTeil.ID
 JOIN Salesianer.dbo.Vsa ON Poolscan.VsaID = Vsa.ID
 JOIN Salesianer.dbo.Kunden ON Vsa.KundenID = Kunden.ID
