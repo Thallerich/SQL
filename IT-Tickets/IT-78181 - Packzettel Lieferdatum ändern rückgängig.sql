@@ -17,10 +17,9 @@ FROM AnfKo
 JOIN Fahrt ON AnfKo.FahrtID = Fahrt.ID
 JOIN Touren ON Fahrt.TourenID = Touren.ID
 JOIN Touren AS FixedTour ON AnfKo.TourenID = FixedTour.ID
-JOIN Fahrt AS FixedFahrt ON FixedFahrt.TourenID = FixedTour.ID AND FixedFahrt.PlanDatum = N'2023-12-27'
+JOIN Fahrt AS FixedFahrt ON FixedFahrt.TourenID = FixedTour.ID AND FixedFahrt.PlanDatum = N'2023-12-27' AND FixedFahrt.MitarbeiID > 0 AND FixedFahrt.UrDatum = N'2023-12-27'
 LEFT JOIN VsaTour ON VsaTour.VsaID = AnfKo.VsaID AND VsaTour.TourenID = AnfKo.TourenID AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
 WHERE AnfKo.LieferDatum = N'2023-12-26'
-  AND AnfKo.TourenID != Fahrt.TourenID
   AND AnfKo.Memo LIKE N'Lieferdatum von 27.12.2023 % auf 26.12.2023 % geändert durch KOVACE';
 
 BEGIN TRY
@@ -57,5 +56,4 @@ JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN Fahrt ON AnfKo.FahrtID = Fahrt.ID
 WHERE AnfKo.LieferDatum = N'2023-12-26'
-  AND AnfKo.TourenID != Fahrt.TourenID
   AND AnfKo.Memo LIKE N'% geändert durch KOVACE';
