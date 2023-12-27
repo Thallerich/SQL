@@ -23,18 +23,24 @@ JOIN Firma ON Kunden.FirmaID = Firma.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 LEFT OUTER JOIN RechKo ON RechKo.KundenID = Kunden.ID AND RechKo.FibuExpID > 0 AND RechKo.RechDat BETWEEN DATEADD(month, -12, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)) AND DATEADD(day, -1, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
 WHERE Kunden.FirmaID = $1$
+  AND Kunden.AdrArtID = 1
 GROUP BY Firma.Bez, KdGf.KurzBez, [Status].StatusBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Standort.Bez, FORMAT(RechKo.RechDat, N'yyyy-MM');
 
-SELECT @Spalten = COALESCE(@Spalten + ', [' + Monat + ']', '[' + Monat + ']') FROM (SELECT DISTINCT Monat FROM #KundenUmsatz WHERE Monat IS NOT NULL) AS K ORDER BY Monat ASC;
+SELECT @Spalten = COALESCE(@Spalten + ', [' + Monat + ']', '[' + Monat + ']', N'unbekannt') FROM (SELECT DISTINCT Monat FROM #KundenUmsatz WHERE Monat IS NOT NULL) AS K ORDER BY Monat ASC;
 
-SET @PivotSQL = '
-  SELECT *
-  FROM (
-    SELECT * FROM #KundenUmsatz
-  ) AS x
-  PIVOT (
-    SUM(Umsatz)
-    FOR Monat IN (' + @Spalten + ')
-  ) AS p';
+IF @Spalten IS NULL
+  SELECT N'Keine Daten vorhanden!' AS Error
+ELSE
+BEGIN
+  SET @PivotSQL = '
+    SELECT *
+    FROM (
+      SELECT * FROM #KundenUmsatz
+    ) AS x
+    PIVOT (
+      SUM(Umsatz)
+      FOR Monat IN (' + @Spalten + ')
+    ) AS p';
 
-EXEC sp_executesql @PivotSQL;
+  EXEC sp_executesql @PivotSQL;
+END;
