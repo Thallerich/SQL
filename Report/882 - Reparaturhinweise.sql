@@ -1,8 +1,8 @@
-DECLARE @EingabeDatumVon datetime;
-DECLARE @EingabeDatumBis datetime;
+DECLARE @EingabeDatumVon datetime2;
+DECLARE @EingabeDatumBis datetime2;
 
-SET @EingabeDatumVon = $1$;
-SET @EingabeDatumBis = DATEADD(day, 1, $2$);
+SET @EingabeDatumVon = CAST($STARTDATE$ AS datetime2);
+SET @EingabeDatumBis = CAST(DATEADD(day, 1, $ENDDATE$) AS datetime2);
 
 WITH Teilestatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
