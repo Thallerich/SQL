@@ -19,14 +19,13 @@ BEGIN TRY
   BEGIN TRANSACTION;
   
     WITH EKPreisImport AS (
-      SELECT DISTINCT _EKPreis.ArtikelID, _EKPreis.EKPreis
+      SELECT DISTINCT _EKPreis.ArtikelNr, _EKPreis.[EK Preis] AS EKPreis
       FROM _EKPreis
     )
     INSERT INTO #EKPreis
     SELECT Artikel.ID AS ArtikelID, EKPreisImport.EKPreis
     FROM Artikel WITH (UPDLOCK)
     JOIN EKPreisImport ON Artikel.ArtikelNr = EKPreisImport.ArtikelNr
-    JOIN Wae ON Artikel.EkPreisWaeID = Wae.ID
     WHERE Artikel.EkPreis != EKPreisImport.EKPreis;
     
     UPDATE Artikel SET EkPreis = #EKPreis.EKPreis
