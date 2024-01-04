@@ -13,16 +13,28 @@ CREATE TABLE #SchwundRetour (
 
 GO
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Parameter-Definition - hier Werte anpassen!                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @kdnr int = 5154;
+DECLARE @user nchar(6) = N'LAMABE';
+DECLARE @schwundtime datetime2 = N'2023-04-01 06:00:00';
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++                                                                                                                           ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 INSERT INTO #SchwundRetour (EinzTeilID, ScanID, SchwundEinzHistID)
 SELECT EinzTeil.ID AS EinzTeilID, Scans.ID AS ScanID, EinzTeil.CurrEinzHistID AS SchwundEinzHistID
 FROM EinzTeil
 JOIN Scans ON Scans.EinzTeilID = EinzTeil.ID
-WHERE EinzTeil.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 7008))
+WHERE EinzTeil.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = @kdnr))
   AND EinzTeil.[Status] = N'W'
   AND EinzTeil.RechPoID < 0
   AND Scans.ActionsID = 116
-  AND Scans.[DateTime] >= N'2023-09-20 00:00:00'
-  AND Scans.AnlageUserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N'FREYIN');
+  AND Scans.[DateTime] >= @schwundtime
+  AND Scans.AnlageUserID_ = (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = @user);
 
 UPDATE #SchwundRetour SET RollbackEinzHistID = x.RollbackEinzHistID
 FROM (
@@ -65,7 +77,7 @@ BEGIN TRY
     DELETE FROM EinzHist WHERE ID IN (SELECT SchwundEinzHistID FROM #SchwundRetour);
     
     /* Restore Rollback EinzHist */
-    UPDATE EinzHist SET EinzHistBis = N'2099-12-31 23:59:59.000', IsCurrEinzHist = 1
+    UPDATE EinzHist SET EinzHistBis = N'2099-12-31 23:59:59.000'
     WHERE ID IN (SELECT RollbackEinzHistID FROM #SchwundRetour);
 
   COMMIT;
