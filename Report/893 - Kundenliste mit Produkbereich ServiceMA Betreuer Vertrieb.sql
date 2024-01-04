@@ -84,6 +84,7 @@ SELECT Firma.Bez AS Firma,
     FROM RechPo
     JOIN RechKo ON RechPo.RechKoID = RechKo.ID
     WHERE RechKo.KundenID = Kunden.ID
+      AND RechPo.KdBerID = KdBer.ID
       AND RechKo.RechDat >= CAST(DATEADD(year, -1, DATETIMEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1, 0, 0, 0, 0)) AS date)
   ),
   RechWae.IsoCode AS Rechnungswährung,
