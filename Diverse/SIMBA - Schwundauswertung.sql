@@ -28,6 +28,7 @@ SET @sqltext = N'
     AND Vsa._IsSIMBAPool = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.[Status] BETWEEN N''Q'' AND N''W''
+    AND EinzHist.[Status] != N''T''
     AND EinzHist.Einzug IS NULL
     AND EinzTeil.LastScanTime < @lastscanbefore;
 ';
@@ -50,6 +51,7 @@ SET @sqltext = N'
     AND Vsa._IsSIMBAPool = 1
     AND EinzHist.PoolFkt = 0
     AND EinzHist.[Status] BETWEEN N''Q'' AND N''W''
+    AND EinzHist.[Status] != N''T''
     AND EinzHist.Einzug IS NULL
     AND EinzTeil.LastScanTime < @lastscanbefore
   GROUP BY Holding.Holding, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGroe.Groesse, KdArti.Variante
