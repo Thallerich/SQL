@@ -1,9 +1,6 @@
 USE AWSInvest;
 GO
 
-DELETE FROM EKBE WHERE Materialbelegjahr = 2023;
-GO
-
 INSERT INTO EKBE (Einkaufsbeleg, Position, [Laufende Kontierung], Vorgangsart, Materialbelegjahr, Materialbeleg, Materialbeleg_Position, Bestellentwicklungstyp, Bewegungsart, Buchungsdatum, Menge, Menge_BPR, Betrag_Hauswährung, Betrag, Währung, Ausgleichswert_HW, WESperrbestand_BME, WESperrbestand_BPME, SollHabenKZ, Bewertungsart, Endlieferung, Referenz, Geschäftsjahr_RefBeleg, Referenzbeleg, RefBeleg_Position, Grund_Bewegung, Erfassungsdatum, Erfassungsuhrzeit, Rechnungswert, Einhaltung_Versandvorschrift, Rechnungswert_FW, Material, Werk, WESt_trotz_RE, LfdNr, BelegkondNr, Steuerkennzeichen, Lieferscheinmenge, LieferscheinMngEinh, Material_2, Ausgleichswert_FW, Hauswährung, Menge_2, Charge, Belegdatum, Wertbildung_offen, Kontierung_Rechprüf_ungeplant, AnlageUser, Leistung, Paketnummer, Leistungszeile, LfdBestellkontierung, SrvRetourekennzeichen, Ausgleichswert_FW_2, RechnBetrag_FW, SAPRelease, Menge_3, MengeBPR, Betrag_Hauswährung_2, Betrag_2, Bewerteter_WESperrbst_BME, Bewerteter_WESperrbest_BPME, Abnahme_Lieferant, Ausgleichswert_HW_2, Kursdifferenzbetrag, Einbehalt_Belegwährung, Einbehalt_Buchungskreiswährung, Gebuchter_Einbehalt_Belegwährung, Gebuchter_Einbehalt_BW, Mehrfachkontierung, Währungskurs, Herkunft_Rechnungsposition, Lieferung, Position_2, Bestandssegment, Logisches_System, VAkEtmg, Knz_DIE_abgeschl, Saisonjahr, Saison, Kollektion, Thema, Merkmalsbezeichnung1, Merkmalsbezeichnung2, Merkmalsbezeichnung3)
 SELECT CAST(Einkaufsbeleg AS bigint) AS Einkaufsbeleg,
   CAST(Position AS int) AS Position,

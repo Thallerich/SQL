@@ -46,27 +46,36 @@ function Split-Content {
 
 # Get-Content -ReadCount 1000 .\MSEG.csv | Split-Content -Path .\MSEGSplit.csv -HeadSize 1 -DataSize 100000
 
-$processtype = "EKKO"
+param (
+    [Parameter(Mandatory=$true)][String]$type
+);
 
-Clear-Host
-Import-Module dbatools;
+$processtype = $type.ToUpper();
 
-Set-DbaToolsInsecureConnection -SessionOnly
+if ($processtype.ToUpper() -ne "BSEG" -and $processtype.ToUpper() -ne "EKBE" -and $processtype.ToUpper() -ne "EKKO" -and $processtype.ToUpper() -ne "EKPO" -and $processtype.ToUpper() -ne "MSEG")
+{
+    Write-Host "Usage: AWSInvest_Import -type [BSEG|EKBE|EKKO|EKPO|MSEG]"
+}
+else
+{
+    Clear-Host
+    Import-Module dbatools;
 
-Set-Location "C:\Users\thalst.SAL\Downloads\csv\$processtype\"
+    Set-DbaToolsInsecureConnection -SessionOnly
 
-$infiles = Get-ChildItem -Filter *.csv
-$tablename = "AWSInvest.dbo." + $processtype + "_Import"
+    $infiles = Get-ChildItem -Path "C:\Users\thalst.SAL\Downloads\csv\$processtype\" -Filter *.csv
+    $tablename = "AWSInvest.dbo." + $processtype + "_Import"
 
-Remove-DbaDbTable -SqlInstance SQL1FCIHQ22.sal.co.at -Table $tablename -Confirm:$false
+    Remove-DbaDbTable -SqlInstance SQL1FCIHQ22.sal.co.at -Table $tablename -Confirm:$false
 
-foreach ($file in $infiles) {
-    Write-Host "Importing $($file.Name) into DataTable-Variable"
-    $DataTable = Import-Csv $file.FullName -Delimiter ";"
-    Write-DbaDbTableData -SqlInstance SQL1FCIHQ22.sal.co.at -InputObject $DataTable -Database AWSInvest -Table $tablename -AutoCreateTable
-    Write-Host "File $($file.Name) processed"
-    Move-Item $file.FullName .\done\
-    Remove-Variable DataTable
+    foreach ($file in $infiles) {
+        Write-Host "Importing $($file.Name) into DataTable-Variable"
+        $DataTable = Import-Csv $file.FullName -Delimiter ";"
+        Write-DbaDbTableData -SqlInstance SQL1FCIHQ22.sal.co.at -InputObject $DataTable -Database AWSInvest -Table $tablename -AutoCreateTable
+        Write-Host "File $($file.Name) processed"
+        Move-Item -Path $file.FullName -Destination "C:\Users\thalst.SAL\Downloads\csv\$processtype\done\"
+        Remove-Variable DataTable
+    }
 }
 
 <#
