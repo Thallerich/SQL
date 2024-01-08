@@ -12,6 +12,7 @@ CREATE TABLE #Result (
   Geschäftsbereich nchar(5),
   Vertriebszone nvarchar(15),
   Hauptstandort nvarchar(60),
+  Holding nvarchar(10),
   KdNr int,
   Kunde nvarchar(20),
   Barcode nvarchar(33),
@@ -61,11 +62,12 @@ FROM [Zone]
 WHERE [Zone].ID IN ($5$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
     Standort.SuchCode + ISNULL(N'' - ('' + Standort.Bez + '')'', N'''') AS Hauptstandort,
+    Holding.Holding,
     Kunden.KdNr,
     Kunden.SuchCode AS Kunde,
     EinzHist.Barcode,
@@ -98,6 +100,7 @@ SET @sqltext = N'
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN Firma ON Kunden.FirmaID = Firma.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+  JOIN Holding ON Kunden.HoldingID = Holding.ID
   JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
@@ -123,7 +126,7 @@ EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 /* ++ Pipeline: Details                                                                                                         ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
+SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
     CASE
         WHEN faktStatus = 3 THEN N'verrechnet'
         WHEN faktStatus = 2 THEN N'wird noch verrechnet'
@@ -153,9 +156,9 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barc
       ELSE N'<<unbekannt>>'
     END
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
   FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
 ) AS x;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -165,6 +168,7 @@ FROM (
 SELECT Hauptstandort,
   Geschäftsbereich,
   Vertriebszone,
+  Holding,
   Kunde + N' (' + CAST(KdNr AS nvarchar) + N')' AS Kunde,
   SUM(IIF(AlterWochen <= 104, 1, 0)) AS [Teile gesamt (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 1, 1, 0)) AS [Teile fakturiert (<= 104 Wochen)],
@@ -174,6 +178,7 @@ SELECT Hauptstandort,
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 1, Preis, 0)) AS [Summe fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 1 AND gutschrKZ = 1, Preis, 0)) AS [Summe gutgeschrieben (<= 104 Wochen)],
   SUM(IIF(AlterWochen <= 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (<= 104 Wochen)],
+  ROUND(CAST(SUM(IIF(AlterWochen <= 104 AND faktKZ = 0, PreisPotentiell, 0)) AS float) / CAST(IIF(SUM(IIF(AlterWochen <= 104, PreisPotentiell, 0)) = 0, 1, SUM(IIF(AlterWochen <= 104, PreisPotentiell, 0))) AS float) * 100, 2) AS [Anteil (%) nicht fakturiert (<= 104 Wochen)],
   SUM(IIF(AlterWochen > 104, 1, 0)) AS [Teile gesamt (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1, 1, 0)) AS [Teile fakturiert (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 1, 1, 0)) AS [Teile gutgeschrieben (> 104 Wochen)],
@@ -181,10 +186,12 @@ SELECT Hauptstandort,
   SUM(IIF(AlterWochen > 104, PreisPotentiell, 0)) AS [Summe potentiell (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1, Preis, 0)) AS [Summe fakturiert (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 1, Preis, 0)) AS [Summe gutgeschrieben (> 104 Wochen)],
-  SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (> 104 Wochen)]
+  SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (> 104 Wochen)],
+  ROUND(CAST(SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS float) / CAST(IIF(SUM(IIF(AlterWochen > 104, PreisPotentiell, 0)) = 0, 1, SUM(IIF(AlterWochen > 104, PreisPotentiell, 0))) AS float) * 100, 2) AS [Anteil (%) nicht fakturiert (> 104 Wochen)]
+
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, MAX(faktKZ) AS faktKZ, MAX(gutschrKZ) AS gutschrKZ, AlterWochen, AnzahlWäschen
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, MAX(faktKZ) AS faktKZ, MAX(gutschrKZ) AS gutschrKZ, AlterWochen, AnzahlWäschen
   FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
 ) AS x
-GROUP BY Hauptstandort, Geschäftsbereich, Vertriebszone, Kunde + N' (' + CAST(KdNr AS nvarchar) + N')';
+GROUP BY Hauptstandort, Geschäftsbereich, Vertriebszone, Holding, Kunde + N' (' + CAST(KdNr AS nvarchar) + N')';
