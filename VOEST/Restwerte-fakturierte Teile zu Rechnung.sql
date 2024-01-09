@@ -15,7 +15,7 @@ WHERE RechKo.RechNr = 30303276
 
 GO
 
-SELECT EinzHist.Barcode, Kunden.KdNr, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Vsa.Bez AS VSA, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Grö0e, EinzHist.AbmeldDat AS [Abmelde-Datum], /* Einsatz.EinsatzBez AS [Abmelde-Grund], */ IIF(RPoType.RPoTypeBez != N'Restwerte', LTRIM(REPLACE(RPoType.RPoTypeBez, N'Restwerte', N'')), RPoType.RPoTypeBez) AS Berechnungsgrund, CAST(TeilSoFa.EPreis AS float) AS Restwert, GRechKo.RechNr, GRechKo.RechDat
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Vsa.Bez AS VSA, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, EinzHist.AbmeldDat AS [Abmelde-Datum], IIF(RPoType.RPoTypeBez != N'Restwerte', LTRIM(REPLACE(RPoType.RPoTypeBez, N'Restwerte', N'')), RPoType.RPoTypeBez) AS Berechnungsgrund, CAST(TeilSoFa.EPreis AS float) AS Restwert, RechKo.RechNr, RechKo.RechDat, IIF(TeilSoFa.RechPoGutschriftID > 0, GRechKo.RechNr, NULL) AS [Gutschrift RechNr], IIF(TeilSoFa.RechPoGutschriftID > 0, GRechKo.RechDat, NULL) AS [Gutschrift Datum]
 FROM TeilSoFa
 JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -27,10 +27,10 @@ JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
---JOIN Einsatz ON EinzHist.AusdienstGrund = Einsatz.EinsatzGrund
 JOIN RPoType ON TeilSoFa.RPoTypeID = RPoType.ID
-WHERE EinzHist.Barcode IN (SELECT Barcode COLLATE Latin1_General_CS_AS FROM Salesianer.dbo._VOEST_KVPTeile)
-  AND RechKo.RechNr = 30303276;
+WHERE TeilSoFa.RechPoID > 0
+  AND RechKo.RechDat > N'2023-01-01'
+  AND Kunden.HoldingID = (SELECT Holding.ID FROM Holding WHERE Holding.Holding = N'VOESLE');
 
 GO
 
