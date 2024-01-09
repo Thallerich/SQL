@@ -45,6 +45,7 @@ JOIN Einsatz ON EinzHist.Ausdienstgrund = Einsatz.Einsatzgrund
 WHERE Kunden.ID IN ($3$)
   AND KdBer.BereichID IN ($4$)
   AND Standort.ID IN ($5$)
+  AND Kunden.StandortID IN ($6$)
   AND EinzHist.Status = N'W'
   AND EinzHist.Einzug IS NULL
   AND EinzHist.PoolFkt = 0
