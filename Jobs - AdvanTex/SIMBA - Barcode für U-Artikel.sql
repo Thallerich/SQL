@@ -6,7 +6,6 @@
 
 DROP TABLE IF EXISTS #PoolTeilToBK;
 DROP TABLE IF EXISTS #BKTeileBarcodeVergabe;
-DROP TABLE IF EXISTS #ExistierBereits;
 
 CREATE TABLE #PoolTeilToBK (
   EinzHistID int,
@@ -18,7 +17,7 @@ CREATE TABLE #PoolTeilToBK (
 CREATE CLUSTERED INDEX #IX_PoolTeilToBK ON #PoolTeilToBK (EinzHistID, EinzTeilID);
 
 INSERT INTO #PoolTeilToBK (EinzHistID, EinzTeilID, Barcode)
-SELECT EinzHist.ID AS EinzHistID, EinzHist.EinzTeilID, EinzHist.Barcode
+SELECT EinzHist.ID AS EinzHistID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.RentomatChip, EinzHist.[Status], EinzHist.Anlage_, EinzTeil.Code, EinzTeil.Code2
 FROM EinzHist
 JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
@@ -26,9 +25,20 @@ WHERE Artikel.ArtikelNr IN ('U10','U11','U12','U31','U32','U33','U34','U37','U41
   AND EinzTeil.Code2 IS NULL
   AND EinzHist.RentomatChip IS NULL
   AND EinzTeil.LastActionsID NOT IN (108, 116) /* Verschrotte und verschwundene Teile ausschließen -- 108 OP Schrott, 116 OP Schwund */
-  AND EinzHist.[Status] BETWEEN N'M' AND N'W';
-
-DELETE FROM #PoolTeilToBK WHERE LEN(Barcode) != 24;
+  AND (EinzHist.[Status] BETWEEN N'M' AND N'W' OR (EinzHist.[Status] = N'A' AND EinzHist.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 100151)))
+  AND LEN(EinzHist.Barcode) = 24
+  AND NOT EXISTS (
+    SELECT eh.*
+    FROM EinzHist AS eh
+    WHERE eh.RentomatChip = EinzHist.Barcode
+      AND eh.Archiv = 0
+      AND eh.EinzHistTyp = 1
+  )
+  AND NOT EXISTS (
+    SELECT et.*
+    FROM Einzteil AS et
+    WHERE et.Code2 = EinzHist.Barcode
+  );
 
 CREATE TABLE #BKTeileBarcodeVergabe (
   EinzHistID int PRIMARY KEY CLUSTERED,
@@ -80,25 +90,12 @@ UPDATE #BKTeileBarcodeVergabe SET Barcode = RTRIM(Barcode) + CHAR(48 + 10 - (Bar
 UPDATE #PoolTeilToBK SET NeuBarcode = #BKTeileBarcodeVergabe.Barcode
 FROM #BKTeileBarcodeVergabe
 WHERE #BKTeileBarcodeVergabe.EinzHistID = #PoolTeilToBK.EinzHistID;
- 
-SELECT EinzHist.ID
-INTO #ExistierBereits
-FROM #PoolTeilToBK, EinzHist
-WHERE #PoolTeilToBK.Barcode = Einzhist.RentomatChip
-  AND EinzHist.Archiv = 0
-  AND Einzhist.EinzHistTyp = 1;
- 
-DELETE FROM #PoolTeilToBK
-WHERE EinzHistID IN (SELECT ID FROM #ExistierBereits);
- 
-DELETE FROM #PoolTeilToBK
-WHERE EXISTS (SELECT * FROM Einzteil WHERE #PoolTeilToBK.Barcode = Einzteil.Code2);
 
 /* UPDATE auf Live-Tabellen mit Transaction-Absicherung, falls bei einem der beiden Updates ein Fehler auftritt! */
 BEGIN TRY
   BEGIN TRANSACTION;
   
-    UPDATE EinzHist SET EinzHist.Barcode = #PoolTeilToBK.NeuBarcode, EinzHist.Rentomatchip = #PoolTeilToBK.Barcode
+    UPDATE EinzHist SET EinzHist.Barcode = #PoolTeilToBK.NeuBarcode, EinzHist.Rentomatchip = #PoolTeilToBK.Barcode, Entnommen = 1, PoolFkt = 0, [Status] = IIF(EinzHist.[Status] = N'A', N'W', EinzHist.[Status])
     FROM #PoolTeilToBK
     WHERE #PoolTeilToBK.EinzHistID = EinzHist.ID;
     
