@@ -49,7 +49,7 @@ ELSE
       Bestand.BestandID, 
       ISNULL((SELECT TOP 1 LB.BestandNeu FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Beginn ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandBeginn,
       ISNULL((SELECT TOP 1 ISNULL(LB.BestandNeu, 0) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Ende ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandEnde,
-      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz > 0 AND LB.LiefLsPoID > 0), 0) AS MengeZugang,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz > 0 AND LB.LiefLsPoID > 0 AND LB.LgBewCodID != (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'WKOR')), 0) AS MengeZugang,
       ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)), 0) AS MengeAbgang
     FROM #TmpLagerbewegung AS Bestand
   ) AS x
