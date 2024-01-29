@@ -1,25 +1,36 @@
+DROP TABLE IF EXISTS #PreAnf;
 DROP TABLE IF EXISTS #Anf;
 DROP TABLE IF EXISTS #VsaTour;
 
-DECLARE @kundenid int = $0$;
+DECLARE @prodid int = $2$;
 
-SELECT Vsa.KundenID, AnfKo.VsaID, EinzTeil.ArtikelID, AnfPo.KdArtiID, KdArti.KdBerID, CAST(Scans.[DateTime] AS date) AS ScanTime, IIF(DATEPART(weekday, Scans.[DateTime]) - 1 = 0, 7, DATEPART(weekday, Scans.[DateTime]) - 1) AS ScanWochentag, COUNT(Scans.ID) AS Menge, CAST(NULL AS int) AS HolenWochenTag, [Week].VonDat AS ErsterTagWoche
-INTO #Anf
+SELECT Scans.EingAnfPoID, EinzTeil.ArtikelID, CAST(Scans.[DateTime] AS date) AS ScanTime, COUNT(Scans.ID) AS Menge
+INTO #PreAnf
 FROM Scans
-JOIN AnfPo ON Scans.EingAnfPoID = AnfPo.ID
-JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN EinzTeil ON Scans.EinzTeilID = EinzTeil.ID
-JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
-JOIN Vsa ON AnfKo.VsaID = Vsa.ID
-JOIN [Week] ON Scans.[DateTime] BETWEEN [Week].VonDat AND [Week].BisDat
-WHERE Vsa.KundenID = @kundenid
+WHERE Scans.ZielNrID IN (SELECT ZielNr.ID FROM ZielNr WHERE ZielNr.ProduktionsID = @prodid)
   AND Scans.[DateTime] BETWEEN $STARTDATE$ AND $ENDDATE$
   AND Scans.EingAnfPoID > 0
-GROUP BY Vsa.KundenID, AnfKo.VsaID, EinzTeil.ArtikelID, AnfPo.KdArtiID, KdArti.KdBerID, CAST(Scans.[DateTime] AS date), IIF(DATEPART(weekday, Scans.[DateTime]) - 1 = 0, 7, DATEPART(weekday, Scans.[DateTime]) - 1), [Week].VonDat;
+GROUP BY Scans.EingAnfPoID, EinzTeil.ArtikelID, CAST(Scans.[DateTime] AS date);
 
+SELECT Vsa.KundenID, AnfKo.VsaID, #PreAnf.ArtikelID, AnfPo.KdArtiID, KdArti.KdBerID, #PreAnf.ScanTime, IIF(DATEPART(weekday, #PreAnf.ScanTime) - 1 = 0, 7, DATEPART(weekday, #PreAnf.ScanTime) - 1) AS ScanWochentag, #PreAnf.Menge, CAST(NULL AS int) AS HolenWochenTag, [Week].VonDat AS ErsterTagWoche
+INTO #Anf
+FROM #PreAnf
+JOIN AnfPo ON #PreAnf.EingAnfPoID = AnfPo.ID
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN [Week] ON #PreAnf.ScanTime BETWEEN [Week].VonDat AND [Week].BisDat
+WHERE AnfKo.ProduktionID = @prodid;
+
+WITH ReportKunden AS (
+  SELECT DISTINCT #Anf.KundenID
+  FROM #Anf
+)
 SELECT HolenVsaTour.VsaID, HolenVsaTour.KdBerID, HolenTour.ID AS HolenTourID, HolenVsaTour.ID AS HolenVsaTourID, HolenTour.Wochentag AS HolenWochentag, HolenVsaTour.MinBearbTage, BringenTour.ID AS BringenTourID, BringenVsaTour.ID AS BringenVsaTourID, BringenTour.Wochentag AS BringenWochentag
 INTO #VsaTour
-FROM funcViewVsaTour(@kundenid, -1, 0, CAST(GETDATE() AS date), 0) AS fVsaTour
+FROM ReportKunden
+CROSS APPLY funcViewVsaTour(ReportKunden.KundenID, -1, 0, CAST(GETDATE() AS date), 0) AS fVsaTour
 JOIN VsaTour AS HolenVsaTour ON fVsaTour.VsaTourID = HolenVsaTour.ID
 JOIN Touren AS HolenTour ON HolenVsaTour.TourenID = HolenTour.ID
 JOIN VsaTour AS BringenVsaTour ON fVsaTour.LiefVsaTourID = BringenVsaTour.ID
