@@ -60,4 +60,5 @@ WHERE BKo.Datum <= CAST(GETDATE() AS date)
     FROM BPo
     WHERE BPo.BKoID = BKo.ID
       AND BPo.Pos = 0
+      AND BPo.Menge != 0
   );
