@@ -7,15 +7,6 @@ DECLARE @liefid_source int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @lief
 DECLARE @liefid_destination int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @liefnr_destination);
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
-DECLARE @ArtiLiefMap TABLE (
-  ArtiLiefID int,
-  ArtikelID int,
-  StandortID int,
-  LiefPackMenge int,
-  VonDatum date,
-  LiefID int
-);
-
 BEGIN TRY
   BEGIN TRANSACTION;
   
@@ -30,14 +21,12 @@ BEGIN TRY
       );
 
     INSERT INTO ArtiLief (LiefID, ArtikelID, EkPreis, EPreisPack, EkPreisSeit, LiefPackMenge, VonDatum, BisDatum, StandortID, MinBestMengeArtikel, MinBestMengeGroessen, LiefTageID, OrderPack, AnlageUserID_, UserID_)
-    OUTPUT inserted.ID, inserted.ArtikelID, inserted.StandortID, inserted.LiefPackMenge, inserted.VonDatum, inserted.LiefID
-    INTO @ArtiLiefMap (ArtiLiefID, ArtikelID, StandortID, LiefPackMenge, VonDatum, LiefID)
-    SELECT @liefid_destination AS LiefID, ArtiLief.ArtikelID, ArtiLief.EkPreis, ArtiLief.EPreisPack, ArtiLief.EkPreisSeit, ArtiLief.LiefPackMenge, ArtiLief.VonDatum, ArtiLief.BisDatum, ArtiLief.StandortID, ArtiLief.MinBestMengeArtikel, ArtiLief.MinBestMengeGroessen, NewLiefTage.ID AS LiefTageID, ArtiLief.OrderPack, @userid AS AnlageUserID_, @userid AS UserID_
+    SELECT @liefid_destination AS LiefID, ArtiLief.ArtikelID, ArtiLief.EkPreis, ArtiLief.EPreisPack, ArtiLief.EkPreisSeit, ArtiLief.LiefPackMenge, ArtiLief.VonDatum, ArtiLief.BisDatum, ArtiLief.StandortID, ArtiLief.MinBestMengeArtikel, ArtiLief.MinBestMengeGroessen, ISNULL(NewLiefTage.ID, -1) AS LiefTageID, ArtiLief.OrderPack, @userid AS AnlageUserID_, @userid AS UserID_
     FROM ArtiLief
-    JOIN LiefTage ON ArtiLief.LiefTageID = LiefTage.ID
-    JOIN LiefTage AS NewLiefTage ON LiefTage.TageM = NewLiefTage.TageM AND LiefTage.TageN = NewLiefTage.TageN AND LiefTage.TageT = NewLiefTage.TageT AND LiefTage.TageV = NewLiefTage.TageV AND LiefTage.TageX = NewLiefTage.TageX AND LiefTage.TageS = NewLiefTage.TageS AND LiefTage.MakeToOrder = NewLiefTage.MakeToOrder
+    LEFT JOIN LiefTage ON ArtiLief.LiefTageID = LiefTage.ID AND LiefTage.ID > 0
+    LEFT JOIN LiefTage AS NewLiefTage ON LiefTage.TageM = NewLiefTage.TageM AND LiefTage.TageN = NewLiefTage.TageN AND LiefTage.TageT = NewLiefTage.TageT AND LiefTage.TageV = NewLiefTage.TageV AND LiefTage.TageX = NewLiefTage.TageX AND LiefTage.TageS = NewLiefTage.TageS AND LiefTage.MakeToOrder = NewLiefTage.MakeToOrder
     WHERE ArtiLief.LiefID = @liefid_source
-      AND NewLiefTage.LiefID = @liefid_destination
+      AND (NewLiefTage.LiefID = @liefid_destination OR ArtiLief.LiefTageID = -1)
       AND ArtiLief.ID > 0
       AND NOT EXISTS (
         SELECT al.*
@@ -49,21 +38,26 @@ BEGIN TRY
           AND al.LiefID = @liefid_destination
       );
 
+    WITH ArtiLiefMap AS (
+      SELECT ArtiLief.*
+      FROM ArtiLief
+      WHERE ArtiLief.LiefID = @liefid_destination
+    )
     INSERT INTO ArGrLief (ArtiLiefID, ArtGroeID, BestellNr, EkPreis, AbMenge, Zuschlag, ZuschlagAbs, VonDatum, BisDatum, BestellInfoText, EAN, LiefTageID, BestellText, AnlageUserID_, UserID_)
-    SELECT ArtiLiefMap.ArtiLiefID, ArGrLief.ArtGroeID, ArGrLief.BestellNr, ArGrLief.EkPreis, ArGrLief.AbMenge, ArGrLief.Zuschlag, ArGrLief.ZuschlagAbs, ArGrLief.VonDatum, ArGrLief.BisDatum, ArGrLief.BestellInfoText, ArGrLief.EAN, NewLiefTage.ID AS LiefTageID, ArGrLief.BestellText, @userid AS AnlageUserID_, @userid AS UserID_
+    SELECT ArtiLiefMap.ID AS ArtiLiefID, ArGrLief.ArtGroeID, ArGrLief.BestellNr, ArGrLief.EkPreis, ArGrLief.AbMenge, ArGrLief.Zuschlag, ArGrLief.ZuschlagAbs, ArGrLief.VonDatum, ArGrLief.BisDatum, ArGrLief.BestellInfoText, ArGrLief.EAN, ISNULL(NewLiefTage.ID, -1) AS LiefTageID, ArGrLief.BestellText, @userid AS AnlageUserID_, @userid AS UserID_
     FROM ArGrLief
     JOIN ArtiLief ON ArGrLief.ArtiLiefID = ArtiLief.ID
-    JOIN @ArtiLiefMap AS ArtiLiefMap ON ArtiLief.ArtikelID = ArtiLiefMap.ArtikelID AND ArtiLief.StandortID = ArtiLiefMap.StandortID AND ArtiLief.LiefPackMenge = ArtiLiefMap.LiefPackMenge AND ArtiLief.VonDatum = ArtiLiefMap.VonDatum AND ArtiLief.LiefID = ArtiLiefMap.LiefID
-    JOIN LiefTage ON ArGrLief.LiefTageID = LiefTage.ID
-    JOIN LiefTage AS NewLiefTage ON LiefTage.TageM = NewLiefTage.TageM AND LiefTage.TageN = NewLiefTage.TageN AND LiefTage.TageT = NewLiefTage.TageT AND LiefTage.TageV = NewLiefTage.TageV AND LiefTage.TageX = NewLiefTage.TageX AND LiefTage.TageS = NewLiefTage.TageS AND LiefTage.MakeToOrder = NewLiefTage.MakeToOrder
+    JOIN ArtiLiefMap ON ArtiLief.ArtikelID = ArtiLiefMap.ArtikelID AND ArtiLief.StandortID = ArtiLiefMap.StandortID AND ArtiLief.LiefPackMenge = ArtiLiefMap.LiefPackMenge AND ArtiLief.VonDatum = ArtiLiefMap.VonDatum
+    LEFT JOIN LiefTage ON ArGrLief.LiefTageID = LiefTage.ID AND LiefTage.ID > 0
+    LEFT JOIN LiefTage AS NewLiefTage ON LiefTage.TageM = NewLiefTage.TageM AND LiefTage.TageN = NewLiefTage.TageN AND LiefTage.TageT = NewLiefTage.TageT AND LiefTage.TageV = NewLiefTage.TageV AND LiefTage.TageX = NewLiefTage.TageX AND LiefTage.TageS = NewLiefTage.TageS AND LiefTage.MakeToOrder = NewLiefTage.MakeToOrder
     WHERE ArtiLief.LiefID = @liefid_source
-      AND NewLiefTage.LiefID = @liefid_destination
+      AND (NewLiefTage.LiefID = @liefid_destination OR ArGrLief.LiefTageID = -1)
       AND ArtiLief.ID > 0
       AND ArGrLief.ID > 0
       AND NOT EXISTS (
         SELECT agl.*
         FROM ArGrLief AS agl
-        WHERE agl.ArtiLiefID = ArtiLiefMap.ArtiLiefID AND agl.ArtGroeID = ArGrLief.ArtGroeID AND agl.AbMenge = ArGrLief.AbMenge AND ISNULL(agl.VonDatum, N'1900-01-01') = ISNULL(ArGrLief.VonDatum, N'1900-01-01')
+        WHERE agl.ArtiLiefID = ArtiLiefMap.ID AND agl.ArtGroeID = ArGrLief.ArtGroeID AND agl.AbMenge = ArGrLief.AbMenge AND ISNULL(agl.VonDatum, N'1900-01-01') = ISNULL(ArGrLief.VonDatum, N'1900-01-01')
       );
 
     INSERT INTO LiefPrio (LiefID, StandortID, ArtikelID, ArtGroeID, AnlageUserID_, UserID_)
