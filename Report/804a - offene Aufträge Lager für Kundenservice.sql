@@ -86,6 +86,8 @@ WHERE EinzHist.Anlage_ > CAST(N'2019-04-01 00:00:00' AS datetime2)
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT ServiceMA AS [Kundenservice-Mitarbeiter], BetreuerMA AS Betreuer, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage AS [Teil angelegt am], ABTermin AS [Termin Auftragsbestätigung], Entnahmeliste AS EntnahmelistenNr, EntnahmeAnlage AS [Entnahmeliste angelegt am], EntnahmeDruck AS [Druckdatum Entnahmeliste], EntnhameZeit AS [Entnahme-Datum], EntnahmePatch AS [Patchdatum Entnahmeliste], Einsatzgrund
+DECLARE @lieftage int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'INTERNET_LIEFZEITNACHANLIEF');
+
+SELECT ServiceMA AS [Kundenservice-Mitarbeiter], BetreuerMA AS Betreuer, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage AS [Teil angelegt am], ABTermin AS [Termin Auftragsbestätigung], Entnahmeliste AS EntnahmelistenNr, EntnahmeAnlage AS [Entnahmeliste angelegt am], EntnahmeDruck AS [Druckdatum Entnahmeliste], EntnhameZeit AS [Entnahme-Datum], EntnahmePatch AS [Patchdatum Entnahmeliste], Einsatzgrund, DATEADD(day, @lieftage, ABTermin) AS [Termin Lieferung Kunde]
 FROM #Result804a
 ORDER BY [Entnahmeliste angelegt am];
