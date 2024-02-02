@@ -21,7 +21,25 @@ Ansprechpartner AS (
   WHERE Sachbear.Status = N'A'
     AND Sachbear.TableName = N'VSA'
 )
-SELECT DISTINCT KdGf.KurzBez AS Geschäftsbereich, Firma.Bez AS Firma, Standort.Bez AS Hauptstandort, Kundenstatus.StatusBez AS Kundenstatus, ABC.ABCBez AS Kundenklasse, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.Name1 AS Adresszeile1, Kunden.Name2 AS Adresszeile2, Kunden.Name3 AS Adresszeile3, Kunden.Strasse, Kunden.Land, Kunden.PLZ, Kunden.Ort, Kunden.KundeSeit AS [Kunde seit], ZahlZiel.ZahlZielBez$LAN$ AS Zahlungsziel, Ansprechpartner.Anrede, Ansprechpartner.Titel, Ansprechpartner.Vorname, Ansprechpartner.Name, Ansprechpartner.SerienAnrede, Ansprechpartner.eMail, Ansprechpartner.Telefon, Ansprechpartner.Abteilung, Ansprechpartner.Position, Ansprechpartner.Rolle
+SELECT DISTINCT KdGf.KurzBez AS Geschäftsbereich, Firma.Bez AS Firma, Standort.Bez AS Hauptstandort, Kundenstatus.StatusBez AS Kundenstatus, ABC.ABCBez AS Kundenklasse, Kunden.KdNr, Kunden.SuchCode AS Kunde, Kunden.Name1 AS Adresszeile1, Kunden.Name2 AS Adresszeile2, Kunden.Name3 AS Adresszeile3, Kunden.Strasse, Kunden.Land, Kunden.PLZ, Kunden.Ort, Kunden.KundeSeit AS [Kunde seit], ZahlZiel.ZahlZielBez$LAN$ AS Zahlungsziel, Ansprechpartner.Anrede, Ansprechpartner.Titel, Ansprechpartner.Vorname, Ansprechpartner.Name, Ansprechpartner.SerienAnrede, Ansprechpartner.eMail, Ansprechpartner.Telefon, Ansprechpartner.Abteilung, Ansprechpartner.Position, Ansprechpartner.Rolle,
+  Kundenservice = (
+    SELECT TOP 1 Mitarbei.Name
+    FROM VsaBer
+    JOIN Mitarbei ON VsaBer.ServiceID = Mitarbei.ID
+    JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
+    WHERE KdBer.KundenID = Kunden.ID
+    GROUP BY Mitarbei.Name
+    ORDER BY COUNT(VsaBer.ID) DESC
+  ),
+  Kundenbetreuer = (
+    SELECT TOP 1 Mitarbei.Name
+    FROM VsaBer
+    JOIN Mitarbei ON VsaBer.BetreuerID = Mitarbei.ID
+    JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
+    WHERE KdBer.KundenID = Kunden.ID
+    GROUP BY Mitarbei.Name
+    ORDER BY COUNT(VsaBer.ID) DESC
+  )
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
