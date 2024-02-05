@@ -17,6 +17,7 @@ CREATE TABLE #Result999118 (
   ArtikelNr nchar(15) COLLATE Latin1_General_CS_AS,
   Variante nchar(2) COLLATE Latin1_General_CS_AS,
   Artikelbezeichnung nvarchar(60) COLLATE Latin1_General_CS_AS,
+  [Gewicht (kg/Stück)] numeric(18,4),
   Leasingpreis money,
   Lieferdatum date,
   LsKoID int,
@@ -58,7 +59,7 @@ ELSE
 
 IF @onlyUHF = 0
   SET @sqltext = N'
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN LsKoArt ON LsKo.LsKoArtID = LsKoArt.ID
@@ -78,7 +79,7 @@ IF @onlyUHF = 0
   ';
 ELSE
   SET @sqltext = N'
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN LsKoArt ON LsKo.LsKoArtID = LsKoArt.ID
@@ -103,12 +104,12 @@ ELSE
     );
   ';
 
-INSERT INTO #Result999118 (KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, Leasingpreis, Lieferdatum, LsKoID, LsNr, Art, [Lieferschein-Art], Menge, Einzelpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis, Kostenstelle, Kostenstellenbezeichnung, RechNr)
+INSERT INTO #Result999118 (KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Leasingpreis, Lieferdatum, LsKoID, LsNr, Art, [Lieferschein-Art], Menge, Einzelpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis, Kostenstelle, Kostenstellenbezeichnung, RechNr)
 EXEC sp_executesql @sqltext, N'@startdate date, @enddate date', @startdate, @enddate;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, Leasingpreis, Gesamtpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], Kostenstelle, Kostenstellenbezeichnung, RechNr
+SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, Leasingpreis, Gesamtpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], Kostenstelle, Kostenstellenbezeichnung, RechNr
 FROM #Result999118;
