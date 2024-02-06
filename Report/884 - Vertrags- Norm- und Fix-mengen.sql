@@ -26,7 +26,10 @@ FROM VsaAnf
 JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
-WHERE Kunden.ID IN ($1$)
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+WHERE Kunden.ID IN ($3$)
+  AND Vsa.StandKonID IN ($2$)
+  AND KdBer.BereichID IN ($1$)
   AND Vsa.Status = N'A'
   AND VsaAnf.Status < N'E';
 
