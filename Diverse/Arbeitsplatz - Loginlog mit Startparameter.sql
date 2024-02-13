@@ -22,7 +22,7 @@ IF @WinUser != N''
 
 GO
 
-DECLARE @AdvantexUser nvarchar(50) = N'INZEXP5';
+DECLARE @AdvantexUser nvarchar(50) = N'';
 
 IF @AdvantexUser != N''
   SELECT TOP 50 ArbPlatz.ComputerName, Mitarbei.UserName, LoginLog.LogInZeit, LoginLog.AdvanTexVersion, REPLACE(LoginLog.StartParameter, N'/Exit=Yes /MANDANT:Salesianer', N'') AS StartParameter, LoginLog.WindowsUserName
