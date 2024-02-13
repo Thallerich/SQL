@@ -126,8 +126,8 @@ GO
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
-DECLARE @ETmap TABLE (ID int, Barcode varchar(33));
-DECLARE @EHmap TABLE (ID int, Barcode varchar(33));
+DECLARE @ETmap TABLE (ID int, Barcode varchar(33) COLLATE Latin1_General_CS_AS);
+DECLARE @EHmap TABLE (ID int, Barcode varchar(33) COLLATE Latin1_General_CS_AS);
 
 BEGIN TRY
   BEGIN TRANSACTION;
@@ -147,7 +147,7 @@ BEGIN TRY
 
     UPDATE Salesianer.dbo._IT79553 SET EinzTeilID = [@ETmap].ID
     FROM @ETmap
-    WHERE [@ETmap].Barcode = Salesianer.dbo._IT79553.Barcode;
+    WHERE [@ETmap].Barcode = Salesianer.dbo._IT79553.Barcode
 
     INSERT INTO EinzHist (EinzTeilID, Barcode, [Status], EinzHistVon, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Entnommen, EinsatzGrund, PatchDatum, AnlageUserID_, UserID_)
     OUTPUT inserted.ID, inserted.Barcode
@@ -156,7 +156,7 @@ BEGIN TRY
     FROM Salesianer.dbo._IT79553
     JOIN Kunden ON Kunden.KdNr = Salesianer.dbo._IT79553.KdNr
     JOIN Vsa ON Vsa.KundenID = Kunden.ID AND Vsa.VsaNr = Salesianer.dbo._IT79553.VsaNr
-    JOIN Traeger ON Traeger.VsaID = Vsa.ID AND Traeger.Nachname = Salesianer.dbo._IT79553.Nachname AND Traeger.Vorname = Salesianer.dbo._IT79553.Vorname AND Traeger.PersNr = Salesianer.dbo._IT79553.Personalnummer 
+    JOIN Traeger ON Traeger.VsaID = Vsa.ID AND Traeger.Nachname = Salesianer.dbo._IT79553.Nachname AND Traeger.Vorname = Salesianer.dbo._IT79553.Vorname AND Traeger.PersNr = Salesianer.dbo._IT79553.Personalnummer
     JOIN Artikel ON Artikel.ArtikelNr = Salesianer.dbo._IT79553.ArtikelNr
     JOIN KdArti ON KdArti.KundenID = Kunden.ID AND KdArti.ArtikelID = Artikel.ID AND KdArti.Variante = Salesianer.dbo._IT79553.Variante
     JOIN ArtGroe ON ArtGroe.ArtikelID = Artikel.ID AND ArtGroe.Groesse = Salesianer.dbo._IT79553.Groesse
@@ -165,7 +165,7 @@ BEGIN TRY
 
     UPDATE Salesianer.dbo._IT79553 SET EinzHistID = [@EHmap].ID
     FROM @EHmap
-    WHERE [@EHmap].Barcode = Salesianer.dbo._IT79553.Barcode;
+    WHERE [@EHmap].Barcode = Salesianer.dbo._IT79553.Barcode
 
     UPDATE EinzTeil SET CurrEinzHistID = Salesianer.dbo._IT79553.EinzHistID
     FROM Salesianer.dbo._IT79553
