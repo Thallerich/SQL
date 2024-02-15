@@ -10,7 +10,7 @@ GO
 
 INSERT INTO #TeilAuslesen (EinzHistID, EinzTeilID)
 SELECT EinzHist.ID AS EinzHistID, EinzHist.EinzTeilID
-FROM EinzHist
+FROM EinzHist WITH (UPDLOCK)
 JOIN Kunden ON EinzHist.KundenID = Kunden.ID
 JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
 JOIN _IT79924 ON EinzHist.Barcode = _IT79924.Barcode AND Kunden.KdNr = _IT79924.KdNr AND Artikel.ArtikelNr = _IT79924.ArtikelNr
@@ -18,9 +18,9 @@ WHERE EinzHist.EinzTeilID = (SELECT EinzTeil.ID FROM EinzTeil WHERE EinzTeil.Cur
   AND EinzHist.[Status] BETWEEN N'Q' AND N'W'
   AND EinzHist.Einzug IS NULL
   AND ISNULL(EinzHist.Eingang1, N'2099-12-31') > ISNULL(EinzHist.Ausgang1, N'1980-01-01')
+  AND ISNULL(EinzHist.Eingang1, N'1980-01-01') < N'2024-02-10'
+  AND ISNULL(EinzHist.Ausgang1, N'1980-01-01') < N'2024-02-10'
   AND EinzHist.EinzHistTyp = 1;
-
-GO
 
 DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 
