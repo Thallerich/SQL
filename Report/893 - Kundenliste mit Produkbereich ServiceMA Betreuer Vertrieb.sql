@@ -1,3 +1,7 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: DataPrep                                                                                                        ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DROP TABLE IF EXISTS #ResultSet893;
 
 WITH Kundenstatus AS (
@@ -41,6 +45,7 @@ SELECT Firma.Bez AS Firma,
   Sichtbar.Bez AS Sichtbarkeit,
   ABC.ABCBez$LAN$ AS [ABC-Klasse],
   Kunden.UStIdNr,
+  ZahlArt.ZahlArtBez$LAN$ AS Zahlungsart,
   BrLauf.BrLaufBez$LAN$ AS Bearbeitungsrechnungslauf,
   Bereich.BereichBez$LAN$ AS Produktbereich,
   FakFreq.FakFreqBez$LAN$ AS Fakturafrequenz,
@@ -125,6 +130,7 @@ JOIN PrLauf ON Vertrag.PrLaufID = PrLauf.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
 JOIN BrLauf ON Kunden.BRLaufID = BrLauf.ID
 JOIN Wae AS RechWae ON Kunden.RechWaeID = RechWae.ID
+JOIN ZahlArt ON Kunden.ZahlArtID = ZahlArt.ID
 LEFT JOIN WebInfo ON WebInfo.KundenID = Kunden.ID
 WHERE Kundenstatus.ID IN ($4$)
   AND Kunden.AdrArtID = 1
@@ -136,7 +142,7 @@ WHERE Kundenstatus.ID IN ($4$)
   AND (($6$ = 1 AND Vertrag.VertragKuendZum >= CAST(GETDATE() AS date)) OR ($6$ = 0));
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++                                                                                                                           ++ */
+/* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT *
