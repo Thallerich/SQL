@@ -1,5 +1,5 @@
 WITH UserStats AS (
-  SELECT COALESCE(Standort.SuchCode, MStandort.SuchCode) AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
+  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
   FROM LoginLog
   JOIN ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Standort ON ArbPlatz.StandortID = Standort.ID
@@ -7,12 +7,14 @@ WITH UserStats AS (
   JOIN Mitarbei ON LoginLog.UserID = Mitarbei.ID
   JOIN Firma MFirma ON Mitarbei.FirmaID = MFirma.ID
   JOIN Standort MStandort ON Mitarbei.StandortID = MStandort.ID
-  WHERE (Firma.SuchCode IN (N'SMSL', N'SMRS', N'SMHR') OR MFirma.SuchCode IN (N'SMSL', N'SMRS', N'SMHR'))
-  GROUP BY COALESCE(Standort.SuchCode, MStandort.SuchCode), LoginLog.UserID
+  WHERE LoginLog.LogInZeit >= N'2024-01-01'
+    AND Mitarbei.[Status] = N'A'
+    AND Mitarbei.UserName NOT LIKE N'JOB%'
+  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID
 
   UNION ALL
 
-  SELECT COALESCE(Standort.SuchCode, MStandort.SuchCode) AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
+  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
   FROM LoginLog
   JOIN ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Standort ON ArbPlatz.StandortID = Standort.ID
@@ -20,8 +22,10 @@ WITH UserStats AS (
   JOIN Mitarbei ON LoginLog.UserID = Mitarbei.ID
   JOIN Firma MFirma ON Mitarbei.FirmaID = MFirma.ID
   JOIN Standort MStandort ON Mitarbei.StandortID = MStandort.ID
-  WHERE (Firma.SuchCode IN (N'SMSL', N'SMRS', N'SMHR') OR MFirma.SuchCode IN (N'SMSL', N'SMRS', N'SMHR'))
-  GROUP BY COALESCE(Standort.SuchCode, MStandort.SuchCode), LoginLog.UserID
+  WHERE LoginLog.LogInZeit >= N'2024-01-01'
+    AND Mitarbei.[Status] = N'A'
+    AND Mitarbei.UserName NOT LIKE N'JOB%'
+  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID
 )
 SELECT UserStats.Standort, COUNT(DISTINCT UserStats.MitarbeiID) AS [Anzahl User]
 FROM UserStats
