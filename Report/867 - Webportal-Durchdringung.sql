@@ -1,4 +1,12 @@
-WITH WebVSA AS (
+SELECT KdGf.KurzBez AS Geschäftsbereich, ABC.ABCBez$LAN$ AS [ABC-Klasse], Holding.Holding, Standort.SuchCode AS Haupstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Vsa.NutztSelfServiceApp AS [verwendet Self-Service App?], Mitarbei.Name AS [Kundenbetreuer], CAST(IIF(WebVsa.VsaID IS NULL, 0, 1) AS bit) AS [Hat Webportal?], CAST(IIF(UHFVSA.VsaID IS NULL, 0, 1) AS bit) AS [UHF-Prozess?], LastWebLogin.LastLoginTime AS [letzter Webportal-Login]
+FROM Vsa
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Firma ON Kunden.FirmaID = Firma.ID
+JOIN ABC ON Kunden.ABCID = ABC.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
+LEFT JOIN (
   SELECT Vsa.ID AS VsaID
   FROM Vsa
   WHERE Vsa.AbteilID IN (
@@ -15,8 +23,26 @@ WITH WebVSA AS (
       WHERE Webuser.[Status] = N'A'
         AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID)
     )
-),
-LastWebLogin AS (
+) AS WebVSA ON WebVSA.VsaID = Vsa.ID
+LEFT JOIN (
+  SELECT VsaBer.VsaID
+  FROM VsaBer
+  JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
+  WHERE (VsaBer.AnfAusEpo > 1 OR (VsaBer.AnfAusEpo = -1 AND KdBer.AnfAusEpo > 1))
+) AS UHFVSA ON UHFVSA.VsaID = Vsa.ID
+LEFT JOIN (SELECT y.VsaID, y.BetreuerID
+  FROM (
+    SELECT x.VsaID, x.BetreuerID, DENSE_RANK() OVER (PARTITION BY x.VsaID ORDER BY x.RowCounter DESC) SortRank
+    FROM (
+      SELECT VsaBer.VsaID, VsaBer.BetreuerID, COUNT(VsaBer.ID) AS RowCounter
+      FROM VsaBer
+      WHERE VsaBer.Status = N'A'
+      GROUP BY VsaBer.VsaID, VsaBer.BetreuerID
+    ) AS x
+  ) AS y
+  WHERE y.SortRank = 1) AS VsaBetreuer ON VsaBetreuer.VsaID = Vsa.ID
+LEFT JOIN Mitarbei ON VsaBetreuer.BetreuerID = Mitarbei.ID
+LEFT JOIN (
   SELECT Vsa.ID AS VsaID, MAX(WebLogin.Zeitpunkt) AS LastLoginTime
   FROM Vsa
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -44,39 +70,7 @@ LastWebLogin AS (
       )
     )
   GROUP BY Vsa.ID
-),
-UHFVSA AS (
-  SELECT VsaBer.VsaID
-  FROM VsaBer
-  JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
-  WHERE (VsaBer.AnfAusEpo > 1 OR (VsaBer.AnfAusEpo = -1 AND KdBer.AnfAusEpo > 1))
-),
-VsaBetreuer AS (
-  SELECT y.VsaID, y.BetreuerID
-  FROM (
-    SELECT x.VsaID, x.BetreuerID, DENSE_RANK() OVER (PARTITION BY x.VsaID ORDER BY x.RowCounter DESC) SortRank
-    FROM (
-      SELECT VsaBer.VsaID, VsaBer.BetreuerID, COUNT(VsaBer.ID) AS RowCounter
-      FROM VsaBer
-      WHERE VsaBer.Status = N'A'
-      GROUP BY VsaBer.VsaID, VsaBer.BetreuerID
-    ) AS x
-  ) AS y
-  WHERE y.SortRank = 1
-)
-SELECT KdGf.KurzBez AS Geschäftsbereich, ABC.ABCBez$LAN$ AS [ABC-Klasse], Holding.Holding, Standort.SuchCode AS Haupstandort, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Vsa.NutztSelfServiceApp AS [verwendet Self-Service App?], Mitarbei.Name AS [Kundenbetreuer], CAST(IIF(WebVsa.VsaID IS NULL, 0, 1) AS bit) AS [Hat Webportal?], CAST(IIF(UHFVSA.VsaID IS NULL, 0, 1) AS bit) AS [UHF-Prozess?], LastWebLogin.LastLoginTime AS [letzter Webportal-Login]
-FROM Vsa
-JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN Standort ON Kunden.StandortID = Standort.ID
-JOIN KdGf ON Kunden.KdGfID = KdGf.ID
-JOIN Firma ON Kunden.FirmaID = Firma.ID
-JOIN ABC ON Kunden.ABCID = ABC.ID
-JOIN Holding ON Kunden.HoldingID = Holding.ID
-LEFT JOIN WebVSA ON WebVSA.VsaID = Vsa.ID
-LEFT JOIN UHFVSA ON UHFVSA.VsaID = Vsa.ID
-LEFT JOIN VsaBetreuer ON VsaBetreuer.VsaID = Vsa.ID
-LEFT JOIN Mitarbei ON VsaBetreuer.BetreuerID = Mitarbei.ID
-LEFT JOIN LastWebLogin ON LastWebLogin.VsaID = Vsa.ID
+) AS LastWebLogin ON LastWebLogin.VsaID = Vsa.ID
 WHERE Firma.ID IN ($1$)
   AND KdGf.ID IN ($2$)
   AND Kunden.StandortID IN ($3$)
