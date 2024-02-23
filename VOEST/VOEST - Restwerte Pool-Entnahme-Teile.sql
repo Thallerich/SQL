@@ -10,7 +10,7 @@ Traegerstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'TRAEGER'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], EinzHist.Barcode, Teilestatus.StatusBez AS [Status des Teils], Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Traegerstatus.StatusBez AS [Status des Trägers], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Vsa.GebaeudeBez AS Abteilung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.Variante, EinzTeil.LastScanTime AS [Datum Ausgabe], LeasProWo.LeasPreisProWo AS [Leasing pro Woche], RwCalc.RestwertInfo AS Restwert
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], EinzHist.Barcode, Teilestatus.StatusBez AS [Status des Teils], Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Traegerstatus.StatusBez AS [Status des Trägers], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Vsa.GebaeudeBez AS Abteilung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, KdArti.Variante, EinzTeil.LastScanTime AS [Datum Ausgabe], CAST(LeasProWo.LeasPreisProWo AS float) AS [Leasing pro Woche], CAST(RwCalc.RestwertInfo AS float) AS Restwert
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 CROSS APPLY advFunc_GetLeasPreisProWo(EinzHist.KdArtiID) AS LeasProWo
@@ -31,4 +31,4 @@ WHERE Kunden.HoldingID IN (SELECT ID FROM Holding WHERE Holding LIKE N'VOES%')
   AND EinzHist.EinzHistTyp = 1
   AND Traeger.ParentTraegerID > 0
   AND Vsa.VsaNr = 902
-  AND EinzTeil.LastScanTime < N'2023-01-01 00:00:00';
+  AND EinzTeil.LastScanTime BETWEEN N'2023-04-01 00:00:00' AND N'2023-07-01 00:00:00';
