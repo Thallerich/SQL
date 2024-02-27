@@ -13,7 +13,8 @@ WITH EinzHistStatus AS (
   WHERE [Status].Tabelle = N''EINZHIST''
 )
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, EinzHist.Barcode, EinzHistStatus.StatusBez AS Teilestatus, EinzHist.AbmeldDat AS [Datum Abmeldung], EinzHist.AlterInfo AS [Alter in Wochen], KdArti.BasisRestwert AS [Basis-Restwert], fRW.RestwertInfo [Restwert KW ' + @curweek + N']
-FROM EinzHist
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 CROSS APPLY funcGetRestwert(EinzHist.ID, @CurWeek, 1) AS fRW
 JOIN EinzHistStatus ON EinzHist.[Status] = EinzHistStatus.[Status]
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
@@ -26,7 +27,7 @@ JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 WHERE Kunden.KdNr = @custnr
-  AND EinzHist.IsCurrEinzHist = 1
+  AND EinzHist.ID = (SELECT EinzTeil.CurrEinzHistID FROM EinzTeil WHERE EinzTeil.ID = EinzHist.EinzTeilID)
   AND EinzHist.[Status] IN (N''U'', N''W'')
   AND EinzHist.Einzug IS NULL
   AND EinzHist.AbmeldDat < DATEADD(week, -3, GETDATE());
@@ -51,8 +52,9 @@ WITH EinzHistStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N''EINZHIST''
 )
-SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, KdArtiLeasWo.LeasPreisProWo AS [Leasingpreis wöchentlich], EinzHist.Barcode, EinzHistStatus.StatusBez AS Teilestatus, EinzHist.AbmeldDat AS [Datum Abmeldung], EinzHist.AlterInfo AS [Alter in Wochen], KdArti.BasisRestwert AS [Basis-Restwert], fRW.RestwertInfo [Restwert KW ' + @curweek + N']
-FROM EinzHist
+SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Traeger.Traeger AS TrägerNr, Traeger.PersNr AS Personalnummer, Traeger.Vorname, Traeger.Nachname, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, CAST(KdArtiLeasWo.LeasPreisProWo AS float) AS [Leasingpreis wöchentlich], EinzHist.Barcode, EinzHistStatus.StatusBez AS Teilestatus, EinzHist.AbmeldDat AS [Datum Abmeldung], EinzTeil.AlterInfo AS [Alter in Wochen], CAST(KdArti.BasisRestwert AS float) AS [Basis-Restwert], CAST(fRW.RestwertInfo AS float) AS [Restwert KW ' + @curweek + N']
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 CROSS APPLY funcGetRestwert(EinzHist.ID, @CurWeek, 1) AS fRW
 JOIN EinzHistStatus ON EinzHist.[Status] = EinzHistStatus.[Status]
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
@@ -66,7 +68,6 @@ CROSS APPLY advfunc_GetLeasPreisProWo(KdArti.ID) AS KdArtiLeasWo
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 WHERE (Holding.Holding = @H1 OR Holding.Holding = @H2)
-  AND EinzHist.IsCurrEinzHist = 1
   AND EinzHist.[Status] IN (N''U'', N''W'')
   AND EinzHist.Einzug IS NULL
   AND EinzHist.AbmeldDat < DATEADD(week, -3, GETDATE());
