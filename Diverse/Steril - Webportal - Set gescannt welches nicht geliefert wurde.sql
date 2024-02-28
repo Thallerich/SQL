@@ -40,4 +40,7 @@ BEGIN
 
 END;
 
+CLOSE SetNotAtCustomer;
+DEALLOCATE SetNotAtCustomer;
+
 SELECT * FROM #Result;
