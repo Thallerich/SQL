@@ -164,7 +164,7 @@ BEGIN
       WHERE Parameter = N'SALSAP_WEBSERVICE_URL';
 
     UPDATE Salesianer_Test.dbo.Settings
-      SET ValueMemo = N'AdvantexTestSOAP'
+      SET ValueMemo = N'AdvantexSOAP'
       WHERE Parameter = N'SALSAP_WEBSERVICE_SENDERSERVICE';
 
     UPDATE Salesianer_Test.dbo.Settings
