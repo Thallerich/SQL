@@ -23,6 +23,7 @@ CREATE TABLE #PWSCleanup (
   ErstDatum date,
   AfaModus int,
   AlterWochen int,
+  AnzWaeschen int,
   MindestProz int,
   MindestRW money,
   EPreis money
@@ -52,8 +53,8 @@ DECLARE @MapTable TABLE (
 SELECT @msg = FORMAT(GETDATE(), N'dd.MM.yyyy HH:mm:ss', N'de-AT') + N': Zu verschrottende Teile laden';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
-INSERT INTO #PWSCleanup (EinzHistID, EinzTeilID, Barcode, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Ausdienst, AusdienstDat, AusdienstGrund, ErstDatum, AfaModus, AlterWochen, MindestProz, MindestRW, EPreis)
-SELECT EinzHist.ID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.KundenID, EinzHist.VsaID, EinzHist.TraegerID, EinzHist.TraeArtiID, EinzHist.KdArtiID, EinzHist.ArtikelID, EinzHist.ArtGroeID, EinzHist.Ausdienst, EinzHist.AusdienstDat, EinzHist.AusdienstGrund, EinzTeil.ErstDatum, RwConfig.RWBerechnungsVar, EinzTeil.AlterInfo, RwConfPo.MindestRwProz, RwConfPo.MindestRWAbs, EinzHist.RestwertInfo
+INSERT INTO #PWSCleanup (EinzHistID, EinzTeilID, Barcode, KundenID, VsaID, TraegerID, TraeArtiID, KdArtiID, ArtikelID, ArtGroeID, Ausdienst, AusdienstDat, AusdienstGrund, ErstDatum, AfaModus, AlterWochen, AnzWaeschen, MindestProz, MindestRW, EPreis)
+SELECT EinzHist.ID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.KundenID, EinzHist.VsaID, EinzHist.TraegerID, EinzHist.TraeArtiID, EinzHist.KdArtiID, EinzHist.ArtikelID, EinzHist.ArtGroeID, EinzHist.Ausdienst, EinzHist.AusdienstDat, EinzHist.AusdienstGrund, EinzTeil.ErstDatum, RwConfig.RWBerechnungsVar, EinzTeil.AlterInfo, EinzTeil.RuecklaufG, RwConfPo.MindestRwProz, RwConfPo.MindestRWAbs, EinzHist.RestwertInfo
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN Kunden ON EinzHist.KundenID = Kunden.ID
@@ -131,7 +132,7 @@ BEGIN TRY
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
     INSERT INTO TeilSoFa (EinzHistID, SoFaArt, Zeitpunkt, MitarbeiID, [Status], Menge, ArtGroeID, ErstDatum, AfaModus, AlterWochen, AnzWaeschen, MindestProz, MindestRW, EPreis, AbschreibDauer, AusdienstGrund, OhneBerechGrund, RwArtID, AnlageUserID_, UserID_)
-    SELECT [#PWSCleanup].EinzHistID, CAST(N'R' AS varchar(1)), @curdatetime, @userid, CAST(N'D' AS varchar(1)), CAST(1 AS numeric(18,4)), [#PWSCleanup].ArtGroeID, [#PWSCleanup].ErstDatum, [#PWSCleanup].AfaModus, [#PWSCleanup].AlterWochen, [#PWSCleanup].EPreis, CAST(10000 AS int), ISNULL([#PWSCleanup].AusdienstGrund, N'Z'), CAST(9 AS int), CAST(10 AS int), @userid, @userid
+    SELECT [#PWSCleanup].EinzHistID, CAST(N'R' AS varchar(1)), @curdatetime, @userid, CAST(N'D' AS varchar(1)), CAST(1 AS numeric(18,4)), [#PWSCleanup].ArtGroeID, [#PWSCleanup].ErstDatum, [#PWSCleanup].AfaModus, [#PWSCleanup].AlterWochen, [#PWSCleanup].AnzWaeschen, [#PWSCleanup].MindestProz, [#PWSCleanup].MindestRW, [#PWSCleanup].EPreis, CAST(10000 AS int), ISNULL([#PWSCleanup].AusdienstGrund, N'Z'), CAST(9 AS int), CAST(10 AS int), @userid, @userid
     FROM #PWSCleanup;
 
     SELECT @msg = FORMAT(GETDATE(), N'dd.MM.yyyy HH:mm:ss', N'de-AT') + N': Restwert-Datensätze geschrieben';
