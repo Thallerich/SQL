@@ -23,7 +23,11 @@ BEGIN
   BEGIN
     SET @sqltext = N'INSERT INTO ##SdcQueueLength (SDCBez, QueueLength) SELECT ''' + @sdcbez + N''', COUNT(*) FROM ' + @linkedserverstring + N' WHERE ErrorCounter < 100 AND SdcDevID = 100';
     PRINT @sqltext;
-    EXEC sp_executesql @sqltext;  
+    BEGIN TRY
+      EXEC sp_executesql @sqltext;  
+    END TRY
+    BEGIN CATCH
+    END CATCH;
   END;
 
   FETCH NEXT FROM SdcDB INTO @sdcbez, @linkedserverstring;
