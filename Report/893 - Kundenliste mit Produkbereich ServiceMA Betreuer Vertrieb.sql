@@ -99,6 +99,7 @@ SELECT Firma.Bez AS Firma,
   Vertrag.VertragStart AS [Start-Datum],
   Vertrag.VertragEndeMoegl AS [nächstmögliches Ende],
   Vertrag.VertragEnde AS [reguläres Ende],
+  Vertrag.VertragKuendEin AS [Kündingung eingangen am],
   Vertrag.VertragKuendZum AS [Kündigung zum],
   Vertrag.VertragLetzteAnl AS [nicht mehr beliefern ab],
   Vertrag.LetztePeDatum AS [letzte Preiserhöhung am],
@@ -139,7 +140,7 @@ WHERE Kundenstatus.ID IN ($4$)
   AND [Zone].ID IN ($3$)
   AND Kunden.StandortID IN ($5$)
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)
-  AND (($6$ = 1 AND Vertrag.VertragKuendZum >= CAST(GETDATE() AS date)) OR ($6$ = 0));
+  AND (($6$ = 1 AND Vertrag.VertragKuendZum >= $7$) OR ($6$ = 0));
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
