@@ -2,9 +2,9 @@
 /* ++ Pipeline: prepareData                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DROP TABLE IF EXISTS #Pool892d;
+DROP TABLE IF EXISTS #Pool892d, #ArtikelSelection892d;
 
-DECLARE @sqltext nvarchar(max), @startdate datetime2, @enddate datetime2, @kundenid int, @artikelid int;
+DECLARE @sqltext nvarchar(max), @startdate datetime2, @enddate datetime2, @kundenid int;
 
 CREATE TABLE #Pool892d (
   Vertriebszone nchar(15) COLLATE Latin1_General_CS_AS,
@@ -26,6 +26,17 @@ CREATE TABLE #Pool892d (
   [Ort Auslesung] nvarchar(60) COLLATE Latin1_General_CS_AS,
   Produktion nvarchar(40) COLLATE Latin1_General_CS_AS
 );
+
+CREATE TABLE #ArtikelSelection892d (
+  ArtikelID int
+);
+
+SELECT @startdate = $STARTDATE$, @enddate = DATEADD(day, 1, $ENDDATE$), @kundenid = $2$;
+
+INSERT INTO #ArtikelSelection892d (ArtikelID)
+SELECT Artikel.ID
+FROM Artikel
+WHERE Artikel.ID IN ($3$);
 
 SET @sqltext = N'
 SELECT [Zone].ZonenCode AS Vertriebszone,
@@ -72,14 +83,12 @@ WHERE Scans_Ausgang.[DateTime] BETWEEN @startdate AND @enddate
   AND EinzHist.PoolFkt = 1
   AND Scans_Ausgang.Menge = -1
   AND Scans_Ausgang.AnfPoID > 0
-  AND EinzTeil.ArtikelID = @artikelid
+  AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #ArtikelSelection892d)
   AND Kunden.ID = @kundenid;
 ';
 
-SELECT @startdate = $STARTDATE$, @enddate = DATEADD(day, 1, $ENDDATE$), @kundenid = $2$, @artikelid = $3$;
-
 INSERT INTO #Pool892d (Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, LsNr, Lieferdatum, Code, Code2, [Zeitpunkt Einlesung], [Zeitpunkt Auslesung], [Ort Auslesung], Produktion)
-EXEC sp_executesql @sqltext, N'@startdate datetime2, @enddate datetime2, @kundenid int, @artikelid int', @startdate, @enddate, @kundenid, @artikelid;
+EXEC sp_executesql @sqltext, N'@startdate datetime2, @enddate datetime2, @kundenid int', @startdate, @enddate, @kundenid;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Pipeline: Poolteile-Auslesungen                                                                                           ++ */

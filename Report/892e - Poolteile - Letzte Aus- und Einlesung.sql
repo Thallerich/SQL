@@ -2,9 +2,9 @@
 /* ++ Pipeline: prepareData                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DROP TABLE IF EXISTS #Pool892e;
+DROP TABLE IF EXISTS #Pool892e, #ArtikelSelection892e;
 
-DECLARE @sqltext nvarchar(max), @kundenid int, @artikelid int;
+DECLARE @sqltext nvarchar(max), @kundenid int;
 
 CREATE TABLE #Pool892e (
   Vertriebszone nchar(15) COLLATE Latin1_General_CS_AS,
@@ -27,6 +27,17 @@ CREATE TABLE #Pool892e (
   Produktion nvarchar(40) COLLATE Latin1_General_CS_AS,
   EinzTeilID int
 );
+
+CREATE TABLE #ArtikelSelection892e (
+  ArtikelID int
+);
+
+SELECT @kundenid = $1$;
+
+INSERT INTO #ArtikelSelection892e (ArtikelID)
+SELECT Artikel.ID
+FROM Artikel
+WHERE Artikel.ID IN ($2$);
 
 SET @sqltext = N'
 SELECT [Zone].ZonenCode AS Vertriebszone,
@@ -54,14 +65,12 @@ JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
 WHERE EinzHist.PoolFkt = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzTeil.[Status] = N''Q''
-  AND EinzTeil.ArtikelID = @artikelid
+  AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #ArtikelSelection892e)
   AND Kunden.ID = @kundenid;
 ';
 
-SELECT @kundenid = $1$, @artikelid = $2$;
-
 INSERT INTO #Pool892e (Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, Code, Code2, EinzTeilID)
-EXEC sp_executesql @sqltext, N'@kundenid int, @artikelid int', @kundenid, @artikelid;
+EXEC sp_executesql @sqltext, N'@kundenid int', @kundenid;
 
 UPDATE #Pool892e SET LsNr = LsKo.LsNr, Lieferdatum = LsKo.Datum, [Zeitpunkt Auslesung] = Scans.[DateTime], [Ort Auslesung] = ZielNr.ZielNrBez$LAN$, Produktion = Standort.Bez
 FROM (
