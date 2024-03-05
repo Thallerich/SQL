@@ -1,26 +1,33 @@
-SET NOCOUNT ON;
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Inzing                                                                                                                    ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @DeletedRows int = 1;
-DECLARE @DeletedRowsAll int = 0;
-DECLARE @MaxRows int = 0;
-DECLARE @Message nvarchar(100);
-
-SET @MaxRows = (
-  SELECT COUNT(RepQueue.Seq)
-  FROM RepQueue
-  WHERE RepQueue.SdcDevID = 51
+CREATE TABLE #Cleanup (
+  Seq int,
+  SdcScanID int
 );
 
-WHILE @DeletedRows > 0 BEGIN
-  DELETE TOP (1000)
-  FROM RepQueue
-  WHERE RepQueue.SdcDevID = 51;
+INSERT INTO #Cleanup (Seq, SdcScanID)
+SELECT RepQueue.Seq, SdcScan.ID
+FROM RepQueue
+JOIN SdcScan ON RepQueue.TableID = SdcScan.ID AND RepQueue.TableName = N'SDCSCAN'
+WHERE SdcScan.AdvInstID = SdcScan.SdcDevID;
 
-  SET @DeletedRows = @@ROWCOUNT;
-  SET @DeletedRowsAll = @DeletedRowsAll + @DeletedRows;
-
-  SET @Message = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss', N'de-AT') + N' - Deleted ' + FORMAT(@DeletedRowsAll, N'##,#', N'de-AT') + ' rows out of ' + FORMAT(@MaxRows, N'##,#', N'de-AT') + '!';
-  RAISERROR(@Message, 0, 1) WITH NOWAIT;
-
-  WAITFOR DELAY N'00:00:10';
-END;
+BEGIN TRY
+  BEGIN TRANSACTION;
+  
+    DELETE FROM RepQueue WHERE Seq IN (SELECT Seq FROM #Cleanup);
+    DELETE FROM SdcScan WHERE ID IN (SELECT SdcScanID FROM #Cleanup);
+  
+  COMMIT;
+END TRY
+BEGIN CATCH
+  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
+  DECLARE @Severity int = ERROR_SEVERITY();
+  DECLARE @State smallint = ERROR_STATE();
+  
+  IF XACT_STATE() != 0
+    ROLLBACK TRANSACTION;
+  
+  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+END CATCH;
