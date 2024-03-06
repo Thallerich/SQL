@@ -188,17 +188,25 @@ SELECT LagerteileHist.Barcode,
        StandortUmlaufSalesianerArtikel.Umlauf AS [Umlauf Standort (Artikel)],
        [Standort mit höchstem Umlauf] = (
          SELECT TOP 1 Standort.Bez
-         FROM #Umlauf_Salesianer_1401
-         JOIN Standort ON #Umlauf_Salesianer_1401.StandortID = Standort.ID
-         WHERE #Umlauf_Salesianer_1401.ArtikelID = LagerteileHist.ArtikelID
-         ORDER BY #Umlauf_Salesianer_1401.Umlauf DESC
+         FROM (
+           SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
+           FROM #Umlauf_Salesianer_1401
+           GROUP BY StandortID, ArtikelID
+         ) AS ArtikelUmlaufStandort
+         JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
+         WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
+         ORDER BY ArtikelUmlaufStandort.Umlauf DESC
        ),
        [Höchste Umlaufmenge] = (
-         SELECT TOP 1 #Umlauf_Salesianer_1401.Umlauf
-         FROM #Umlauf_Salesianer_1401
-         JOIN Standort ON #Umlauf_Salesianer_1401.StandortID = Standort.ID
-         WHERE #Umlauf_Salesianer_1401.ArtikelID = LagerteileHist.ArtikelID
-         ORDER BY #Umlauf_Salesianer_1401.Umlauf DESC
+         SELECT TOP 1 ArtikelUmlaufStandort.Umlauf
+         FROM (
+           SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
+           FROM #Umlauf_Salesianer_1401
+           GROUP BY StandortID, ArtikelID
+         ) AS ArtikelUmlaufStandort
+         JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
+         WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
+         ORDER BY ArtikelUmlaufStandort.Umlauf DESC
        )
 FROM #LagerteileHist_1401 LagerteileHist
 JOIN Bestand ON LagerteileHist.ArtGroeID = Bestand.ArtGroeID AND LagerteileHist.LagerartID = Bestand.LagerartID
