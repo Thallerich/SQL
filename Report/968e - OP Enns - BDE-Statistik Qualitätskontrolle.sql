@@ -6,13 +6,6 @@ AS (
     FROM Scans
     WHERE CAST(Scans.[DateTime] AS date) BETWEEN $1$ AND $2$
       AND Scans.ActionsID = 109
-
-    UNION ALL
-
-    SELECT OPScans.OPTeileID, OPScans.Zeitpunkt, OPScans.AnlageUserID_
-    FROM Salesianer_Archive.dbo.OPScans
-    WHERE CAST(OPScans.Zeitpunkt AS date) BETWEEN $1$ AND $2$
-      AND OPScans.ActionsID = 109
   ) AS Scans  
   GROUP BY Scans.EinzTeilID, CAST(Scans.[DateTime] AS date), Scans.AnlageUserID_
 )

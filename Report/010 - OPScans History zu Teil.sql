@@ -15,21 +15,12 @@ BEGIN
       AND (
         EinzTeil.Code = @Code OR EinzTeil.Code2 = @Code
       )
-    
-    UNION ALL
-    
-    SELECT OPTeile.Code, OPScans.Zeitpunkt, OPScans.ZielNrID, OPScans.AnfPoID, OPScans.EingAnfPoID, OPScans.OPGrundID AS GrundID, OPScans.AnlageUser_ COLLATE Latin1_General_CS_AS AS MitarbeiUser
-    FROM Salesianer_Archive.dbo.OPScans, Salesianer.dbo.OPTeile
-    WHERE OPScans.OPTeileID = OPTeile.ID
-      AND (
-        OPTeile.Code = @Code OR OPTeile.Code2 = @Code
-      )
     ) AS OPScans
-  LEFT OUTER JOIN AnfPo AnfPoOut ON AnfPoOut.ID = OPScans.AnfPoID AND OPScans.AnfPoID > 0
-  LEFT OUTER JOIN AnfKo AnfKoOut ON AnfKoOut.ID = AnfPoOut.AnfKoID
-  LEFT OUTER JOIN AnfPo AnfPoIn ON AnfPoIn.ID = OPScans.EingAnfPoID AND OPScans.EingAnfPoID > 0
-  LEFT OUTER JOIN AnfKo AnfKoIn ON AnfKoIn.ID = AnfPoIn.AnfKoID
-  WHERE OPScans.ZielNrID = ZielNr.ID
-    AND OPScans.GrundID = WegGrund.ID
-  ORDER BY OPScans.Code, OPScans.Zeitpunkt DESC;
+  LEFT JOIN AnfPo AnfPoOut ON AnfPoOut.ID = opscans.AnfPoID AND opScans.AnfPoID > 0
+  LEFT JOIN AnfKo AnfKoOut ON AnfKoOut.ID = AnfPoOut.AnfKoID
+  LEFT JOIN AnfPo AnfPoIn ON AnfPoIn.ID = opScans.EingAnfPoID AND opScans.EingAnfPoID > 0
+  LEFT JOIN AnfKo AnfKoIn ON AnfKoIn.ID = AnfPoIn.AnfKoID
+  WHERE opScans.ZielNrID = ZielNr.ID
+    AND opScans.GrundID = WegGrund.ID
+  ORDER BY opscans.Code, opscans.Zeitpunkt DESC;
 END;
