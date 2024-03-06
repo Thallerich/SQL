@@ -60,7 +60,7 @@ CREATE INDEX Ind_ArtGroe ON #Umlauf_Salesianer_1401 (ArtgroeID)
 INSERT INTO #Umlauf_Salesianer_1401 (StandortID, ArtGroeID, ArtikelID, Umlauf)
 SELECT StandortID, ArtGroeID, ArtikelID, SUM(Umlauf) AS Umlauf 
 FROM ( 
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaLeas.Menge) AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaLeas.Menge) AS Umlauf 
   FROM VsaLeas 
   JOIN Vsa ON VsaLeas.VsaID = Vsa.ID 
   JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
@@ -69,11 +69,11 @@ FROM (
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
   WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') 
     AND ISNULL(VsaLeas.Ausdienst, N'2099/52') 
-  GROUP BY COALESCE(StandBer.LokalLagerID, StandBer.LagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
+  GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
   
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Umlauf 
   FROM VsaAnf
   JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
   JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID 
@@ -81,11 +81,11 @@ FROM (
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
   WHERE VsaAnf.Bestand != 0 AND VsaAnf.[Status] = N'A' 
-  GROUP BY COALESCE(StandBer.LokalLagerID, StandBer.LagerID), COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1), KdArti.ArtikelID 
+  GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
   
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(Strumpf.ID) AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(Strumpf.ID) AS Umlauf 
   FROM Strumpf
   JOIN Vsa ON Strumpf.VsaID = Vsa.ID
   JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID 
@@ -95,11 +95,11 @@ FROM (
   WHERE Strumpf.[Status] != N'X' 
     AND ISNULL(Strumpf.Indienst, N'1980/01') >= @CurrentWeek 
     AND Strumpf.WegGrundID < 0 
-  GROUP BY COALESCE(StandBer.LokalLagerID, StandBer.LagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
+  GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
   
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, TraeArti.ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, TraeArti.ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -110,7 +110,7 @@ FROM (
   
   UNION ALL 
   
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -124,7 +124,7 @@ FROM (
   
   UNION ALL 
   
-  SELECT COALESCE(StandBer.LokalLagerID, StandBer.LagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -187,7 +187,14 @@ SELECT LagerteileHist.Barcode,
        UmlaufSalesianerArtikel.Umlauf AS [Umlauf Salesianer (Artikel)],
        StandortUmlaufSalesianerArtikel.Umlauf AS [Umlauf Standort (Artikel)],
        [Standort mit höchstem Umlauf] = (
-         SELECT TOP 1 Standort.Bez + N' (Umlaufmenge: ' + CAST(#Umlauf_Salesianer_1401.Umlauf AS nvarchar) + N')'
+         SELECT TOP 1 Standort.Bez
+         FROM #Umlauf_Salesianer_1401
+         JOIN Standort ON #Umlauf_Salesianer_1401.StandortID = Standort.ID
+         WHERE #Umlauf_Salesianer_1401.ArtikelID = LagerteileHist.ArtikelID
+         ORDER BY #Umlauf_Salesianer_1401.Umlauf DESC
+       ),
+       [Höchste Umlaufmenge] = (
+         SELECT TOP 1 #Umlauf_Salesianer_1401.Umlauf
          FROM #Umlauf_Salesianer_1401
          JOIN Standort ON #Umlauf_Salesianer_1401.StandortID = Standort.ID
          WHERE #Umlauf_Salesianer_1401.ArtikelID = LagerteileHist.ArtikelID
