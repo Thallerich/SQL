@@ -1,4 +1,4 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez$LAN$ AS Außerdienststellungsgrund, WegGrund.WeggrundBez$LAN$ AS [Schrott-Grund], RwArt.RwArtBez$LAN$ AS [Restwert-Art], TeilSoFa.EPreis AS Restwert, TeilSoFaStatus.StatusBez AS [Status], IIF($3$ = 1, RechKo.RechNr, NULL) AS Rechnungsnummer, IIF($3$ = 1, Rechko.RechDat, NULL) AS Rechnungsdatum, Produktion.SuchCode AS Produktion, Betreuer.Name AS Kundenbetreuer, Kundenservice.Name AS Kundenservice
+SELECT KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez$LAN$ AS Außerdienststellungsgrund, WegGrund.WeggrundBez$LAN$ AS [Schrott-Grund], RwArt.RwArtBez$LAN$ AS [Restwert-Art], TeilSoFa.EPreis AS Restwert, TeilSoFaStatus.StatusBez AS [Status], IIF($3$ = 1, RechKo.RechNr, NULL) AS Rechnungsnummer, IIF($3$ = 1, Rechko.RechDat, NULL) AS Rechnungsdatum, Produktion.SuchCode AS Produktion, Betreuer.Name AS Kundenbetreuer, Kundenservice.Name AS Kundenservice
 FROM TeilSofa
 JOIN (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
@@ -8,6 +8,7 @@ JOIN (
 JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
 JOIN Einsatz ON TeilSoFa.AusdienstGrund = Einsatz.EinsatzGrund
