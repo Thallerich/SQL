@@ -23,6 +23,7 @@ CREATE TABLE #Pool892d (
   Code2 nvarchar(33) COLLATE Latin1_General_CS_AS,
   [Zeitpunkt Einlesung] datetime,
   [Zeitpunkt Auslesung] datetime,
+  [Zeitpunkt letzte Einlesung] datetime,
   [Ort Auslesung] nvarchar(60) COLLATE Latin1_General_CS_AS,
   Produktion nvarchar(40) COLLATE Latin1_General_CS_AS
 );
@@ -62,6 +63,14 @@ SELECT [Zone].ZonenCode AS Vertriebszone,
     ORDER BY Scans_Eingang.[DateTime] DESC
   ),
   Scans_Ausgang.[DateTime] AS [Zeitpunkt Auslesung],
+  [Zeitpunkt letzte Einlesung] = (
+    SELECT TOP 1 Scans_Eingang.[DateTime]
+    FROM Scans AS Scans_Eingang
+    WHERE Scans_Eingang.ActionsID IN (1, 100)
+      AND Scans_Eingang.EinzTeilID = Scans_Ausgang.EinzTeilID
+      AND Scans_Eingang.[DateTime] <= Scans_Ausgang.[DateTime]
+    ORDER BY Scans_Eingang.[DateTime] DESC
+  ),
   ZielNr.ZielNrBez$LAN$ AS [Ort Auslesung],
   Standort.Bez AS Produktion
 FROM Scans AS Scans_Ausgang
@@ -87,7 +96,7 @@ WHERE Scans_Ausgang.[DateTime] BETWEEN @startdate AND @enddate
   AND Kunden.ID = @kundenid;
 ';
 
-INSERT INTO #Pool892d (Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, LsNr, Lieferdatum, Code, Code2, [Zeitpunkt Einlesung], [Zeitpunkt Auslesung], [Ort Auslesung], Produktion)
+INSERT INTO #Pool892d (Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, LsNr, Lieferdatum, Code, Code2, [Zeitpunkt Einlesung], [Zeitpunkt Auslesung], [Zeitpunkt letzte Einlesung], [Ort Auslesung], Produktion)
 EXEC sp_executesql @sqltext, N'@startdate datetime2, @enddate datetime2, @kundenid int', @startdate, @enddate, @kundenid;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -102,4 +111,11 @@ FROM #Pool892d;
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, LsNr, Lieferdatum, Code, Code2, [Zeitpunkt Einlesung], [Zeitpunkt Auslesung], [Ort Auslesung], Produktion
+FROM #Pool892d;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: Poolteile-Auslesung mit letzter Einlesung                                                                       ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+SELECT Vertriebszone, Geschäftsbereich, Holding, KdNr, Kunde, VsaNr, [VSA-Bezeichnung], ArtikelNr, Artikelbezeichnung, Größe, LsNr, Lieferdatum, Code, Code2, [Zeitpunkt letzte Einlesung], [Zeitpunkt Auslesung], [Ort Auslesung], Produktion
 FROM #Pool892d;
