@@ -23,7 +23,7 @@ BEGIN
   WITH ScanHistory AS (
     SELECT Scans.EinzTeilID, Scans.ID AS LastAusgangScanID, LAG(Scans.ID) OVER (PARTITION BY Scans.EinzTeilID ORDER BY Scans.ID) AS BeforeLastAusgangScanID
     FROM Scans
-    WHERE Scans.ActionsID = 102
+    WHERE Scans.ActionsID IN (102, 165)
       AND Scans.EinzTeilID IN (SELECT EinzTeilID FROM #LsForExport)
   )
   SELECT LsKo.LsNr,
