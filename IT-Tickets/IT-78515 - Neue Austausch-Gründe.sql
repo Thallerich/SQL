@@ -3,10 +3,10 @@ DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 BEGIN TRY
   BEGIN TRANSACTION;
   
-    UPDATE WegGrund SET Austausch = 0 WHERE Austausch = 1;
+    UPDATE WegGrund SET Austausch = 0, SchrottAustausch = 0 WHERE Austausch = 1 OR SchrottAustausch = 1;
 
-    INSERT INTO WegGrund (WeggrundBez, WeggrundBez2, WeggrundBez3, WeggrundBez4, WeggrundBez5, WeggrundBez7, WeggrundBez8, WeggrundBez9, WeggrundBezA, Austausch, UserID_, AnlageUserID_)
-    SELECT WeggrundBez, WeggrundBez2, WeggrundBez3, WeggrundBez4, WeggrundBez5, WeggrundBez7, WeggrundBez8, WeggrundBez9, WeggrundBezA, CAST(1 AS bit) AS Austausch, @UserID AS UserID_, @UserID AS AnlageUserID_
+    INSERT INTO WegGrund (WeggrundBez, WeggrundBez2, WeggrundBez3, WeggrundBez4, WeggrundBez5, WeggrundBez7, WeggrundBez8, WeggrundBez9, WeggrundBezA, Austausch, SchrottAustausch, UserID_, AnlageUserID_)
+    SELECT WeggrundBez, WeggrundBez2, WeggrundBez3, WeggrundBez4, WeggrundBez5, WeggrundBez7, WeggrundBez8, WeggrundBez9, WeggrundBezA, CAST(1 AS bit) AS Austausch, CAST(1 AS bit) AS SchrottAustausch, @UserID AS UserID_, @UserID AS AnlageUserID_
     FROM _IT78515;
   
   COMMIT;
