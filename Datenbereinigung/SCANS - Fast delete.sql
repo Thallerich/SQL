@@ -1,24 +1,43 @@
 SET NOCOUNT ON;
 GO
+/* 
+CREATE INDEX IX_ScanDelete ON dbo.SCANS ([DateTime])
+INCLUDE (ActionsID, Menge, AnfPoID, EingAnfPoID, InvPoID, LsPoID, LotID, WaschChID, VpsPoID, OPEtiKoID)
+WHERE ActionsID <> 47
+  AND ActionsID <> 56
+  AND ActionsID <> 52
+  AND ActionsID <> 144
+  AND Menge = 0
+  AND AnfPoID = -1
+  AND EingAnfPoID = -1
+  AND InvPoID = -1
+  AND LsPoID = -1
+  AND LotID = -1
+  AND WaschChID = -1
+  AND VpsPoID = -1
+  AND OPEtiKoID = -1
+WITH (DATA_COMPRESSION = PAGE);
 
+GO
+ */
 CREATE VIEW dbo.Scans_Delete AS
   SELECT TOP 1000 *
   FROM dbo.Scans
   WHERE ActionsID NOT IN (47, 56, 52, 144)
     AND Menge = 0
-    AND AnfPoID < 0
-    AND EingAnfPoID < 0
-    AND InvPoID < 0
-    AND LsPoID < 0
-    AND LotID < 0
-    AND WaschChID < 0
-    AND VpsPoID < 0
-    AND OPEtiKoID < 0
+    AND AnfPoID = -1
+    AND EingAnfPoID = -1
+    AND InvPoID = -1
+    AND LsPoID = -1
+    AND LotID = -1
+    AND WaschChID = -1
+    AND VpsPoID = -1
+    AND OPEtiKoID = -1
   ORDER BY [DateTime] ASC;
 
 GO
 
-DECLARE @EndTime datetime2(3) = DATEADD(minute, 120, GETDATE());
+DECLARE @EndTime datetime2(3) = DATEADD(minute, 10, GETDATE());
 DECLARE @IsError bit = 0;
 DECLARE @RunCounter int = 1;
 DECLARE @Msg nvarchar(100);
