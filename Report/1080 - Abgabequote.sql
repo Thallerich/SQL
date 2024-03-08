@@ -1,7 +1,7 @@
 DECLARE @StartWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE $STARTDATE$ BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @EndWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE $ENDDATE$ BETWEEN Week.VonDat AND Week.BisDat);
 
-SELECT KdNr, Kunde, Produktbereich, Artikelgruppe, Sortiment, ArtikelNr, Artikelbezeichnung, ROUND(AVG(TraeAnz), 0) AS Trägeranzahl, ROUND(AVG(Menge), 0) AS Durchschnitt, SUM(Menge) AS Umlauf, ROUND(SUM(Ruecklauf), 1) AS Maximum, SUM(Effektiv) AS Effektiv, ROUND(IIF(SUM(Ruecklauf) = 0, 0.0, SUM(Effektiv) * 100 / SUM(Ruecklauf)), 2) AS [Quote %]
+SELECT KdNr, Kunde, Produktbereich, Artikelgruppe, Sortiment, ArtikelNr, Artikelbezeichnung, ROUND(AVG(TraeAnz), 0) AS Trägeranzahl, SUM(Menge) AS Umlauf, ROUND(AVG(Menge), 0) AS [Durchschnitt Umlauf], ROUND(SUM(Ruecklauf), 1) AS [Maximale Abgabemenge], SUM(Effektiv) AS [Effektive Abgabemenge], ROUND(IIF(SUM(Ruecklauf) = 0, 0.0, SUM(Effektiv) * 100 / SUM(Ruecklauf)), 2) AS [Quote %]
 FROM (
   SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Bereich.BereichBez$LAN$ AS Produktbereich, ArtGru.ArtGruBez$LAN$ AS Artikelgruppe, ProdGru.ProdGruBez$LAN$ AS Sortiment, Wochen.Woche, SUM(TraeArch.Menge) AS Menge, SUM(TraeArch.Effektiv) AS Effektiv, IIF(SUM(TraeArch.Menge) < 3, CAST((SUM(TraeArch.Menge) / 3.0) AS numeric(18, 4)), CAST(((SUM(TraeArch.Menge) - 1) / 2.0) AS numeric(18, 4))) AS Ruecklauf, COUNT(DISTINCT Traeger.ID) AS TraeAnz
   FROM TraeArch
