@@ -69,8 +69,7 @@ FROM (
   JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
-  WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') 
-    AND ISNULL(VsaLeas.Ausdienst, N'2099/52') 
+  WHERE ISNULL(VsaLeas.Ausdienst, N'2099/52') > @CurrentWeek
     AND Kunden.[Status] = N'A'
     AND Vsa.[Status] = N'A'
     AND VsaBer.[Status] = N'A'
@@ -117,7 +116,7 @@ FROM (
   
   UNION ALL 
   
-  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, TraeArti.ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf 
+  SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, TraeArti.ArtGroeID, KdArti.ArtikelID, IIF(TraeArti.MengeAufkauf > TraeArti.Menge, TraeArti.MengeAufkauf, TraeArti.Menge) AS Umlauf 
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
@@ -131,6 +130,7 @@ FROM (
     AND Vsa.[Status] = N'A'
     AND VsaBer.[Status] = N'A'
     AND KdBer.[Status] = N'A'
+    AND Traeger.[Status] != N'I'
   
   UNION ALL 
   
@@ -151,6 +151,7 @@ FROM (
     AND Vsa.[Status] = N'A'
     AND VsaBer.[Status] = N'A'
     AND KdBer.[Status] = N'A'
+    AND Traeger.[Status] != N'I'
   
   UNION ALL 
   
@@ -171,6 +172,7 @@ FROM (
     AND Vsa.[Status] = N'A'
     AND VsaBer.[Status] = N'A'
     AND KdBer.[Status] = N'A'
+    AND Traeger.[Status] != N'I'
 ) AS x 
 GROUP BY StandortID, ArtGroeID, ArtikelID;
     
