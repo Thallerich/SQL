@@ -63,12 +63,18 @@ FROM (
   SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaLeas.Menge) AS Umlauf 
   FROM VsaLeas 
   JOIN Vsa ON VsaLeas.VsaID = Vsa.ID 
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
   WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') 
     AND ISNULL(VsaLeas.Ausdienst, N'2099/52') 
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
   GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
@@ -76,11 +82,17 @@ FROM (
   SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Umlauf 
   FROM VsaAnf
   JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID 
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
-  WHERE VsaAnf.Bestand != 0 AND VsaAnf.[Status] = N'A' 
+  WHERE VsaAnf.Bestand != 0 AND VsaAnf.[Status] = N'A'
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
   GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
@@ -88,13 +100,19 @@ FROM (
   SELECT IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID) AS StandortID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(Strumpf.ID) AS Umlauf 
   FROM Strumpf
   JOIN Vsa ON Strumpf.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID 
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-' 
   WHERE Strumpf.[Status] != N'X' 
     AND ISNULL(Strumpf.Indienst, N'1980/01') >= @CurrentWeek 
     AND Strumpf.WegGrundID < 0 
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
   GROUP BY IIF(StandBer.LokalLagerID = -1, StandBer.LagerID, StandBer.LokalLagerID), COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID 
   
   UNION ALL 
@@ -103,10 +121,16 @@ FROM (
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID 
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52') 
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
   
   UNION ALL 
   
@@ -114,13 +138,19 @@ FROM (
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID 
   JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID 
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID 
   WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52') 
     AND KdArAppl.ArtiTypeID = 3 --Emblem 
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
   
   UNION ALL 
   
@@ -128,13 +158,19 @@ FROM (
   FROM TraeArti 
   JOIN Traeger ON TraeArti.TraegerID = Traeger.ID 
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID 
   JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID 
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdBer.ID
   JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
   LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID 
   WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52') 
     AND KdArAppl.ArtiTypeID = 2 --Namenschild
+    AND Kunden.[Status] = N'A'
+    AND Vsa.[Status] = N'A'
+    AND VsaBer.[Status] = N'A'
+    AND KdBer.[Status] = N'A'
 ) AS x 
 GROUP BY StandortID, ArtGroeID, ArtikelID;
     
