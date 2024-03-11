@@ -49,7 +49,7 @@ WITH LiefermengeMonatlich AS (
     AND Vsa.KundenID IN ($3$)
     AND LsPo.Menge != 0
     AND ((Vsa.RentomatID > 0 AND Rentomat.LsKoArtScanOutID > 0 AND LsKo.LsKoArtID != Rentomat.LsKoArtScanOutID) OR (Vsa.RentomatID < 0) OR (Rentomat.LsKoArtScanOutID < 0))
-    AND (($5$ = 0) OR ($5$ = 1 AND LsPo.Menge > 0 AND LsPo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1) AND LsKo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1)))
+    AND (($6$ = 0) OR ($6$ = 1 AND LsPo.Menge > 0 AND LsPo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1) AND LsKo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1)))
     AND NOT EXISTS (
       SELECT Scans.*
       FROM Scans
@@ -74,7 +74,7 @@ WITH LiefermengeMonatlich AS (
     AND LsPo.Menge != 0
     AND EinzHist.TraeArtiID > 0
     AND ((Vsa.RentomatID > 0 AND Rentomat.LsKoArtScanOutID > 0 AND LsKo.LsKoArtID != Rentomat.LsKoArtScanOutID) OR (Vsa.RentomatID < 0) OR (Rentomat.LsKoArtScanOutID < 0))
-    AND (($5$ = 0) OR ($5$ = 1 AND LsPo.Menge > 0 AND LsPo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1) AND LsKo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1)))
+    AND (($6$ = 0) OR ($6$ = 1 AND LsPo.Menge > 0 AND LsPo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1) AND LsKo.LsKoGruID NOT IN (SELECT ID FROM LsKoGru WHERE Reklamation = 1)))
   GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM', N'de-AT'), LsKo.VsaID, LsPo.KdArtiID, LsPo.AbteilID, EinzHist.ArtGroeID
 )
 SELECT ProdBetrieb.SuchCode AS [produzierender Betrieb], IntProdBetrieb.SuchCode AS [intern produzierender Betrieb], Holding.Holding AS Kette, Kunden.KdNr AS Kundennummer, Kunden.SuchCode AS Kundenname, Vsa.VsaNr AS [VSA-Nummer], Vsa.Bez AS [VSA-Bezeichnung], Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, Artikel.ArtikelNr AS Artikelnummer, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Artikel.StueckGewicht AS Stückgewicht, LiefArt.LiefArtBez$LAN$ AS Auslieferart, LiefermengeMonatlich.Monat, LiefermengeMonatlich.Liefermenge
@@ -99,7 +99,8 @@ JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = B
 JOIN Standort AS ProdBetrieb ON StandBer.ExpeditionID = ProdBetrieb.ID
 JOIN Standort AS IntProdBetrieb ON StandBer.ProduktionID = IntProdBetrieb.ID
 WHERE Kunden.ID IN ($3$)
-  AND LiefArt.ID IN ($4$);
+  AND Bereich.ID IN ($4$)
+  AND LiefArt.ID IN ($5$);
 
 SET @pivotsql = N'SELECT [produzierender Betrieb], [intern produzierender Betrieb], Kette, Kundennummer, Kundenname, [VSA-Nummer], [VSA-Bezeichnung], Kostenstelle, Kostenstellenbezeichnung, Produktbereich, Artikelgruppe, Artikelnummer, Artikelbezeichnung, Größe, Stückgewicht, Auslieferart, ' + @pivotcolumns + ' FROM #LiefermengeVSA AS LiefermengeVSA PIVOT ( SUM(LiefermengeVSA.Liefermenge) FOR LiefermengeVSA.Monat IN (' + @pivotcolumns + ')) AS PivotResult ORDER BY Kundennummer, [VSA-Nummer],Artikelnummer';
 
