@@ -3,6 +3,7 @@ DECLARE @curdatetime datetime2 = GETDATE();
 DECLARE @returntime datetime2 = DATEADD(millisecond, -10, @curdatetime);
 DECLARE @userid int = (SELECT MitarbeiID FROM #AdvSession);
 DECLARE @arbplatzid int = (SELECT ID FROM ArbPlatz WHERE ComputerName = HOST_NAME());
+DECLARE @curweek nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
 
 DECLARE @KdNr AS TABLE (
   KdNr int
@@ -65,7 +66,7 @@ BEGIN TRY
     /* ++ Alten Umlauf-Datensatz anpassen                                                                                           ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    UPDATE EinzHist SET EinzHistBis = @curdatetime, UserID_ = @userid
+    UPDATE EinzHist SET EinzHistBis = @curdatetime, EinzHist.Ausdienst = @curweek, EinzHist.AusdienstDat = CAST(@curdatetime AS date), EinzHist.Abmeldung = @curweek, EinzHist.AbmeldDat = CAST(@curdatetime AS date), UserID_ = @userid
     FROM #PoolSchwund
     WHERE #PoolSchwund.EinzHistID = EinzHist.ID;
 
