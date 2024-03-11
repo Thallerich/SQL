@@ -10,4 +10,6 @@ SELECT data.value('(/event/@timestamp)[1]','datetime') AS [timestamp],
        data.value('(/event/data[@name=''message''])[1]','varchar(max)') AS [message]
 FROM cte_HADR
 WHERE data.value('(/event/data[@name=''error_number''])[1]','int') = 1480
+  AND data.value('(/event/@timestamp)[1]','datetime') > N'2024-03-10'
+  AND data.value('(/event/data[@name=''message''])[1]','varchar(max)') LIKE N'% "Salesianer" %'
 ORDER BY [timestamp] DESC
