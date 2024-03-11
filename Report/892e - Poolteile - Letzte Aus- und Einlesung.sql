@@ -94,7 +94,7 @@ UPDATE #Pool892e SET [Zeitpunkt Einlesung] = (
   SELECT TOP 1 Scans.[DateTime]
   FROM Scans
   WHERE Scans.EinzTeilID = #Pool892e.EinzTeilID
-    AND Scans.Menge = 1
+    AND Scans.ActionsID IN (1, 100)
   ORDER BY Scans.[DateTime] DESC
 );
 
