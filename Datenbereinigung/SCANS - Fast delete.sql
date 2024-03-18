@@ -19,6 +19,9 @@ WHERE ActionsID <> 47
 WITH (DATA_COMPRESSION = PAGE);
 
 GO
+
+DROP INDEX IX_ScanDelete ON dbo.SCANS;
+GO
  */
 CREATE VIEW dbo.Scans_Delete AS
   SELECT TOP 1000 *
@@ -37,12 +40,12 @@ CREATE VIEW dbo.Scans_Delete AS
 
 GO
 
-DECLARE @EndTime datetime2(3) = DATEADD(minute, 10, GETDATE());
+DECLARE @EndTime datetime2(3) = DATEADD(minute, 60, GETDATE());
 DECLARE @IsError bit = 0;
-DECLARE @RunCounter int = 1;
+DECLARE @RunCounter int = 1, @DeleteCount int = 1;
 DECLARE @Msg nvarchar(100);
 
-WHILE @EndTime > GETDATE()
+WHILE (@EndTime > GETDATE() AND @DeleteCount > 0)
 BEGIN
   SET @Msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' - Beginning run ' + CAST(@RunCounter AS nvarchar) + '!';
   RAISERROR(@Msg, 0, 1) WITH NOWAIT;
@@ -52,6 +55,8 @@ BEGIN
     
       DELETE FROM dbo.Scans_Delete
       WHERE [DateTime] < N'2020-01-01 00:00:00.000';
+
+      SET @DeleteCount = @@ROWCOUNT;
 
     COMMIT;
   END TRY
