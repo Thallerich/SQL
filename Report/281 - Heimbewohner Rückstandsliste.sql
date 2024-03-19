@@ -17,7 +17,8 @@ CREATE TABLE #Result281 (
   [Status] nchar(2),
   Eingang1 date,
   Ausgang1 date,
-  Träger nvarchar(61),
+  Bewohner nvarchar(61),
+  Bewohnerstatus char(1),
   ZimmerNr nvarchar(10),
   SuchCode nvarchar(40),
   Bez nvarchar(40),
@@ -43,7 +44,7 @@ SET @sqltext = N'
       ORDER BY Scans.[DateTime] DESC
     ) AS [Letztes Ziel], a.*
   FROM (
-    SELECT EinzHist.ID AS EinzHistID, Kunden.KdNr, Kunden.Name2, Kunden.Name3, Kunden.Name1 AS Kunde, EinzHist.Barcode AS Seriennummer, Artikel.ArtikelBez$LAN$ AS Artikel, EinzHist.Status, EinzHist.Eingang1, EinzHist.Ausgang1, ISNULL(RTRIM(Traeger.Nachname), '''') + '' '' + ISNULL(RTRIM(Traeger.Vorname), '''') AS Träger, Traeger.PersNr AS ZimmerNr, VSA.SuchCode, VSA.Bez AS Bez, VSA.Name1 AS Vsa, VSA.Name2 AS VSA2, VSA.Name3 AS VSA3, (SELECT TOP 1 Fach FROM ScanFach WHERE ScanFach.VsaID = Vsa.ID AND ScanFach.TraegerID = Traeger.ID) AS Fach
+    SELECT EinzHist.ID AS EinzHistID, Kunden.KdNr, Kunden.Name2, Kunden.Name3, Kunden.Name1 AS Kunde, EinzHist.Barcode AS Seriennummer, Artikel.ArtikelBez$LAN$ AS Artikel, EinzHist.Status, EinzHist.Eingang1, EinzHist.Ausgang1, ISNULL(RTRIM(Traeger.Nachname), '''') + '' '' + ISNULL(RTRIM(Traeger.Vorname), '''') AS Bewohner, Traeger.[Status] AS Bewohnerstatus, Traeger.PersNr AS ZimmerNr, VSA.SuchCode, VSA.Bez AS Bez, VSA.Name1 AS Vsa, VSA.Name2 AS VSA2, VSA.Name3 AS VSA3, (SELECT TOP 1 Fach FROM ScanFach WHERE ScanFach.VsaID = Vsa.ID AND ScanFach.TraegerID = Traeger.ID) AS Fach
     FROM EinzHist
     JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
     JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
@@ -55,21 +56,21 @@ SET @sqltext = N'
       AND (EinzHist.Eingang1 > EinzHist.Ausgang1 OR EinzHist.Ausgang1 IS NULL)
       AND EinzHist.Status BETWEEN N''M'' AND N''Q''
       AND EinzTeil.AltenheimModus > 0
-      AND Traeger.Status != N''I''
+      AND ((Traeger.Status = N''I'' AND EinzTeil.LastScanTime > DATEADD(month, -1, GETDATE()) OR Traeger.Status = N''A''))
     ) a, Scans
   WHERE a.EinzHistID = Scans.EinzHistID
     AND Scans.AnlageUserID_ <> (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N''ADVSUP'')
-  GROUP BY a.EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, Status, Eingang1, Ausgang1, Träger, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach
+  GROUP BY a.EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, Status, Eingang1, Ausgang1, Bewohner, Bewohnerstatus, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach
   HAVING MAX(CONVERT(date, [DateTime])) <= @maxscantime
-  ORDER BY SuchCode, Träger;
 ';
 
-INSERT INTO #Result281 ([Letzter Scan], [Letztes Ziel], EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, [Status], Eingang1, Ausgang1, Träger, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach)
+INSERT INTO #Result281 ([Letzter Scan], [Letztes Ziel], EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, [Status], Eingang1, Ausgang1, Bewohner, Bewohnerstatus, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach)
 EXEC sp_executesql @sqltext, N'@kundenid int, @maxscantime datetime', @kundenid, @maxscantime;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Teile                                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT "Letzter Scan", "Letztes Ziel", EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, Status, Eingang1, Ausgang1, Träger, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach
-FROM #Result281;
+SELECT "Letzter Scan", "Letztes Ziel", EinzHistID, KdNr, Name2, Name3, Kunde, Seriennummer, Artikel, Status, Eingang1, Ausgang1, Bewohner, Bewohnerstatus, ZimmerNr, SuchCode, Bez, Vsa, Vsa2, Vsa3, Fach
+FROM #Result281
+ORDER BY SuchCode, Bewohner;
