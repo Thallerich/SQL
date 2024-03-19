@@ -1,26 +1,49 @@
-CREATE TABLE #TeilAppl (
-  ID int PRIMARY KEY CLUSTERED,
-  TraeApplID int,
-  TraeArtiID int,
-  ApplKdArtiID int
+DECLARE @TeilAppl TABLE (
+  ID int
 );
 
-INSERT INTO #TeilAppl
-SELECT TeilAppl.ID, TeilAppl.TraeApplID, EinzHist.TraeArtiID, TeilAppl.ApplKdArtiID
+DECLARE @TraeAppl TABLE (
+  ID int
+);
+
+INSERT INTO @TeilAppl (ID)
+SELECT TeilAppl.ID
 FROM TeilAppl
 JOIN EinzHist ON TeilAppl.EinzHistID = EinzHist.ID
-WHERE EinzHist.KdArtiID = 34912634
-  AND TeilAppl.ApplArtikelID = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'DENZB');
+JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
+WHERE EinzHist.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 2523974))
+  AND TeilAppl.ApplArtikelID != (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'WAVIDB')
+  AND EXISTS (SELECT ta.* FROM TeilAppl AS ta WHERE ta.EinzHistID = TeilAppl.EinzHistID AND ta.ApplArtikelID = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'WAVIDB'))
+  AND TeilAppl.ArtiTypeID = 3
+  AND TeilAppl.Bearbeitung != N'-'
+  AND EinzHist.EinzHistTyp = 1;
+
+INSERT INTO @TraeAppl (ID)
+SELECT TraeAppl.ID
+FROM TraeAppl
+JOIN TraeArti ON TraeAppl.TraeArtiID = TraeArti.ID
+JOIN KdArti ON TraeAppl.ApplKdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+WHERE TraeArti.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 2523974))
+  AND Artikel.ArtikelNr != N'WAVIDB'
+  AND EXISTS (
+    SELECT tr.*
+    FROM TraeAppl AS tr
+    JOIN KdArti ON tr.ApplKdArtiID = KdArti.ID
+    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+    WHERE tr.TraeArtiID = TraeAppl.TraeArtiID
+      AND Artikel.ArtikelNr = N'WAVIDB'
+  )
+  AND TraeAppl.ArtiTypeID = 3;
 
 BEGIN TRY
   BEGIN TRANSACTION;
   
-    DELETE FROM TeilAppl WHERE ID IN (SELECT ID FROM #TeilAppl);
+    DELETE FROM TeilAppl WHERE ID IN (SELECT ID FROM @TeilAppl);
 
-    DELETE FROM MsgTraeM WHERE TraeApplID IN (SELECT TraeApplID FROM #TeilAppl) AND TraeArtiID IN (SELECT TraeArtiID FROM #TeilAppl) AND TraeArtiID > 0;
+    UPDATE TeilAppl SET TraeApplID = -1 WHERE TraeApplID IN (SELECT ID FROM @TraeAppl);
 
-    DELETE FROM TraeAppl WHERE ID IN (SELECT TraeApplID FROM #TeilAppl) AND TraeArtiID IN (SELECT TraeArtiID FROM #TeilAppl) AND TraeArtiID > 0;
-    DELETE FROM TraeAppl WHERE ApplKdArtiID IN (SELECT ApplKdArtiID FROM #TeilAppl) AND NOT EXISTS (SELECT EinzHist.ID FROM EinzHist WHERE EinzHist.TraeArtiID = TraeAppl.TraeArtiID);
+    DELETE FROM TraeAppl WHERE ID IN (SELECT ID FROM @TraeAppl);
   
   COMMIT;
 END TRY
@@ -34,5 +57,3 @@ BEGIN CATCH
   
   RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
 END CATCH;
-
-DROP TABLE #TeilAppl;
