@@ -100,6 +100,7 @@ SELECT Firma.Bez AS Firma,
   Vertrag.VertragEndeMoegl AS [nächstmögliches Ende],
   Vertrag.VertragEnde AS [reguläres Ende],
   Vertrag.VertragKuendEin AS [Kündingung eingangen am],
+  KuendGru.KuendGruBez$LAN$ AS [Grund der Kündigung],
   Vertrag.VertragKuendZum AS [Kündigung zum],
   Vertrag.VertragLetzteAnl AS [nicht mehr beliefern ab],
   Vertrag.LetztePeDatum AS [letzte Preiserhöhung am],
@@ -128,6 +129,7 @@ JOIN ABC ON Kunden.ABCID = ABC.ID
 JOIN Vertrag ON KdBer.VertragID = Vertrag.ID
 JOIN Vertragstatus ON Vertrag.[Status] = Vertragstatus.[Status]
 JOIN PrLauf ON Vertrag.PrLaufID = PrLauf.ID
+JOIN KuendGru ON Vertrag.KuendGruID = KuendGru.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
 JOIN BrLauf ON Kunden.BRLaufID = BrLauf.ID
 JOIN Wae AS RechWae ON Kunden.RechWaeID = RechWae.ID
