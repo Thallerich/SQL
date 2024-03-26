@@ -1,0 +1,73 @@
+CREATE OR ALTER VIEW [sapbw].[UMLAUF_LastWeek]
+AS
+-- Umlauf DATUM = select CAST(DATEDIFF(DAY,1,GETDATE()-DATEDIFF(DAY,0,GETDATE())%7) AS DATETIME) -->> Letzte Sontag
+WITH U AS (
+	SELECT _U.Datum,
+		K.KdNr,
+		V.VsaNr,
+		_U.KdArtiID,
+		UPPER(A.ArtikelNr+IIF(ISNULL(REPLACE(AG.Groesse,'"',''),'-')='-','','-'+REPLACE(AG.Groesse,'-','/'))) AS Artikel,
+		SUM(_U.Umlauf) Umlauf,
+		M.IsoCode ME,
+		VW.ID VW_ID,
+		FW.ID FW_ID,
+		VW.IsoCode VW_IsoCode,
+		FW.IsoCode FW_IsoCode
+	FROM Salesianer.dbo._Umlauf _U
+	JOIN Salesianer.dbo.VSA V ON V.ID=_U.VsaID
+	JOIN Salesianer.dbo.ARTIKEL A ON A.ID=_U.ArtikelID
+	JOIN Salesianer.dbo.ME M ON A.MEID=M.ID
+	JOIN Salesianer.dbo.Kunden K ON V.KundenID=K.ID
+	JOIN Salesianer.dbo.Firma F ON K.FirmaID=F.ID
+	JOIN Salesianer.dbo.Wae VW ON K.VertragWaeID=VW.ID
+	JOIN Salesianer.dbo.Wae FW ON F.WaeID=FW.ID
+	LEFT JOIN Salesianer.dbo.ARTGROE AG ON AG.ID=_U.ArtGroeID
+	WHERE A.ArtiTypeID=1 -->> Textile Artikel
+		AND K.AdrArtID=1 -->> nur Kunde
+		AND _U.Datum=CAST(DATEDIFF(DAY,1,GETDATE()-DATEDIFF(DAY,0,GETDATE())%7) AS DATETIME) -->> Letzte Sontag !
+	GROUP BY _U.Datum,K.KdNr,V.VsaNr,_U.KdArtiID,A.ArtikelNr,M.IsoCode,AG.Groesse,VW.ID,FW.ID,VW.IsoCode,FW.IsoCode
+),
+VB AS (
+	SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) Pos,value VarBez
+	FROM STRING_SPLIT(N'GEF-A,GEF-H,GEF-1,GEF-3,GEF-4,HANG,UNGEF,1W,2W,3W,4W,12W,24W,8W,99W,6W,26W,16W,32W,52W,SPEZWN,SPL-A,SPL-H,CHEM,FOLIE,GYN,MTLKA,QUER,OBEN,ET,RUDI,LAENGS,AUVA,KORNB,KE,KE-HA,KE-H,EXPR,VE/100,-',',')
+),
+KA AS (
+	SELECT ID,KundenId,KdBerID,VkPreis,WaschPreis,BasisRestwert,GesamtRestwert,STRING_AGG(VB.VarBez,',') WITHIN GROUP (ORDER BY VB.Pos ASC) VarBez,LeasPreis.LeasPreisProWo AS Leasingpreis_VTW, CAST(IIF(KDA.LeasPreisPrListKdArtiID > 0 OR KDA.WaschPreisPrListKdArtiID > 0, 1, 0) AS bit) AS Preisliste
+	FROM Salesianer.dbo.KDARTI KDA
+  CROSS APPLY Salesianer.dbo.advFunc_GetLeasPreisProWo(KDA.ID) AS LeasPreis
+	LEFT JOIN VB ON KDA.VariantBez LIKE '%('+VB.VarBez+')%'
+	GROUP BY ID,KundenId,KdBerID,VariantBez,VkPreis,WaschPreis,BasisRestwert,GesamtRestwert, LeasPreis.LeasPreisProWo, CAST(IIF(KDA.LeasPreisPrListKdArtiID > 0 OR KDA.WaschPreisPrListKdArtiID > 0, 1, 0) AS bit)
+),
+WE4 AS (
+  SELECT ID FROM Salesianer.dbo.Wae WHERE Code=N'EUR4'
+)
+SELECT U.Datum,
+	U.KdNr,
+	U.VsaNr,
+	U.Artikel,
+	KA.VarBez Variante,
+	KA.Preisliste,
+	U.Umlauf,
+	IIF(U.ME='-','ST',U.ME) ME,
+	U.VW_IsoCode Vertragswährung,
+	U.FW_IsoCode Firmenwährung,
+	KA.VkPreis VKPreis_VTW,
+	KA.WaschPreis Waschpreis_VTW,
+	KA.Leasingpreis_VTW,
+	KA.BasisRestwert Basisrestwert_VTW,
+	KA.GesamtRestwert Gesamtrestwert_VTW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,U.FW_ID,KA.VkPreis,U.Datum)) VKPreis_HRW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,U.FW_ID,KA.WaschPreis,U.Datum)) Waschpreis_HRW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,U.FW_ID,KA.Leasingpreis_VTW,U.Datum)) Leasingpreis_HRW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,U.FW_ID,KA.BasisRestwert,U.Datum)) Basisrestwert_HRW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,U.FW_ID,KA.GesamtRestwert,U.Datum)) Gesamtrestwert_HRW,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,WE4.ID,KA.VkPreis,U.Datum)) VKPreis_EUR,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,WE4.ID,KA.WaschPreis,U.Datum)) Waschpreis_EUR,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,WE4.ID,KA.Leasingpreis_VTW,U.Datum)) Leasingpreis_EUR,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,WE4.ID,KA.BasisRestwert,U.Datum)) Basisrestwert_EUR,
+(SELECT NachPreis FROM Salesianer.dbo.advFunc_ConvertExchangeRate(U.VW_ID,WE4.ID,KA.GesamtRestwert,U.Datum)) Gesamtrestwert_EUR
+FROM U
+LEFT JOIN KA ON KA.ID=U.KdArtiID
+CROSS JOIN WE4;
+GO
+
