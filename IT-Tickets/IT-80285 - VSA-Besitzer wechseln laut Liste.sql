@@ -9,11 +9,15 @@ CREATE TABLE #VsaOwnerChange (
 GO
 
 INSERT INTO #VsaOwnerChange (EinzTeilID, VsaOwnerID)
-SELECT EinzTeil.ID,VsaOwner_New.ID
+SELECT EinzTeil.ID, VsaOwnerID = (
+  SELECT Vsa.ID
+  FROM Vsa
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
+  WHERE Kunden.KdNr = _IT80285.KdNr
+    AND Vsa.VsaNr = _IT80285.VsaNr_Besitzer
+)
 FROM EinzTeil
-JOIN _IT80285 ON EinzTeil.Code = _IT80285.Code
-JOIN Vsa AS VsaOwner ON EinzTeil.VsaOwnerID = VsaOwner.ID
-JOIN Vsa AS VsaOwner_New ON VsaOwner.KundenID = VsaOwner_New.KundenID AND _IT80285.VsaNr_Besitzer = VsaOwner_New.VsaNr;
+JOIN _IT80285 ON EinzTeil.Code = _IT80285.Code;
 
 GO
 
