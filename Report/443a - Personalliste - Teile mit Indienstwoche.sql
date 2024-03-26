@@ -8,7 +8,7 @@ Teilestatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'EINZHIST'
 )
-SELECT Traeger.Traeger AS TrägerNr, Traeger.PersNr, Traegerstatus.StatusBez AS [Status Träger], Traeger.Nachname, Traeger.Vorname, Traeger.SchrankInfo AS [Schrank/Fach], EinzHist.Barcode, Teilestatus.StatusBez AS [Status Teil], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Indienst AS IndienstWoche, EinzHist.Ausgang1, EinzHist.Eingang1, BerufsgrpArti.VariantBez AS Berufsgruppe, Kunden.Name1 AS Kunde, Vsa.Bez + ' (' + Vsa.SuchCode + ')' AS VSA, Abteil.Bez AS Kostenstelle
+SELECT Traeger.Traeger AS TrägerNr, Traeger.PersNr, Traegerstatus.StatusBez AS [Status Träger], Traeger.Nachname, Traeger.Vorname, Traeger.SchrankInfo AS [Schrank/Fach], EinzHist.Barcode, Teilestatus.StatusBez AS [Status Teil], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS Variantenbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Indienst AS IndienstWoche, EinzHist.Ausgang1, EinzHist.Eingang1, BerufsgrpArti.VariantBez AS Berufsgruppe, Traeger.VormalsNr AS [Sonstige Daten], Kunden.Name1 AS Kunde, Vsa.Bez + ' (' + Vsa.SuchCode + ')' AS VSA, Abteil.Bez AS Kostenstelle
 FROM EinzTeil, EinzHist, TraeArti, Traeger, Vsa, Kunden, KdArti, Artikel, Abteil, ArtGroe, KdArti AS BerufsgrpArti, Traegerstatus, Teilestatus
 WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
   AND EinzHist.TraeArtiID = TraeArti.ID

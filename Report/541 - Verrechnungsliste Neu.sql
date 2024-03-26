@@ -1,4 +1,4 @@
-SELECT Traeger.PersNr AS Personalnummer, Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, Traeger.Indienst AS [Indienststellungswoche Träger], 1 AS Menge, KdArti.LeasPreis AS Periodenpreis
+SELECT Traeger.PersNr AS Personalnummer, Traeger.Nachname, Traeger.Vorname, Abteil.Bez AS Kostenstelle, KdArti.VariantBez AS Berufsgruppe, Traeger.VormalsNr AS [Sonstige Daten], Traeger.Indienst AS [Indienststellungswoche Träger], 1 AS Menge, KdArti.LeasPreis AS Periodenpreis
 FROM TraeArch
 JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
