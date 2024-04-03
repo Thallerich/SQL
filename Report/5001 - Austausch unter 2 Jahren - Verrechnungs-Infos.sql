@@ -113,6 +113,15 @@ SET @sqltext = N'
     AND TeilSoFa.SoFaArt = N''R''
     AND (EinzHist.Status = N''Y'' OR (EinzHist.Status = N''S'' AND EinzHist.WegGrundID > 0))
     AND Kunden.KdNr NOT IN (10005396, 100151)
+    AND NOT EXISTS (
+      SELECT SoFaCheck.*
+      FROM TeilSoFa SoFaCheck
+      WHERE SoFaCheck.EinzHistID = EinzHist.ID
+        AND SoFaCheck.SoFaArt = N''R''
+        AND SoFaCheck.Zeitpunkt < CAST(@from AS datetime2)
+        AND SoFaCheck.AlterWochen = TeilSoFa.AlterWochen
+        AND SoFaCheck.AnzWaeschen = TeilSoFa.AnzWaeschen
+    )
 ';
 
 IF @onlybk = 1
