@@ -120,7 +120,6 @@ SET @sqltext = N'
         AND SoFaCheck.SoFaArt = N''R''
         AND SoFaCheck.Zeitpunkt < CAST(@from AS datetime2)
         AND SoFaCheck.AlterWochen = TeilSoFa.AlterWochen
-        AND SoFaCheck.AnzWaeschen = TeilSoFa.AnzWaeschen
     )
 ';
 
