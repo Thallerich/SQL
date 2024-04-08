@@ -1,3 +1,9 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Laut Mail von Malte MAYER (03/04/2024) ist dieser Datenexport nicht notwendig                                             ++ */
+/* ++                                                                                                                           ++ */
+/* ++ Author: Stefan THALLER - 2024-04-08                                                                                       ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DECLARE @customerarticle TABLE (
   customerid int,
   customername nvarchar(20) COLLATE Latin1_General_CS_AS,

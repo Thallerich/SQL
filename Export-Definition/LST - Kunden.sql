@@ -18,5 +18,5 @@ WHERE Kunden.[Status] = N'A'
 GROUP BY Kunden.KdNr, Kunden.SuchCode
 HAVING SUM(IIF(LEN(EinzHist.Barcode) = 24 OR LEN(EinzHist.RentomatChip) = 24, 1, 0)) > 0 OR SUM(IIF(LEN(EinzHist.Barcode) != 24 AND LEN(EinzHist.RentomatChip) != 24, 1, 0)) > 0;
 
-SELECT customerid, CAST(IIF(percentagechipped > 50, 1, 0) AS bit) AS chipcoded
+SELECT customerid, customername, CAST(IIF(percentagechipped > 50, 1, 0) AS bit) AS chipcoded
 FROM @customer;
