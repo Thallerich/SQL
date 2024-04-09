@@ -12,6 +12,12 @@ VertragPE AS (
     LAST_VALUE(Vertrag.LetztePeProz) OVER (PARTITION BY Vertrag.KundenID, Vertrag.PrLaufID ORDER BY Vertrag.LetztePeDatum ASC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS VertragLastPEProz
   FROM Vertrag
   WHERE Vertrag.Status = N'A'
+),
+Fee AS (
+  SELECT KdFee.KundenID, KdFee.UmsatzProz, KdFee.UmsatzAbs, RechFee.RechFeeBez$LAN$ AS RechFeeBez
+  FROM KdFee
+  JOIN RechFee ON KdFee.RechFeeID = RechFee.ID
+  WHERE KdFee.[Status] = N'A'
 )
 SELECT DISTINCT Firma.SuchCode AS Firma,
   Holding.Holding,
@@ -43,16 +49,22 @@ SELECT DISTINCT Firma.SuchCode AS Firma,
   PrListPE.PrListNr AS [Preisliste-Nr],
   PrListPE.PrListBez AS Preisliste,
   PrListPE.PrListLastPEDate AS [Datum letzte PE Preisliste],
-  IIF(PrListPE.PrListLastPeProz = 0, NULL, PrListPE.PrListLastPEProz) AS [letzte PE Preisliste - Prozent]
+  IIF(PrListPE.PrListLastPeProz = 0, NULL, PrListPE.PrListLastPEProz) AS [letzte PE Preisliste - Prozent],
+  RKoOut.RKoOutBez$LAN$ AS [Ausgabetyp Rechnung],
+  Fee.RechFeeBez$LAN$ AS Gebühr,
+  Fee.UmsatzProz AS Prozentwert,
+  Fee.UmsatzAbs AS [absoluter Wert]
 FROM VertragPE
 JOIN Kunden ON VertragPE.KundenID = Kunden.ID
+LEFT JOIN Fee ON Fee.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Firma ON Kunden.FirmaID = Firma.ID
 JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 JOIN Abc ON Kunden.AbcID = Abc.ID
 JOIN PrLauf ON VertragPE.PrLaufID = PrLauf.ID
-LEFT JOIN PrListPE ON Kunden.PrListKundenID = PrListPe.PrListID
+LEFT JOIN PrListPE ON Kunden.ID = PrListPe.PrListID
+JOIN RKoOut ON Kunden.RKoOutID = RKoOut.ID
 WHERE Kunden.Status = N'A'
   AND Kunden.AdrArtID = 1
   AND Firma.ID IN ($1$)
