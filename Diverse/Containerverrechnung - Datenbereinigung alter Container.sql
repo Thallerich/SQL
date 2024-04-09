@@ -59,5 +59,12 @@ FROM #Entlasten;
 
 GO
 
+DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE MitarbeiUser = N'THALST');
+
+UPDATE Contain SET KundenID = -1, UserID_ = @UserID
+WHERE ID IN (SELECT ContainID FROM #Entlasten);
+
+GO
+
 DROP TABLE #Entlasten;
 GO
