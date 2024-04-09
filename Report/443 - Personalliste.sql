@@ -40,29 +40,25 @@ SELECT Vsa.ID AS VsaID, Traeger.ID AS TraegerID, Wochen.Woche, Traeger.Traeger A
 	SELECT TOP 1 Fach
 	FROM TraeFach
 	WHERE Traeger.ID = TraegerID
-) AS Fach, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, KdArti.Variante, KdArti.VariantBez, Kunden.Name1 AS Kunde, RTRIM(VSA.Bez) + ' ('+ RTRIM(VSA.SuchCode) + ')' AS Vsa, Abteil.Bez AS KsSt
+) AS Fach, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, KdArti.Variante, KdArti.VariantBez, Kunden.Name1 AS Kunde, RTRIM(VSA.Bez) + ' ('+ RTRIM(VSA.SuchCode) + ')' AS Vsa,Abteil.Abteilung as KoStNr, Abteil.Bez AS KsSt
 INTO #TempPersonalliste
-FROM TraeArch, Wochen, Kunden, VSA, Abteil, TraeArti, ArtGroe, KdArti, Artikel, Traeger
+FROM TraeArch, Wochen, Kunden, Vsa, Abteil, TraeArti, ArtGroe, KdArti, Artikel, Traeger
 WHERE Traeger.ID = TraeArti.TraegerID
-	AND KdArti.ArtikelID = Artikel.ID
+	AND KdArti.ArtikelID = Artikel.ID 
+	AND TraeArch.ApplKdArtiID = -1
 	AND KdArti.ID = TraeArti.KdArtiID
 	AND ArtGroe.ID = TraeArti.ArtGroeID
 	AND TraeArti.ID = TraeArch.TraeArtiID
 	AND Abteil.ID = TraeArch.AbteilID
-	AND VSA.ID = TraeArch.VSAID
+	AND TraeArch.VsaID = Vsa.ID
 	AND Kunden.ID = TraeArch.KundenID
 	AND Wochen.ID = TraeArch.WochenID
 	AND Kunden.ID = $ID$
-	AND Wochen.Woche = $1$
-ORDER BY Vsa.ID, Nachname, Vorname;
+	AND Wochen.Woche = $1$;
 
-DROP TABLE IF EXISTS #TempAnzTraeger;
-
-SELECT COUNT(DISTINCT TraegerID) AS AnzTraeger, VsaID
-INTO #TempAnzTraeger
-FROM #TempPersonalliste
-GROUP BY VsaID;
-
-SELECT AnzT.AnzTraeger, PL.*
-FROM #TempPersonalliste PL, #TempAnzTraeger AnzT
-WHERE PL.VsaID = AnzT.VsaID;
+SELECT AnzTraeger = (
+	SELECT COUNT(DISTINCT TraeCount.TraegerID)
+	FROM #TempPersonalliste AS TraeCount
+	WHERE TraeCount.VsaID = Personalliste.VsaID
+), Personalliste.*
+FROM #TempPersonalliste AS Personalliste;
