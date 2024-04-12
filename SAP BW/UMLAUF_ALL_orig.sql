@@ -98,4 +98,4 @@ SELECT DATEADD(DAY,7,MAX(U.Datum)) Datum,
   0 Gesamtrestwert_EUR
 FROM U
 LEFT JOIN KA ON KA.ID=U.KdArtiID
-GROUP BY U.KdNr,U.VsaNr,U.Artikel,KA.VarBez,CAST(IIF(U.PrListKundenID>0,1,0) AS BIT),IIF(U.ME='-','ST',U.ME),U.VW_IsoCode,U.FW_IsoCode,KA.VkPreis,KA.WaschPreis,KA.Leasingpreis_VTW,KA.BasisRestwert,KA.GesamtRestwert;
+GROUP BY U.KdNr,U.VsaNr,U.Artikel,KA.VarBez,KA.Preisliste,IIF(U.ME='-','ST',U.ME),U.VW_IsoCode,U.FW_IsoCode,KA.VkPreis,KA.WaschPreis,KA.Leasingpreis_VTW,KA.BasisRestwert,KA.GesamtRestwert;

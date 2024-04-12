@@ -35,7 +35,7 @@ KA AS (
 	FROM Salesianer.dbo.KDARTI KDA
   CROSS APPLY Salesianer.dbo.advFunc_GetLeasPreisProWo(KDA.ID) AS LeasPreis
 	LEFT JOIN VB ON KDA.VariantBez LIKE '%('+VB.VarBez+')%'
-	GROUP BY ID,KundenId,KdBerID,VariantBez,VkPreis,WaschPreis,BasisRestwert,GesamtRestwert, CAST(IIF(KDA.LeasPreisPrListKdArtiID > 0 OR KDA.WaschPreisPrListKdArtiID > 0, 1, 0) AS bit)
+	GROUP BY ID,KundenId,KdBerID,VkPreis,WaschPreis,BasisRestwert,GesamtRestwert, LeasPreis.LeasPreisProWo, CAST(IIF(KDA.LeasPreisPrListKdArtiID > 0 OR KDA.WaschPreisPrListKdArtiID > 0, 1, 0) AS bit)
 )
 SELECT DATEADD(DAY,7,MAX(U.Datum)) Datum,
 	U.KdNr,

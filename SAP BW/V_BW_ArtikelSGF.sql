@@ -1,6 +1,3 @@
-USE [Salesianer_Archive]
-GO
-
 CREATE OR ALTER VIEW [sapbw].[V_BW_ArtikelSGF] AS
    SELECT UPPER(Artikel.ArtikelNr + IIF(ISNULL(ArtGroe.Groesse, N'-') = N'-', N'', N'-' + ArtGroe.Groesse)) AS Artikel,
     KdGf.KurzBez,

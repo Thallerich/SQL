@@ -1,6 +1,3 @@
-USE [Salesianer_Archive]
-GO
-
 ALTER VIEW [sapbw].[V_BW_LIEFERQUOTE] AS
   SELECT Vsa.VsaNr,
           Kunden.KdNr,

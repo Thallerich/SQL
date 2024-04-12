@@ -65,15 +65,8 @@ AS RETURN (
     KdArti.Variante AS Variante_Orig,
     IIF(Expedition.SuchCode = N'SALESIANER MIET' OR Expedition.Bez LIKE N'BU SMA%', SUBSTRING(Expedition.Bez, CHARINDEX(N' ', Expedition.Bez, 1) + 1, CHARINDEX(N':', Expedition.Bez, 1) - CHARINDEX(N' ', Expedition.Bez, 1) - 1), Expedition.SuchCode) AS Expedition,
     IIF(Produktion.SuchCode = N'SALESIANER MIET' OR Produktion.Bez LIKE N'BU SMA%', SUBSTRING(Produktion.Bez, CHARINDEX(N' ', Produktion.Bez, 1) + 1, CHARINDEX(N':', Produktion.Bez, 1) - CHARINDEX(N' ', Produktion.Bez, 1) - 1), Produktion.SuchCode) AS Produktion,
-    PrListKdArtiID = COALESCE((
-      SELECT PrKdArti.ID
-      FROM Salesianer.dbo.KdArti AS PrKdArti
-      WHERE PrKdArti.KundenID = Kunden.PrListKundenID
-        AND PrKdArti.ArtikelID = KdArti.ArtikelID
-        AND PrKdArti.Variante = KdArti.Variante
-        AND Kunden.PrListKundenID > 0
-    ), -1),
-    CAST(IIF(Kunden.PrListKundenID > 0, 1, 0) AS bit) AS Preisliste,
+    PrListKdArtiID = IIF(KdArti.WaschPreisPrListKdArtiID > 0, KdArti.WaschPreisPrListKdArtiID, KdArti.LeasPreisPrListKdArtiID),
+    CAST(IIF(KdArti.LeasPreisPrListKdArtiID > 0 OR KdArti.WaschPreisPrListKdArtiID > 0, 1, 0) AS bit) AS Preisliste,
     Umlauf.Umlauf,
     IIF(ME.ID < 0, N'ST', ME.IsoCode) AS ME,
     VertragWae.IsoCode AS Vertragswährung,
