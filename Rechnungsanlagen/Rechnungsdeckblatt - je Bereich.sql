@@ -17,7 +17,11 @@ FROM #Final AS F, (
   FROM RechPo
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
-    AND RechPo.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'OPK', N'OPS'))
+    AND (
+      (RechPo.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'OPK', N'OPS')))
+      OR
+      (RechPo.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'24X7') AND KdArti.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 19023)))
+    )
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
@@ -29,7 +33,7 @@ FROM #Final AS F, (
   WHERE RechPo.RechKoID = $RECHKOID$
     AND RechPo.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = 'BK')
     AND RechPo.ArtGruID NOT IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'BGP', N'OPK', N'OPS'))
-    AND RechPo.KdArtiID NOT IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID IN (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr IN (N'54A7XL', N'54A7L')))
+    AND RechPo.KdArtiID NOT IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID IN (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr IN (N'54A7XL', N'54A7L', N'24X7')))
   GROUP BY RechPo.AbteilID
 ) AS x
 WHERE F.AbteilID = x.AbteilID;
