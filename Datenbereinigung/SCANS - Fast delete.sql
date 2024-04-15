@@ -40,7 +40,7 @@ CREATE VIEW dbo.Scans_Delete AS
 
 GO
 
-DECLARE @EndTime datetime2(3) = DATEADD(minute, 60, GETDATE());
+DECLARE @EndTime datetime2(3) = DATEADD(minute, 540, GETDATE());
 DECLARE @IsError bit = 0;
 DECLARE @RunCounter int = 1, @DeleteCount int = 1;
 DECLARE @Msg nvarchar(100);
@@ -84,3 +84,19 @@ GO
 
 DROP VIEW dbo.Scans_Delete;
 GO
+
+/*
+
+EXEC Salesianer_Archive.dbo.IndexOptimize
+    @Databases = N'Salesianer',
+    @Indexes = N'Salesianer.dbo.SCANS',
+    @FragmentationLow = NULL,
+    @FragmentationMedium = N'INDEX_REBUILD_OFFLINE',
+    @FragmentationHigh = N'INDEX_REBUILD_OFFLINE',
+    @FragmentationLevel1 = 50,
+    @FragmentationLevel2 = 80,
+    @UpdateStatistics = NULL,
+    @LogToTable = N'N',
+	@Execute = N'N';
+
+*/
