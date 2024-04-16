@@ -1,5 +1,5 @@
 WITH UserStats AS (
-  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
+  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins, COALESCE(IIF(Standort.FirmaID < 0, NULL, Standort.FirmaID), MStandort.FirmaID) AS FirmaID
   FROM LoginLog
   JOIN ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Standort ON ArbPlatz.StandortID = Standort.ID
@@ -10,11 +10,11 @@ WITH UserStats AS (
   WHERE LoginLog.LogInZeit >= N'2024-01-01'
     AND Mitarbei.[Status] = N'A'
     AND Mitarbei.UserName NOT LIKE N'JOB%'
-  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID
+  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID, COALESCE(IIF(Standort.FirmaID < 0, NULL, Standort.FirmaID), MStandort.FirmaID)
 
   UNION ALL
 
-  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins
+  SELECT COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')') AS Standort, LoginLog.UserID AS MitarbeiID, COUNT(LoginLog.ID) AS AnzLogins,  COALESCE(IIF(Standort.FirmaID < 0, NULL, Standort.FirmaID), MStandort.FirmaID) AS FirmaID
   FROM LoginLog
   JOIN ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Standort ON ArbPlatz.StandortID = Standort.ID
@@ -25,16 +25,17 @@ WITH UserStats AS (
   WHERE LoginLog.LogInZeit >= N'2024-01-01'
     AND Mitarbei.[Status] = N'A'
     AND Mitarbei.UserName NOT LIKE N'JOB%'
-  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID
+  GROUP BY COALESCE(Standort.Bez + N' (' + Standort.SuchCode + N')', MStandort.Bez + N' (' + MStandort.SuchCode + N')'), LoginLog.UserID, COALESCE(IIF(Standort.FirmaID < 0, NULL, Standort.FirmaID), MStandort.FirmaID)
 )
-SELECT UserStats.Standort, COUNT(DISTINCT UserStats.MitarbeiID) AS [Anzahl User]
+SELECT UserStats.Standort, COUNT(DISTINCT UserStats.MitarbeiID) AS [Anzahl User], Firma.Bez AS Firma
 FROM UserStats
 JOIN (
   SELECT MitarbeiID, MAX(AnzLogins) AS MaxLoginCount
   FROM UserStats
   GROUP BY MitarbeiID
 ) us1 ON UserStats.MitarbeiID = us1.MitarbeiID AND UserStats.AnzLogins = us1.MaxLoginCount
-GROUP BY UserStats.Standort;
+LEFT JOIN Firma ON UserStats.FirmaID = Firma.ID
+GROUP BY UserStats.Standort, Firma.Bez;
 
 
 SELECT N'LOTO' AS Standort, Mitarbei.Name
