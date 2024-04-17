@@ -5,9 +5,9 @@ DROP TABLE IF EXISTS #Umlauf_Salesianer_1401;
 DECLARE @LagerID int = $1$;
 DECLARE @CurrentWeek nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
 
-CREATE TABLE #LagerteileHist_1401
-( 
-  Barcode varchar(33) COLLATE Latin1_General_CS_AS, 
+CREATE TABLE #LagerteileHist_1401 ( 
+  Barcode varchar(33) COLLATE Latin1_General_CS_AS,
+  EinzHistID int,
   EinzteilID int,
   KundenID int,
   LagerortID int, 
@@ -24,30 +24,30 @@ CREATE INDEX Ind_LagerortID ON #LagerteileHist_1401 (LagerortID);
 CREATE INDEX Ind_ArtGroeID ON #LagerteileHist_1401 (ArtGroeID);
 CREATE INDEX Ind_LagerartID ON #LagerteileHist_1401 (LagerartID);
     
-INSERT INTO #LagerteileHist_1401 (Barcode, EinzteilID, KundenID, LagerortID, LagerartID, ArtikelID, ArtGroeID, EKPreis, [Status], EinzHistVon, RuecklaufG)
-  SELECT EinzHist.Barcode, 
-         EinzHist.EinzTeilID,
-         EinzHist.KundenID,
-         Lagerort.ID AS LagerortID, 
-         EinzHist.LagerArtID,
-         Artikel.ID AS ArtikelID,
-         EinzHist.ArtGroeID, 
-         ArtGroe.EKPreis, 
-         Einzhist.Status,
-         EinzHist.EinzHistVon,
-         EinzTeil.RuecklaufG
-  FROM EinzTeil
-  JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
-  JOIN Lagerort ON EinzHist.LagerOrtID = LagerOrt.ID 
-  JOIN Lagerart ON EinzHist.LagerArtID = Lagerart.Id 
-  JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID 
-  JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID 
-  WHERE Lagerart.LagerID = @LagerID 
-    AND EinzHist.Status IN ('X', 'XE', 'XM') 
-    AND EinzHist.EinzHistTyp = 2;
+INSERT INTO #LagerteileHist_1401 (Barcode, EinzHistID, EinzteilID, KundenID, LagerortID, LagerartID, ArtikelID, ArtGroeID, EKPreis, [Status], EinzHistVon, RuecklaufG)
+SELECT EinzHist.Barcode,
+  EinzHist.ID,
+  EinzHist.EinzTeilID,
+  EinzHist.KundenID,
+  Lagerort.ID AS LagerortID, 
+  EinzHist.LagerArtID,
+  Artikel.ID AS ArtikelID,
+  EinzHist.ArtGroeID, 
+  ArtGroe.EKPreis, 
+  Einzhist.Status,
+  EinzHist.EinzHistVon,
+  EinzTeil.RuecklaufG
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN Lagerort ON EinzHist.LagerOrtID = LagerOrt.ID 
+JOIN Lagerart ON EinzHist.LagerArtID = Lagerart.Id 
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID 
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID 
+WHERE Lagerart.LagerID = @LagerID 
+  AND EinzHist.Status IN ('X', 'XE', 'XM') 
+  AND EinzHist.EinzHistTyp = 2;
 
-CREATE TABLE #Umlauf_Salesianer_1401
-(
+CREATE TABLE #Umlauf_Salesianer_1401 (
   StandortID int,
   ArtGroeID int,
   ArtikelID int,
@@ -198,54 +198,63 @@ ArtikelverwendungStandort AS (
   GROUP BY ArtikelID
 )
 SELECT LagerteileHist.Barcode,
-       Kunden.KdNr,
-       Kunden.SuchCode as [Letzter Kunde],
-       LagerteileHist.RuecklaufG as [Anzahl Wäschen],
-       LagerteileHist.EinzHistVon AS [im Lager seit],
-       Standort.Bez AS Lagerstandort, 
-       Lagerort.Lagerort, 
-       LagSchr.Bez AS Lagerschrank, 
-       Lagerart.LagerartBez$LAN$ AS Lagerart, 
-       Lagerart.Zustand, 
-       LagerArt.Neuwertig, 
-       Artikel.ArtikelNr, 
-       Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, 
-       ArtGroe.Groesse AS Größe,
-       ArtikelverwendungStandort.VerwendetIn AS [verwendet in],
-       Artikelstatus.StatusBez AS Artikelstatus, 
-       Umlaufmenge.Umlauf as [Umlauf Salesianer (Artikel-Größe)],
-       UmlaufmengeStandort.Umlauf as [Umlauf Standort (Artikel-Größe)],
-       Bestort.Bestand as [Bestand am Lagerort],
-       Abc.ABCBez$LAN$ AS [ABC-Klasse], 
-       BestOrt.Bestand, 
-       BestOrt.Reserviert,
-       BestOrt.BestandUrsprung AS [Bestand vom Ursprungsartikel], 
-       Bestand.Gleitpreis, 
-       LagerteileHist.EKPreis,
-       UmlaufSalesianerArtikel.Umlauf AS [Umlauf Salesianer (Artikel)],
-       StandortUmlaufSalesianerArtikel.Umlauf AS [Umlauf Standort (Artikel)],
-       [Standort mit höchstem Umlauf] = (
-         SELECT TOP 1 Standort.Bez
-         FROM (
-           SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
-           FROM #Umlauf_Salesianer_1401
-           GROUP BY StandortID, ArtikelID
-         ) AS ArtikelUmlaufStandort
-         JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
-         WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
-         ORDER BY ArtikelUmlaufStandort.Umlauf DESC
-       ),
-       [Höchste Umlaufmenge] = (
-         SELECT TOP 1 ArtikelUmlaufStandort.Umlauf
-         FROM (
-           SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
-           FROM #Umlauf_Salesianer_1401
-           GROUP BY StandortID, ArtikelID
-         ) AS ArtikelUmlaufStandort
-         JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
-         WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
-         ORDER BY ArtikelUmlaufStandort.Umlauf DESC
-       )
+  Kunden.KdNr,
+  Kunden.SuchCode as [Letzter Kunde],
+  LagerteileHist.RuecklaufG as [Anzahl Wäschen],
+  LagerteileHist.EinzHistVon AS [im Lager seit],
+  Standort.Bez AS Lagerstandort, 
+  Lagerort.Lagerort, 
+  LagSchr.Bez AS Lagerschrank, 
+  Lagerart.LagerartBez$LAN$ AS Lagerart, 
+  Lagerart.Zustand, 
+  LagerArt.Neuwertig, 
+  Artikel.ArtikelNr, 
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, 
+  ArtGroe.Groesse AS Größe,
+  ArtikelverwendungStandort.VerwendetIn AS [verwendet in],
+  Artikelstatus.StatusBez AS Artikelstatus, 
+  Umlaufmenge.Umlauf as [Umlauf Salesianer (Artikel-Größe)],
+  UmlaufmengeStandort.Umlauf as [Umlauf Standort (Artikel-Größe)],
+  Bestort.Bestand as [Bestand am Lagerort],
+  Abc.ABCBez$LAN$ AS [ABC-Klasse], 
+  BestOrt.Bestand, 
+  BestOrt.Reserviert,
+  BestOrt.BestandUrsprung AS [Bestand vom Ursprungsartikel], 
+  Bestand.Gleitpreis, 
+  LagerteileHist.EKPreis,
+  UmlaufSalesianerArtikel.Umlauf AS [Umlauf Salesianer (Artikel)],
+  StandortUmlaufSalesianerArtikel.Umlauf AS [Umlauf Standort (Artikel)],
+  [Standort mit höchstem Umlauf] = (
+    SELECT TOP 1 Standort.Bez
+    FROM (
+      SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
+      FROM #Umlauf_Salesianer_1401
+      GROUP BY StandortID, ArtikelID
+    ) AS ArtikelUmlaufStandort
+    JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
+    WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
+    ORDER BY ArtikelUmlaufStandort.Umlauf DESC
+  ),
+  [Höchste Umlaufmenge] = (
+    SELECT TOP 1 ArtikelUmlaufStandort.Umlauf
+    FROM (
+      SELECT StandortID, ArtikelID, SUM(Umlauf) AS Umlauf
+      FROM #Umlauf_Salesianer_1401
+      GROUP BY StandortID, ArtikelID
+    ) AS ArtikelUmlaufStandort
+    JOIN Standort ON ArtikelUmlaufStandort.StandortID = Standort.ID
+    WHERE ArtikelUmlaufStandort.ArtikelID = LagerteileHist.ArtikelID
+    ORDER BY ArtikelUmlaufStandort.Umlauf DESC
+  ),
+  Applikationen = STUFF((
+    SELECT N', ' + Artikel.ArtikelBez$LAN$ + N' (' + ArtiType.ArtiTypeBez$LAN$ + N')'
+    FROM TeilAppl
+    JOIN Artikel ON TeilAppl.ApplArtikelID = Artikel.ID
+    JOIN ArtiType ON TeilAppl.ArtiTypeID = ArtiType.ID
+    WHERE TeilAppl.EinzHistID = LagerteileHist.EinzHistID
+      AND TeilAppl.Bearbeitung = N'-'
+    FOR XML PATH('')
+  ), 1, 2, '')
 FROM #LagerteileHist_1401 LagerteileHist
 JOIN Bestand ON LagerteileHist.ArtGroeID = Bestand.ArtGroeID AND LagerteileHist.LagerartID = Bestand.LagerartID
 JOIN BestOrt ON LagerteileHist.LagerortID = BestOrt.LagerortID AND BestOrt.BestandID = Bestand.ID
