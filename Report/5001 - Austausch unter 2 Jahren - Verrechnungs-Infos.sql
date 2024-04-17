@@ -15,6 +15,8 @@ CREATE TABLE #Result (
   Holding nvarchar(10),
   KdNr int,
   Kunde nvarchar(20),
+  Vorname nvarchar(20),
+  Nachname nvarchar(40),
   Barcode nvarchar(33),
   ArtikelNr nvarchar(15),
   Artikelbezeichnung nvarchar(60),
@@ -62,7 +64,7 @@ FROM [Zone]
 WHERE [Zone].ID IN ($5$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
@@ -70,6 +72,8 @@ SET @sqltext = N'
     Holding.Holding,
     Kunden.KdNr,
     Kunden.SuchCode AS Kunde,
+    Traeger.Vorname,
+    Traeger.Nachname,
     EinzHist.Barcode,
     Artikel.ArtikelNr,
     Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
@@ -94,6 +98,7 @@ SET @sqltext = N'
     WegGrund.WegGrundBez$LAN$ AS Schrottgrund
   FROM TeilSoFa
   JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
+  JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
   JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   JOIN Vsa ON EinzHist.VsaID = Vsa.ID
@@ -134,7 +139,7 @@ EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 /* ++ Pipeline: Details                                                                                                         ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
+SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
     CASE
         WHEN faktStatus = 3 THEN N'verrechnet'
         WHEN faktStatus = 2 THEN N'wird noch verrechnet'
@@ -164,9 +169,9 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Ku
       ELSE N'<<unbekannt>>'
     END
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
+  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
   FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
+  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
 ) AS x;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
