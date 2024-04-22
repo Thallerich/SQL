@@ -51,7 +51,7 @@ SELECT DISTINCT Firma.SuchCode AS Firma,
   PrListPE.PrListLastPEDate AS [Datum letzte PE Preisliste],
   IIF(PrListPE.PrListLastPeProz = 0, NULL, PrListPE.PrListLastPEProz) AS [letzte PE Preisliste - Prozent],
   RKoOut.RKoOutBez$LAN$ AS [Ausgabetyp Rechnung],
-  Fee.RechFeeBez$LAN$ AS Gebühr,
+  Fee.RechFeeBez AS Gebühr,
   Fee.UmsatzProz AS Prozentwert,
   Fee.UmsatzAbs AS [absoluter Wert]
 FROM VertragPE
