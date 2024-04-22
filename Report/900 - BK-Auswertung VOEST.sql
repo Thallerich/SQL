@@ -36,7 +36,8 @@ JOIN Vsa ON TraeArch.VsaID = Vsa.ID
 JOIN Kunden ON TraeArch.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 WHERE RechKo.RechDat BETWEEN $1$ AND $2$
-  AND RechKo.Status = N'F'
+  AND RechKo.Status >= N'N'
+  AND RechKo.Status < N'X'
   AND Kunden.ID = $ID$
 GROUP BY Holding.Bez, Kunden.KdNr, Kunden.SuchCode, RechKo.RechNr, RechKo.RechDat, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Wochen.Woche;
 

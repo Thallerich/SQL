@@ -2,7 +2,7 @@ SELECT Firma.SuchCode AS Firma, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kund
 FROM RechKo
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Firma ON RechKo.FirmaID = Firma.ID
-WHERE RechKo.Status = N'A'
+WHERE RechKo.Status < N'L'
   AND RechKo.ID > 0
   AND RechKo.FirmaID IN ($1$)
   AND EXISTS (

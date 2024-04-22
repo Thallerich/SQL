@@ -2,7 +2,8 @@ WITH Jahresumsatz AS (
   SELECT RechKo.KundenID, SUM(RechKo.Nettowert) AS Nettoumsatz
   FROM RechKo
   WHERE DATEPART(year, RechKo.RechDat) = DATEPART(year, $ENDDATE$) - 1  /* Umsatz vom Jahr vor der PE verwenden */
-    AND RechKo.Status BETWEEN N'F' AND N'S'
+    AND RechKo.Status >= N'N'
+    AND RechKo.[Status] < N'X'
   GROUP BY RechKo.KundenID
 )
 SELECT DISTINCT Firma.SuchCode AS Firma, Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, KdGf.KurzBez AS Geschäftsbereich, [Zone].ZonenCode AS Vertriebszone, ABC.ABCBez AS [ABC-Klasse], PeKo.Bez AS [Bezeichnung Preiserhöhung], PeKo.WirksamDatum AS [Wirksam ab], PeKo.DurchfuehrungsDatum AS [durchgeführt am], PePo.PeProzent AS Prozentsatz, Jahresumsatz.Nettoumsatz AS [Jahresumsatz]

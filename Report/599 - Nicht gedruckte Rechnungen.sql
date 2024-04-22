@@ -29,7 +29,7 @@ JOIN [Status] ON RechKo.Status = [Status].[Status] AND [Status].Tabelle = N'RECH
 JOIN DrLauf ON RechKo.DrLaufID = DrLauf.ID
 WHERE KdGf.ID IN ($1$)
   AND RechKo.FirmaID IN ($2$)
-  AND RechKo.[Status] < N'F'
+  AND RechKo.[Status] < N'N'
   AND DrLauf.SichtbarID IN ($SICHTBARIDS$)
   AND ((Kunden.FakAustausch = 0 AND $3$ = 1) OR ($3$ = 0))
 ORDER BY SGF, Kunden.KdNr, RechKo.RechNr;

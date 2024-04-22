@@ -13,7 +13,8 @@ SELECT RechKo.ID
 FROM RechKo
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 WHERE RechKo.RechDat BETWEEN @vonDatum AND @bisDatum
-  AND RechKo.Status = N'F'
+  AND RechKo.Status >= N'N'
+  AND RechKo.[Status] < N'X'
   AND Kunden.KdNr = 272295;
 
 SELECT @Wochenanzahl = DATEDIFF(week, MIN(Week.VonDat), MAX(Week.BisDat))
