@@ -13,5 +13,6 @@ FROM RechKo
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 WHERE RechKo.FibuExpID < 0
   AND Kunden.BarRech = 1
-  AND RechKo.Status = N'F'
+  AND RechKo.[Status] >= N'N'
+  AND RechKo.[Status] < N'X'
   AND RechKo.FirmaID IN (5260, 5272);
