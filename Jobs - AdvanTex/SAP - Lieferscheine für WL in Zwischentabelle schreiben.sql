@@ -37,5 +37,5 @@ JOIN Firma ON Kunden.FirmaID = Firma.ID
 WHERE (
     (Firma.SuchCode = N'FA14' AND KdGf.KurzBez IN (N'MED', N'GAST', N'JOB', N'SAEU', N'BM', N'RT', N'MIC'))
     OR
-    (Firma.SuchCode IN (N'SMP', N'SMKR', N'SMSK', N'SMRO', N'BUDA', N'SMRS', N'SMSL',N'SMHR'))
+    (Firma.SuchCode IN (N'SMP', N'SMKR', N'SMSK', N'SMRO', N'BUDA', N'SMRS', N'SMSL',N'SMHR',N'SMPL'))
   );
