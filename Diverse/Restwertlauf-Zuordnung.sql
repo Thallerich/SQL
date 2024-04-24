@@ -27,7 +27,8 @@ BEGIN TRANSACTION
 
   UPDATE r SET RwLaufID = RwLauf.ID
   FROM @RwLauf AS r
-  JOIN RwLauf ON RwLauf.RWLaufBez = r.RwLaufBez;
+  JOIN RwLauf ON RwLauf.RWLaufBez = r.RwLaufBez
+  WHERE RwLaufID IS NULL;
 
   UPDATE Kunden SET RwLaufID = r.RwLaufID
   FROM @RwLauf AS r
