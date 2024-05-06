@@ -107,15 +107,22 @@ WHERE Kunden.ID IN ($3$)
 /* ++ Author: Stefan THALLER - 2022-01-25                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @pivotcols nvarchar(max);
-DECLARE @pivotcolshead nvarchar(max);
-DECLARE @pivotsql nvarchar(max);
+IF (SELECT TOP 1 ArtikelNr FROM #Preishistory) IS NOT NULL
+BEGIN
+  DECLARE @pivotcols nvarchar(max);
+  DECLARE @pivotcolshead nvarchar(max);
+  DECLARE @pivotsql nvarchar(max);
 
-SET @pivotcols = STUFF((SELECT DISTINCT ', [' + Preistyp + ']' FROM #Preishistory ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
-SET @pivotcolshead = STUFF((SELECT DISTINCT ', [' + Preistyp + '] AS [' + REPLACE(REPLACE(Preistyp, N'B', N'Bearbeitung '), N'L', N'Leasing ') + ']' FROM #Preishistory ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
+  SET @pivotcols = STUFF((SELECT DISTINCT ', [' + Preistyp + ']' FROM #Preishistory ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
+  SET @pivotcolshead = STUFF((SELECT DISTINCT ', [' + Preistyp + '] AS [' + REPLACE(REPLACE(Preistyp, N'B', N'Bearbeitung '), N'L', N'Leasing ') + ']' FROM #Preishistory ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
 
-SET @pivotsql = N'SELECT ArtikelNr, Artikelbezeichnung, Kundenbereich, Variante, Variantenbezeichnung, ' + @pivotcolshead + 
-  ' FROM #Preishistory AS Pivotdata ' +
-  ' PIVOT (MAX(Preis) FOR Preistyp IN (' + @pivotcols + ')) AS b;';
+  SET @pivotsql = N'SELECT ArtikelNr, Artikelbezeichnung, Kundenbereich, Variante, Variantenbezeichnung, ' + @pivotcolshead + 
+    ' FROM #Preishistory AS Pivotdata ' +
+    ' PIVOT (MAX(Preis) FOR Preistyp IN (' + @pivotcols + ')) AS b;';
 
-EXEC sp_executesql @pivotsql;
+  EXEC sp_executesql @pivotsql;
+END
+ELSE
+BEGIN
+  SELECT N'Keine Daten verfügbar!' AS Fehler;
+END;
