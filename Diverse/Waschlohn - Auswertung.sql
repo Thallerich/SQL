@@ -2,12 +2,13 @@ SELECT Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
   Produktion.SuchCode AS Wäscher,
   Produktion.Bez AS [Wäscher Bezeichnung],
+  Bereich.BereichBez AS Produktbereich,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez,
   Artikelkategorie = 
     CASE
       WHEN UPPER(Artikel.ArtikelBez) LIKE N'%T-SHIRT%' THEN N'T-Shirt'
-      WHEN UPPER(Artikel.ArtikelBez) LIKE N'%BUNDHOSE%' OR UPPER(Artikel.ArtikelBez) LIKE N'% BH %' THEN N'Bundhose'
+      WHEN UPPER(Artikel.ArtikelBez) LIKE N'%BUNDHOSE%' OR (UPPER(Artikel.ArtikelBez) LIKE N'% BH %' AND Bereich.Bereich != N'PWS') OR (UPPER(Artikel.ArtikelBez) LIKE N'BH %' AND Bereich.Bereich != N'PWS') THEN N'Bundhose'
     END,
   KdArti.WaschPreis AS Bearbeitungspreis,
   KdArti.LeasPreis AS Mietpreis,
@@ -20,6 +21,8 @@ JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN Standort AS Produktion ON LsPo.ProduktionID = Produktion.ID
 JOIN Firma ON Kunden.FirmaID = Firma.ID
 JOIN KdGf ON Kunden.KdGFID = KdGf.ID
@@ -29,4 +32,4 @@ WHERE Firma.SuchCode = N'FA14'
   AND LsKo.Status >= N'Q'
   AND LsKo.SentToSAP = 1
   AND (LEFT(LsKo.Referenz, 7) != N'INTERN_' OR LsKo.Referenz IS NULL)
-GROUP BY Kunden.KdNr, Kunden.SuchCode, Produktion.SuchCode, Produktion.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArti.WaschPreis, KdArti.LeasPreis, LsPo.InternKalkPreis;
+GROUP BY Kunden.KdNr, Kunden.SuchCode, Produktion.SuchCode, Produktion.Bez, Bereich.BereichBez, Bereich.Bereich, Artikel.ArtikelNr, Artikel.ArtikelBez, KdArti.WaschPreis, KdArti.LeasPreis, LsPo.InternKalkPreis;
