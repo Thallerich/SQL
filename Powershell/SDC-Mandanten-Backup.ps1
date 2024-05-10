@@ -1,44 +1,61 @@
-# To-Do: Use \\svatsmwfp1.sal.co.at\sql-backups instead - should have better bandwith to HQ22 
+Import-Module BitsTransfer
 
-Import-Module dbatools
-Set-DbaToolsInsecureConnection -SessionOnly
+# Specifiy backup paths (and servers) here
+$source = @(
+  @{location = 'Graz'; path = '\\SVATGRAZSQL1.sal.co.at\M$\Backup\SVATGRAZSQL1$SQL1\Salesianer_Graz\FULL\'},
+  @{location = 'SA22'; path = '\\SVATSMWFP1.sal.co.at\SQL-Backups\SQL1FCIHQ22$SQL1\Salesianer_SA22\FULL\'},
+  @{location = 'Inzing'; path = '\\SVATINZSQL1.sal.co.at\M$\Backup\SVATINZSQL1$SQL1\Salesianer_Inzing\FULL\'},
+  @{location = 'Klagenfurt'; path = '\\SVATUMKLSQL1.sal.co.at\M$\Backup\SVATUMKLSQL1$SQL1\Salesianer_Klagenfurt\FULL\'},
+  @{location = 'Wr. Neustadt'; path = '\\SVATSAWRSQL1.sal.co.at\M$\Backup\SVATSAWRSQL1$SQL1\Salesianer_SAWR\FULL\'},
+  @{location = 'Bratislava'; path = '\\SVSKSMSKSQL1.sal.co.at\M$\Backup\SVSKSMSKSQL1$SQL1\Salesianer_SMSK\FULL\'},
+  @{location = 'Enns 1'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Enns_1\FULL\'},
+  @{location = 'Enns 2'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Enns_2\FULL\'},
+  @{location = 'Lenzing 1'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Lenzing_1\FULL\'},
+  @{location = 'Lenzing 2'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Lenzing_2\FULL\'}
+)
 
-Write-Host "Starting Backup for GRAZ"
-Backup-DbaDatabase -SqlInstance SVATGRAZSQL1.sal.co.at -Database Salesianer_Graz -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+# specificy destination directory where backups will be gathered
+$dest = 'C:\Users\thalst.SAL\Downloads\Mandanten\'
 
-Write-Host "Starting Backup for INZING"
-Backup-DbaDatabase -SqlInstance SVATINZSQL1.sal.co.at -Database Salesianer_Inzing -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+# make sure there is no drive T as we will be using that
+if ((Test-Path -PathType Container -Path "T:"))
+{
+  Write-Host "ERROR: There is already a mapped drive T:"
+  exit
+}
 
-Write-Host "Starting Backup for KLAGENFURT"
-Backup-DbaDatabase -SqlInstance SVATUMKLSQL1.sal.co.at -Database Salesianer_Klagenfurt -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+# get credential to use for all servers
+$cred = Get-Credential -Message "Please input domain admin credentials:"
 
-Write-Host "Starting Backup for WR. NEUSTADT"
-Backup-DbaDatabase -SqlInstance SVATSAWRSQL1.sal.co.at -Database Salesianer_SAWR -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+# create destination directory if it does not exists
+if (!(Test-Path -PathType Container $dest)) {
+    New-Item -ItemType Directory -Path $dest
+}
 
-Write-Host "Starting Backup for BRATISLAVA"
-Backup-DbaDatabase -SqlInstance SVSKSMSKSQL1.sal.co.at -Database Salesianer_SMSK -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+# mapping drives with credentials and copying to destination
 
-Write-Host "Starting Backup for LENZING"
-# Backup-DbaDatabase -SqlInstance SVATWMLESQL1.sal.co.at -Database Salesianer_Lenzing1 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-# Backup-DbaDatabase -SqlInstance SVATWMLESQL1.sal.co.at -Database Salesianer_Lenzing2 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+foreach ($src in $source)
+{
+  $location = $src.location;
+  $srcpath = $src.path;
 
-Write-Host "Starting Backup for ENNS"
-Backup-DbaDatabase -SqlInstance SQL1FCIEN.sal.co.at -Database Salesianer_Enns_1 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-Backup-DbaDatabase -SqlInstance SQL1FCIEN.sal.co.at -Database Salesianer_Enns_2 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
+  if (($location -like "Enns ?") -or ($location -like "Lenzing ?") -or ($location -eq "SA22") -or ($location -eq "Inzing"))
+  {
+    $null = New-PSDrive -Name T -PSProvider FileSystem -Root $srcpath
+  }
+  else
+  {
+    $null = New-PSDrive -Name T -PSProvider FileSystem -Root $srcpath -Credential $cred
+  }
 
-Backup-DbaDatabase -SqlInstance SQL1FCIEN.sal.co.at -Database Wozabal_Lenzing_1 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-Backup-DbaDatabase -SqlInstance SQL1FCIEN.sal.co.at -Database Wozabal_Lenzing_2 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-
-Write-Host "Starting Backup for HQ22"
-Backup-DbaDatabase -SqlInstance SQL1FCIHQ22.sal.co.at -Database Salesianer_SA22 -CopyOnly -Type Full -CompressBackup -Checksum -Path \\srvatenhvrep01.sal.co.at\SQLBackup\Mandanten -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-
-Write-Host "Starting Backup for TSA RZ"
-# Salesianer-Backup is typically not needed as there should be a Salesianer.bak file from the nightly database copy job
-# Backup-DbaDatabase -SqlInstance SALADVPSQLC1A1.salres.com -Database Salesianer -CopyOnly -Type Full -CompressBackup -Checksum -Path \\salshdsvm09_681.salres.com\mssql_backup\_temp -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-Backup-DbaDatabase -SqlInstance SALADVPSQLC1A1.salres.com -Database OWS -CopyOnly -Type Full -CompressBackup -Checksum -Path \\salshdsvm09_681.salres.com\mssql_backup\_temp -FilePath dbname_timestamp_backuptype_COPYONLY.bak -ReplaceInName
-
-Write-Host "ALL BACKUPS completed!"
-
-Write-Host "Now gathering backups"
-<# TODO: copy backups somewhere #>
-Write-Host "Done gathering backups - ALL DONE"
+  if ((Test-Path -PathType Container $srcpath))
+  {
+    $lastbackupfile = Get-ChildItem -Path "T:" -Filter *.bak | Sort-Object LastWriteTime | Select-Object -Last 1
+    Start-BitsTransfer -Source $lastbackupfile -Destination $dest -Description $location -DisplayName "Mandant"
+  }
+  else
+  {
+    Write-Host "Could not connect to backup directory!"
+  }
+  Remove-PSDrive -Name T
+}
