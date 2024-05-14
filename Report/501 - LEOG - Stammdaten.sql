@@ -28,7 +28,7 @@ WHERE Touren.ExpeditionID = @StandortID
   AND KdBer.BereichID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
   AND Vsa.Status = N'A'
   AND Kunden.Status = N'A'
-  AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum;
+  AND VsaTour.BisDatum >= CAST(GETDATE() AS date);
 
 OPEN Tourdaten;
 
@@ -330,7 +330,21 @@ SELECT DISTINCT
       AND CAST(GETDATE() AS date) BETWEEN LSText.VonDatum AND LSText.BisDatum
     FOR XML PATH('')
   ),
-  Folge = COALESCE(Montagstour.Folge, Dienstagstour.Folge, Mittwochstour.Folge, Donnerstagstour.Folge, Freitagstour.Folge, Samstagstour.Folge, Sonntagstour.Folge)
+  Folge = COALESCE(Montagstour.Folge, Dienstagstour.Folge, Mittwochstour.Folge, Donnerstagstour.Folge, Freitagstour.Folge, Samstagstour.Folge, Sonntagstour.Folge),
+  [gültig von Montag] = Montagstour.VonDatum,
+  [gültig bis Montag] = Montagstour.BisDatum,
+  [gültig von Dienstag] = Dienstagstour.VonDatum,
+  [gültig bis Dienstag] = Dienstagstour.BisDatum,
+  [gültig von Mittwoch] = Mittwochstour.VonDatum,
+  [gültig bis Mittwoch] = Mittwochstour.BisDatum,
+  [gültig von Donnerstag] = Donnerstagstour.VonDatum,
+  [gültig bis Donnerstag] = Donnerstagstour.BisDatum,
+  [gültig von Freitag] = Freitagstour.VonDatum,
+  [gültig bis Freitag] = Freitagstour.BisDatum,
+  [gültig von Samstag] = Samstagstour.VonDatum,
+  [gültig bis Samstag] = Samstagstour.BisDatum,
+  [gültig von Sonntag] = Sonntagstour.VonDatum,
+  [gültig bis Sonntag] = Sonntagstour.BisDatum
 FROM Vsa
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
@@ -338,74 +352,74 @@ JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN LiefArt ON Vsa.LiefArtID = LiefArt.ID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 1 --Montag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Montagstour ON Montagstour.VsaID = Vsa.ID AND Montagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 2 --Dienstag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Dienstagstour ON Dienstagstour.VsaID = Vsa.ID AND Dienstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 3 --Mittwoch
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Mittwochstour ON Mittwochstour.VsaID = Vsa.ID AND Mittwochstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 4 --Donnerstag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Donnerstagstour ON Donnerstagstour.VsaID = Vsa.ID AND Donnerstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 5 --Freitag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Freitagstour ON Freitagstour.VsaID = Vsa.ID AND Freitagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 6 --Samstag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Samstagstour ON Samstagstour.VsaID = Vsa.ID AND Samstagstour.KdBerID = VsaBer.KdBerID
 LEFT OUTER JOIN (
-  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
+  SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge, LiefVsaTour.VonDatum, LiefVsaTour.BisDatum
   FROM VsaTour
   JOIN Touren ON VsaTour.TourenID = Touren.ID
   JOIN #VsaTourLief AS VTL ON VTL.VsaTourID = VsaTour.ID
   JOIN VsaTour AS LiefVsaTour ON VTL.LiefVsaTourID = LiefVsaTour.ID
   JOIN Touren AS LiefTouren ON LiefVsaTour.TourenID = LiefTouren.ID
   WHERE Touren.Wochentag = 7 --Sonntag
-    AND CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum
+    AND VsaTour.BisDatum >= CAST(GETDATE() AS date)
 ) AS Sonntagstour ON Sonntagstour.VsaID = Vsa.ID AND Sonntagstour.KdBerID = VsaBer.KdBerID
 WHERE Kunden.ID IN (SELECT KundenID FROM @Kunden)
   AND Bereich.ID IN (SELECT ID FROM Bereich WHERE Bereich IN (N'FW', N'LW'))
