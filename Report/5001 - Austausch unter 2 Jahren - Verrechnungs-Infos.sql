@@ -169,9 +169,12 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Ku
       ELSE N'<<unbekannt>>'
     END
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, MAX(faktStatus) AS faktStatus, MAX(noFaktReason) AS noFaktReason
-  FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund
+  SELECT *
+  FROM (
+    SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, faktStatus, noFaktReason, ROW_NUMBER() OVER (PARTITION BY Barcode, Nachname, Vorname, KdNr ORDER BY AlterWochen DESC, AnzahlWäschen DESC, faktStatus DESC, noFaktReason DESC) AS SortRank
+    FROM #Result
+  ) RwData
+  WHERE RwData.SortRank = 1
 ) AS x;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -201,10 +204,12 @@ SELECT Hauptstandort,
   SUM(IIF(AlterWochen > 104 AND faktKZ = 1 AND gutschrKZ = 1, Preis, 0)) AS [Summe gutgeschrieben (> 104 Wochen)],
   SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS [Summe nicht fakturiert (> 104 Wochen)],
   ROUND(CAST(SUM(IIF(AlterWochen > 104 AND faktKZ = 0, PreisPotentiell, 0)) AS float) / CAST(IIF(SUM(IIF(AlterWochen > 104, PreisPotentiell, 0)) = 0, 1, SUM(IIF(AlterWochen > 104, PreisPotentiell, 0))) AS float) * 100, 2) AS [Anteil (%) nicht fakturiert (> 104 Wochen)]
-
 FROM (
-  SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, Ausdienst, MAX(Preis) AS Preis, PreisPotentiell, MAX(faktKZ) AS faktKZ, MAX(gutschrKZ) AS gutschrKZ, AlterWochen, AnzahlWäschen
-  FROM #Result
-  GROUP BY Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, Ausdienst, PreisPotentiell, AlterWochen, AnzahlWäschen
+  SELECT *
+  FROM (
+    SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Barcode, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, AlterWochen, AnzahlWäschen, ROW_NUMBER() OVER (PARTITION BY Barcode, Nachname, Vorname, KdNr ORDER BY AlterWochen DESC, AnzahlWäschen DESC, faktStatus DESC, noFaktReason DESC) AS SortRank
+    FROM #Result
+  ) RwData
+  WHERE RwData.SortRank = 1
 ) AS x
 GROUP BY Hauptstandort, Geschäftsbereich, Vertriebszone, Holding, Kunde + N' (' + CAST(KdNr AS nvarchar) + N')';
