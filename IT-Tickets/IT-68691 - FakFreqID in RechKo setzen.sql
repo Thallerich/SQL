@@ -21,7 +21,7 @@ SELECT RechKo.ID AS RechKoID,
 FROM RechKo
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 WHERE Kunden.DrLaufID = (SELECT ID FROM DrLauf WHERE Bez = N'HOGAST alle')
-  AND RechKo.Status < N'F';
+  AND RechKo.Status < N'N';
 
 GO
 
