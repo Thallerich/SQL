@@ -8,12 +8,29 @@ CREATE TABLE #ArtiStanCheck (
   BearbProzessID int
 );
 
-DECLARE @ProduktionID int = $1$;
+DECLARE @Produktion TABLE (
+  ProduktionID int
+);
+
+INSERT INTO @Produktion (ProduktionID)
+SELECT Standort.ID
+FROM Standort
+WHERE Standort.ID IN ($1$)
+  AND Standort.Produktion = 1;
+
+IF $1$ = 5175
+  INSERT INTO @Produktion (ProduktionID)
+  VALUES (1), (4535), (5006), (5008), (5175);
+
+IF $1$ = 2
+  INSERT INTO @Produktion (ProduktionID)
+  VALUES (4), (4547), (5005), (5007), (5010), (5011);
+  
 
 INSERT INTO #ArtiStanCheck (ArtikelID, StandortID, FaltProgID, FinishPrID, BearbProzessID)
 SELECT ArtiStan.ArtikelID, ArtiStan.StandortID, ArtiStan.FaltProgID, ArtiStan.FinishPrID, ArtiStan.BearbProzessID
 FROM ArtiStan
-WHERE ArtiStan.StandortID = @ProduktionID;
+WHERE ArtiStan.StandortID IN (SELECT ProduktionID FROM @Produktion);
 
 MERGE INTO #ArtiStanCheck
 USING (
@@ -32,7 +49,7 @@ WITH Artikelstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'ARTIKEL')
 )
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikelstatus.StatusBez AS Artikelstatus, Standort.ID AS STandortID, Standort.SuchCode AS Produktionsstandort, FaltProg.Programm AS Faltprogramm, FaltProg.FaltProgBez$LAN$ AS Faltprogrammbezeichnung, FinishPr.Programm AS Finishprogramm, FinishPr.FinishPrBez$LAN$ AS Finishprogrammbezeichnung, Prozess.Prozess AS Bearbeitungsprozess, Prozess.ProzessBez$LAN$ AS Bearbeitungsprozessbezeichnung
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikelstatus.StatusBez AS Artikelstatus, Standort.ID AS StandortID, Standort.SuchCode AS Produktionsstandort, FaltProg.Programm AS Faltprogramm, FaltProg.FaltProgBez$LAN$ AS Faltprogrammbezeichnung, FinishPr.Programm AS Finishprogramm, FinishPr.FinishPrBez$LAN$ AS Finishprogrammbezeichnung, Prozess.Prozess AS Bearbeitungsprozess, Prozess.ProzessBez$LAN$ AS Bearbeitungsprozessbezeichnung
 FROM #ArtiStanCheck AS ArtiStan
 JOIN FaltProg ON ArtiStan.FaltProgID = FaltProg.ID
 JOIN FinishPr ON ArtiStan.FinishPrID = FinishPr.ID
@@ -62,12 +79,12 @@ WHERE (($2$ = 1 AND (FaltProg.ID < 0 OR FinishPr.ID < 0 OR Prozess.ID < 0)) OR (
     WHERE EinzHist.ArtikelID = Artikel.ID
       AND EinzHist.Status BETWEEN N'E' AND N'W'
       AND EinzHist.EinzHistTyp = 1
-      AND EinzHist.PoolFkt = 0
-      AND StandBer.ProduktionID = @ProduktionID
-      AND StBerSDC.SdcDevID = (
+      AND EinzHist.TraegerID > 0
+      AND (StandBer.ProduktionID IN (SELECT ProduktionID FROM @Produktion) OR Vsa.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 100151))
+      AND StBerSDC.SdcDevID IN (
         SELECT SdcDev.ID
         FROM SdcDev
-        WHERE SdcDev.StandortID = @ProduktionID
+        WHERE SdcDev.StandortID IN (SELECT ProduktionID FROM @Produktion)
       )
   )
 ORDER BY ArtikelNr ASC;
