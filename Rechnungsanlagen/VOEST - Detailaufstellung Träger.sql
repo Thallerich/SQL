@@ -1,6 +1,7 @@
-DROP TABLE IF EXISTS #TmpVOESTRechnung;
+DROP TABLE IF EXISTS #TmpVOESTRechnungPrep, #TmpVOESTRechnung;
 
-DECLARE @RechKoID int = $RECHKOID$;
+DECLARE @RechKoID int, @MasterWoche varchar(7);
+SELECT @RechKoID = RechKo.ID, @MasterWoche = Wochen.Woche FROM RechKo JOIN Wochen ON RechKo.MasterWochenID = Wochen.ID WHERE RechKo.ID = $RECHKOID$;
 
 SELECT Artikel.ID AS ArtikelID,
   Traeger.ID AS TraegerID,
@@ -24,14 +25,15 @@ SELECT Artikel.ID AS ArtikelID,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez AS ArtikelBez,
   KdArti.VariantBez AS Variante,
-  0 AS Waschzyklen,
-  SUM(EinzHist.RuecklaufK) AS WaschzyklenGesamt,
-  SUM(AbtKdArW.EPreis) AS Mietkosten,
-  CAST(0 AS money) AS Waschkosten,
-  CAST(0 AS money) AS Gesamt,
+  EinzHist.RuecklaufK,
+  AbtKdArW.EPreis,
   EinzHist.Barcode,
-  MIN(EinzHist.IndienstDat) AS Erstausgabedatum
-INTO #TmpVOESTRechnung
+  EinzHist.IndienstDat,
+  EinzHist.Kostenlos,
+  EinzHist.Indienst,
+  EinzHist.Ausdienst,
+  Traeger.[Status] AS Trägerstatus
+INTO #TmpVOESTRechnungPrep
 FROM RechPo
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN AbtKdArW ON AbtKdArW.RechPoID = RechPo.ID
@@ -47,30 +49,71 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE RechKo.ID = @RechKoID
   AND EinzHist.EinzHistVon <= RechKo.BisDatum
   AND ISNULL(EinzHist.EinzHistBis, N'2099-12-31') >= RechKo.VonDatum
-  AND EinzHist.Indienst IS NOT NULL
-GROUP BY Artikel.ID,
-  Traeger.ID,
-  RechKo.RechNr,
-  RechKo.RechDat,
-  Kunden.KdNr,
-  Kunden.SuchCode,
-  Vsa.ID,
-  Vsa.VsaNr,
-  Vsa.SuchCode,
-  Vsa.Bez,
-  Vsa.GebaeudeBez,
-  Vsa.Name2,
-  Abteil.ID,
-  Abteil.Abteilung,
-  Abteil.Bez,
-  Traeger.Traeger,
-  Traeger.PersNr,
-  Traeger.Nachname,
-  Traeger.Vorname,
-  Artikel.ArtikelNr,
-  Artikel.ArtikelBez,
-  KdArti.VariantBez,
-  EinzHist.Barcode;
+  AND EinzHist.Indienst IS NOT NULL;
+
+/* Kostenlose / nicht relevante Einsatz-Historie-Datensätze löschen */
+/* Wird nicht direkt im oberen Query gemacht, da so die Performance besser ist --> kein Index Scan auf EINZHIST.PK_EINZHIST im oberen SELECT */
+DELETE FROM #TmpVOESTRechnungPrep
+WHERE Kostenlos = 1
+  OR Trägerstatus IN (N'K', N'P')
+  OR Indienst > @MasterWoche
+  OR ISNULL(Ausdienst, N'2099/52') < @MasterWoche;
+
+SELECT ArtikelID,
+  TraegerID,
+  RechNr,
+  RechDat,
+  KdNr,
+  Kunde,
+  VsaID,
+  VsaNr,
+  VsaStichwort,
+  VsaBezeichnung,
+  Abteilung,
+  Bereich,
+  AbteilID,
+  Kostenstelle,
+  Kostenstellenbezeichnung,
+  TraegerNr,
+  PersNr,
+  Nachname,
+  Vorname,
+  ArtikelNr,
+  ArtikelBez,
+  Variante,
+  CAST(0 AS int) AS Waschzyklen,
+  SUM(RuecklaufK) AS WaschzyklenGesamt,
+  SUM(EPreis) AS Mietkosten,
+  CAST(0 AS money) AS Waschkosten,
+  CAST(0 AS money) AS Gesamt,
+  Barcode,
+  MIN(IndienstDat) AS Erstausgabedatum
+INTO #TmpVOESTRechnung
+FROM #TmpVOESTRechnungPrep
+GROUP BY ArtikelID,
+  TraegerID,
+  RechNr,
+  RechDat,
+  KdNr,
+  Kunde,
+  VsaID,
+  VsaNr,
+  VsaStichwort,
+  VsaBezeichnung,
+  Abteilung,
+  Bereich,
+  AbteilID,
+  Abteilung,
+  Kostenstelle,
+  Kostenstellenbezeichnung,
+  TraegerNr,
+  PersNr,
+  Nachname,
+  Vorname,
+  ArtikelNr,
+  ArtikelBez,
+  Variante,
+  Barcode;
 
 MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
 USING (
