@@ -47,7 +47,7 @@ AS
   IF @errorflag = 0
     BEGIN
       SET @sqltext = N'
-      SELECT SalExLog.Anlage_ AS Zeitpunkt, SalExLog.HTTPRequest, SalExLog.ResponseSuccessful AS [Succcess?], SalExLog.ResponseReturnDescriptio AS [Rückmeldung SAP]
+      SELECT SalExLog.Anlage_ AS Zeitpunkt, SalExLog.HTTPRequest, SalExLog.ResponseSuccessful AS [Success?], SalExLog.ResponseReturnDescriptio AS [SAP-Response]
       FROM SalExLog
       WHERE SalExLog.Anlage_ > @filter
         AND SalExLog.FunctionName = @function
