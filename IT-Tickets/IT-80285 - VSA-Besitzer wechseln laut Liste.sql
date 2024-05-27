@@ -13,11 +13,11 @@ SELECT EinzTeil.ID, VsaOwnerID = (
   SELECT Vsa.ID
   FROM Vsa
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
-  WHERE Kunden.KdNr = _IT80285.KdNr
-    AND Vsa.VsaNr = _IT80285.VsaNr_Besitzer
+  WHERE Kunden.KdNr = _IT83096.KdNr
+    AND Vsa.VsaNr = _IT83096.VsaBesitzer
 )
 FROM EinzTeil
-JOIN _IT80285 ON EinzTeil.Code = _IT80285.Code;
+JOIN _IT83096 ON EinzTeil.Code = _IT83096.Chipcode COLLATE Latin1_General_CS_AS;
 
 GO
 
