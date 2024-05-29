@@ -39,6 +39,7 @@ WITH FailedMail AS (
     AND [Status].Tabelle = N'MAILQUE'
     AND MailQue.QueueZeit > N'2024-05-27 00:00:00.000'
     AND MailQue.[Status] = N'S'
+    AND MailQue.ErrorLog LIKE N'%Temporary server error%'
   ORDER BY MailQue.QueueZeit ASC
 )
 UPDATE MailQue SET [Status] = N'A', MailAttempts = 0, VersandMitarbeiID = -2, ErrorLog = CONCAT(FailedMail.AppendErrorLog, MailQue.ErrorLog), UserID_ = @userid
