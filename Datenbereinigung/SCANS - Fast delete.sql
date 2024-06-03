@@ -54,7 +54,7 @@ BEGIN
     BEGIN TRANSACTION
     
       DELETE FROM dbo.Scans_Delete
-      WHERE [DateTime] < N'2020-01-01 00:00:00.000';
+      WHERE [DateTime] < N'2021-01-01 00:00:00.000';
 
       SET @DeleteCount = @@ROWCOUNT;
 
@@ -93,10 +93,10 @@ EXEC Salesianer_Archive.dbo.IndexOptimize
     @FragmentationLow = NULL,
     @FragmentationMedium = N'INDEX_REBUILD_OFFLINE',
     @FragmentationHigh = N'INDEX_REBUILD_OFFLINE',
-    @FragmentationLevel1 = 50,
+    @FragmentationLevel1 = 70,
     @FragmentationLevel2 = 80,
     @UpdateStatistics = NULL,
-    @LogToTable = N'N',
+    @LogToTable = N'Y',
 	@Execute = N'N';
 
 */
