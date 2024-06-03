@@ -125,7 +125,7 @@ SELECT KdGf.KurzBez AS Geschäftsbereich,
     ORDER BY Scans.[DateTime] DESC
   )
 FROM EinzTeil
-JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN EinzHist ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -142,6 +142,7 @@ JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 JOIN Standort AS Kundenservice ON Kunden.StandortID = Kundenservice.ID
 JOIN [Week] ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
 WHERE EinzTeil.AltenheimModus = 0
+  AND EinzHist.EinzHistTyp = 1
   AND EinzHist.[Status] > N'S'
   AND EinzHist.AusdienstGrund IN (N'A', N'a', N'B', N'b', N'C', N'c', N'E', N'e')
   AND EinzHist.AusdienstDat BETWEEN $1$ AND $2$
@@ -201,7 +202,7 @@ SELECT KdGf.KurzBez AS Geschäftsbereich,
     ORDER BY Scans.[DateTime] DESC
   )
 FROM EinzTeil
-JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN EinzHist ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 JOIN Vsa ON EinzHist.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -218,6 +219,7 @@ JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 JOIN Standort AS Kundenservice ON Kunden.StandortID = Kundenservice.ID
 JOIN [Week] ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN Week.VonDat AND Week.BisDat
 WHERE EinzTeil.AltenheimModus = 0
+  AND EinzHist.EinzHistTyp = 1
   AND EinzHist.[Status] = N'Y'
   AND EinzHist.AusdienstDat BETWEEN $1$ AND $2$
   AND Produktion.ID IN ($3$)
