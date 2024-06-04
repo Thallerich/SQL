@@ -73,3 +73,6 @@ BEGIN CATCH
 END CATCH;
 
 GO
+
+DROP TABLE #Artikeltausch, #EinzHistNeu;
+GO
