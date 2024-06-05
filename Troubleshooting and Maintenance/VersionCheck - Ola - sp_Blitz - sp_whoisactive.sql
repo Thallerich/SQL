@@ -57,50 +57,35 @@ USE[Ƥ];
 
 INSERT INTO ##DBA_SProcs
 SELECT
-     DB_NAME() AS DBName
-    ,LTRIM(RTRIM(
-        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-            SUBSTRING([text], CHARINDEX(''sp_Blitz'', [text], 1), 18)
-            ,'']'','''')
-            ,''('','''')
-            ,CHAR(9)/*Tab*/,'' '')
-            ,CHAR(10)/*LF*/,'' '')
-            ,CHAR(13)/*CR*/,'' '')
-            ,''@He'','''')
-            ,''@Ch'','''')
-        )) AS SProcName
-    ,REPLACE(REPLACE(REPLACE(
-        SUBSTRING([text], CHARINDEX(''T @Version'', [text], 1) + 3, 15)
-        ,'''''''', '''')
-        ,'', @'' , '''')
-        ,''Version = '' , '''')
+     DB_NAME() AS DBName,
+     SProcName = ROUTINE_NAME,
+     REPLACE(REPLACE(REPLACE(
+        SUBSTRING(ROUTINE_DEFINITION, CHARINDEX(''T @Version'', ROUTINE_DEFINITION, 1) + 3, 15),
+        '''''''', ''''),
+        '', @'' , ''''),
+        ''Version = '' , '''')
         AS VersionString
-FROM sys.syscomments sc
-WHERE sc.colid <= 1
-  AND sc.[text] LIKE ''%sp_Blitz%''
-  AND sc.[text] LIKE ''%T @Version%'';
+FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_DEFINITION LIKE ''%sp_Blitz%''
+  AND ROUTINE_DEFINITION LIKE ''%T @Version%'';
 
 INSERT INTO ##DBA_SProcs
 SELECT
-     DB_NAME() AS DBName
-    ,''sp_WhoIsActive'' AS SProcName
-    ,SUBSTRING(
-        [text]
-        ,CHARINDEX(''Who Is Active? v'', [text], 1) + 15
-        ,7
+     DB_NAME() AS DBName,
+	 ROUTINE_NAME,
+     SUBSTRING(
+        ROUTINE_DEFINITION,
+        CHARINDEX(''Who Is Active? v'', ROUTINE_DEFINITION, 1) + 15,
+        7
         ) AS VersionString
-FROM sys.syscomments sc
-WHERE sc.[text] LIKE ''%sp_WhoIsActive%''
-  AND sc.[text] LIKE ''%Who Is Active? v%'';
+FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_DEFINITION LIKE ''%sp_WhoIsActive%''
+  AND ROUTINE_DEFINITION LIKE ''%Who Is Active? v%'';
 ';
 
-SELECT DISTINCT DBName AS DatabaseName, VersionString AS [Version], STUFF((SELECT N' | ' + sp.SProcName FROM ##DBA_SProcs sp WHERE sp.DBName = ##DBA_SProcs.DBName AND sp.SProcName LIKE N'sp@_Blitz%' ESCAPE N'@' ORDER BY sp.SProcName FOR XML PATH(N'')), 1, 3, N'') AS [Procs Used]
+SELECT DISTINCT DBName AS DatabaseName, VersionString AS [Version], STUFF((SELECT N' | ' + sp.SProcName FROM ##DBA_SProcs sp WHERE sp.DBName = ##DBA_SProcs.DBName AND sp.VersionString = ##DBA_SProcs.VersionString AND sp.SProcName LIKE N'sp@_Blitz%' ESCAPE N'@' ORDER BY sp.SProcName FOR XML PATH(N'')), 1, 3, N'') AS [Procs Used]
 FROM ##DBA_SProcs
 WHERE SProcName LIKE N'sp@_Blitz%' ESCAPE N'@'
-UNION 
-SELECT DISTINCT DBName AS DatabaseName, VersionString AS [Version], STUFF((SELECT N' | ' + sp.SProcName FROM ##DBA_SProcs sp WHERE sp.DBName = ##DBA_SProcs.DBName AND sp.SProcName LIKE N'sp@_WhoIsActive%' ESCAPE N'@' ORDER BY sp.SProcName FOR XML PATH(N'')), 1, 3, N'') AS [Procs Used]
-FROM ##DBA_SProcs
-WHERE SProcName LIKE N'sp@_WhoIsActive%' ESCAPE N'@';
 
 DROP TABLE IF EXISTS ##DBA_SProcs;
 
