@@ -100,3 +100,72 @@ GO
 
 DROP TABLE #KdArtiSrc, #KdArtiNew;
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ TODO                                                                                                                      ++ */
+/* ++ In obiges Skript als Massen-Änderung integrieren                                                                          ++ */
+/* ++                                                                                                                           ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #VsaLeas;
+GO
+
+DECLARE @curweek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @nextweek nchar(7) = (SELECT Week.Woche FROM Week WHERE DATEADD(week, 1, GETDATE()) BETWEEN Week.VonDat AND Week.BisDat);
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+
+DECLARE @NewKdArti TABLE (
+  KundenID int,
+  KdArtiID int
+);
+
+INSERT INTO @NewKdArti (KundenID, KdArtiID)
+SELECT KdArti.KundenID, KdArti.ID AS KdArtiID
+FROM KdArti
+WHERE KdArti.ArtikelID = (SELECT ID FROM Artikel WHERE ArtikelNr = N'BD718MW');
+
+WITH Src AS (
+  SELECT *
+  FROM _IT82668
+  WHERE KdNr = 240308
+)
+SELECT VsaLeas.*
+INTO #VsaLeas
+FROM VsaLeas
+JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
+JOIN Src ON KdArti.KundenID = Src.KundenID AND KdArti.ArtikelID = Src.ArtikelID_Alt
+WHERE ISNULL(VsaLeas.AusDienst, N'2099/52') > @curweek;
+
+UPDATE VsaLeas SET AusDienst = @curweek WHERE ID IN (SELECT ID FROM #VsaLeas);
+
+UPDATE #VsaLeas SET ID = NEXT VALUE FOR NextID_VSALEAS, KdArtiID = NewKdArti.KdArtiID, InDienst = @nextweek
+FROM KdArti
+JOIN @NewKdArti AS NewKdArti ON KdArti.KundenID = NewKdArti.KundenID
+WHERE #VsaLeas.KdArtiID = KdArti.ID;
+
+INSERT INTO VsaLeas
+SELECT *
+FROM #VsaLeas;
+
+WITH Src AS (
+  SELECT *
+  FROM _IT82668
+  WHERE KdNr = 240308
+)
+INSERT INTO JahrLief (TableName, TableID, Jahr, Lieferwochen, AnlageUserID_, UserID_)
+SELECT N'VSALEAS' AS TableName, kNew.VsaLeasID AS TableID, JahrLief.Jahr, JahrLief.Lieferwochen, @userid AS AnlageUserID_, @userid AS UserID_
+FROM JahrLief
+JOIN VsaLeas ON JahrLief.TableID = VsaLeas.ID
+JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
+JOIN Src ON KdArti.KundenID = Src.KundenID AND KdArti.ArtikelID = Src.ArtikelID_Alt
+JOIN (
+  SELECT VsaLeas.ID AS VsaLeasID, KdArti.ArtikelID, KdArti.KundenID
+  FROM VsaLeas
+  JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
+) AS kNew ON kNew.KundenID = Src.KundenID AND kNew.ArtikelID = Src.ArtikelID_Neu
+WHERE JahrLief.TableName = N'VSALEAS'
+
+GO
+
+DROP TABLE IF EXISTS #VsaLeas;
+GO
