@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS #Scans457;
 
 SELECT *
 INTO #Scans457
-FROM Scans
+FROM Scans WITH (INDEX(DateTime))
 WHERE Scans.DateTime BETWEEN @von AND @bis;
 
 SELECT Mitarbei.UserName AS Mitarbeiter,  Mitarbei.Name,
