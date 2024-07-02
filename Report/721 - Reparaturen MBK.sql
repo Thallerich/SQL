@@ -58,7 +58,7 @@ BEGIN
   ORDER BY KdNr, VsaNr, Traeger;
 END;
 
-/* Pipeline ReparaturenSummen */
+/* Pipeline Reparaturen_Summen */
 
 SELECT RepType.ArtikelBez$LAN$ AS Reparaturgrund, SUM(RepDaten.RepAnz) AS [Anzahl Reparaturen], Standort.Bez AS Produktion
 FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort, Artikel AS RepType, (
@@ -105,5 +105,57 @@ WHERE RepDaten.TraegerID = Traeger.ID
   AND StandBer.ProduktionID = Standort.ID
   AND RepDaten.RepTypeID = RepType.ID
   AND Standort.ID IN ($2$)
+  AND RepType.ArtiTypeID = 5 -- nur Reparaturen
+ORDER BY Reparaturgrund, Produktion;
+
+/* Pipeline Reparaturen_Summen_Hauptstandort */
+
+SELECT RepType.ArtikelBez$LAN$ AS Reparaturgrund, SUM(RepDaten.RepAnz) AS [Anzahl Reparaturen], Produktion.Bez AS Produktion, Hauptstandort.Bez AS Hauptstandort
+FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort AS Produktion, Standort AS Hauptstandort, Artikel AS RepType, (
+  SELECT EinzHist.TraegerID, EinzHist.Barcode, EinzHist.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID
+  FROM EinzHist, TeilSoFa, KdArti, Artikel, KdBer
+  WHERE TeilSoFa.EinzHistID = EinzHist.ID
+    AND EinzHist.KdArtiID = KdArti.ID
+    AND KdArti.ArtikelID = Artikel.ID
+    AND KdArti.KdBerID = KdBer.ID
+    AND CONVERT(date, TeilSoFa.Zeitpunkt) BETWEEN $STARTDATE$ AND $ENDDATE$
+  GROUP BY EinzHist.TraegerID, EinzHist.Barcode, EinzHist.Indienst, TeilSoFa.ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdBer.BereichID
+) AS RepDaten
+WHERE RepDaten.TraegerID = Traeger.ID
+  AND Traeger.VsaID = Vsa.ID
+  AND Vsa.KundenID = Kunden.ID
+  AND Vsa.StandKonID = StandKon.ID
+  AND StandBer.StandKonID = StandKon.ID
+  AND StandBer.BereichID = RepDaten.BereichID
+  AND StandBer.ProduktionID = Produktion.ID
+  AND Kunden.StandortID = Hauptstandort.ID
+  AND RepDaten.RepTypeID = RepType.ID
+  AND Produktion.ID IN ($2$)
+  AND RepType.ArtiTypeID = 5 --nur Reparaturen
+GROUP BY RepType.ArtikelBez$LAN$, Produktion.Bez, Hauptstandort.Bez
+
+UNION ALL
+
+SELECT N'_Reparaturen Gesamt' AS Reparaturgrund, SUM(RepDaten.RepAnz) AS [Anzahl Reparaturen], N'(alle ausgewählten Standorte)' AS Produktion, N'(alle Hauptstandorte)' AS Hauptstandort
+FROM Traeger, Vsa, Kunden, StandKon, StandBer, Standort AS Produktion, Standort AS Hauptstandort, Artikel AS RepType, (
+  SELECT EinzHist.TraegerID, EinzHist.Barcode, EinzHist.Indienst, TeilSoFa.ArtikelID AS RepTypeID, CONVERT(date, MAX(TeilSoFa.Zeitpunkt)) AS LastRepDate, SUM(TeilSoFa.Menge) AS RepAnz, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdBer.BereichID
+  FROM EinzHist, TeilSoFa, KdArti, Artikel, KdBer
+  WHERE TeilSoFa.EinzHistID = EinzHist.ID
+    AND EinzHist.KdArtiID = KdArti.ID
+    AND KdArti.ArtikelID = Artikel.ID
+    AND KdArti.KdBerID = KdBer.ID
+    AND CONVERT(date, TeilSoFa.Zeitpunkt) BETWEEN $STARTDATE$ AND $ENDDATE$
+  GROUP BY EinzHist.TraegerID, EinzHist.Barcode, EinzHist.Indienst, TeilSoFa.ArtikelID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, KdBer.BereichID
+) AS RepDaten
+WHERE RepDaten.TraegerID = Traeger.ID
+  AND Traeger.VsaID = Vsa.ID
+  AND Vsa.KundenID = Kunden.ID
+  AND Vsa.StandKonID = StandKon.ID
+  AND StandBer.StandKonID = StandKon.ID
+  AND StandBer.BereichID = RepDaten.BereichID
+  AND StandBer.ProduktionID = Produktion.ID
+  AND Kunden.StandortID = Hauptstandort.ID
+  AND RepDaten.RepTypeID = RepType.ID
+  AND Produktion.ID IN ($2$)
   AND RepType.ArtiTypeID = 5 -- nur Reparaturen
 ORDER BY Reparaturgrund, Produktion;
