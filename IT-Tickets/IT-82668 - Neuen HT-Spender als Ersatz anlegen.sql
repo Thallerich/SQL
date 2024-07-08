@@ -2,7 +2,7 @@
    ALTER TABLE _IT82668
      ADD KundenID int,
          ArtikelID_Alt int,
-        ArtikelID_Neu int;
+         ArtikelID_Neu int;
    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DROP TABLE IF EXISTS #KdArtiSrc, #KdArtiNew;
