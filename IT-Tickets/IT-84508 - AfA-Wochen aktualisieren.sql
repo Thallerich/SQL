@@ -188,3 +188,52 @@ GO
 
 SET CONTEXT_INFO 0x0; /* AdvanTex-Trigger für RepQueue aktivieren */
 GO
+
+/* Step 4 - AfA-Weeks from customer article to price list article */
+/*          only if all linked customer articles are the same     */
+
+DECLARE @PrListKdArtiForUpdate TABLE (
+  PrListKdArtiID int PRIMARY KEY CLUSTERED,
+  AfAWochen int
+);
+
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+
+INSERT INTO @PrListKdArtiForUpdate (PrListKdArtiID, AfAWochen)
+SELECT DISTINCT PrListKdArti.ID AS PrListKdArtiID, KdArti.AfaWochen AS [AfA-Wochen Kundenartikel]
+FROM KdArti AS PrListKdArti
+JOIN Artikel ON PrListKdArti.ArtikelID = Artikel.ID
+JOIN Kunden ON PrListKdArti.KundenID = Kunden.ID
+JOIN KdArti ON KdArti.BasisRWPrListKdArtiID = PrListKdArti.ID
+WHERE Kunden.FirmaID = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'FA14')
+  AND Kunden.[Status] = N'A'
+  AND Kunden.AdrArtID = 5
+  AND NOT EXISTS (
+    SELECT KdArtiCheck.*
+    FROM KdArti AS KdArtiCheck
+    WHERE KdArtiCheck.BasisRWPrListKdArtiID = KdArti.BasisRWPrListKdArtiID
+      AND KdArtiCheck.AfaWochen != KdArti.AfaWochen
+  )
+  AND PrListKdArti.AfaWochen != KdArti.AfaWochen;
+
+BEGIN TRY
+  BEGIN TRANSACTION;
+  
+    UPDATE KdArti SET AfaWochen = [@PrListKdArtiForUpdate].AfAWochen
+    FROM @PrListKdArtiForUpdate
+    WHERE [@PrListKdArtiForUpdate].PrListKdArtiID = KdArti.ID;
+  
+  COMMIT;
+END TRY
+BEGIN CATCH
+  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
+  DECLARE @Severity int = ERROR_SEVERITY();
+  DECLARE @State smallint = ERROR_STATE();
+  
+  IF XACT_STATE() != 0
+    ROLLBACK TRANSACTION;
+  
+  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+END CATCH;
+
+GO
