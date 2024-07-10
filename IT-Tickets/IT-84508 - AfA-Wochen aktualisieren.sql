@@ -157,5 +157,34 @@ WHERE PrListKdArti.AfAundBasisRWausPrList = 1
 
 GO
 
+/* Step 3 - Set suggested value for new customer articles at the customer level */
+
+BEGIN TRY
+  BEGIN TRANSACTION;
+  
+    UPDATE Kunden SET AfaWochen = _IT84508.AfAWochen
+    FROM _IT84508
+    JOIN RwConfig ON _IT84508.RWBez = RwConfig.RwConfigBez
+    JOIN Kunden ON Kunden.RWConfigID = RwConfig.ID
+    WHERE Kunden.FirmaID = (SELECT ID FROM Firma WHERE SuchCode = N'FA14')
+      AND Kunden.[Status] = N'A'
+      AND Kunden.AdrArtID = 1 /* Kunde */
+      AND Kunden.AfaWochen != _IT84508.AfAWochen;
+  
+  COMMIT;
+END TRY
+BEGIN CATCH
+  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
+  DECLARE @Severity int = ERROR_SEVERITY();
+  DECLARE @State smallint = ERROR_STATE();
+  
+  IF XACT_STATE() != 0
+    ROLLBACK TRANSACTION;
+  
+  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+END CATCH;
+
+GO
+
 SET CONTEXT_INFO 0x0; /* AdvanTex-Trigger für RepQueue aktivieren */
 GO
