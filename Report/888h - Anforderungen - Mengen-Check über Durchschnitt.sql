@@ -18,7 +18,7 @@ JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
 JOIN VsaAnf ON AnfKo.VsaID = VsaAnf.VsaID AND AnfPo.KdArtiID = VsaAnf.KdArtiID AND AnfPo.ArtGroeID = VsaAnf.ArtGroeID
 LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND ArtiStan.StandortID = AnfKo.ProduktionID
 WHERE AnfKo.Lieferdatum > CAST(GETDATE() AS date)
-  AND AnfPo.Angefordert > 0
+  AND (AnfPo.Angefordert > 0 OR VsaAnf.Durchschnitt > 0)
   AND AnfKo.Status = N'I'
   AND AnfKo.Sonderfahrt = 0
   AND VsaAnf.Status = N'A'
@@ -45,7 +45,7 @@ SELECT Kundenservice.Name AS Kundenservice,
   /* ROUND(LSK.Durchschnitt / CAST(LSK.Packmenge AS float), 0) * CAST(LSK.Packmenge AS int) AS Durchschnitt, */
   LSK.Angefordert - LSK.Durchschnitt AS Abweichung,
   /* ROUND(LSK.Durchschnitt / CAST(LSK.Packmenge AS float), 0) * CAST(LSK.Packmenge AS int) - LSK.Angefordert AS Abweichung, */
-  FORMAT(CONVERT(numeric(7,2), (LSK.Angefordert - LSK.Durchschnitt)) / CONVERT(numeric(7,2), LSK.Angefordert), N'P2', N'de-AT') AS [Abweichung %],
+  FORMAT(CONVERT(numeric(7,2), (LSK.Angefordert - LSK.Durchschnitt)) / CONVERT(numeric(7,2), IIF(LSK.Angefordert = 0, 1, LSK.Angefordert)), N'P2', N'de-AT') AS [Abweichung %],
   /* FORMAT(CONVERT(numeric(7,2), ROUND(LSK.Durchschnitt / CAST(LSK.Packmenge AS float), 0) * CAST(LSK.Packmenge AS int) - LSK.Angefordert) / CONVERT(numeric(7, 2), LSK.Angefordert), N'P2', N'de-AT') AS [Abweichung %], */
   LSK.Packzettelnummer AS Packzettel,
   LSK.Lieferdatum
