@@ -48,6 +48,7 @@ JOIN Actions ON Schwundteile.LastActionsID = Actions.ID
 LEFT JOIN Inventurscan ON Inventurscan.EinzTeilID = Schwundteile.EinzTeilID
 JOIN PoolteilStatus ON PoolteilStatus.Status = Schwundteile.Status
 WHERE (($3$ = 1 AND Schwundteile.LastActionsID IN (2, 102, 120, 129, 130, 136, 154, 116)) OR ($3$ = 0 AND Schwundteile.LastActionsID IN (2, 102, 120, 129, 130, 136, 154)))  --schwundgebuchte Teile anzeigen, falls Parameter aktiviert
+  AND (($4$ = 1 AND Vsa._IsSIMBAPool = 0) OR ($4$ = 0))
   AND Schwundteile.RechPoID < 0
   AND Schwundteile.LastScanTime < $1$
   AND Bereich.ID IN ($2$)
