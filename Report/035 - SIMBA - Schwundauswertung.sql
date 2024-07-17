@@ -24,6 +24,7 @@ CREATE TABLE #Schwundteile (
   Barcode varchar(33) COLLATE Latin1_General_CS_AS,
   Chipcode varchar(33) COLLATE Latin1_General_CS_AS,
   [aktueller Status] nvarchar(40) COLLATE Latin1_General_CS_AS,
+  [letzte Aktion] nvarchar(60) COLLATE Latin1_General_CS_AS,
   [letzter Scan] datetime2,
   [Tage seit letztem Scan] int,
   [Teil beim Kunden] bit,
@@ -37,14 +38,15 @@ SET @sqltext = N'
     FROM [Status]
     WHERE [Status].Tabelle = N''EINZHIST''
   )
-  INSERT INTO #Schwundteile (Holding, KdNr, Kunde, VsaNr, VsaBez, Traeger, Vorname, Nachname, ArtikelNr, Artikelbezeichnung, Größe, Variante, Barcode, Chipcode, [aktueller Status], [letzter Scan], [Tage seit letztem Scan], [Teil beim Kunden], [Restwert aktuell], EinzHistStatus)
-  SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, KdArti.Variante, EinzHist.Barcode, EinzHist.RentomatChip AS Chipcode, Teilestatus.StatusBez AS [aktueller Status], EinzTeil.LastScanTime AS [letzter Scan], DATEDIFF(day, EinzTeil.LastScanTime, GETDATE()) AS [Tage seit letztem Scan],
+  INSERT INTO #Schwundteile (Holding, KdNr, Kunde, VsaNr, VsaBez, Traeger, Vorname, Nachname, ArtikelNr, Artikelbezeichnung, Größe, Variante, Barcode, Chipcode, [aktueller Status], [letzte Aktion], [letzter Scan], [Tage seit letztem Scan], [Teil beim Kunden], [Restwert aktuell], EinzHistStatus)
+  SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, KdArti.Variante, EinzHist.Barcode, EinzHist.RentomatChip AS Chipcode, Teilestatus.StatusBez AS [aktueller Status], Actions.ActionsBez AS [letzte Aktion], EinzTeil.LastScanTime AS [letzter Scan], DATEDIFF(day, EinzTeil.LastScanTime, GETDATE()) AS [Tage seit letztem Scan],
     [Teil beim Kunden] = IIF((SELECT TOP 1 Scans.Menge FROM Scans WHERE Scans.EinzHistID = EinzHist.ID AND Scans.Menge != 0 ORDER BY Scans.ID DESC) = 1, CAST(0 AS bit), CAST(1 AS bit)),
     curRW.RestwertInfo AS [Restwert aktuell], EinzHist.Status AS EinzHistStatus
   FROM EinzHist
   CROSS APPLY funcGetRestwert(EinzHist.ID, @curweek, 1) curRW
   JOIN EinzTeil ON EinzTeil.CurrEinzHistID = EinzHist.ID
   JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
+  JOIN Actions ON EinzTeil.LastActionsID = Actions.ID
   JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
   JOIN Vsa ON Traeger.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -67,7 +69,7 @@ EXEC sp_executesql @sqltext, N'@kundenid int, @curweek nchar(7), @lastscanbefore
 /* ++ Schwundteile                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Holding, KdNr, Kunde, VsaNr, VsaBez, Traeger, Vorname, Nachname, ArtikelNr, Artikelbezeichnung, Größe, Variante, Barcode, Chipcode, [aktueller Status], [letzter Scan], [Tage seit letztem Scan], [Teil beim Kunden], [Restwert aktuell]
+SELECT Holding, KdNr, Kunde, VsaNr, VsaBez, Traeger, Vorname, Nachname, ArtikelNr, Artikelbezeichnung, Größe, Variante, Barcode, Chipcode, [aktueller Status], [letzte Aktion], [letzter Scan], [Tage seit letztem Scan], [Teil beim Kunden], [Restwert aktuell]
 FROM #Schwundteile;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
