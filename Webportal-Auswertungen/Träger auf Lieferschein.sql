@@ -7,5 +7,5 @@ JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 WHERE LsKo.LsNr = $lsnr
-GROUP BY LsKo.LsNr, LsKo.Datum, Artikel.ArtikelNr, Artikel.ArtikelBez, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname
+GROUP BY LsKo.LsNr, LsKo.Datum, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname
 ORDER BY Träger, Artikelbezeichnung;
