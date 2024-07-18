@@ -12,7 +12,7 @@ SELECT msgTrae.MsgNo AS \"$lang_messageid\",
     WHEN msgTraeA.Status = 'C' THEN \"$lang_wm_status_freigabe_abgelehnt\"
     WHEN msgTraeA.Status = 'H' THEN \"$lang_wm_status_freigabe\"
     ELSE '?'
-  END AS Status,
+  END AS \"$lang_status\",
   CASE
     WHEN msgTraeA.Typ = 'NO_CHANGE' THEN '?'
     WHEN msgTraeA.Typ = 'ADD_RESIDENT' THEN \"$lang_wmt_add_resident\"
@@ -41,7 +41,7 @@ SELECT msgTrae.MsgNo AS \"$lang_messageid\",
     WHEN msgTraeA.Typ = 'EXCHANGE_PIECE' THEN \"$lang_piece_exchange\"
     WHEN msgTraeA.Typ = 'TRAEGER_IMPORT' THEN \"$lang_traeger_import\"
     ELSE '?'
-  END AS Auftragsart,
+  END AS \"$lang_messagetype\",
   msgTrae.Vorname AS \"$lang_firstname\",
   msgTrae.Nachname AS \"$lang_lastname\",
   msgTrae.Titel AS \"$lang_title\",
