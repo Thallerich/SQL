@@ -1,3 +1,7 @@
+/*
+  TRUNCATE TABLE _VOESTStudentenEntnahme;
+*/
+
 SET NOCOUNT ON;
 GO
 
