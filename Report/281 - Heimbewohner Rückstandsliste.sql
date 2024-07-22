@@ -57,7 +57,7 @@ SET @sqltext = N'
       AND EinzHist.Status BETWEEN N''M'' AND N''Q''
       AND EinzTeil.AltenheimModus > 0
       AND ((Traeger.Status = N''I'' AND EinzTeil.LastScanTime > DATEADD(month, -1, GETDATE())) OR Traeger.Status = N''A'')
-      AND (SELECT TOP 1 Scans.AnlageUserID_ FROM Scans WHERE Scans.EinzHistID = EinzHist.ID ORDER BY Scans.[DateTime] DESC) IN (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName LIKE N''CARE%'' OR Mitarbei.UserName = N''CLIN'')
+      AND ((SELECT TOP 1 Scans.AnlageUserID_ FROM Scans WHERE Scans.EinzHistID = EinzHist.ID ORDER BY Scans.[DateTime] DESC) IN (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName LIKE N''CARE%'' OR Mitarbei.UserName = N''CLIN'') OR Vsa.StandKonID IN (SELECT StandBer.StandKonID FROM StandBer WHERE StandBer.ProduktionID = (SELECT Standort.ID FROM Standort WHERE Standort.SuchCode = N''MATT'') AND StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N''PWS'')))
     ) a, Scans
   WHERE a.EinzHistID = Scans.EinzHistID
     AND Scans.AnlageUserID_ <> (SELECT Mitarbei.ID FROM Mitarbei WHERE Mitarbei.UserName = N''ADVSUP'')
