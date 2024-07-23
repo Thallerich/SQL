@@ -8,13 +8,16 @@ DECLARE @AnfDelete TABLE (
   AnfKoID int
 );
 
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'KALLNI');
+DECLARE @generatetime datetime2 = DATEADD(hour, -1, GETDATE());
+
 WITH OldGeneratedDate AS (
   SELECT ChgLog.TableID AS VsaID, MIN(CAST(ChgLog.OldValue AS date)) AS OldValue
   FROM ChgLog
   WHERE ChgLog.TableName = N'VSA'
     AND ChgLog.FieldName = N'VsaAnfBis'
-    AND ChgLog.AnlageUserID_ = 9116039
-    AND ChgLog.[Timestamp] > N'2023-04-12 11:00:00'
+    AND ChgLog.AnlageUserID_ = @userid
+    AND ChgLog.[Timestamp] > @generatetime
     AND NOT EXISTS (
       SELECT c.*
       FROM ChgLog c
@@ -33,12 +36,10 @@ JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN Vsa ON AnfKo.VsaID = Vsa.ID
 JOIN ServType ON Vsa.ServTypeID = ServType.ID
 JOIN VsaAnf ON VsaAnf.KdArtiID = AnfPo.KdArtiID AND VsaAnf.VsaID = AnfKo.VsaID AND VsaAnf.ArtGroeID = AnfPo.ArtGroeID
-WHERE AnfKo.LieferDatum > N'2023-04-12'
-  AND Vsa.ID = 6147902
+WHERE AnfKo.LieferDatum > CAST(@generatetime AS date)
   AND UPPER(VsaAnf.Art) <> N'M'
   AND AnfKo.[Status] < N'I'
-  AND AnfKo.ProduktionID NOT IN (SELECT ID FROM Standort WHERE SuchCode LIKE N'UKL_')
-  AND (AnfKo.AnlageUserID_ = 9116039 OR AnfPo.UserID_ = 9116039)
+  AND (AnfKo.AnlageUserID_ = @userid OR AnfPo.UserID_ = @userid)
   AND NOT EXISTS (
     SELECT Scans.*
     FROM Scans
@@ -96,8 +97,8 @@ WITH OldGeneratedDate AS (
   FROM ChgLog
   WHERE ChgLog.TableName = N'VSA'
     AND ChgLog.FieldName = N'VsaAnfBis'
-    AND ChgLog.AnlageUserID_ = 9116039
-    AND ChgLog.[Timestamp] > N'2023-04-12 11:00:00'
+    AND ChgLog.AnlageUserID_ = @userid
+    AND ChgLog.[Timestamp] > @generatetime
     AND NOT EXISTS (
       SELECT c.*
       FROM ChgLog c
