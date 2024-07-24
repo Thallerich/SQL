@@ -11,6 +11,7 @@ JOIN Artikel ON [_IT82430].ArtikelNrNeu = Artikel.ArtikelNr
 JOIN ArtGroe AS ArtGroeNeu ON Artikel.ID = ArtGroeNeu.ArtikelID AND ArtGroeAlt.Groesse = ArtGroeNeu.Groesse
 WHERE EinzHist.EinzHistTyp = 1
   AND EinzHist.Status < N'Z'
+  AND EinzHist.PoolFkt = 1
   AND EinzTeil.ArtikelID != Artikel.ID;
 
 SELECT EinzHist.*
@@ -21,6 +22,7 @@ JOIN _IT82430 ON [_IT82430].Code = EinzHist.Barcode
 JOIN Artikel ON [_IT82430].ArtikelNrNeu = Artikel.ArtikelNr
 WHERE EinzHist.EinzHistTyp = 1
   AND EinzHist.[Status] < N'Z'
+  AND EinzHist.PoolFkt = 1
   AND EinzTeil.ArtikelID != Artikel.ID;
 
 GO
