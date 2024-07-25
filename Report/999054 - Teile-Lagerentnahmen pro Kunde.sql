@@ -16,10 +16,10 @@ SELECT WegGrund.WegGrundBez$LAN$ AS Schrottgrund, EinzHist.Barcode, Teilestatus.
       LEFT JOIN LiefPrio ArtikelPrio ON ArtiLief.StandortID = ArtikelPrio.StandortID AND ArtiLief.ArtikelID = ArtikelPrio.ArtikelID AND ArtikelPrio.LiefID = ArtiLief.LiefID AND ArtikelPrio.ArtGroeID = - 1
       JOIN Lief ON ArtiLief.LiefID = Lief.ID
       WHERE ArGrLief.ArtGroeID = EinzHist.ArtGroeID
-        AND ArGrLief.VonDatum <= CAST(LagerBew.Zeitpunkt AS date)
+        AND ISNULL(ArGrLief.VonDatum, N'1980-01-01') <= CAST(LagerBew.Zeitpunkt AS date)
         AND ArtiLief.StandortID = Lagerart.LagerID
         AND IIF(COALESCE(ArtGroePrio.ID, ArtikelPrio.ID, 0) > 0, CAST(1 AS bit), CAST(0 AS bit)) = 1
-      ORDER BY ArGrLief.VonDatum DESC
+      ORDER BY ISNULL(ArGrLief.VonDatum, N'1980-01-01') DESC
     ),
     (
       SELECT TOP 1 ArGrLief.ID
@@ -30,13 +30,12 @@ SELECT WegGrund.WegGrundBez$LAN$ AS Schrottgrund, EinzHist.Barcode, Teilestatus.
       LEFT JOIN LiefPrio ArtikelPrio ON ArtiLief.StandortID = ArtikelPrio.StandortID AND ArtiLief.ArtikelID = ArtikelPrio.ArtikelID AND ArtikelPrio.LiefID = ArtiLief.LiefID AND ArtikelPrio.ArtGroeID = - 1
       JOIN Lief ON ArtiLief.LiefID = Lief.ID
       WHERE ArGrLief.ArtGroeID = EinzHist.ArtGroeID
-        AND ArGrLief.VonDatum <= CAST(LagerBew.Zeitpunkt AS date)
+        AND ISNULL(ArGrLief.VonDatum, N'1980-01-01') <= CAST(LagerBew.Zeitpunkt AS date)
         AND IIF(ArtiLief.LiefID = Artikel.LiefID AND ArtiLief.StandortID = -1, CAST(1 AS bit), CAST(0 AS bit)) = 1
-      ORDER BY ArGrLief.VonDatum DESC
+      ORDER BY ISNULL(ArGrLief.VonDatum, N'1980-01-01') DESC
     ), -1)
 INTO #TmpErgebnis999054
-FROM EinzTeil
-JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+FROM EinzHist
 JOIN EntnPo ON EinzHist.EntnPoID = EntnPo.ID
 JOIN LagerBew ON LagerBew.EntnPoID = EntnPo.ID 
 JOIN Lagerart ON EntnPo.LagerArtID = Lagerart.ID
