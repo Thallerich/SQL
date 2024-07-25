@@ -1,3 +1,6 @@
+SET NOCOUNT ON;
+GO
+
 DROP TABLE IF EXISTS #SMZLPreisPrep, #SMZLPreis;
 GO
 
@@ -7,7 +10,27 @@ FROM ArtiLief
 JOIN Artikel ON ArtiLief.ArtikelID = Artikel.ID
 JOIN LiefPrio ON LiefPrio.ArtikelID = ArtiLief.ArtikelID AND LiefPrio.LiefID = ArtiLief.LiefID AND LiefPrio.StandortID = (SELECT ID FROM Standort WHERE SuchCode = N'SMZL')
 WHERE ArtiLief.StandortID = (SELECT ID FROM Standort WHERE SuchCode = N'SMZL')
-  AND CAST(GETDATE() AS date) BETWEEN ArtiLief.VonDatum AND ISNULL(ArtiLief.BisDatum, N'2099-12-31');
+  AND CAST(GETDATE() AS date) BETWEEN ISNULL(ArtiLief.VonDatum, N'1980-01-01') AND ISNULL(ArtiLief.BisDatum, N'2099-12-31')
+  AND Artikel.ID IN (
+    SELECT DISTINCT Artikel.ID
+    FROM KdArti
+    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+    JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+    JOIN Bereich ON KdBer.BereichID = Bereich.ID
+    JOIN Kunden ON KdArti.KundenID = Kunden.ID
+    JOIN Firma ON Kunden.FirmaID = Firma.ID
+    WHERE Artikel.EkPreis < 1
+      AND (Bereich.Bereich != N'LW' AND Bereich.Bereich != N'PWS' AND Artikel.ArtikelNr NOT LIKE N'SW%')
+      AND EXISTS (
+        SELECT EinzHist.*
+        FROM EinzTeil
+        JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+        WHERE EinzHist.KdArtiID = KdArti.ID
+          AND EinzHist.EinzHistTyp = 1
+          AND EinzHist.PoolFkt = 0
+          AND EinzTeil.AltenheimModus =  0
+      )
+  );
 
 SELECT *
 INTO #SMZLPreis
@@ -23,6 +46,8 @@ WHERE Prio = 0
     FROM #SMZLPreis
     WHERE #SMZLPreis.ArtikelID = #SMZLPreisPrep.ArtikelID
   );
+
+DELETE FROM #SMZLPreis WHERE EkPreis < 1;
 
 GO
 
