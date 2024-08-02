@@ -168,3 +168,77 @@ BEGIN CATCH
 END CATCH;
 
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Alte Barcodes verfälschen                                                                                                 ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #BarcodeHide;
+GO
+
+SELECT EinzHist.ID, EinzHist.EinzTeilID
+INTO #BarcodeHide
+FROM EinzHist
+WHERE EinzHist.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID = 8)
+  AND EinzHist.ID = (SELECT EinzTeil.CurrEinzHistID FROM EinzTeil WHERE EinzTeil.ID = EinzHist.EinzTeilID)
+  AND LEN(EinzHist.Barcode) = 10;
+
+GO
+
+SET CONTEXT_INFO 0x1; /* AdvanTex-Trigger für RepQueue deaktivieren */
+GO
+
+DECLARE @traegerid int = 10005707;
+
+DECLARE @teilrepl TABLE (EinzHistID int);
+
+BEGIN TRY
+  BEGIN TRANSACTION;
+
+    UPDATE EinzHist SET [Status] = N'N'
+    OUTPUT inserted.ID INTO @teilrepl (EinzHistID)
+    WHERE EinzHist.TraegerID = @traegerid;
+  
+    UPDATE EinzHist SET Barcode = Barcode + N'*BHS'
+    WHERE ID IN (SELECT ID FROM #BarcodeHide);
+
+    UPDATE EinzTeil SET Code = EinzHist.Barcode
+    FROM EinzHist
+    WHERE EinzHist.EinzTeilID = EinzTeil.ID
+      AND EinzHist.ID IN (SELECT ID FROM #BarcodeHide);
+  
+  COMMIT;
+END TRY
+BEGIN CATCH
+  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
+  DECLARE @Severity int = ERROR_SEVERITY();
+  DECLARE @State smallint = ERROR_STATE();
+  
+  IF XACT_STATE() != 0
+    ROLLBACK TRANSACTION;
+  
+  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+END CATCH;
+
+WAITFOR DELAY '00:00:5';
+
+INSERT INTO RepQueue (Typ, TableName, TableID, ApplicationID, SdcDevID, Priority)
+SELECT N'UPDATE', N'EINZHIST', EinzHistID, N'AdvanTex.exe', 3, 21
+FROM @teilrepl;
+
+WAITFOR DELAY '00:00:1';
+
+INSERT INTO RepQueue (Typ, TableName, TableID, ApplicationID, SdcDevID, Priority)
+SELECT N'UPDATE', N'EINZHIST', ID, N'AdvanTex.exe', 3, 21
+FROM #BarcodeHide;
+
+WAITFOR DELAY '00:00:1';
+
+INSERT INTO RepQueue (Typ, TableName, TableID, ApplicationID, SdcDevID, Priority)
+SELECT N'UPDATE', N'EINZTEIL', EinzTeilID, N'AdvanTex.exe', 3, 22
+FROM #BarcodeHide;
+
+GO
+
+SET CONTEXT_INFO 0x0; /* AdvanTex-Trigger für RepQueue deaktivieren */
+GO
