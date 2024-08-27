@@ -1,4 +1,11 @@
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez, Bereich.BereichBez, VsaAnf.Anlage_, Mitarbei.Name + ISNULL(N' (' + Mitarbei.MitarbeiUser + N')', N'') AS AnlageUser
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Artikel.ArtikelNr, Artikel.ArtikelBez, Bereich.Bereich, VsaAnf.Anlage_, Mitarbei.MitarbeiUser AS AnlageUser, OhneGrößeVorhanden = CAST(IIF(EXISTS((
+  SELECT v.*
+  FROM VsaAnf AS v
+  WHERE v.VsaID = VsaAnf.VsaID
+    AND v.KdArtiID = VsaAnf.KdArtiID
+    AND v.ArtGroeID = -1
+    AND v.Status < N'I'
+)), 1, 0) AS bit)
 FROM VsaAnf
 JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
