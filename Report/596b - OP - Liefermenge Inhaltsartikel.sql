@@ -1,5 +1,9 @@
-DECLARE @von date = $1$;
-DECLARE @bis date = $2$;
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: Liefermenge                                                                                                     ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @von date = $STARTDATE$;
+DECLARE @bis date = $ENDDATE$;
 
 DROP TABLE IF EXISTS #EinzTeilProd;
 DROP TABLE IF EXISTS #OPStats;
@@ -356,3 +360,236 @@ JOIN Artikel ON OPStats.ArtikelID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN Lagerbestand ON Lagerbestand.ArtikelID = Artikel.ID AND Lagerbestand.StandortID = OPStats.StandortID
 LEFT JOIN BestelltOffen ON BestelltOffen.ArtikelID = Artikel.ID AND BestelltOffen.StandortID = OPStats.StandortID;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: Liefermenge_je_KW                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @von date = $STARTDATE$;
+DECLARE @bis date = $ENDDATE$;
+
+DECLARE @Spalten nvarchar(max);
+DECLARE @PivotSQL nvarchar(max);
+
+DROP TABLE IF EXISTS #EinzTeilProd;
+DROP TABLE IF EXISTS #OPStatsProKW;
+DROP TABLE IF EXISTS #OPDatenProKW;
+DROP TABLE IF EXISTS #LSproKW;
+DROP TABLE IF EXISTS #Standort;
+DROP TABLE IF EXISTS #PivotPrepare1;
+DROP TABLE IF EXISTS #PivotPrepare2;
+
+CREATE TABLE #EinzTeilProd (
+  EinzTeilID int PRIMARY KEY,
+  ArtikelID int NOT NULL,
+  LastScanID bigint DEFAULT -1
+);
+
+CREATE INDEX IX_TmpEinzTeilProd_LastScan ON #EinzTeilProd (LastScanID);
+
+CREATE TABLE #OPStatsProKW (
+  StandortID int NOT NULL,
+  ArtikelID int NOT NULL,
+  Woche nchar(7) COLLATE Latin1_General_CS_AS,
+  Liefermenge int NOT NULL DEFAULT 0,
+  Schrottmenge int NOT NULL DEFAULT 0
+);
+
+CREATE TABLE #OPDatenProKW (
+  StandortID int NOT NULL,
+  OPEtiPoID int PRIMARY KEY CLUSTERED,
+  ArtikelID int,
+  EinzTeilID int,
+  OPEinwegID int,
+  Artikel1ID int,
+  Artikel2ID int,
+  Woche nchar(7) COLLATE Latin1_General_CS_AS,
+  LsMenge numeric(18,4),
+  PackmengeSet int,
+  Ersatzartikel bit
+);
+CREATE INDEX IX_TmpOPDaten_EinzTeilID ON #OPDatenProKW (EinzTeilID);
+
+CREATE TABLE #LSproKW (
+  LsPoID int PRIMARY KEY,
+  StandortID int NOT NULL,
+  Woche nchar(7) COLLATE Latin1_General_CS_AS NOT NULL,
+  Menge numeric(18,4) NOT NULL,
+  KdArtiID int NOT NULL
+);
+
+CREATE TABLE #Standort (
+  StandortID int,
+  OPStandortID int
+);
+
+INSERT INTO #Standort (StandortID)
+SELECT Standort.ID
+FROM Standort
+WHERE Standort.ID IN ($3$);
+
+UPDATE #Standort SET OPStandortID = 
+  CASE StandortID
+    WHEN 2 THEN 2
+    WHEN 4 THEN 2
+    WHEN 4547 THEN 2
+    WHEN 5005 THEN 2
+    WHEN 5007 THEN 2
+    WHEN 5010 THEN 2
+    WHEN 5011 THEN 2
+    WHEN 5001 THEN 5001
+    WHEN 5000 THEN 5001
+    WHEN 5212 THEN 5001
+    WHEN 5213 THEN 5001
+    WHEN 5214 THEN 5001
+    WHEN 5133 THEN 5133
+    ELSE -1
+  END;
+
+INSERT INTO #LSproKW (LsPoID, StandortID, Woche, Menge, KdArtiID)
+SELECT LsPo.ID, s.OPStandortID, [Week].Woche, LsPo.Menge, LsPo.KdArtiID
+FROM LsPo
+JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
+JOIN #Standort s ON LsPo.ProduktionID = s.StandortID
+WHERE LsKo.Datum BETWEEN @von AND @bis
+  AND LsKo.[Status] >= N'Q';
+
+INSERT INTO #OPDatenProKW (StandortID, OPEtiPoID, ArtikelID, EinzTeilID, OPEinwegID, Artikel1ID, Artikel2ID, Woche, LsMenge, PackmengeSet, Ersatzartikel)
+SELECT #LSproKW.StandortID, OPEtiPo.ID AS OPEtiPoID, OPEtiKo.ArtikelID, OPEtiPo.EinzTeilID, OPEtiPo.OPEinwegID, OPSets.Artikel1ID, OPSets.Artikel2ID, #LSproKW.Woche, #LSproKW.Menge AS LsMenge, OPSets.Menge AS PackmengeSet, OPEtiPo.Ersatzartikel
+FROM OPEtiPo
+JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
+JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
+JOIN #LSproKW ON OPEtiKo.LsPoID = #LSproKW.LsPoID;
+
+INSERT INTO #OPStatsProKW (StandortID, ArtikelID, Woche, Liefermenge)
+SELECT #OPDatenProKW.StandortID, EinzTeil.ArtikelID, #OPDatenProKW.Woche, COUNT(#OPDatenProKW.OPEtiPoID) AS Liefermenge
+FROM #OPDatenProKW
+JOIN EinzTeil ON #OPDatenProKW.EinzTeilID = EinzTeil.ID
+WHERE #OPDatenProKW.EinzTeilID > 0
+  AND #OPDatenProKW.OPEinwegID = -1
+  AND NOT EXISTS (
+    SELECT SiS.*
+    FROM OPSets AS SiS
+    WHERE Sis.ArtikelID = #OPDatenProKW.Artikel1ID
+  )
+GROUP BY #OPDatenProKW.StandortID, EinzTeil.ArtikelID, #OPDatenProKW.Woche;
+
+MERGE INTO #OPStatsProkW AS OPStats
+USING (
+  SELECT #OPDatenProKW.StandortID AS StandortID, OPEinweg.ArtikelID, #OPDatenProKW.Woche, COUNT(#OPDatenProKW.OPEtiPoID) AS Liefermenge
+  FROM #OPDatenProKW
+  JOIN Artikel SetArti ON #OPDatenProKW.ArtikelID = SetArti.ID
+  JOIN OPEinweg ON #OPDatenProKW.OPEinwegID = OPEinweg.ID
+  WHERE #OPDatenProKW.EinzTeilID = -1
+    AND #OPDatenProKW.OPEinwegID > 0
+    AND NOT EXISTS (
+      SELECT SiS.*
+      FROM OPSets AS SiS
+      WHERE Sis.ArtikelID = #OPDatenProKW.Artikel1ID
+    )
+  GROUP BY #OPDatenProKW.StandortID, OPEinweg.ArtikelID, #OPDatenProKW.Woche
+) AS NoScanLiefermenge (StandortID, ArtikelID, Woche, Liefermenge)
+ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID AND OPStats.Woche = NoScanLiefermenge.Woche
+WHEN MATCHED THEN
+  UPDATE SET OPStats.Liefermenge = OPStats.Liefermenge + NoScanLiefermenge.Liefermenge
+WHEN NOT MATCHED THEN
+  INSERT (StandortID, ArtikelID, Woche, Liefermenge) VALUES (NoScanLiefermenge.StandortID, NoScanLiefermenge.ArtikelID, NoScanLiefermenge.Woche, NoScanLiefermenge.Liefermenge);
+
+MERGE INTO #OPStatsProKW AS OPStats
+USING (
+  SELECT #OPDatenProKW.StandortID AS StandortID, #OPDatenProKW.Artikel1ID AS ArtikelID, #OPDatenProKW.Woche, SUM(CAST(#OPDatenProKW.LsMenge AS int) * (#OPDatenProKW.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  FROM #OPDatenProKW
+  JOIN Artikel SetArti ON #OPDatenProKW.ArtikelID = SetArti.ID
+  WHERE #OPDatenProKW.EinzTeilID = -1
+    AND #OPDatenProKW.OPEinwegID = -1
+    AND #OPDatenProKW.Ersatzartikel = 0
+    AND NOT EXISTS (
+      SELECT SiS.*
+      FROM OPSets AS SiS
+      WHERE Sis.ArtikelID = #OPDatenProKW.Artikel1ID
+    )
+  GROUP BY #OPDatenProKW.StandortID, #OPDatenProKW.Artikel1ID, #OPDatenProKW.Woche
+) AS NoScanLiefermenge (StandortID, ArtikelID, Woche, Liefermenge)
+ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID AND OPStats.Woche = NoScanLiefermenge.Woche
+WHEN MATCHED THEN
+  UPDATE SET OPStats.Liefermenge = OPStats.Liefermenge + NoScanLiefermenge.Liefermenge
+WHEN NOT MATCHED THEN
+  INSERT (StandortID, ArtikelID, Woche, Liefermenge) VALUES (NoScanLiefermenge.StandortID, NoScanLiefermenge.ArtikelID, NoScanLiefermenge.Woche, NoScanLiefermenge.Liefermenge);
+
+MERGE INTO #OPStatsProKW AS OPStats
+USING (
+  SELECT #OPDatenProKW.StandortID AS StandortID, #OPDatenProKW.Artikel2ID AS ArtikelID, #OPDatenProKW.Woche, SUM(CAST(#OPDatenProKW.LsMenge AS int) * (#OPDatenProKW.PackmengeSet / SetArti.Packmenge)) AS Liefermenge
+  FROM #OPDatenProKW
+  JOIN Artikel SetArti ON #OPDatenProKW.ArtikelID = SetArti.ID
+  WHERE #OPDatenProKW.EinzTeilID = -1
+    AND #OPDatenProKW.OPEinwegID = -1
+    AND #OPDatenProKW.Ersatzartikel = 1
+    AND NOT EXISTS (
+      SELECT SiS.*
+      FROM OPSets AS SiS
+      WHERE Sis.ArtikelID = #OPDatenProKW.Artikel1ID
+    )
+  GROUP BY #OPDatenProKW.StandortID, #OPDatenProKW.Artikel2ID, #OPDatenProKW.Woche
+) AS NoScanLiefermenge (StandortID, ArtikelID, Woche, Liefermenge)
+ON OPStats.ArtikelID = NoScanLiefermenge.ArtikelID AND OPStats.StandortID = NoScanLiefermenge.StandortID AND OPStats.Woche = NoScanLiefermenge.Woche
+WHEN MATCHED THEN
+  UPDATE SET OPStats.Liefermenge = OPStats.Liefermenge + NoScanLiefermenge.Liefermenge
+WHEN NOT MATCHED THEN
+  INSERT (StandortID, ArtikelID, Woche, Liefermenge) VALUES (NoScanLiefermenge.StandortID, NoScanLiefermenge.ArtikelID, NoScanLiefermenge.Woche, NoScanLiefermenge.Liefermenge);
+
+MERGE INTO #OPStatsProKW AS OPStats
+USING (
+  SELECT #LSproKW.StandortID AS StandortID, Artikel.ID AS ArtikelID, #LSproKW.Woche, SUM(CAST(#LSproKW.Menge AS int) * (OPSets.Menge / OPSetArtikel.Packmenge) * (SiS.Menge / SiSArtikel.Packmenge)) AS Liefermenge
+  FROM #LSproKW
+  JOIN KdArti ON #LSproKW.KdArtiID = KdArti.ID
+  JOIN OPSets ON OPSets.ArtikelID = KdArti.ArtikelID
+  JOIN OPSets AS SiS ON OPSets.Artikel1ID = SiS.ArtikelID
+  JOIN Artikel ON SiS.Artikel1ID = Artikel.ID
+  JOIN Artikel AS OPSetArtikel ON OPSets.ArtikelID = OPSetArtikel.ID
+  JOIN Artikel AS SiSArtikel ON SiS.ArtikelID = SiSArtikel.ID
+  GROUP BY #LSproKW.StandortID, Artikel.ID, #LsProKW.Woche
+) AS SiSLiefermenge (StandortID, ArtikelID, Woche, Liefermenge)
+ON OPStats.ArtikelID = SiSLiefermenge.ArtikelID AND OPStats.StandortID = SiSLiefermenge.StandortID AND OPStats.Woche = SiSLiefermenge.Woche
+WHEN MATCHED THEN
+  UPDATE SET OPStats.Liefermenge = OPStats.Liefermenge + SiSLiefermenge.Liefermenge
+WHEN NOT MATCHED THEN
+  INSERT (StandortID, ArtikelID, Woche, Liefermenge) VALUES (SiSLiefermenge.StandortID, SiSLiefermenge.ArtikelID, SiSLiefermenge.Woche, SiSLiefermenge.Liefermenge);
+
+SELECT Standort.Bez AS Produktionsstandort,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  ArtGru.ArtGruBez$LAN$ AS Artikelgruppe,
+  OPStats.Woche AS Kalenderwoche,
+  OPStats.Liefermenge,
+  OPStats.Schrottmenge
+INTO #PivotPrepare1
+FROM #OPStatsProKW AS OPStats
+JOIN Standort ON OPStats.StandortID = Standort.ID
+JOIN Artikel ON OPStats.ArtikelID = Artikel.ID
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID;
+
+SELECT Produktionsstandort, ArtikelNr, Artikelbezeichnung, Artikelgruppe, Kalenderwoche, c.cname COLLATE Latin1_General_CS_AS + N' ' + Kalenderwoche AS Spaltenname, c.cvalue AS Spaltenwert
+INTO #Pivotprepare2
+FROM #Pivotprepare1
+UNPIVOT(cvalue FOR cname IN (Liefermenge, Schrottmenge)) AS c;
+
+SELECT @Spalten = COALESCE(@Spalten + ', ' + QUOTENAME(Spaltenname), QUOTENAME(Spaltenname), QUOTENAME(N'unbekannt')) FROM (SELECT DISTINCT Kalenderwoche, Spaltenname FROM #PivotPrepare2 WHERE Spaltenname IS NOT NULL) AS K ORDER BY Kalenderwoche, Spaltenname ASC;
+
+IF @Spalten IS NULL
+  SELECT N'Keine Daten vorhanden!' AS Error
+ELSE
+BEGIN
+  SET @PivotSQL = '
+    SELECT Produktionsstandort, ArtikelNr, Artikelbezeichnung, Artikelgruppe, ' + @Spalten + N'
+    FROM (
+      SELECT Produktionsstandort, ArtikelNr, Artikelbezeichnung, Artikelgruppe, Spaltenname, Spaltenwert
+      FROM #Pivotprepare2
+    ) AS x
+    PIVOT (
+      SUM(Spaltenwert)
+      FOR Spaltenname IN (' + @Spalten + ')
+    ) AS p';
+
+  EXEC sp_executesql @PivotSQL;
+END;
