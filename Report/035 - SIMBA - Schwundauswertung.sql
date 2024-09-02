@@ -2,6 +2,8 @@
 /* ++ Prepare Data                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+DROP TABLE IF EXISTS #Schwundteile;
+
 DECLARE @kundenid int = $ID$;
 DECLARE @lastscanbefore date = $1$;
 
@@ -40,7 +42,7 @@ SET @sqltext = N'
   )
   INSERT INTO #Schwundteile (Holding, KdNr, Kunde, VsaNr, VsaBez, Traeger, Vorname, Nachname, ArtikelNr, Artikelbezeichnung, Größe, Variante, Barcode, Chipcode, [aktueller Status], [letzte Aktion], [letzter Scan], [Tage seit letztem Scan], [Teil beim Kunden], [Restwert aktuell], EinzHistStatus)
   SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS VsaBez, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, KdArti.Variante, EinzHist.Barcode, EinzHist.RentomatChip AS Chipcode, Teilestatus.StatusBez AS [aktueller Status], Actions.ActionsBez AS [letzte Aktion], EinzTeil.LastScanTime AS [letzter Scan], DATEDIFF(day, EinzTeil.LastScanTime, GETDATE()) AS [Tage seit letztem Scan],
-    [Teil beim Kunden] = IIF((SELECT TOP 1 Scans.Menge FROM Scans WHERE Scans.EinzHistID = EinzHist.ID AND Scans.Menge != 0 ORDER BY Scans.ID DESC) = 1, CAST(0 AS bit), CAST(1 AS bit)),
+    [Teil beim Kunden] = IIF((SELECT TOP 1 Scans.Menge FROM Scans WHERE Scans.EinzHistID = EinzHist.ID AND Scans.Menge != 0 AND NOT EXISTS (SELECT s.* FROM Scans AS s WHERE s.EinzHistID = Scans.EinzHistID AND s.[DateTime] > Scans.[DateTime] AND s.ZielNrID NOT IN (SELECT SdcZiel.ZielNrID FROM SdcZiel WHERE SdcZiel.ZielNrID > 0) AND s.ActionsID NOT IN (2 ,102 ,120 ,129 ,130 ,136 ,137 ,154 ,173)) ORDER BY Scans.ID DESC) = -1, CAST(1 AS bit), CAST(0 AS bit)),
     curRW.RestwertInfo AS [Restwert aktuell], EinzHist.Status AS EinzHistStatus
   FROM EinzHist
   CROSS APPLY funcGetRestwert(EinzHist.ID, @curweek, 1) curRW
