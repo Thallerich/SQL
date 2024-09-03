@@ -20,7 +20,7 @@ TeileSTatus as (
   FROM [Status]
   WHERE [Status].Tabelle = N'EINZHIST'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS Kundenstatus, Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, Traeger.SchrankInfo, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, TeileStatus.StatusBez AS [Status Teil], EinzHist.Abmeldung, RestwertAktuell.RestwertInfo AS Restwert, /* Kunden.VertragWaeID AS Restwert_WaeID, */ RestwertAktuell.Alterinfo AS [Alter in Wochen], EinzHist.Indienst
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Kundenstatus.StatusBez AS Kundenstatus, Vsa.VsaNr, Vsa.Bez AS [VSA-Bezeichnung], Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, Traeger.SchrankInfo, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, TeileStatus.StatusBez AS [Status Teil], EinzHist.Abmeldung, RestwertAktuell.RestwertInfo AS Restwert, Kunden.VertragWaeID AS Restwert_WaeID, RestwertAktuell.Alterinfo AS [Alter in Wochen], EinzHist.Indienst
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 CROSS APPLY funcGetRestwert(EinzHist.ID, @curweek, 1) AS RestwertAktuell
