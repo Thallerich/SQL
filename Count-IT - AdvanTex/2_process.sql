@@ -1,46 +1,8 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Prepare Target table on AdvanTex DB                                                                                       ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-/* DROP TABLE dbo._PackageUnitCIT */
-
-IF OBJECT_ID(N'dbo._PackageUnitCIT') IS NULL
-BEGIN
-  CREATE TABLE dbo._PackageUnitCIT (
-    PackageUnitID bigint,
-    CreationDate datetime,
-    LocationID int,
-    Menge int,
-    Sgtin96HexCode nvarchar(33) COLLATE Latin1_General_CS_AS,
-    ArticleID int,
-    VPSKoID int DEFAULT -1,
-    VPSNr nvarchar(16) COLLATE Latin1_General_CS_AS,
-    VPSPoID int DEFAULT -1,
-    IsLatestVPS bit DEFAULT 0,
-    EinzHistID int DEFAULT -1,
-    EinzTeilID int DEFAULT -1
-  );
-END
-ELSE
-  TRUNCATE TABLE _PackageUnitCIT;
-
-GO
-
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ run on Count-IT DB!                                                                                                       ++ */
-/* ++   export to file and import into _PackageUnit on Salesianer DB                                                            ++ */
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-SELECT PackageUnit.PackageUnitID, PackageUnit.CreationDate, PackageUnit.LocationID, PackageUnit.EanPackagingUnit AS Menge, Chip.Sgtin96HexCode, Chip.ArticleID
-FROM CustomerSystem.dbo.PackageUnit
-JOIN CustomerSystem.dbo.Chip ON Chip.PackageUnitID = PackageUnit.PackageUnitID
-WHERE PackageUnit.CreationDate > N'2024-01-01 00:00:00.000';
-
-GO
-
-/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ prepare work table                                                                                                        ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @message nvarchar(max), @severity int, @state smallint;
 
 BEGIN TRY
   BEGIN TRANSACTION;
@@ -85,17 +47,13 @@ BEGIN TRY
   COMMIT;
 END TRY
 BEGIN CATCH
-  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
-  DECLARE @Severity int = ERROR_SEVERITY();
-  DECLARE @State smallint = ERROR_STATE();
+  SELECT @message = ERROR_MESSAGE(), @severity = ERROR_SEVERITY(), @state = ERROR_STATE();
   
   IF XACT_STATE() != 0
     ROLLBACK TRANSACTION;
   
-  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+  RAISERROR(@message, @severity, @state) WITH NOWAIT;
 END CATCH;
-
-GO
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ VPSKO / VPSPO - Datensätze erstellen                                                                                      ++ */
@@ -116,6 +74,7 @@ BEGIN TRY
     FROM (
       SELECT DISTINCT _PackageUnitCIT.VPSKoID, _PackageUnitCIT.VPSNr, _PackageUnitCIT.CreationDate
       FROM _PackageUnitCIT
+      WHERE _PackageUnitCIT.VPSKoID > 0
     ) AS PU;
 
     INSERT INTO VPSPo (ID, VPSKoID, ArtikelID, Menge, Anlage_, AnlageUserID_, UserID_)
@@ -124,28 +83,28 @@ BEGIN TRY
       SELECT DISTINCT _PackageUnitCIT.VPSPoID, _PackageUnitCIT.VPSKoID, _PackageUnitCIT.ArticleID, _PackageUnitCIT.Menge, _PackageUnitCIT.CreationDate
       FROM _PackageUnitCIT
       JOIN Artikel ON _PackageUnitCIT.ArticleID = Artikel.ID
+      WHERE _PackageUnitCIT.VPSPoID > 0
     ) AS PU;
 
     UPDATE EinzHist SET LastVpsPoID = _PackageUnitCIT.VPSPoID
     FROM _PackageUnitCIT
     WHERE _PackageUnitCIT.EinzHistID = EinzHist.ID
-      AND _PackageUnitCIT.IsLatestVPS = 1;
+      AND _PackageUnitCIT.IsLatestVPS = 1
+      AND _PackageUnitCIT.EinzHistID > 0;
 
     INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, VPSPoID, AnlageUserID_, UserID_)
     SELECT _PackageUnitCIT.EinzHistID, _PackageUnitCIT.EinzTeilID, _PackageUnitCIT.CreationDate, 126 AS ActionsID, 250 AS ZielNrID, @arbplatzid AS ArbPlatzID, _PackageUnitCIT.VPSPoID, @userid AS AnlageUserID_, @userid AS UserID_
     FROM _PackageUnitCIT
+    WHERE _PackageUnitCIT.VPSPoID > 0
+      AND _PackageUnitCIT.EinzHistID > 0;
   
   COMMIT;
 END TRY
 BEGIN CATCH
-  DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
-  DECLARE @Severity int = ERROR_SEVERITY();
-  DECLARE @State smallint = ERROR_STATE();
+  SELECT @message = ERROR_MESSAGE(), @severity = ERROR_SEVERITY(), @state = ERROR_STATE();
   
   IF XACT_STATE() != 0
     ROLLBACK TRANSACTION;
   
-  RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
+  RAISERROR(@message, @severity, @state) WITH NOWAIT;
 END CATCH;
-
-GO
