@@ -18,7 +18,8 @@ BEGIN
     VPSPoID int DEFAULT -1,
     IsLatestVPS bit DEFAULT 0,
     EinzHistID int DEFAULT -1,
-    EinzTeilID int DEFAULT -1
+    EinzTeilID int DEFAULT -1,
+    Processed bit DEFAULT 0
   );
 END
 ELSE

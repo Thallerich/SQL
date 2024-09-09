@@ -1,8 +1,13 @@
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ prepare work table                                                                                                        ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @message nvarchar(max), @severity int, @state smallint;
+
+DROP TABLE IF EXISTS #VPSKo, #VPSPo;
 
 BEGIN TRY
   BEGIN TRANSACTION;
@@ -65,46 +70,79 @@ END CATCH;
 
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 DECLARE @arbplatzid int = (SELECT ID FROM ArbPlatz WHERE ComputerName = HOST_NAME());
+DECLARE @rows int;
 
-BEGIN TRY
-  BEGIN TRANSACTION;
-  
-    INSERT INTO VPSKo (ID, VPSTypeID, ZielNrID, VPSNr, [Status], FachNr, Anlage_, AnlageUserID_, UserID_)
-    SELECT PU.VPSKoID AS ID, 9 AS VPSTypeID, 250 AS ZielNrID, PU.VPSNr, N'D' AS [Status], -1 AS FachNr, PU.CreationDate AS Anlage_, @userid AS AnlageUserID, @userid AS UserID_
-    FROM (
-      SELECT DISTINCT _PackageUnitCIT.VPSKoID, _PackageUnitCIT.VPSNr, _PackageUnitCIT.CreationDate
-      FROM _PackageUnitCIT
-      WHERE _PackageUnitCIT.VPSKoID > 0
-    ) AS PU;
+DROP TABLE IF EXISTS #ProcessItem;
 
-    INSERT INTO VPSPo (ID, VPSKoID, ArtikelID, Menge, Anlage_, AnlageUserID_, UserID_)
-    SELECT PU.VPSPoID AS ID, PU.VPSKoID, PU.ArticleID AS ArtikelID, PU.Menge, PU.CreationDate AS Anlage_, @userid AS AnlageUserID_, @userid AS UserID_
-    FROM (
-      SELECT DISTINCT _PackageUnitCIT.VPSPoID, _PackageUnitCIT.VPSKoID, _PackageUnitCIT.ArticleID, _PackageUnitCIT.Menge, _PackageUnitCIT.CreationDate
-      FROM _PackageUnitCIT
-      JOIN Artikel ON _PackageUnitCIT.ArticleID = Artikel.ID
-      WHERE _PackageUnitCIT.VPSPoID > 0
-    ) AS PU;
+SELECT _PackageUnitCIT.*
+INTO #ProcessItem
+FROM _PackageUnitCIT
+WHERE _PackageUnitCIT.VPSKoID IN (
+  SELECT TOP 1000 VPSKoID
+  FROM _PackageUnitCIT
+  WHERE Processed = 0
+);
 
-    UPDATE EinzHist SET LastVpsPoID = _PackageUnitCIT.VPSPoID
+SET @rows = @@ROWCOUNT;
+
+WHILE @rows > 0
+BEGIN
+  BEGIN TRY
+    BEGIN TRANSACTION;
+    
+      INSERT INTO VPSKo (ID, VPSTypeID, ZielNrID, VPSNr, [Status], FachNr, Anlage_, AnlageUserID_, UserID_)
+      SELECT PU.VPSKoID AS ID, 9 AS VPSTypeID, 250 AS ZielNrID, PU.VPSNr, N'D' AS [Status], -1 AS FachNr, PU.CreationDate AS Anlage_, @userid AS AnlageUserID, @userid AS UserID_
+      FROM (
+        SELECT DISTINCT #ProcessItem.VPSKoID, #ProcessItem.VPSNr, #ProcessItem.CreationDate
+        FROM #ProcessItem
+        WHERE #ProcessItem.VPSKoID > 0
+      ) AS PU;
+
+      INSERT INTO VPSPo (ID, VPSKoID, ArtikelID, Menge, Anlage_, AnlageUserID_, UserID_)
+      SELECT PU.VPSPoID AS ID, PU.VPSKoID, PU.ArticleID AS ArtikelID, PU.Menge, PU.CreationDate AS Anlage_, @userid AS AnlageUserID_, @userid AS UserID_
+      FROM (
+        SELECT DISTINCT #ProcessItem.VPSPoID, #ProcessItem.VPSKoID, #ProcessItem.ArticleID, #ProcessItem.Menge, #ProcessItem.CreationDate
+        FROM #ProcessItem
+        JOIN Artikel ON #ProcessItem.ArticleID = Artikel.ID
+        WHERE #ProcessItem.VPSPoID > 0
+      ) AS PU;
+
+      UPDATE EinzHist SET LastVpsPoID = #ProcessItem.VPSPoID
+      FROM #ProcessItem
+      WHERE #ProcessItem.EinzHistID = EinzHist.ID
+        AND #ProcessItem.IsLatestVPS = 1
+        AND #ProcessItem.EinzHistID > 0;
+
+      INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, VPSPoID, AnlageUserID_, UserID_)
+      SELECT #ProcessItem.EinzHistID, #ProcessItem.EinzTeilID, #ProcessItem.CreationDate, 126 AS ActionsID, 250 AS ZielNrID, @arbplatzid AS ArbPlatzID, #ProcessItem.VPSPoID, @userid AS AnlageUserID_, @userid AS UserID_
+      FROM #ProcessItem
+      WHERE #ProcessItem.VPSPoID > 0
+        AND #ProcessItem.EinzHistID > 0;
+    
+    COMMIT;
+  END TRY
+  BEGIN CATCH
+    SELECT @message = ERROR_MESSAGE(), @severity = ERROR_SEVERITY(), @state = ERROR_STATE();
+    
+    IF XACT_STATE() != 0
+      ROLLBACK TRANSACTION;
+    
+    RAISERROR(@message, @severity, @state) WITH NOWAIT;
+  END CATCH;
+
+  UPDATE _PackageUnitCIT SET Processed = 1
+  WHERE VPSKoID IN (SELECT DISTINCT VPSKoID FROM #ProcessItem);
+
+  DELETE FROM #ProcessItem;
+
+  INSERT INTO #ProcessItem
+  SELECT _PackageUnitCIT.*
+  FROM _PackageUnitCIT
+  WHERE _PackageUnitCIT.VPSKoID IN (
+    SELECT TOP 1000 VPSKoID
     FROM _PackageUnitCIT
-    WHERE _PackageUnitCIT.EinzHistID = EinzHist.ID
-      AND _PackageUnitCIT.IsLatestVPS = 1
-      AND _PackageUnitCIT.EinzHistID > 0;
+    WHERE Processed = 0
+  );
 
-    INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, VPSPoID, AnlageUserID_, UserID_)
-    SELECT _PackageUnitCIT.EinzHistID, _PackageUnitCIT.EinzTeilID, _PackageUnitCIT.CreationDate, 126 AS ActionsID, 250 AS ZielNrID, @arbplatzid AS ArbPlatzID, _PackageUnitCIT.VPSPoID, @userid AS AnlageUserID_, @userid AS UserID_
-    FROM _PackageUnitCIT
-    WHERE _PackageUnitCIT.VPSPoID > 0
-      AND _PackageUnitCIT.EinzHistID > 0;
-  
-  COMMIT;
-END TRY
-BEGIN CATCH
-  SELECT @message = ERROR_MESSAGE(), @severity = ERROR_SEVERITY(), @state = ERROR_STATE();
-  
-  IF XACT_STATE() != 0
-    ROLLBACK TRANSACTION;
-  
-  RAISERROR(@message, @severity, @state) WITH NOWAIT;
-END CATCH;
+  SET @rows = @@ROWCOUNT;
+END;
