@@ -85,6 +85,7 @@ SELECT ArtikelID,
   SUM(RuecklaufK) AS WaschzyklenGesamt,
   SUM(EPreis) AS Mietkosten,
   CAST(0 AS money) AS Waschkosten,
+  CAST(0 AS money) AS Restwert,
   CAST(0 AS money) AS Gesamt,
   Barcode,
   MIN(IndienstDat) AS Erstausgabedatum
@@ -138,11 +139,36 @@ ON Bearbeitung.ArtikelID = VOESTRechnung.ArtikelID AND Bearbeitung.TraegerID = V
 WHEN MATCHED THEN
   UPDATE SET Waschkosten = Bearbeitung.EPreis * Bearbeitung.Waschzyklen, Waschzyklen = Bearbeitung.Waschzyklen
 WHEN NOT MATCHED THEN
-  INSERT (ArtikelID, TraegerID, Barcode, Erstausgabedatum, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Mietkosten, Waschkosten, Waschzyklen, WaschzyklenGesamt)
-  VALUES (Bearbeitung.ArtikelID, Bearbeitung.TraegerID, Bearbeitung.Barcode, Bearbeitung.Erstausgabedatum, Bearbeitung.RechNr, Bearbeitung.RechDat, Bearbeitung.KdNr, Bearbeitung.Kunde, Bearbeitung.VsaID, Bearbeitung.VsaNr, Bearbeitung.VsaStichwort, Bearbeitung.VsaBezeichnung, Bearbeitung.Abteilung, Bearbeitung.Bereich, Bearbeitung.AbteilID, Bearbeitung.Kostenstelle, Bearbeitung.Kostenstellenbezeichnung, Bearbeitung.TraegerNr, Bearbeitung.PersNr, Bearbeitung.Nachname, Bearbeitung.Vorname, Bearbeitung.ArtikelNr, Bearbeitung.ArtikelBez, Bearbeitung.Variante, 0, Bearbeitung.EPreis * Bearbeitung.Waschzyklen, Bearbeitung.Waschzyklen, Bearbeitung.RuecklaufK);
+  INSERT (ArtikelID, TraegerID, Barcode, Erstausgabedatum, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Mietkosten, Waschkosten, Restwert, Waschzyklen, WaschzyklenGesamt)
+  VALUES (Bearbeitung.ArtikelID, Bearbeitung.TraegerID, Bearbeitung.Barcode, Bearbeitung.Erstausgabedatum, Bearbeitung.RechNr, Bearbeitung.RechDat, Bearbeitung.KdNr, Bearbeitung.Kunde, Bearbeitung.VsaID, Bearbeitung.VsaNr, Bearbeitung.VsaStichwort, Bearbeitung.VsaBezeichnung, Bearbeitung.Abteilung, Bearbeitung.Bereich, Bearbeitung.AbteilID, Bearbeitung.Kostenstelle, Bearbeitung.Kostenstellenbezeichnung, Bearbeitung.TraegerNr, Bearbeitung.PersNr, Bearbeitung.Nachname, Bearbeitung.Vorname, Bearbeitung.ArtikelNr, Bearbeitung.ArtikelBez, Bearbeitung.Variante, 0, Bearbeitung.EPreis * Bearbeitung.Waschzyklen, 0, Bearbeitung.Waschzyklen, Bearbeitung.RuecklaufK);
 
-UPDATE #TmpVOESTRechnung SET Gesamt = Waschkosten + Mietkosten;
+MERGE INTO #TmpVOESTRechnung AS VOESTRechnung
+USING (
+  SELECT EinzHist.ArtikelID, Traeger.ID AS TraegerID, EinzHist.Barcode, EinzHist.IndienstDat AS Erstausgabedatum, RechKo.RechNr, RechKo.RechDat, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, Vsa.GebaeudeBez AS Abteilung, Vsa.Name2 AS Bereich, Abteil.ID AS AbteilID, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, Traeger.Traeger AS TraegerNr, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, Artikel.ArtikelNr, Artikel.ArtikelBez AS ArtikelBez, KdArti.VariantBez AS Variante, TeilSoFa.EPreis, EinzHist.RuecklaufK AS RuecklaufK
+  FROM TeilSoFa
+  JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
+  JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+  JOIN Wochen ON RechKo.MasterWochenID = Wochen.ID
+  JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
+  JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
+  JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+  JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
+  JOIN Vsa ON RechPo.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
+  JOIN Abteil ON RechPo.AbteilID = Abteil.ID
+  WHERE RechKo.ID = @RechKoID
+) AS RestwertFakt
+ON RestwertFakt.ArtikelID = VOESTRechnung.ArtikelID AND RestwertFakt.TraegerID = VOESTRechnung.TraegerID AND RestwertFakt.Variante = VOESTRechnung.Variante AND RestwertFakt.Barcode = VOESTRechnung.Barcode AND RestwertFakt.AbteilID = VOESTRechnung.AbteilID AND RestwertFakt.VsaID = VOESTRechnung.VsaID
+WHEN MATCHED THEN
+  UPDATE SET Restwert = RestwertFakt.EPreis
+WHEN NOT MATCHED THEN
+  INSERT (ArtikelID, TraegerID, Barcode, Erstausgabedatum, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaStichwort, VsaBezeichnung, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, ArtikelBez, Variante, Mietkosten, Waschkosten, Restwert, Waschzyklen, WaschzyklenGesamt)
+  VALUES (RestwertFakt.ArtikelID, RestwertFakt.TraegerID, RestwertFakt.Barcode, RestwertFakt.Erstausgabedatum, RestwertFakt.RechNr, RestwertFakt.RechDat, RestwertFakt.KdNr, RestwertFakt.Kunde, RestwertFakt.VsaID, RestwertFakt.VsaNr, RestwertFakt.VsaStichwort, RestwertFakt.VsaBezeichnung, RestwertFakt.Abteilung, RestwertFakt.Bereich, RestwertFakt.AbteilID, RestwertFakt.Kostenstelle, RestwertFakt.Kostenstellenbezeichnung, RestwertFakt.TraegerNr, RestwertFakt.PersNr, RestwertFakt.Nachname, RestwertFakt.Vorname, RestwertFakt.ArtikelNr, RestwertFakt.ArtikelBez, RestwertFakt.Variante, 0, 0, RestwertFakt.EPreis, 0, RestwertFakt.RuecklaufK);
 
-SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Waschzyklen, WaschzyklenGesamt AS [Waschzyklen Gesamt], Mietkosten, Waschkosten, Gesamt AS Gesamtkosten, Barcode, Erstausgabedatum
+UPDATE #TmpVOESTRechnung SET Gesamt = Waschkosten + Mietkosten + Restwert;
+
+SELECT RechNr, RechDat AS Rechnungsdatum, KdNr, Kunde, VsaNr, VsaBezeichnung AS [Vsa-Bezeichnung], Abteilung, Bereich, Kostenstelle, Kostenstellenbezeichnung, TraegerNr AS TrägerNr, PersNr AS Personalnummer, Nachname, Vorname, ArtikelNr, ArtikelBez AS Artikelbezeichnung, Variante AS Verrechnungsart, Waschzyklen, WaschzyklenGesamt AS [Waschzyklen Gesamt], Mietkosten, Waschkosten, Restwert AS [Restwert-Verkauf], Gesamt AS Gesamtkosten, Barcode, Erstausgabedatum
 FROM #TmpVOESTRechnung
 ORDER BY RechNr, KdNr, VsaNr, TrägerNr, ArtikelNr;
