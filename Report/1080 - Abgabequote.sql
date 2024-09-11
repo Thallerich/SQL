@@ -19,6 +19,7 @@ FROM (
   WHERE Kunden.ID IN ($3$)
     AND Wochen.Woche BETWEEN @StartWeek AND @EndWeek
     AND TraeArch.Menge > 0
+    AND TraeArch.ApplKdArtiID = -1
   GROUP BY Kunden.KdNr, Kunden.SuchCode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Bereich.BereichBez$LAN$, ArtGru.ArtGruBez$LAN$, ProdGru.ProdGruBez$LAN$, Wochen.Woche
 ) AS Ruecklaufdaten
 GROUP BY KdNr, Kunde, Produktbereich, Artikelgruppe, Sortiment, ArtikelNr, Artikelbezeichnung
