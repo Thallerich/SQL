@@ -1,4 +1,4 @@
-DECLARE @HalfYearAgo datetime = DATEADD(day, -180, GETDATE());
+DECLARE @HalfYearAgo datetime = DATEADD(day, -250, GETDATE());
 DECLARE @curdatetime datetime2 = GETDATE();
 DECLARE @returntime datetime2 = DATEADD(millisecond, -10, @curdatetime);
 DECLARE @userid int = (SELECT MitarbeiID FROM #AdvSession);
