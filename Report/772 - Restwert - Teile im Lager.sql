@@ -17,4 +17,5 @@ JOIN LagerteilStatus ON EinzHist.[Status] = LagerteilStatus.[Status]
 CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, EinzHist.RestwertInfo, GETDATE()) AS VertragWaeRestwert
 WHERE EinzHist.EinzHistTyp = 2 /* Teile im Lager */
   AND EinzHist.[Status] IN (N'X', N'XE', N'XI')
-  AND Lager.ID IN ($1$);
+  AND Lager.ID IN ($1$)
+  AND Artikel.ID IN ($2$);
