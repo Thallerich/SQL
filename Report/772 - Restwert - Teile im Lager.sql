@@ -3,7 +3,25 @@ WITH LagerteilStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'EINZHIST'
 )
-SELECT Lager.Suchcode AS [Lager-Standort], Lagerart.LagerartBez$LAN$ AS Lagerart, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, IIF(Kunden.KdNr = 0, NULL, Kunden.KdNr) AS [Letzte KdNr], Kunden.SuchCode AS [Letzter Kunde], EinzHist.Barcode, LagerteilStatus.StatusBez AS [Status Lager-Teil], Lagerort.Lagerort, VertragWaeRestwert.NachPreis AS Restwert, Wae.IsoCode AS Währung
+SELECT Lager.Suchcode AS [Lager-Standort],
+  Lagerart.LagerartBez$LAN$ AS Lagerart,
+  Artikel.ArtikelNr,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  ArtGroe.Groesse AS Größe,
+  IIF(Kunden.KdNr = 0, NULL, Kunden.KdNr) AS [Letzte KdNr],
+  Kunden.SuchCode AS [Letzter Kunde],
+  Holding.Holding AS [Holding letzter Kunde],
+  EinzHist.Barcode,
+  LagerteilStatus.StatusBez AS [Status Lager-Teil],
+  Lagerort.Lagerort,
+  VertragWaeRestwert.NachPreis AS Restwert,
+  Wae.ID AS Restwert_WaeID,
+  Wae.IsoCode AS Währung,
+  [hat Applikation] = CAST(IIF(EXISTS (
+    SELECT TeilAppl.*
+    FROM TeilAppl
+    WHERE TeilAppl.EinzHistID = EinzHist.ID
+  ), 1, 0) AS bit)
 FROM EinzHist
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
@@ -12,6 +30,7 @@ JOIN Firma ON Lagerart.FirmaID = Firma.ID
 JOIN Standort AS Lager ON Lagerart.LagerID = Lager.ID
 JOIN Lagerort ON EinzHist.LagerOrtID = Lagerort.ID
 JOIN Kunden ON EinzHist.KundenID = Kunden.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Wae ON Kunden.VertragWaeID = Wae.ID
 JOIN LagerteilStatus ON EinzHist.[Status] = LagerteilStatus.[Status]
 CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, EinzHist.RestwertInfo, GETDATE()) AS VertragWaeRestwert
