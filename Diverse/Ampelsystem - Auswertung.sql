@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS #Result;
+DROP TABLE IF EXISTS #Result, #Final;
 
 CREATE TABLE #Result (
   KdArtiID int,
@@ -6,7 +6,7 @@ CREATE TABLE #Result (
 );
 
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
-DECLARE @from datetime2 = DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE())-1, 0), @to datetime2 = DATEADD(MONTH, DATEDIFF(MONTH, -1, GETDATE())-1, -1);
+DECLARE @from datetime2 = DATEADD(month, DATEDIFF(month, 0, GETDATE())-1, 0), @to datetime2 = DATEADD(month, DATEDIFF(month, -1, GETDATE())-1, -1);
 DECLARE @sqltext nvarchar(max);
 
 SET @sqltext = N'
@@ -36,75 +36,17 @@ SET @sqltext = N'
 EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 
 WITH UmlaufPerKdArti AS (
-  SELECT KdArtiID, SUM(Umlauf) AS Umlauf
-  FROM (
-    SELECT VsaLeas.VsaID, - 1 AS TraegerID, VsaLeas.KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaLeas.Menge) AS Umlauf
-    FROM VsaLeas
-    JOIN Vsa ON VsaLeas.VsaID = Vsa.ID
-    JOIN KdArti ON VsaLeas.KdArtiID = KdArti.ID
-    LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE @CurrentWeek BETWEEN ISNULL(VsaLeas.Indienst, N'1980/01') AND ISNULL(VsaLeas.Ausdienst, N'2099/52')
-    GROUP BY VsaLeas.VsaID, VsaLeas.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
-
-    UNION ALL
-
-    SELECT VsaAnf.VsaID, - 1 AS TraegerID, VsaAnf.KdArtiID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Umlauf
-    FROM VsaAnf
-    JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
-    LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE VsaAnf.Bestand != 0
-      AND VsaAnf.[Status] = N'A'
-    GROUP BY VsaAnf.VsaID, VsaAnf.KdArtiID, COALESCE(IIF(VsaAnf.ArtGroeID < 0, NULL, VsaAnf.ArtGroeID), ArtGroe.ID, -1), KdArti.ArtikelID
-
-    UNION ALL
-
-    SELECT Strumpf.VsaID, - 1 AS TraegerID, Strumpf.KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, COUNT(Strumpf.ID) AS Umlauf
-    FROM Strumpf
-    JOIN KdArti ON Strumpf.KdArtiID = KdArti.ID
-    LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID AND ArtGroe.Groesse = N'-'
-    WHERE Strumpf.[Status] != N'X'
-      AND ISNULL(Strumpf.Indienst, N'1980/01') >= @CurrentWeek
-      AND Strumpf.WegGrundID < 0
-    GROUP BY Strumpf.VsaID, Strumpf.KdArtiID, COALESCE(ArtGroe.ID, -1), KdArti.ArtikelID
-    
-    UNION ALL
-
-    SELECT Traeger.VsaID, TraeArti.TraegerID, TraeArti.KdArtiID, TraeArti.ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
-    WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
-
-    UNION ALL
-
-    SELECT Traeger.VsaID, TraeArti.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
-    JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
-    LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
-      AND KdArAppl.ArtiTypeID = 3  --Emblem
-
-    UNION ALL
-
-    SELECT Traeger.VsaID, TraeArti.TraegerID, KdArti.ID AS KdArtiID, COALESCE(ArtGroe.ID, -1) AS ArtGroeID, KdArti.ArtikelID, TraeArti.Menge AS Umlauf
-    FROM TraeArti
-    JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
-    JOIN KdArAppl ON TraeArti.KdArtiID = KdArAppl.KdArtiID
-    JOIN KdArti ON KdArAppl.ApplKdArtiID = KdArti.ID
-    LEFT JOIN ArtGroe ON KdArti.ArtikelID = ArtGroe.ArtikelID
-    WHERE @CurrentWeek BETWEEN ISNULL(Traeger.Indienst, N'1980/01') AND ISNULL(Traeger.Ausdienst, N'2099/52')
-      AND KdArAppl.ArtiTypeID = 2 --Namenschild
-  ) AS x
-  GROUP BY KdArtiID
+  SELECT _Umlauf.KdArtiID, SUM(_Umlauf.Umlauf) AS Umlauf
+  FROM _Umlauf
+  WHERE _Umlauf.Datum = (SELECT MAX(_Umlauf.Datum) FROM _Umlauf WHERE _Umlauf.Datum BETWEEN @from AND @to)
+  GROUP BY _Umlauf.KdArtiID
 ),
 LiefermPerKdArti AS (
   SELECT LsPo.KdArtiID, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
-  WHERE LsKo.Datum >= N'2024-08-01'
-    AND LsKo.Datum <= N'2024-08-31'
+  WHERE LsKo.Datum >= @from
+    AND LsKo.Datum <= @to
   GROUP BY LsPo.KdArtiID
 )
 SELECT Kunden.KdNr,
@@ -115,6 +57,7 @@ SELECT Kunden.KdNr,
   SUM(ISNULL(UmlaufPerKdArti.Umlauf, 0)) AS Umlaufmenge,
   SUM(ISNULL(LiefermPerKdArti.Liefermenge, 0)) AS Liefermenge,
   SUM(ISNULL(#Result.AnzSchrott, 0)) AS [Austausch absolut]
+INTO #Final
 FROM KdArti
 LEFT JOIN UmlaufPerKdArti ON KdArti.ID = UmlaufPerKdArti.KdArtiID
 LEFT JOIN LiefermPerKdArti ON KdArti.ID = LiefermPerKdArti.KdArtiID
@@ -126,3 +69,13 @@ JOIN Bereich ON KdBer.BereichID = Bereich.ID
 WHERE Kunden.StandortID = (SELECT ID FROM Standort WHERE Standort.SuchCode = N'SAWR')
   AND Kunden.KdNr NOT IN (10005396, 100151)
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez, Artikel.ArtikelNr, Artikel.ArtikelBez;
+
+SELECT FORMAT(@from, N'yyyy-MM') AS Monat,
+  #Final.*,
+  ROUND(CAST(#Final.[Austausch absolut] AS float) / CAST(IIF(#Final.Umlaufmenge = 0, 1, #Final.Umlaufmenge) AS float) * CAST(100 AS float), 1) AS [Austausch relativ zu Umlauf in Prozent],
+  #Final.Umlaufmenge / 208 AS [Wöchentlicher Austausch SOLL],
+  #Final.[Austausch absolut] / 4.33 AS [Wöchentlicher Austausch IST],
+  ROUND(CAST((#Final.Umlaufmenge / 208) - (#Final.[Austausch absolut] / 4.33) AS float) / CAST(IIF(#Final.[Austausch absolut] / 4.33 = 0, 1, #Final.[Austausch absolut] / 4.33) AS float) * CAST(100 AS float), 1) AS [Abweichung in Prozent],
+  #Final.Umlaufmenge / IIF(#Final.[Austausch absolut] = 0, 1, #Final.[Austausch absolut]) AS [Reichweite in Monaten]
+FROM #Final
+ORDER BY [Austausch absolut] DESC;
