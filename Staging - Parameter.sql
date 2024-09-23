@@ -195,6 +195,42 @@ BEGIN
       SET VersandPath = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Export\Rechnungen_Testmandant\'
       WHERE VersandPath IS NOT NULL;
 
+    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    /* ++ AdvanTex Online - Webportal                                                                                               ++ */
+    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'/__test/'
+      WHERE Parameter = N'LIVE_FTP_DIRECTORY';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'65090'
+      WHERE Parameter = N'LIVE_SERVER_PORT';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'https://kundenportal.salesianer.com/__test/'
+      WHERE Parameter = N'LIVE_URL';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\SSL\Salesianer_Wildcard_aktuell.crt'
+      WHERE Parameter = N'LIVE_SSL_CERT_FILE';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\SSL\Salesianer_Wildcard_aktuell.key'
+      WHERE Parameter = N'LIVE_SSL_KEY_FILE';
+
+    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+    /* ++ AdvanTex Apps - Allgemein                                                                                                 ++ */
+    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\SSL\Salesianer_Wildcard_aktuell.crt'
+      WHERE Parameter = N'MOBSYNC_SSL_CERTIFICATE';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'\\salshdsvm11_682.salres.com\advsapp_file\AdvanTex\Data\SSL\Salesianer_Wildcard_aktuell.key'
+      WHERE Parameter = N'MOBSYNC_SSL_KEY';
+
   COMMIT;
 
 END
