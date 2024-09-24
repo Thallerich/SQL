@@ -200,7 +200,7 @@ BEGIN
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
     UPDATE Salesianer.dbo.Settings
-      SET ValueMemo = N'/__test/'
+      SET ValueMemo = N'/'
       WHERE Parameter = N'LIVE_FTP_DIRECTORY';
 
     UPDATE Salesianer.dbo.Settings
@@ -208,7 +208,7 @@ BEGIN
       WHERE Parameter = N'LIVE_SERVER_PORT';
 
     UPDATE Salesianer.dbo.Settings
-      SET ValueMemo = N'https://kundenportal.salesianer.com/__test/'
+      SET ValueMemo = N'https://testportal.salesianer.com/'
       WHERE Parameter = N'LIVE_URL';
 
     UPDATE Salesianer.dbo.Settings
