@@ -45,7 +45,7 @@ GO
 
 INSERT INTO SCANS_New WITH (TABLOCK) (ID, EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, Menge, LsPoID, LotID, WaschChID, EinAusDat, VPSPoID, LastPoolTraegerID, Info, GrundID, AnfPoID, EingAnfPoID, OpEtiKoID, VonLagerBewID, NachLagerBewID, InvPoID, TraegerID, ContainID, VsaID, FahrtID, Anlage_, Update_, AnlageUserID_, UserID_)
 SELECT ID, EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, Menge, LsPoID, LotID, WaschChID, EinAusDat, VPSPoID, LastPoolTraegerID, Info, GrundID, AnfPoID, EingAnfPoID, OpEtiKoID, VonLagerBewID, NachLagerBewID, InvPoID, TraegerID, ContainID, VsaID, FahrtID, Anlage_, Update_, AnlageUserID_, UserID_
-FROM SCANS WITH (INDEX(PK_Scans));
+FROM SCANS /* WITH (INDEX(PK_Scans)) */;
 
 GO
 
