@@ -9,5 +9,5 @@ JOIN (
 		WHERE blocking_session_id IS NOT NULL
 	) blocked_session ON blocked_session.collection_time = WhoIsActive.collection_time AND (blocked_session.blocking_session_id = WhoIsActive.session_id OR WhoIsActive.blocking_session_id IS NOT NULL)
 ) x ON x.collection_time = WhoIsActive.collection_time AND x.session_id = WhoIsActive.session_id
-WHERE WhoIsActive.collection_time BETWEEN N'2024-09-27 06:00:00.000' AND N'2024-09-27 06:17:00.000'
+WHERE WhoIsActive.collection_time > DATEADD(hour, -1, GETDATE())
 ORDER BY x.collection_time DESC;
