@@ -20,7 +20,7 @@ FROM #Final AS F, (
     AND (
       (RechPo.ArtGruID IN (SELECT ArtGru.ID FROM ArtGru WHERE ArtGru.Gruppe IN (N'OPK', N'OPS')))
       OR
-      (RechPo.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'24X7') AND KdArti.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 19023)))
+      (RechPo.KdArtiID IN (SELECT KdArti.ID FROM KdArti WHERE KdArti.ArtikelID = (SELECT Artikel.ID FROM Artikel WHERE Artikel.ArtikelNr = N'24X7')))
     )
   GROUP BY RechPo.AbteilID
 ) AS x
