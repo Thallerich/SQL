@@ -2,6 +2,14 @@ SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Disable AdvanTex-supplied patch scripts                                                                                   ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+UPDATE dbSystem.dbo.Updates SET UpdatesSQL = N'SELECT 1' WHERE ID IN (12139, 12140, 12141, 12142, 12143, 12144, 12145, 12146, 12147);
+
+GO
+
 DECLARE @statusmsg nvarchar(max), @starttime datetime, @overallstarttime datetime = GETDATE();
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -132,67 +140,79 @@ RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "ActionsID" ON SCANS ("ActionsID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  1/11 - now creating Index AnfPoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  1/13 - now creating Index AnfPoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "AnfPoID" ON SCANS ("AnfPoID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  2/11 - now creating Index ArbPlatzID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  2/13 - now creating Index ArbPlatzID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "ArbPlatzID" ON SCANS ("ArbPlatzID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  3/11 - now creating Index ContainID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  3/13 - now creating Index ContainID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "ContainID" ON SCANS ("ContainID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  4/11 - now creating Index DateTime';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  4/13 - now creating Index DateTime';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "DateTime" ON SCANS ("DateTime","ZielNrID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  5/11 - now creating Index VsaID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  5/13 - now creating Index VsaID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "VsaID" ON SCANS ("VsaID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  6/11 - now creating Index EingAnfPoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  6/13 - now creating Index EingAnfPoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "EingAnfPoID" ON SCANS ("EingAnfPoID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  7/11 - now creating Index EinzHistID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  7/13 - now creating Index EinzHistID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "EinzHistID" ON SCANS ("EinzHistID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  8/11 - now creating Index EinzTeilID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  8/13 - now creating Index EinzTeilID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "EinzTeilID" ON SCANS ("EinzTeilID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  9/11 - now creating Index FahrtID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  9/13 - now creating Index FahrtID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "FahrtID" ON SCANS ("FahrtID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 10/11 - now creating Index GrundID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 10/13 - now creating Index GrundID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "GrundID" ON SCANS ("GrundID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 11/11';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 11/13 - now creating Index LastPoolTraegerID';
+SET @starttime = GETDATE();
+RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
+
+CREATE INDEX "LastPoolTraegerID" ON SCANS ("LastPoolTraegerID")  WITH (DATA_COMPRESSION = PAGE);
+
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 12/13 - now creating Index LotID';
+SET @starttime = GETDATE();
+RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
+
+CREATE INDEX "LotID" ON SCANS ("LotID");
+
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 13/13';
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' Index creation completed after ' + FORMAT(GETDATE() - @overallstarttime, N'HH:mm:ss');
@@ -211,73 +231,61 @@ RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "WaschChID" ON SCANS ("WaschChID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  1/12 - now creating Index InvPoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  1/10 - now creating Index InvPoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "InvPoID" ON SCANS ("InvPoID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  2/12 - now creating Index LastPoolTraegerID';
-SET @starttime = GETDATE();
-RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
-
-CREATE INDEX "LastPoolTraegerID" ON SCANS ("LastPoolTraegerID")  WITH (DATA_COMPRESSION = PAGE);
-
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  3/12 - now creating Index LotID';
-SET @starttime = GETDATE();
-RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
-
-CREATE INDEX "LotID" ON SCANS ("LotID");
-
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  4/12 - now creating Index LsPoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  2/10 - now creating Index LsPoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "LsPoID" ON SCANS ("LsPoID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  5/12 - now creating Index NachLagerBewID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  3/10 - now creating Index NachLagerBewID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "NachLagerBewID" ON SCANS ("NachLagerBewID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  6/12 - now creating Index ZielNrID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  4/10 - now creating Index ZielNrID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "ZielNrID" ON SCANS ("ZielNrID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  7/12 - now creating Index OPEtiKoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  5/10 - now creating Index OPEtiKoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "OpEtiKoID" ON SCANS ("OpEtiKoID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  8/12 - now creating Index TeilZeitpunkt';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  6/10 - now creating Index TeilZeitpunkt';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "TeilZeitpunkt" ON SCANS ("EinzHistID","DateTime")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  9/12 - now creating Index TraegerID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  7/10 - now creating Index TraegerID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "TraegerID" ON SCANS ("TraegerID")  WITH (DATA_COMPRESSION = PAGE);
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 10/12 - now creating Index VPSPoID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  8/10 - now creating Index VPSPoID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "VPSPoID" ON SCANS ("VPSPoID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 11/12 - now creating Index VonLagerBewID';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N'  9/10 - now creating Index VonLagerBewID';
 SET @starttime = GETDATE();
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 CREATE INDEX "VonLagerBewID" ON SCANS ("VonLagerBewID");
 
-SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 12/12';
+SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': Created index in ' + FORMAT(GETDATE() - @starttime, N'HH:mm:ss') + N' 10/10';
 RAISERROR(@statusmsg, 0, 1) WITH NOWAIT;
 
 SET @statusmsg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' Index creation completed after ' + FORMAT(GETDATE() - @overallstarttime, N'HH:mm:ss');
