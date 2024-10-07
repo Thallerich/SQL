@@ -29,7 +29,7 @@ IF @AdvantexUser != N''
   FROM LoginLog
   JOIN ArbPlatz ON LoginLog.ArbPlatzID = ArbPlatz.ID
   JOIN Mitarbei ON LoginLog.UserID = Mitarbei.ID
-  WHERE (Mitarbei.MitarbeiUser = @AdvantexUser OR Mitarbei.UserName = @AdvantexUser)
+  WHERE (UPPER(Mitarbei.MitarbeiUser) = UPPER(@AdvantexUser) OR UPPER(Mitarbei.UserName) = UPPER(@AdvantexUser))
   ORDER BY LoginLog.LoginZeit DESC;
 
 GO
