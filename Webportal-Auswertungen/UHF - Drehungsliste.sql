@@ -38,7 +38,7 @@ WHERE Kunden.ID = @kundenid
       AND (WebUVsa.ID IS NULL OR WebUVsa.VsaID = Vsa.ID) 
   ) 
   AND EinzTeil.Status = N''Q'' 
-  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136) 
+  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173) 
   AND Artikel.BereichID NOT IN (SELECT ID FROM Bereich WHERE Bereich IN (N''LW'', N''ST'')) 
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez, IIF(Bereich.VsaAnfGroe = 1, ArtGroe.Groesse, N''-''), VsaAnfArti.Bestand, GroePo.Folge 
 ORDER BY Kundennummer, [VSA-Nummer], ArtikelNr, GroePo.Folge;';
