@@ -11,7 +11,9 @@ SET @sqltext = N'SELECT Kunden.KdNr AS Kundennummer,
   IIF(Bereich.VsaAnfGroe = 1, ArtGroe.Groesse, N''-'') AS Groesse, 
   VsaAnfArti.Bestand AS Vertragsbestand, 
   COUNT(EinzTeil.ID) AS [Teile beim Kunden],
-  SUM(IIF(EinzTeil.LastActionsID = 154, 1, 0)) AS [bei Schwundsuche gefunden]
+  SUM(IIF(DATEDIFF(day, ISNULL(EinzTeil.LastScanToKunde, N''1980-01-01''), GETDATE()) > 90, 1, 0)) AS [Teile über 90 Tagen beim Kunden],
+  SUM(IIF(EinzTeil.LastActionsID = 154, 1, 0)) AS [bei Schwundsuche gefunden],
+  SUM(IIF(DATEDIFF(day, ISNULL(EinzTeil.LastScanToKunde, N''1980-01-01''), GETDATE()) > 90 AND EinzTeil.LastActionsID = 154, 1, 0)) AS [Teile über 90 Tagen bei Schwundsuche gefunden]
 FROM EinzTeil 
 JOIN Vsa ON EinzTeil.VsaID = Vsa.ID 
 JOIN Kunden ON Vsa.KundenID = Kunden.ID 
