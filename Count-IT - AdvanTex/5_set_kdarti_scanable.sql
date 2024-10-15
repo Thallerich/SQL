@@ -11,7 +11,7 @@ GO
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @istest bit = 0;                                                           /* if no data changes should be made set to 1 */
-DECLARE @prod nvarchar(60) = N'Enns SH'; /* Produktion GP Enns */                  /* which production location to change */
+DECLARE @prod nvarchar(60) = N'Produktion GP Enns'; /* Produktion GP Enns */                  /* which production location to change */
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');        /* user who makes the changes */
 
 DECLARE @msg nvarchar(max);
