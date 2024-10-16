@@ -211,11 +211,11 @@ SELECT Artikel.ArtikelNr,
     ) AS TLMMenge
   ),
   [stärkster Monat] = (
-    SELECT TOP 1 SUM(#Liefermenge.Liefermenge) AS LiefermengeMonat
+    SELECT TOP 1 #Liefermenge.Monat
     FROM #Liefermenge
     WHERE #Liefermenge.ArtikelID = Artikel.ID
     GROUP BY #Liefermenge.Monat
-    ORDER BY LiefermengeMonat DESC
+    ORDER BY SUM(#Liefermenge.Liefermenge) DESC
   )
 INTO #ResultSet
 FROM Artikel
