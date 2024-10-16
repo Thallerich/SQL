@@ -209,6 +209,13 @@ SELECT Artikel.ArtikelNr,
         AND #Liefermenge.Woche < @CurrentWeek
       ORDER BY #Liefermenge.Woche DESC
     ) AS TLMMenge
+  ),
+  [stärkster Monat] = (
+    SELECT TOP 1 SUM(#Liefermenge.Liefermenge) AS LiefermengeMonat
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+    GROUP BY #Liefermenge.Monat
+    ORDER BY LiefermengeMonat DESC
   )
 INTO #ResultSet
 FROM Artikel
@@ -231,11 +238,12 @@ SELECT ArtikelNr,
   [Bestellmenge offen],
   [Bestellmenge 12 Monate],
   [Liefermenge 12 Monate],
-  [Bestellmenge zu Liefermenge %] = ROUND(IIF(ISNULL([Bestellmenge 12 Monate], 0) = 0, 0, 100 * ISNULL([Bestellmenge 12 Monate], 0) / ISNULL([Liefermenge 12 Monate], 1)), 2),
+  [Bestellmenge zu Liefermenge %] = ROUND(IIF(ISNULL([Bestellmenge 12 Monate], 0) = 0, 0, 100 * ISNULL([Bestellmenge 12 Monate], 0) / IIF(ISNULL([Liefermenge 12 Monate], 0) = 0, 1, [Liefermenge 12 Monate])), 2),
   Umlaufmenge,
   [EK-Preis],
   [TLM-Spitze],
-  [TLM letzte 4 Wochen]
+  [TLM letzte 4 Wochen],
+  [stärkster Monat]
 FROM #ResultSet
 WHERE [Liefermenge 12 Monate] IS NOT NULL
   OR [Bestellmenge 12 Monate] IS NOT NULL
