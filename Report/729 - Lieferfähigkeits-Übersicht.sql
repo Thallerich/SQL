@@ -3,14 +3,20 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 WITH AnfDaten AS (
-  SELECT AnfKo.Lieferdatum, AnfPo.Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, Artgroe.Groesse, Artgroe.ID as ArtgroeID
-  FROM AnfPo, AnfKo, artgroe
-  WHERE AnfPo.AnfKoID = AnfKo.ID
-   and artgroe.id = Anfpo.artgroeid
-    AND AnfKo.Lieferdatum BETWEEN $1$ AND $2$
-    AND (AnfPo.Angefordert > 0 OR AnfPo.Geliefert > 0)
-)
-,UmlaufDaten AS (SELECT VsaID,  KdArtiID, ArtGroeID, SUM(Umlauf) AS Umlauf
+  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
+  FROM AnfPo
+  JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+  JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
+  JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+  JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
+  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
+  WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
+    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
+),
+UmlaufDaten AS (
+  SELECT VsaID,  KdArtiID, ArtGroeID, SUM(Umlauf) AS Umlauf
   FROM (
     SELECT VsaLeas.VsaID,  VsaLeas.KdArtiID, - 1 AS ArtGroeID, SUM(Menge) Umlauf
     FROM VsaLeas
@@ -77,38 +83,23 @@ WITH AnfDaten AS (
   ) AS x
   GROUP BY VsaID, KdArtiID, ArtGroeID
 )
-SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa
-,Bereich,Artgru.Gruppe, Artgru.ArtgruBez$LAN$, Prodhier.Lagerkategorie, Prodhier.ProdhierBez$LAN$
-,  Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez,
-Anfdaten.Groesse, Artikel.Stueckgewicht, Standkonbez$LAN$, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf as Umlauf
-/*FROM AnfDaten, VSA, Kunden, KdArti, Artikel, Bereich
-WHERE AnfDaten.VsaID = Vsa.ID
-  AND Vsa.KundenID = Kunden.ID
-  AND AnfDaten.KdArtiID = KdArti.ID
-  AND KdArti.ArtikelID = Artikel.ID
-  AND Artikel.BereichID = Bereich.ID
-  AND Bereich.ID IN ($3$)
-  AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
-  AND Kunden.FirmaID IN ($5$)
-  AND Kunden.StandortID IN ($6$)
-  and Kunden.KdGfID in ($7$) */
+SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$ AS Produkthierarchie, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfDaten.Groesse AS Größe, Artikel.Stueckgewicht AS Stückgewicht, StandKon.StandKonBez$LAN$ AS Standortkonfiguration, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf AS Umlauf
 FROM AnfDaten
-join VSA on AnfDaten.VsaID = Vsa.ID 
-join Kunden on Vsa.KundenID = Kunden.ID
-join KdArti on AnfDaten.KdArtiID = KdArti.ID
-join Artikel on KdArti.ArtikelID = Artikel.ID
-join ARTGRU on ARTIKEL.ArtGruID = ARTGRU.ID
-join prodhier on ARTIKEL.ProdHierID = PRODHIER.id
-join Bereich on Artikel.BereichID = Bereich.ID
-join standkon on standkon.id = vsa.standkonid
-left join UmlaufDaten on UmlaufDaten.KdArtiID = AnfDaten.KdArtiID and UmlaufDaten.ArtGroeID = AnfDaten.ArtGroeID and AnfDaten.VsaID = UmlaufDaten.VsaID
-where Bereich.ID IN ($3$)
+JOIN Vsa ON AnfDaten.VsaID = Vsa.ID 
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti ON AnfDaten.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
+JOIN ProdHier ON Artikel.ProdHierID = ProdHier.ID
+JOIN Bereich ON Artikel.BereichID = Bereich.ID
+JOIN StandKon ON Vsa.StandKonID = StandKon.ID
+LEFT JOIN UmlaufDaten ON UmlaufDaten.KdArtiID = AnfDaten.KdArtiID AND UmlaufDaten.ArtGroeID = AnfDaten.ArtGroeID AND AnfDaten.VsaID = UmlaufDaten.VsaID
+WHERE Bereich.ID IN ($3$)
   AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
   AND Kunden.FirmaID IN ($5$)
   AND Kunden.StandortID IN ($6$)
   and Kunden.KdGfID in ($7$)
-GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.SuchCode, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$,Anfdaten.Groesse, Umlaufdaten.Umlauf, Standkonbez$LAN$
-,Bereich,Artgru.Gruppe, Artgru.ArtgruBez$LAN$, Prodhier.Lagerkategorie, Prodhier.ProdhierBez$LAN$,Artikel.Stueckgewicht
+GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Bereich.Bereich, ArtGru.Gruppe, ArtGru.ArtGruBez$LAN$, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfDaten.Groesse, Artikel.Stueckgewicht, StandKon.StandKonBez$LAN$, Umlaufdaten.Umlauf
 ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -116,24 +107,29 @@ ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 WITH AnfDaten AS (
-  SELECT AnfKo.Lieferdatum, AnfPo.Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, Artgroe.Groesse, Artgroe.ID as ArtgroeID
-  FROM AnfPo, AnfKo, artgroe
-  WHERE AnfPo.AnfKoID = AnfKo.ID
-   and artgroe.id = Anfpo.artgroeid
-    AND AnfKo.Lieferdatum BETWEEN $1$ AND $2$
-    AND (AnfPo.Angefordert > 0 OR AnfPo.Geliefert > 0)
+  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
+  FROM AnfPo
+  JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+  JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
+  JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+  JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
+  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
+  WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
+    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
 )
-SELECT  Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz
 FROM AnfDaten
-join VSA on AnfDaten.VsaID = Vsa.ID 
-join Kunden on Vsa.KundenID = Kunden.ID
-join KdArti on AnfDaten.KdArtiID = KdArti.ID
-join Artikel on KdArti.ArtikelID = Artikel.ID
-join Bereich on Artikel.BereichID = Bereich.ID
-where Bereich.ID IN ($3$)
+JOIN Vsa ON AnfDaten.VsaID = Vsa.ID 
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti ON AnfDaten.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Bereich ON Artikel.BereichID = Bereich.ID
+WHERE Bereich.ID IN ($3$)
   AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
   AND Kunden.FirmaID IN ($5$)
   AND Kunden.StandortID IN ($6$)
-  and Kunden.KdGfID in ($7$)
-GROUP BY  Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$
+  AND Kunden.KdGfID in ($7$)
+GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$
 ORDER BY Artikel.ArtikelNr;
