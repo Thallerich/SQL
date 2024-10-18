@@ -1,3 +1,5 @@
+DECLARE @curweek nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
+
 WITH LagerteilStatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
@@ -16,6 +18,8 @@ SELECT Lager.Suchcode AS [Lager-Standort],
   Lagerort.Lagerort,
   VertragWaeRestwert.NachPreis AS Restwert,
   Wae.ID AS Restwert_WaeID,
+  EinlagerRestwert.NachPreis AS Restwert_Einlagerung,
+  Wae.ID AS Restwert_Einlagerung_WaeID,
   Wae.IsoCode AS Währung,
   [hat Applikation] = CAST(IIF(EXISTS (
     SELECT TeilAppl.*
@@ -33,7 +37,9 @@ JOIN Kunden ON EinzHist.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Wae ON Kunden.VertragWaeID = Wae.ID
 JOIN LagerteilStatus ON EinzHist.[Status] = LagerteilStatus.[Status]
-CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, EinzHist.RestwertInfo, GETDATE()) AS VertragWaeRestwert
+CROSS APPLY dbo.funcGetRestwert(EinzHist.ID, @curweek, 1) RwCalc
+CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, IIF(RwCalc.RestwertInfo = 0, EinzHist.RestwertInfo, RwCalc.RestwertInfo), GETDATE()) AS VertragWaeRestwert
+CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, EinzHist.RestwertInfo, GETDATE()) AS EinlagerRestwert
 WHERE EinzHist.ID = (SELECT EinzTeil.CurrEinzHistID FROM EinzTeil WHERE EinzTeil.ID = EinzHist.EinzTeilID)
   AND EinzHist.EinzHistTyp = 2 /* Teile im Lager */
   AND EinzHist.[Status] IN (N'X', N'XE', N'XI')
