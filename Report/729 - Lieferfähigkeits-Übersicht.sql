@@ -11,7 +11,7 @@ WITH AnfDaten AS (
   JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-  JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
+  LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
   WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
     AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
 ),
@@ -83,7 +83,7 @@ UmlaufDaten AS (
   ) AS x
   GROUP BY VsaID, KdArtiID, ArtGroeID
 )
-SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$ AS Produkthierarchie, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfDaten.Groesse AS Größe, Artikel.Stueckgewicht AS Stückgewicht, StandKon.StandKonBez$LAN$ AS Standortkonfiguration, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf AS Umlauf
+SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$ AS Produkthierarchie, KdArti.ID AS KdArtiID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfDaten.Groesse AS Größe, Artikel.Stueckgewicht AS Stückgewicht, StandKon.StandKonBez$LAN$ AS Standortkonfiguration, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf AS Umlauf
 FROM AnfDaten
 JOIN Vsa ON AnfDaten.VsaID = Vsa.ID 
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -98,8 +98,8 @@ WHERE Bereich.ID IN ($3$)
   AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
   AND Kunden.FirmaID IN ($5$)
   AND Kunden.StandortID IN ($6$)
-  and Kunden.KdGfID in ($7$)
-GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Bereich.Bereich, ArtGru.Gruppe, ArtGru.ArtGruBez$LAN$, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfDaten.Groesse, Artikel.Stueckgewicht, StandKon.StandKonBez$LAN$, Umlaufdaten.Umlauf
+  AND Kunden.KdGfID in ($7$)
+GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Bereich.Bereich, ArtGru.Gruppe, ArtGru.ArtGruBez$LAN$, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$, KdArti.ID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfDaten.Groesse, Artikel.Stueckgewicht, StandKon.StandKonBez$LAN$, Umlaufdaten.Umlauf
 ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -115,7 +115,7 @@ WITH AnfDaten AS (
   JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-  JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
+  LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
   WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
     AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
 )
