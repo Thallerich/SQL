@@ -20,6 +20,7 @@ GO
 DECLARE @ispadded bit = 1; /* set to 1 if Traeger.Traeger contains leading zeroes and import-list does not, otherwise set to zero */
 DECLARE @forcefolge bit = 0; /* set to 1 if the flag "Zwingend" should be set to force usage of the "Folge-Artikel" even if stock for the old article is available */
 
+DECLARE @userid int = (SELECT COALESCE(Mitarbei.ID, -2) AS ID FROM Mitarbei WHERE Mitarbei.MitarbeiUser = UPPER(REPLACE(SUSER_NAME(), N'SAL\', N'')))
 DECLARE @msg nvarchar(max);
 
 IF @ispadded = 1
@@ -60,7 +61,7 @@ RAISERROR(@msg, 0, 1) WITH NOWAIT;
 BEGIN TRY
   BEGIN TRANSACTION;
   
-    UPDATE TraeArti SET FolgeTraeArtiID = #FolgeImport.FolgeTraeArtiID, FolgeArtZwingend = @forcefolge
+    UPDATE TraeArti SET FolgeTraeArtiID = #FolgeImport.FolgeTraeArtiID, FolgeArtZwingend = @forcefolge, UserID_ = @userid
     FROM #FolgeImport
     WHERE #FolgeImport.TraegerID = TraeArti.TraegerID
       AND #FolgeImport.KdArtiID = TraeArti.KdArtiID
