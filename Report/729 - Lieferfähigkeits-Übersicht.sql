@@ -3,17 +3,18 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 WITH AnfDaten AS (
-  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
+  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
   FROM AnfPo
   JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
   JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
   JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
   JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN Kunden ON KdBer.KundenID = Kunden.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
   WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
-    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
+    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
 ),
 UmlaufDaten AS (
   SELECT VsaID,  KdArtiID, ArtGroeID, SUM(Umlauf) AS Umlauf
@@ -107,17 +108,18 @@ ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 WITH AnfDaten AS (
-  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
+  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, AnfPo.Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
   FROM AnfPo
   JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
   JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
   JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
   JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN Kunden ON KdBer.KundenID = Kunden.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
   WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
-    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
+    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
 )
 SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz
 FROM AnfDaten

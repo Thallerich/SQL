@@ -1,15 +1,19 @@
 DROP TABLE IF EXISTS #TmpLsKontrolle888e;
 
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, CONVERT(char(15), NULL) AS ArtikelNr, CONVERT(nvarchar(60), NULL) AS ArtikelBez, ArtGroe.Groesse AS Größe, IIF(DATEDIFF(minute, AnfPo.Anlage_, AnfPo.BestaetZeitpunkt) = 0, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, 0) AS NichtKdArti, CONVERT(bit, IIF(KdArti.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti.ID AS OrigKdArtiID, KdArti.ErsatzFuerKdArtiID, IIF(KdArti.ErsatzFuerKdArtiID > 0, KdArti.ErsatzFuerKdArtiID, KdArti.ID) AS KdArtiID, CONVERT(bit, 0) AS IstFalschlieferung, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, AnfPo.Kostenlos, Vsa.ID AS VsaID, NULL AS KdBerID, NULL AS ArtikelID, AnfPo.ArtGroeID
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS VsaBezeichnung, CONVERT(varchar(10), NULL) AS LsNr, CONVERT(date, NULL) AS Datum, AnfKo.AuftragsNr AS Packzettelnummer, CONVERT(char(15), NULL) AS ArtikelNr, CONVERT(nvarchar(60), NULL) AS ArtikelBez, ArtGroe.Groesse AS Größe, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, 0 AS Liefermenge, 0 AS AnzahlChips, 0 AS Abweichung, CONVERT(numeric(7,2), 0) AS AbweichungProzent, CONVERT(bit, 0) AS NichtKdArti, CONVERT(bit, IIF(KdArti.ErsatzFuerKdArtiID > 0, 1, 0)) AS IstErsatz, KdArti.ID AS OrigKdArtiID, KdArti.ErsatzFuerKdArtiID, IIF(KdArti.ErsatzFuerKdArtiID > 0, KdArti.ErsatzFuerKdArtiID, KdArti.ID) AS KdArtiID, CONVERT(bit, 0) AS IstFalschlieferung, AnfKo.LsKoID, AnfPo.ID AS AnfPoID, AnfPo.Kostenlos, Vsa.ID AS VsaID, NULL AS KdBerID, NULL AS ArtikelID, AnfPo.ArtGroeID
 INTO #TmpLsKontrolle888e
-FROM AnfPo, AnfKo, Vsa, Kunden, KdArti, ArtGroe
-WHERE AnfPo.AnfKoID = AnfKo.ID
-  AND AnfKo.VsaID = Vsa.ID
-  AND Vsa.KundenID = Kunden.ID
-  AND AnfPo.KdArtiID = KdArti.ID
-  AND AnfPo.ArtGroeID = ArtGroe.ID
-  AND AnfKo.Lieferdatum = $1$
-  AND (AnfPo.Angefordert > 0 OR AnfPo.Geliefert > 0)
+FROM AnfPo
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
+JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
+WHERE AnfKo.Lieferdatum = $1$
+  AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
   AND AnfKo.Status >= N'I'
   AND Vsa.StandKonID IN ($3$)
 ;
@@ -27,7 +31,7 @@ WHERE ArtikelID <= 0;
 
 DELETE FROM #TmpLsKontrolle888e
 WHERE $5$ = 1 
-  AND ArtikelNr IN (N'111260022001', N'111260020001');  -- Artikel 111260022001, 111260020001 - Ticket 17910 / ticket 19345
+  AND ArtikelNr IN (N'111260022001', N'111260020001');  -- Ticket 17910 / ticket 19345
 
 DELETE FROM #TmpLsKontrolle888e
 WHERE ArtikelID IN (SELECT Artikel.ID FROM Artikel WHERE Artikel.EAN IS NULL AND $2$ = 1);
