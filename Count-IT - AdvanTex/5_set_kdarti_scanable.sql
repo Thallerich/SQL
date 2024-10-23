@@ -11,7 +11,7 @@ GO
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @istest bit = 0;                                                           /* if no data changes should be made set to 1 */
-DECLARE @prod nvarchar(60) = N'Produktion GP Enns'; /* Produktion GP Enns */                  /* which production location to change */
+DECLARE @prod nvarchar(60) = N'MBK Enns'; /* Produktion GP Enns */                  /* which production location to change */
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');        /* user who makes the changes */
 
 DECLARE @msg nvarchar(max);
@@ -33,7 +33,27 @@ JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
 WHERE StandBer.ProduktionID = (SELECT Standort.ID FROM Standort WHERE Standort.Bez = @prod AND Standort.Produktion = 1)
   AND ArtGru.BereichID != (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'ST')
-  AND (KdArti.ArtiOptionalBarcodiert = 0 OR (KdArti.ArtiOptionalBarcodiert = 1 AND (KdArti.ArtiZwingendBarcodiert = 1 OR ArtGru.OptionalBarcodiert = 1 OR ArtGru.ZwingendBarcodiert = 1)));
+  AND (KdArti.ArtiOptionalBarcodiert = 0 OR (KdArti.ArtiOptionalBarcodiert = 1 AND (KdArti.ArtiZwingendBarcodiert = 1 OR ArtGru.OptionalBarcodiert = 1 OR ArtGru.ZwingendBarcodiert = 1)))
+  AND EXISTS (
+    SELECT VsaAnf.*
+    FROM VsaAnf
+    JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
+    JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+    JOIN Vsa AS v ON VsaAnf.VsaID = v.ID
+    JOIN StandBer ON v.StandKonID = StandBer.StandKonID AND StandBer.BereichID = (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'FW')
+    WHERE VsaAnf.VsaID = Vsa.ID
+      AND VsaAnf.[Status] = N'A'
+      AND StandBer.ProduktionID IN (SELECT Standort.ID FROM Standort WHERE Standort.Bez IN (N'Enns SH', N'Produktion GP Enns'))
+  )
+  AND EXISTS (
+    SELECT EinzTeil.*
+    FROM EinzTeil
+    WHERE EinzTeil.ArtikelID = Artikel.ID
+      AND EinzTeil.VsaID = Vsa.ID
+      AND EinzTeil.LastScanToKunde > DATEADD(month, -6, GETDATE())
+      AND EinzTeil.[Status] = N'Q'
+      AND LEN(EinzTeil.Code) = 24
+  );
 
 SET @msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N': ' + FORMAT(@@ROWCOUNT, N'N0') + N' customer articles need updating!';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
