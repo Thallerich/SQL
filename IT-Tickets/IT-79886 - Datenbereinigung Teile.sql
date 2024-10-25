@@ -62,6 +62,7 @@ JOIN RwConfig ON Kunden.RwConfigID = RwConfig.ID
 JOIN RwConfPo ON RwConfPo.RwConfigID = RwConfig.ID
 WHERE EinzHist.Barcode IN (SELECT Barcode FROM _IT79886)
   AND ISNULL(EinzHist.Eingang1, N'2099-12-31') > ISNULL(EinzHist.Ausgang1, N'1980-01-01')
+  AND ISNULL(EinzHist.Eingang1, N'1980-01-01') < N'2023-01-01'
   AND RwConfPo.RwArtID = 10
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.[Status] != N'Y';
