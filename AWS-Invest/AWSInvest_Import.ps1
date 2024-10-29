@@ -52,9 +52,9 @@ param (
 
 $processtype = $type.ToUpper();
 
-if ($processtype.ToUpper() -ne "BSEG" -and $processtype.ToUpper() -ne "EKBE" -and $processtype.ToUpper() -ne "EKKO" -and $processtype.ToUpper() -ne "EKPO" -and $processtype.ToUpper() -ne "MSEG")
+if ($processtype.ToUpper() -ne "BSEG" -and $processtype.ToUpper() -ne "EKBE" -and $processtype.ToUpper() -ne "EKKO" -and $processtype.ToUpper() -ne "EKPO" -and $processtype.ToUpper() -ne "MSEG" -and $processtype -ne "ACDOCA")
 {
-    Write-Host "Usage: AWSInvest_Import -type [BSEG|EKBE|EKKO|EKPO|MSEG]"
+    Write-Host "Usage: AWSInvest_Import -type [BSEG|EKBE|EKKO|EKPO|MSEG|ACDOCA]"
 }
 else
 {
