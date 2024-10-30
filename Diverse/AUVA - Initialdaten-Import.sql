@@ -58,6 +58,20 @@ WHERE Vsa.RentomatID IN (SELECT DISTINCT RentomatID FROM #TmpImport)
   AND Traeger.PersNr <> RIGHT(N'00000000' + Traeger.PersNr, 8)
   AND Traeger.PersNr IS NOT NULL;
 
+/* Personalnummer aus Initialdaten übernehmen wo zuordenbar */
+UPDATE Traeger SET Traeger.VormalsNr = i.I_Kartentyp, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.Ausdienst = NULL, Traeger.AusdienstDat = NULL, Traeger.PersNr = i.I_PersNr
+FROM Traeger, (  
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
+  FROM Traeger, Vsa, #TmpImport x
+  WHERE Traeger.VsaID = Vsa.ID
+    AND Vsa.RentomatID = x.RentomatID
+    AND Traeger.PersNr != x.PersNr
+    AND Traeger.Vorname = x.Vorname
+    AND Traeger.Nachname = x.Nachname
+    AND Traeger.RentomatKarte = x.Kartennummer
+) AS i
+WHERE i.TraegerID = Traeger.ID;
+
 UPDATE Traeger SET Traeger.Status = 'I', Traeger.RentomatKarte = NULL, Traeger.Ausdienst = NULL, Traeger.AusdienstDat = NULL
 WHERE Traeger.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.RentomatID IN (SELECT RentomatID FROM #TmpImport))
   AND Traeger.RentoArtID IN (1, 2);
@@ -140,19 +154,6 @@ FROM Traeger, (
     AND Vsa.RentomatID = x.RentomatID
     AND Traeger.PersNr = x.PersNr
     AND Traeger.Nachname <> x.Nachname + ISNULL(x.TitelN, '')
-) AS i
-WHERE i.TraegerID = Traeger.ID;
-
-UPDATE Traeger SET Traeger.VormalsNr = i.I_Kartentyp, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.Ausdienst = NULL, Traeger.AusdienstDat = NULL, Traeger.PersNr = i.I_PersNr
-FROM Traeger, (  
-  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
-  FROM Traeger, Vsa, #TmpImport x
-  WHERE Traeger.VsaID = Vsa.ID
-    AND Vsa.RentomatID = x.RentomatID
-    AND Traeger.PersNr != x.PersNr
-    AND Traeger.Vorname = x.Vorname
-    AND Traeger.Nachname = x.Nachname
-    AND Traeger.RentomatKarte = x.Kartennummer
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
