@@ -32,7 +32,7 @@ BEGIN TRY
       CAST(Bestellung AS bigint) AS Bestellung,
       CAST(Bestellposition AS int) AS Bestellposition,
       CAST(RefBeleg_Geschäftsjahr AS smallint) AS RefBeleg_Geschäftsjahr,
-      CAST(RefBeleg AS bigint) AS RefBeleg,
+      TRY_CAST(RefBeleg AS bigint) AS RefBeleg,
       CAST(RefBeleg_Position AS smallint) AS RefBeleg_Position,
       CAST(MatBeleg_Jahr AS smallint) AS MatBeleg_Jahr,
       CAST(MatBeleg AS bigint) AS MatBeleg,
@@ -91,7 +91,7 @@ BEGIN TRY
       CAST(Änderungsgrund AS char(10)) AS Änderungsgrund,
       CAST(Branche AS char(4)) AS Branche
     FROM MSEG_Import;
-
+    
     DROP TABLE MSEG_Import;
   
   COMMIT;
