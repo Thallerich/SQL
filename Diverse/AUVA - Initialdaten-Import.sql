@@ -66,8 +66,8 @@ FROM Traeger, (
   WHERE Traeger.VsaID = Vsa.ID
     AND Vsa.RentomatID = x.RentomatID
     AND Traeger.PersNr != x.PersNr
-    AND Traeger.Vorname = x.Vorname
-    AND Traeger.Nachname = x.Nachname
+    AND LTRIM(RTRIM(UPPER(Traeger.Vorname))) = LTRIM(RTRIM(UPPER(x.Vorname)))
+    AND LTRIM(RTRIM(UPPER(Traeger.Nachname))) = LTRIM(RTRIM(UPPER(x.Nachname)))
     AND Traeger.RentomatKarte = x.Kartennummer
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
@@ -208,7 +208,7 @@ JOIN Kunden oN Vsa.KundenID = Kunden.ID
 JOIN Rentomat ON Vsa.RentomatID = Rentomat.ID
 JOIN [Status] ON Traeger.[Status] = [Status].[Status] AND [Status].[Tabelle] = N'TRAEGER'
 JOIN Abteil ON Traeger.AbteilID = Abteil.ID
-WHERE Rentomat.SchrankNr LIKE N'%RW%'
+WHERE Rentomat.SchrankNr LIKE N'%<UL>%'
   AND Traeger.Status = N'A'
   AND Traeger.RentomatKarte IS NOT NULL;
 
