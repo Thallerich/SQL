@@ -31,6 +31,7 @@ ALTER TABLE _auvainitial ALTER COLUMN Kostenstelle nchar(6) COLLATE Latin1_Gener
 /* Import über SSMS in Tabelle _auvainitial - Struktur siehe oben */
 
 SELECT * FROM _auvainitial;
+
 UPDATE _auvainitial SET Kartennummer = RIGHT(REPLICATE(N'0', 8) + RTRIM(Kartennummer), 8) WHERE LEN(Kartennummer) != 8;
 -- SELECT ISNULL(LfdNr, '') AS LfdNr, MifareID, Kartennummer, Status, Typ, Vorname, Nachname, Titel, TitelN, ISNULL(Standort, '') AS Standort, ISNULL(Kostenstelle, '') AS Kostenstelle FROM _auvainitial WHERE Standort IS NULL;
 -- SELECT DISTINCT Standort FROM _auvainitial;
@@ -139,6 +140,19 @@ FROM Traeger, (
     AND Vsa.RentomatID = x.RentomatID
     AND Traeger.PersNr = x.PersNr
     AND Traeger.Nachname <> x.Nachname + ISNULL(x.TitelN, '')
+) AS i
+WHERE i.TraegerID = Traeger.ID;
+
+UPDATE Traeger SET Traeger.VormalsNr = i.I_Kartentyp, Traeger.DebitorNr = i.I_Kartennummer, Traeger.Status = 'A', Traeger.Ausdienst = NULL, Traeger.AusdienstDat = NULL, Traeger.PersNr = i.I_PersNr
+FROM Traeger, (  
+  SELECT Traeger.ID AS TraegerID, Traeger.PersNr, x.PersNr AS I_PersNr, Traeger.Vorname, x.Vorname AS I_Vorname, Traeger.Nachname, x.Nachname AS I_Nachname, x.TitelN AS I_TitelN, Traeger.Titel, x.Titel AS I_Titel, Traeger.RentomatKarte AS Kartennummer, x.Kartennummer AS I_Kartennummer, x.Kartentyp AS I_Kartentyp
+  FROM Traeger, Vsa, #TmpImport x
+  WHERE Traeger.VsaID = Vsa.ID
+    AND Vsa.RentomatID = x.RentomatID
+    AND Traeger.PersNr != x.PersNr
+    AND Traeger.Vorname = x.Vorname
+    AND Traeger.Nachname = x.Nachname
+    AND Traeger.RentomatKarte = x.Kartennummer
 ) AS i
 WHERE i.TraegerID = Traeger.ID;
 
