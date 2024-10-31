@@ -2,7 +2,7 @@ DECLARE @RwArt integer = 1;
 DECLARE @Woche nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @filter datetime = CAST(CAST($1$ AS nchar(10))+ N' 00:00:00' AS datetime);
 
-SELECT Kunden.ID AS KundenID, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, EinzTeil.Code, EinzTeil.Code2, EinzTeil.LastScanToKunde AS [letzter Ausgangsscan], EinzTeil.Erstwoche, OPRW.RestwertInfo AS Restwert
+SELECT Kunden.ID AS KundenID, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS VsaStichwort, Vsa.Bez AS Vsa, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, EinzTeil.Code, EinzTeil.Code2, EinzTeil.LastScanToKunde AS [letzter Ausgangsscan], Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), OPRW.RestwertInfo AS Restwert
 FROM EinzTeil
 CROSS APPLY dbo.funcGetRestwertOP(EinzTeil.ID, @Woche, @RwArt) AS OPRW
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID

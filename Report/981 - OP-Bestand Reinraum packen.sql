@@ -106,7 +106,7 @@ FROM #TmpOPBestand AS OPBestand, (
   SELECT EinzTeil.ArtikelID, COUNT(EinzTeil.ID) AS AnzTeile
   FROM EinzTeil
   WHERE EinzTeil.Status IN (N'A', N'Q')
-    AND EinzTeil.Erstwoche >= CONVERT(char(4), YEAR(GETDATE())) + '/01'
+    AND DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) >= DATEFROMPARTS(DATEPART(year, GETDATE()), 1, 1)
     AND EinzTeil.ArtikelID IN (SELECT ArtikelID FROM #TmpOPBestand)
   GROUP BY EinzTeil.ArtikelID
 ) AS x

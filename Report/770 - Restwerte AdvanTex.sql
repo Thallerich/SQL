@@ -15,7 +15,7 @@ SELECT Traeger.Vorname,
   EinzHist.Eingang1,
   EinzHist.Ausgang1,
   EinzHist.Indienst,
-  EinzTeil.Erstwoche,
+  Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat),
   RwCalc.RestWertInfo AS Restwert,
   DATEDIFF(day, ISNULL(einzhist.Ausgang1, CONVERT(DATE, GETDATE())), CONVERT(DATE, GETDATE())) AS BeimKundeSeitTagen
 FROM EinzHist

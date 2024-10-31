@@ -34,7 +34,7 @@ CREATE TABLE #OPSchrott (
 );
 
 INSERT INTO #OPSchrott (EinzTeilID, [Code], ArtikelID, WegGrundID, WegDatum, VsaID, Erstwoche, RuecklaufG, Restwert, ProduktionID)
-SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, EinzTeil.Erstwoche, EinzTeil.RuecklaufG, EinzTeil.RestwertInfo, ProduktionID = ISNULL((
+SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), EinzTeil.RuecklaufG, EinzTeil.RestwertInfo, ProduktionID = ISNULL((
     SELECT TOP 1 COALESCE(IIF(ZielNr.ProduktionsID < 0, NULL, ZielNr.ProduktionsID), IIF(ArbPlatz.StandortID < 0, NULL, ArbPlatz.StandortID), IIF(Mitarbei.StandortID < 0, NULl, Mitarbei.StandortID), -1)
     FROM Scans
     JOIN ZielNr ON Scans.ZielNrID = ZielNr.ID

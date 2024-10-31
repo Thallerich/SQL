@@ -5,7 +5,7 @@ WITH Eingangsscan AS (
     AND Scans.Menge = 1
   GROUP BY Scans.EinzTeilID
 )
-SELECT KdGf.KurzBez AS SGF, EinzTeil.Code AS Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.EKPreis, EinzTeil.ErstWoche, Eingangsscan.LastScanIn AS [letzter Eingangsscan], EinzTeil.WegDatum, WegGrund.WegGrundBez$LAN$ AS WegGrund, EinzTeil.RuecklaufG AS [Anzahl Wäschen], Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung]
+SELECT KdGf.KurzBez AS SGF, EinzTeil.Code AS Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.EKPreis, ErstWoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), Eingangsscan.LastScanIn AS [letzter Eingangsscan], EinzTeil.WegDatum, WegGrund.WegGrundBez$LAN$ AS WegGrund, EinzTeil.RuecklaufG AS [Anzahl Wäschen], Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung]
 FROM EinzTeil
 JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
