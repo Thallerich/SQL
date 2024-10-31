@@ -66,7 +66,7 @@ else
     $infiles = Get-ChildItem -Path "C:\Users\thalst.SAL\Downloads\csv\$processtype\" -Filter *.csv
     $tablename = "AWSInvest.dbo." + $processtype + "_Import"
 
-    Remove-DbaDbTable -SqlInstance SQL1FCIHQ22.sal.co.at -Table $tablename -Confirm:$false
+    # Remove-DbaDbTable -SqlInstance SQL1FCIHQ22.sal.co.at -Table $tablename -Confirm:$false
 
     foreach ($file in $infiles) {
         Write-Host "Importing $($file.Name) into DataTable-Variable"
