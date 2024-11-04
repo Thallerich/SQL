@@ -45,7 +45,7 @@ SELECT SetArtikel.ArtikelNr AS [Set-ArtikelNr],
       WHEN OPEtiPo.EinzTeilID > 0 AND (SELECT COUNT(*) FROM OPEtiKo AS o WHERE o.EtiNr = EinzTeil.Code) > 0 THEN N'Set-im-Set'
       ELSE N'who knows man!'
     END,
-  EinzTeil.Erstwoche,
+  [Week].Woche AS Erstwoche,
   EinzTeil.RuecklaufG AS [Anzahl Wäschen],
   [Anzahl Nachwäschen] = (
     SELECT COUNT(Scans.ID)
@@ -63,6 +63,7 @@ JOIN Mitarbei AS PackMitarbei ON OPEtiKo.PackMitarbeiID = PackMitarbei.ID
 JOIN OPEtiPo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID
 JOIN OPSets ON OPEtiPo.OPSetsID = OPSets.ID
 LEFT JOIN EinzTeil ON OPEtiPo.EinzTeilID = EinzTeil.ID AND OPEtiPo.EinzTeilID > 0
+LEFT JOIN [Week] ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat
 LEFT JOIN Artikel AS InhaltTeil ON EinzTeil.ArtikelID = InhaltTeil.ID
 LEFT JOIN OPEinweg ON OPEtiPo.OPEinwegID = OPEinweg.ID AND OPEtiPo.OPEinwegID > 0
 LEFT JOIN Artikel AS InhaltEinweg ON OPEinweg.ArtikelID = InhaltEinweg.ID

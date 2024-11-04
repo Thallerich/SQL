@@ -13,23 +13,25 @@ PoolteilStatus AS (
 )
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.Bez AS [VSA-Bezeichnung], Schwundteile.Code AS Chipcode, PoolteilStatus.StatusBez AS [aktueller Status des Teils], Bereich.Bereich AS Produktbereich, Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, ArtGroe.Groesse AS [Größe], Schwundteile.Vertragsartikel, Schwundteile.BasisAfa AS Basisrestwert, Schwundteile.RestwertInfo AS Restwert, CAST(Schwundteile.LastScanTime AS date) AS [letzter Scan], Actions.ActionsBez AS [letzte Aktion], CAST(Inventurscan.Zeitpunkt AS date) AS [zuletzt inventiert], DATEDIFF(day, Schwundteile.LastScanTime, GETDATE()) AS [Tage ohne Bewegung], Schwundteile.Erstwoche AS [Erster Einsatz], Schwundteile.SetTeil AS [ist Set-Inhalt?], CAST(IIF(Schwundteile.RechPoID = -2, 1, 0) AS bit) AS [ohne Berrechnung?]
 FROM (
-  SELECT EinzTeil.ID AS EinzTeilID, ArtGroe.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, EinzTeil.Erstwoche, EinzTeil.LastErsatzFuerKdArtiID, CAST(MAX(CAST(KdArti.Vertragsartikel AS int)) AS bit) AS Vertragsartikel, EinzTeil.LastActionsID, fRW.BasisAfa, fRW.RestwertInfo, CAST(0 AS bit) AS SetTeil
+  SELECT EinzTeil.ID AS EinzTeilID, ArtGroe.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, [Week].Woche AS Erstwoche, EinzTeil.LastErsatzFuerKdArtiID, CAST(MAX(CAST(KdArti.Vertragsartikel AS int)) AS bit) AS Vertragsartikel, EinzTeil.LastActionsID, fRW.BasisAfa, fRW.RestwertInfo, CAST(0 AS bit) AS SetTeil
   FROM EinzTeil
   CROSS APPLY dbo.funcGetRestWertOP(EinzTeil.ID, @curweek, 1) fRW
   JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
   JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
   JOIN KdArti ON ArtGroe.ArtikelID = KdArti.ArtikelID AND KdArti.KundenID = Vsa.KundenID
+  JOIN [Week] ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat
   WHERE Vsa.KundenID = $ID$
-  GROUP BY EinzTeil.ID, ArtGroe.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, EinzTeil.Erstwoche, EinzTeil.LastActionsID, EinzTeil.LastErsatzFuerKdArtiID, fRW.BasisAfa, fRW.RestwertInfo
+  GROUP BY EinzTeil.ID, ArtGroe.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, [Week].Woche, EinzTeil.LastActionsID, EinzTeil.LastErsatzFuerKdArtiID, fRW.BasisAfa, fRW.RestwertInfo
   
   UNION
   
-  SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, EinzTeil.Erstwoche, EinzTeil.LastErsatzFuerKdArtiID, CAST(0 AS bit) AS VertragsArtikel, EinzTeil.LastActionsID, CAST(0 AS money) AS BasisAfa, CAST(0 AS money) AS RestwertInfo, CAST(1 AS bit) AS SetTeil
+  SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.ArtikelID, EinzTeil.ArtGroeID, EinzTeil.Status, EinzTeil.RechPoID, EinzTeil.VsaID, EinzTeil.Code, EinzTeil.LastScanTime, [Week].Woche AS Erstwoche, EinzTeil.LastErsatzFuerKdArtiID, CAST(0 AS bit) AS VertragsArtikel, EinzTeil.LastActionsID, CAST(0 AS money) AS BasisAfa, CAST(0 AS money) AS RestwertInfo, CAST(1 AS bit) AS SetTeil
   FROM EinzTeil
   JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
   JOIN OPEtiPo ON OPEtiPo.EinzTeilID = EinzTeil.ID
   JOIN OPEtiKo ON OPEtiPo.OPEtiKoID = OPEtiKo.ID AND OPEtiKo.VsaID = EinzTeil.VsaID
   JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
+  JOIN [Week] ON DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat
   WHERE Vsa.KundenID = $ID$
     AND OPEtiKo.Status IN (N'R', N'U')
     AND NOT EXISTS (
