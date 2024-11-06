@@ -1,7 +1,7 @@
 /* LIEFTAGE, ARTILIEF, ARGRLIEF, LIEFPRIO, ARTEKHIS */
 
-DECLARE @liefnr_source int = 30021;
-DECLARE @liefnr_destination int = 28764;
+DECLARE @liefnr_source int = 200019610;
+DECLARE @liefnr_destination int = 200020806;
 
 DECLARE @liefid_source int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @liefnr_source);
 DECLARE @liefid_destination int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @liefnr_destination);
@@ -88,10 +88,10 @@ BEGIN TRY
 
     DELETE FROM LiefPrio WHERE LiefID = @liefid_source;
 
-    UPDATE ArtGroe SET LiefID = @liefid_destination
+    UPDATE ArtGroe SET LiefID = @liefid_destination, UserID_ = @userid
     WHERE ArtGroe.LiefID = @liefid_source;
 
-    UPDATE Artikel SET LiefID = @liefid_destination
+    UPDATE Artikel SET LiefID = @liefid_destination, UserID_ = @userid
     WHERE Artikel.LiefID = @liefid_source;
   
   COMMIT;
