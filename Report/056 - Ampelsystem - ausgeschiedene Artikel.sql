@@ -2,23 +2,26 @@ DROP TABLE IF EXISTS #Result, #Final;
 
 CREATE TABLE #Result (
   KdArtiID int,
-  AnzSchrott int
+  AnzSchrott int,
+  SummeZyklen int
 );
 
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
-DECLARE @from datetime2 = DATEADD(month, DATEDIFF(month, 0, GETDATE())-1, 0), @to datetime2 = DATEADD(month, DATEDIFF(month, -1, GETDATE())-1, -1);
+DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST($ENDDATE$ AS datetime2);
+DECLARE @locationid int = $2$;
 DECLARE @sqltext nvarchar(max);
 
 SET @sqltext = N'
-  INSERT INTO #Result (KdArtiID, AnzSchrott)
-  SELECT KdArti.ID AS KdArtiID, COUNT(DISTINCT EinzHist.ID) AS AnzSchrott
+  INSERT INTO #Result (KdArtiID, AnzSchrott, SummeZyklen)
+  SELECT KdArti.ID AS KdArtiID, COUNT(DISTINCT EinzHist.ID) AS AnzSchrott, SUM(EinzTeil.RuecklaufG) AS SummeZyklen
   FROM TeilSoFa
   JOIN EinzHist ON TeilSoFa.EinzHistID = EinzHist.ID
+  JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
   JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
   JOIN Kunden ON EinzHist.KundenID = Kunden.ID
   WHERE TeilSoFa.Zeitpunkt BETWEEN @from AND @to
     AND EinzHist.PoolFkt = 0
-    AND Kunden.StandortID = (SELECT ID FROM Standort WHERE Standort.SuchCode = N''SAWR'')
+    AND Kunden.StandortID = @locationid
     AND TeilSoFa.SoFaArt = N''R''
     AND (EinzHist.Status = N''Y'' OR (EinzHist.Status = N''S'' AND EinzHist.WegGrundID > 0))
     AND Kunden.KdNr NOT IN (10005396, 100151)
@@ -33,7 +36,7 @@ SET @sqltext = N'
   GROUP BY KdArti.ID;
 ';
 
-EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
+EXEC sp_executesql @sqltext, N'@from date, @to date, @locationid int', @from, @to, @locationid;
 
 WITH UmlaufPerKdArti AS (
   SELECT _Umlauf.KdArtiID, SUM(_Umlauf.Umlauf) AS Umlauf
@@ -51,12 +54,13 @@ LiefermPerKdArti AS (
 )
 SELECT Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
-  Bereich.BereichBez AS Kundenbereich,
+  Bereich.BereichBez$LAN$ AS Kundenbereich,
   Artikel.ArtikelNr,
-  Artikel.ArtikelBez AS Artikelbezeichnung,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
   SUM(ISNULL(UmlaufPerKdArti.Umlauf, 0)) AS Umlaufmenge,
   SUM(ISNULL(LiefermPerKdArti.Liefermenge, 0)) AS Liefermenge,
-  SUM(ISNULL(#Result.AnzSchrott, 0)) AS [Austausch absolut]
+  SUM(ISNULL(#Result.AnzSchrott, 0)) AS [Austausch absolut],
+  SUM(ISNULL(#Result.SummeZyklen, 0)) / SUM(ISNULL(#Result.AnzSchrott, 1)) AS [Waschzyklen-Durchschnitt Austausch]
 INTO #Final
 FROM KdArti
 LEFT JOIN UmlaufPerKdArti ON KdArti.ID = UmlaufPerKdArti.KdArtiID
@@ -66,11 +70,15 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
-WHERE Kunden.StandortID = (SELECT ID FROM Standort WHERE Standort.SuchCode = N'SAWR')
+WHERE Kunden.StandortID = @locationid
   AND Kunden.KdNr NOT IN (10005396, 100151)
-GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez, Artikel.ArtikelNr, Artikel.ArtikelBez;
+GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$;
 
-SELECT FORMAT(@from, N'yyyy-MM') AS Monat,
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST($ENDDATE$ AS datetime2);
+
+SELECT FORMAT(@from, N'dd.MM.yyyy') + N' - ' + FORMAT(@to, N'dd.MM.yyyy') AS Auswertungszeitraum,
   #Final.*,
   ROUND(CAST(#Final.[Austausch absolut] AS float) / CAST(IIF(#Final.Umlaufmenge = 0, 1, #Final.Umlaufmenge) AS float) * CAST(100 AS float), 1) AS [Austausch relativ zu Umlauf in Prozent],
   #Final.Umlaufmenge / 208 AS [Wöchentlicher Austausch SOLL],
