@@ -8,10 +8,10 @@ FROM EinzTeil
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
 JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-WHERE Kunden.KdNr = 10006291
-  AND Artikel.ArtikelNr = N'7199W1'
+WHERE Kunden.KdNr = 10001802
+  AND Artikel.ArtikelNr = N'111220040036'
   AND EinzTeil.Status != N'Z'
-  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 154);
+  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 154, 173);
 
 BEGIN TRY
   
