@@ -204,8 +204,16 @@ BEGIN
       WHERE Parameter = N'LIVE_FTP_DIRECTORY';
 
     UPDATE Salesianer.dbo.Settings
-      SET ValueMemo = N'65090'
+      SET ValueMemo = N'9099'
       WHERE Parameter = N'LIVE_SERVER_PORT';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'saladftptest1'
+      WHERE Parameter = N'LIVE_FTP_USERNAME';
+
+    UPDATE Salesianer.dbo.Settings
+      SET ValueMemo = N'~$<e-.z0*#*~'
+      WHERE Parameter = N'LIVE_FTP_PASSWORD';
 
     UPDATE Salesianer.dbo.Settings
       SET ValueMemo = N'https://testportal.salesianer.com/'
