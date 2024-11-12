@@ -16,7 +16,7 @@ JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
 JOIN Mitarbei ON VsaAnf.AnlageUserID_ = Mitarbei.ID
 WHERE VsaAnf.ArtGroeID > -1
   AND Bereich.VsaAnfGroe = 0
-  AND VsaAnf.Status < 'I'
+  AND VsaAnf.Status < 'E'
   AND KdArti.Status = 'A'
   AND KdBer.Status = 'A'
   AND Kunden.Status = 'A'
