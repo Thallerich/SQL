@@ -31,7 +31,7 @@ WHERE x.ActionsID = 1;
 EXEC sp_executesql @sqltext, N'@from datetime2, @to datetime2', @from, @to;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/* ++ Reportdaten                                                                                                               ++ */
+/* ++ Kunden-Daten                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, #EinAusScan.Eingang AS [Abholung], #EinAusScan.Ausgang AS [Anlieferung], #EinAusScan.WochenInProd AS [Wochen bei Salesianer]
@@ -43,4 +43,23 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
 WHERE Kunden.ID IN ($3$)
+  AND #EinAusScan.WochenInProd IS NOT NULL;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Produktions-Daten                                                                                                         ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+SELECT Produktion.Bez AS Produktion, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Traeger.Traeger AS TrägerNr, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Barcode, #EinAusScan.Eingang AS [Abholung], #EinAusScan.Ausgang AS [Anlieferung], #EinAusScan.WochenInProd AS [Wochen bei Salesianer]
+FROM #EinAusScan
+JOIN EinzHist ON #EinAusScan.EinzHistID = EinzHist.ID
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+JOIN Vsa ON EinzHist.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
+JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
+WHERE Produktion.ID IN ($4$)
   AND #EinAusScan.WochenInProd IS NOT NULL;
