@@ -7,7 +7,7 @@ DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 SET @LSText = CHAR(13) + CHAR(10) + N'Sehr geehrter SALESIANER Kunde,' + CHAR(13) + CHAR(10) + N'haben Sie in der anstehenden Weihnachtszeit / Silvester Schließtage oder einen Betriebsurlaub geplant?' + CHAR(13) + CHAR(10) + N'Geben Sie unserem Kundenservice schon jetzt per E-Mail an @MailParam Bescheid, damit wir Ihre reibungslose Versorgung sicherstellen können.';
 
 INSERT INTO VsaTexte (KundenID, TextArtID, Memo, VonDatum, BisDatum, AnlageUserID_, UserID_)
-SELECT Kunden.ID AS KundenID, 2 AS TextArtID, REPLACE(@LSText, N'@MailParam', _IT75057.[Mail-Adresse]) AS Memo, CAST(GETDATE() AS date) AS VonDatum, CAST(N'2023-12-31' AS date) AS BisDatum, @UserID AS AnlageUserID_, @UserID AS UserID_
+SELECT Kunden.ID AS KundenID, 2 AS TextArtID, REPLACE(@LSText, N'@MailParam', _IT75057.[Mail-Adresse]) AS Memo, CAST(GETDATE() AS date) AS VonDatum, DATEFROMPARTS(YEAR(GETDATE()), 12, 31) AS BisDatum, @UserID AS AnlageUserID_, @UserID AS UserID_
 FROM Kunden
 JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 JOIN KdGf ON Kunden.KdGfID = KdGf.ID
