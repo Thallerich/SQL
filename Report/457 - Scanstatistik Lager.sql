@@ -3,20 +3,19 @@ DECLARE @bis datetime = DATEADD(day, 1, $1$);
 
 DROP TABLE IF EXISTS #Scans457;
 
-SELECT *
+SELECT Scans.ID, Scans.ActionsID, Scans.AnlageUserID_
 INTO #Scans457
-FROM Scans WITH (INDEX(DateTime))
+FROM Scans WITH(INDEX([DateTime]))
 WHERE Scans.DateTime BETWEEN @von AND @bis;
 
 SELECT Mitarbei.UserName AS Mitarbeiter,  Mitarbei.Name,
-  SUM(IIF(Scans.ZielNrID = 40, 1, 0)) AS "Lagerentnahme",
-  SUM(IIF(Scans.ZielNrID = 7, 1, 0)) AS "neu gepatcht",
-  SUM(IIF(Scans.ZielNrID = 41, 1, 0)) AS "Endkontrolle",
-  SUM(IIF(Scans.ZielNrID = 6, 1, 0)) AS "Rückgabe",
-  SUM(IIF(Scans.ZielNrID = 18, 1, 0)) AS "Lager",
-  SUM(IIF(Scans.ZielNrID = 19, 1, 0)) AS "verschrottet",
-  SUM(IIF(Scans.ZielNrID = 5, 1, 0)) AS "Austausch",
-  SUM(IIF(Scans.ZielNrID = 36, 1, 0)) AS "Teile Info",
+  SUM(IIF(Scans.ActionsID = 57, 1, 0)) AS "Lagerentnahme",
+  SUM(IIF(Scans.ActionsID = 23, 1, 0)) AS "neu gepatcht",
+  SUM(IIF(Scans.ActionsID = 49, 1, 0)) AS "Endkontrolle",
+  SUM(IIF(Scans.ActionsID = 6, 1, 0)) AS "Rückgabe",
+  SUM(IIF(Scans.ActionsID IN (26, 33), 1, 0)) AS "Lager",
+  SUM(IIF(Scans.ActionsID = 7, 1, 0)) AS "verschrottet",
+  SUM(IIF(Scans.ActionsID IN (4, 142), 1, 0)) AS "Austausch",
   COUNT(Scans.ID) AS Total
 FROM #Scans457 AS Scans
 RIGHT JOIN Mitarbei ON Scans.AnlageUserID_ = Mitarbei.ID

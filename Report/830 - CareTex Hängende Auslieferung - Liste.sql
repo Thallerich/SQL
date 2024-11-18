@@ -5,7 +5,6 @@ WITH ExpScan AS (
   SELECT Scans.EinzHistID, Scans.[DateTime] AS Zeitpunkt
   FROM Scans
   WHERE Scans.[DateTime] BETWEEN @von AND @bis
-    AND Scans.ZielNrID = 2
     AND Scans.ActionsID = 2
 )
 SELECT L.KdNr, L.SuchCode, L.VsaID, L.VsaNr, L.Vsa, L.Nachname, L.Vorname, L.ZimmerNr, L.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS ArtikelBez
