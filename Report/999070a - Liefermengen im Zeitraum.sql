@@ -25,7 +25,7 @@ CREATE TABLE #TmpLSMimZeitraum (
   ArtikelNr nvarchar(15) COLLATE Latin1_General_CS_AS,
   ArtikelBez nvarchar(60) COLLATE Latin1_General_CS_AS,
   ArtiGröße nvarchar(12) COLLATE Latin1_General_CS_AS,
-  Variante nchar(2) COLLATE Latin1_General_CS_AS,
+  Variante nchar(4) COLLATE Latin1_General_CS_AS,
   VarianteBez nvarchar(60) COLLATE Latin1_General_CS_AS,
   Umlauf int,
   Auslieferart nvarchar(60) COLLATE Latin1_General_CS_AS,
