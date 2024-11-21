@@ -77,13 +77,14 @@ GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Artikel.ArtikelN
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST($ENDDATE$ AS datetime2);
+DECLARE @weekcount int = DATEDIFF(week, @from, @to);
 
 SELECT FORMAT(@from, N'dd.MM.yyyy') + N' - ' + FORMAT(@to, N'dd.MM.yyyy') AS Auswertungszeitraum,
   #Final.*,
   ROUND(CAST(#Final.[Austausch absolut] AS float) / CAST(IIF(#Final.Umlaufmenge = 0, 1, #Final.Umlaufmenge) AS float) * CAST(100 AS float), 1) AS [Austausch relativ zu Umlauf in Prozent],
   #Final.Umlaufmenge / 208 AS [Wöchentlicher Austausch SOLL],
-  #Final.[Austausch absolut] / 4.33 AS [Wöchentlicher Austausch IST],
-  ROUND(CAST((#Final.Umlaufmenge / 208) - (#Final.[Austausch absolut] / 4.33) AS float) / CAST(IIF(#Final.[Austausch absolut] / 4.33 = 0, 1, #Final.[Austausch absolut] / 4.33) AS float) * CAST(100 AS float), 1) AS [Abweichung in Prozent],
+  #Final.[Austausch absolut] / @weekcount AS [Wöchentlicher Austausch IST],
+  IIF(#Final.Umlaufmenge / 208 = 0, NULL, ROUND(CAST(#Final.[Austausch absolut] / @weekcount AS float) / CAST(IIF(#Final.Umlaufmenge / 208 = 0, 1, #Final.Umlaufmenge / 208) AS float) * CAST(100 AS float), 1)) AS [Abweichung in Prozent],
   #Final.Umlaufmenge / IIF(#Final.[Austausch absolut] = 0, 1, #Final.[Austausch absolut]) AS [Reichweite in Monaten]
 FROM #Final
 ORDER BY [Austausch absolut] DESC;
