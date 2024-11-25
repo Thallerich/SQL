@@ -11,7 +11,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
 WHERE Kunden.ID = $ID$
   AND DATEDIFF(day, EinzTeil.LastScanToKunde, GETDATE()) > 90
-  AND ((EinzTeil.[Status] = N'Q' AND EinzTeil.LastActionsID = 102) OR (EinzTeil.[Status] = N'W' AND EinzTeil.RechPoID = -1))  /* bei Schwund-Teilen nur nicht verrechnete und nicht für Verrechnung gesperrte Teile */
+  AND ((EinzTeil.[Status] = N'Q' AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)) OR (EinzTeil.[Status] = N'W' AND EinzTeil.RechPoID = -1))  /* bei Schwund-Teilen nur nicht verrechnete und nicht für Verrechnung gesperrte Teile */
   AND Artikel.EAN IS NOT NULL
   AND LEN(EinzTeil.Code) = 24
   AND Artikel.BereichID != 104

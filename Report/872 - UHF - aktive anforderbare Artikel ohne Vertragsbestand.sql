@@ -46,7 +46,7 @@ WHERE VsaAnf.Status = N'A'
       FROM EinzTeil
       WHERE EinzTeil.ArtikelID = Artikel.ID
         AND EinzTeil.VsaID = Vsa.ID
-        AND EinzTeil.LastActionsID IN (102, 120, 136)
+        AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
         AND EinzTeil.LastErsatzFuerKdArtiID < 0
         AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND EinzTeil.ArtGroeID = VsaAnf.ArtGroeID))
     )
@@ -56,7 +56,7 @@ WHERE VsaAnf.Status = N'A'
       JOIN KdArti ON LastErsatzFuerKdArtiID = KdArti.ID
       WHERE KdArti.ArtikelID = Artikel.ID
         AND EinzTeil.VsaID = Vsa.ID
-        AND EinzTeil.LastActionsID IN (102, 120, 136)
+        AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
         AND EinzTeil.LastErsatzFuerKdArtiID > 0
         AND (VsaAnf.ArtGroeID = -1 OR (Bereich.VsaAnfGroe = 1 AND EinzTeil.LastErsatzArtGroeID = VsaAnf.ArtGroeID))
     )

@@ -39,7 +39,7 @@ SET @sqltext = N'
   LEFT JOIN VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = KdArti.ID
   WHERE Kunden.ID = @kundenid
     AND EinzTeil.Status IN (N''Q'', N''W'')
-    AND EinzTeil.LastActionsID IN (102, 116, 120, 136)
+    AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
   GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, VsaAnf.Bestand;
 ';
 
