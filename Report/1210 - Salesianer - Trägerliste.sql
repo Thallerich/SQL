@@ -34,7 +34,10 @@ SELECT Holding.Holding,
   EinzHist.Eingang1,
   EinzHist.Ausgang1,
   EinzHist.IndienstDat AS [Letztes Einsatzdatum],
-  EinzTeil.RuecklaufG AS [Waschzyklen]
+  EinzTeil.RuecklaufG AS [Waschzyklen],
+  EinzTeil.AlterInfo AS [Alter in Wochen],
+  KdArti.AfaWochen AS [AfA-Wochen],
+  EinzTeil.AlterInfo - KdArti.AfaWochen AS [Differenz Alter zu AfA-Wochen]
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN TraeArti ON EinzHist.TraeArtiID = TraeArti.ID
@@ -45,6 +48,7 @@ JOIN Abteil AS TraeAbteil ON Traeger.AbteilID = TraeAbteil.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN KdArti ON TraeArti.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
 JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID
@@ -54,39 +58,10 @@ JOIN Teilestatus ON EinzHist.Status = Teilestatus.Status
 WHERE Kunden.HoldingID IN ($1$)
   AND Kunden.ID IN ($2$)
   AND Vsa.ID IN ($3$)
+  AND KdBer.BereichID IN ($4$)
+  AND Kunden.StandortID IN ($5$)
+  AND EinzTeil.AlterInfo >= $6$
   AND EinzHist.Status BETWEEN N'Q' AND N'W'
   AND EinzHist.Einzug IS NULL
   AND EinzHist.PoolFkt = 0
-GROUP BY Holding.Holding,
-  Kunden.KdNr,
-  Kunden.SuchCode,
-  Vsa.VsaNr,
-  Vsa.SuchCode,
-  Vsa.Bez,
-  Vsa.Name1,
-  Vsa.Name2,
-  Vsa.GebaeudeBez,
-  Abteil.Abteilung,
-  Abteil.Bez,
-  TraeAbteil.Abteilung,
-  TraeAbteil.Bez,
-  Schrank.SchrankNr,
-  TraeFach.Fach,
-  Traeger.Traeger,
-  Traeger.Nachname,
-  Traeger.Vorname,
-  Traeger.PersNr,
-  Artikel.ArtikelNr,
-  Artikel.ArtikelBez$LAN$,
-  ArtGroe.Groesse,
-  KdArti.Variante,
-  KdArti.VariantBez,
-  TraeArti.Menge,
-  EinzHist.Barcode,
-  CAST(IIF(EinzHist.Status > N'Q', 1, 0) AS bit),
-  Teilestatus.Statusbez,
-  EinzHist.Eingang1,
-  EinzHist.Ausgang1,
-  EinzHist.IndienstDat,
-  EinzTeil.RuecklaufG
 ORDER BY KdNr, VsaNr, Traeger, ArtikelNr, Groesse;
