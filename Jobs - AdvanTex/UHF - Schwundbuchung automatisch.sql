@@ -42,7 +42,7 @@ JOIN Bereich ON Artikel.BereichID = Bereich.ID
 WHERE Kunden.KdNr IN (SELECT KdNr FROM @KdNr)
   AND EinzTeil.Status = N'Q'
   AND Bereich.Bereich != N'ST'
-  AND EinzTeil.LastActionsID IN (102, 120, 136)
+  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
   AND EinzTeil.LastScanTime < @HalfYearAgo;
 
 BEGIN TRY
@@ -66,7 +66,7 @@ BEGIN TRY
     /* ++ Alten Umlauf-Datensatz anpassen                                                                                           ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    UPDATE EinzHist SET EinzHistBis = @curdatetime, EinzHist.Ausdienst = @curweek, EinzHist.AusdienstDat = CAST(@curdatetime AS date), EinzHist.Abmeldung = @curweek, EinzHist.AbmeldDat = CAST(@curdatetime AS date), UserID_ = @userid
+    UPDATE EinzHist SET EinzHistBis = @curdatetime, UserID_ = @userid
     FROM #PoolSchwund
     WHERE #PoolSchwund.EinzHistID = EinzHist.ID;
 
