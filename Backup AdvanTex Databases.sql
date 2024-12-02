@@ -23,11 +23,11 @@ EXEC AdminDB.dbo.DatabaseBackup @Databases = N'Salesianer_Klagenfurt', @CopyOnly
 GO
 
 /* WMEN */
-EXEC AdminDB.dbo.DatabaseBackup @Databases = N'Salesianer_Enns1, Salesianer_Enns_2', @CopyOnly = N'Y', @BackupType = N'FULL', @Checksum = N'Y', @DirectoryStructure = NULL, @FileName = N'{DatabaseName}_{Year}{Month}{Day}{Hour}{Minute}{Second}_{CopyOnly}.{FileExtension}'
+EXEC AdminDB.dbo.DatabaseBackup @Databases = N'Salesianer_Enns_1, Salesianer_Enns_2', @CopyOnly = N'Y', @BackupType = N'FULL', @Checksum = N'Y', @DirectoryStructure = NULL, @FileName = N'{DatabaseName}_{Year}{Month}{Day}{Hour}{Minute}{Second}_{CopyOnly}.{FileExtension}'
 GO
 
 /* WMLE */
-EXEC AdminDB.dbo.DatabaseBackup @Databases = N'Salesianer_Lenzing_1, Salesianer_Lenzing_2, dbSystem', @CopyOnly = N'Y', @BackupType = N'FULL', @Checksum = N'Y', @DirectoryStructure = NULL, @FileName = N'{DatabaseName}_{Year}{Month}{Day}{Hour}{Minute}{Second}_{CopyOnly}.{FileExtension}'
+EXEC AdminDB.dbo.DatabaseBackup @Databases = N'Salesianer_Lenzing_1, Salesianer_Lenzing_2', @CopyOnly = N'Y', @BackupType = N'FULL', @Checksum = N'Y', @DirectoryStructure = NULL, @FileName = N'{DatabaseName}_{Year}{Month}{Day}{Hour}{Minute}{Second}_{CopyOnly}.{FileExtension}'
 GO
 
 /* Zentrale */
