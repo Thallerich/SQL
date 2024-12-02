@@ -74,7 +74,7 @@ BEGIN TRY
     /* ++ EinzTeil-Datensatz anpassen                                                                                               ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    UPDATE EinzTeil SET [Status] = N'W', CurrEinzHistID = [@MapTable].EinzHistID, LastActionsID = 116, ZielNrID = 10000105, RechPoID = -2, UserID_ = @userid
+    UPDATE EinzTeil SET [Status] = N'W', CurrEinzHistID = [@MapTable].EinzHistID, LastActionsID = 116, ZielNrID = -1, RechPoID = -2, UserID_ = @userid
     FROM #PoolSchwund
     JOIN @MapTable ON #PoolSchwund.EinzTeilID = [@MapTable].EinzTeilID
     WHERE #PoolSchwund.EinzTeilID = EinzTeil.ID
@@ -84,7 +84,7 @@ BEGIN TRY
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
     INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, AnlageUserID_, UserID_)
-    SELECT [#PoolSchwund].EinzHistID, [#PoolSchwund].EinzTeilID, @returntime AS [DateTime], CAST(116 AS int) AS ActionsID, CAST(10000105 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, @userid AS AnlageUserID_, @userid AS UserID_
+    SELECT [#PoolSchwund].EinzHistID, [#PoolSchwund].EinzTeilID, @returntime AS [DateTime], CAST(116 AS int) AS ActionsID, CAST(-1 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, @userid AS AnlageUserID_, @userid AS UserID_
     FROM #PoolSchwund;
 
   
