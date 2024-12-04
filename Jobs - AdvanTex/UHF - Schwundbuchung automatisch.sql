@@ -43,6 +43,8 @@ WHERE Kunden.KdNr IN (SELECT KdNr FROM @KdNr)
   AND EinzTeil.Status = N'Q'
   AND Bereich.Bereich != N'ST'
   AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
+  AND EinzHist.PoolFkt = 1
+  AND EinzHist.EinzHistTyp = 1
   AND EinzTeil.LastScanTime < @HalfYearAgo;
 
 BEGIN TRY
@@ -66,7 +68,7 @@ BEGIN TRY
     /* ++ Alten Umlauf-Datensatz anpassen                                                                                           ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    UPDATE EinzHist SET EinzHistBis = @curdatetime, UserID_ = @userid
+    UPDATE EinzHist SET EinzHistBis = @curdatetime, Abmeldung = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AbmeldDat = IIF(EinzHist.Indienst IS NOT NULL, CAST(@curdatetime AS date), NULL), Ausdienst = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AusdienstDat = IIF(EinzHist.Indienst IS NOT NULL, CAST(@curdatetime AS date), NULL), UserID_ = @userid
     FROM #PoolSchwund
     WHERE #PoolSchwund.EinzHistID = EinzHist.ID;
 
