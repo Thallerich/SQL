@@ -31,6 +31,7 @@ DECLARE @returntime datetime2 = DATEADD(millisecond, -10, @curdatetime);
 DECLARE @ausdienstweek varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST')
 DECLARE @arbplatzid int = (SELECT ID FROM ArbPlatz WHERE ComputerName = HOST_NAME());
+DECLARE @iserror bit = 0;
 DECLARE @msg nvarchar(max);
 
 DECLARE @MapTable TABLE (
@@ -46,7 +47,7 @@ SELECT EinzHist.ID, EinzHist.EinzTeilID, EinzHist.Barcode, EinzHist.ArtikelID, E
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 JOIN Kunden ON EinzHist.KundenID = Kunden.ID
-WHERE EinzHist.Barcode IN (SELECT Barcode FROM Salesianer.dbo._IT88875)
+WHERE EinzHist.Barcode IN (SELECT Barcode FROM Salesianer.dbo._IT89402)
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.PoolFkt = 1;
 
@@ -95,17 +96,6 @@ BEGIN TRY
 
     SELECT @msg = FORMAT(GETDATE(), N'dd.MM.yyyy HH:mm:ss', N'de-AT') + N': EinzTeil-Datensatz angepasst';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
-
-    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-    /* ++ Scans schreiben (Rückgabe und Schrott - jeweils auf alten Umlauf-Datensatz)                                               ++ */
-    /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-    INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, GrundID, AnlageUserID_, UserID_)
-    SELECT [#Cleanup].EinzHistID, [#Cleanup].EinzTeilID, @returntime, CAST(108 AS int) AS ActionsID, CAST(-1 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, @weggrundid AS GrundID, @userid AS AnlageUserID_, @userid AS UserID_
-    FROM #Cleanup;
-
-    SELECT @msg = FORMAT(GETDATE(), N'dd.MM.yyyy HH:mm:ss', N'de-AT') + N': Scans geschrieben';
-    RAISERROR(@msg, 0, 1) WITH NOWAIT;
   
   COMMIT;
 END TRY
@@ -117,8 +107,23 @@ BEGIN CATCH
   IF XACT_STATE() != 0
     ROLLBACK TRANSACTION;
   
+  SET @iserror = 1;
   RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
 END CATCH;
+
+IF @iserror = 0
+  BEGIN
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+  /* ++ Scans schreiben (Rückgabe und Schrott - jeweils auf alten Umlauf-Datensatz)                                               ++ */
+  /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+  INSERT INTO Scans (EinzHistID, EinzTeilID, [DateTime], ActionsID, ZielNrID, ArbPlatzID, GrundID, AnlageUserID_, UserID_)
+  SELECT [#Cleanup].EinzHistID, [#Cleanup].EinzTeilID, @returntime, CAST(108 AS int) AS ActionsID, CAST(-1 AS int) AS ZielNrID, @arbplatzid AS ArbPlatzID, @weggrundid AS GrundID, @userid AS AnlageUserID_, @userid AS UserID_
+  FROM #Cleanup;
+
+  SELECT @msg = FORMAT(GETDATE(), N'dd.MM.yyyy HH:mm:ss', N'de-AT') + N': Scans geschrieben';
+  RAISERROR(@msg, 0, 1) WITH NOWAIT;
+END;
 
 GO
 
