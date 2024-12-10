@@ -9,5 +9,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Contain ON LsCont.ContainID = Contain.ID
 WHERE LsKo.Datum BETWEEN @from AND @to
   AND Kunden.ID IN ($3$)
+  AND Vsa.StandKonID IN ($2$)
 GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.VsaNr, Vsa.Bez, LsKo.LsNr, LsKo.Datum
 ORDER BY Kunden.KdNr, Vsa.VsaNr, LsKo.Datum;
