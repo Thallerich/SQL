@@ -7,7 +7,7 @@ CREATE TABLE #Result (
 );
 
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
-DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST($ENDDATE$ AS datetime2);
+DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST(DATEADD(day, 1, $ENDDATE$) AS datetime2);
 DECLARE @locationid int = $2$;
 DECLARE @sqltext nvarchar(max);
 
@@ -30,18 +30,18 @@ SET @sqltext = N'
       FROM TeilSoFa SoFaCheck
       WHERE SoFaCheck.EinzHistID = EinzHist.ID
         AND SoFaCheck.SoFaArt = N''R''
-        AND SoFaCheck.Zeitpunkt < CAST(@from AS datetime2)
+        AND SoFaCheck.Zeitpunkt < @from
         AND SoFaCheck.AlterWochen = TeilSoFa.AlterWochen
     )
   GROUP BY KdArti.ID;
 ';
 
-EXEC sp_executesql @sqltext, N'@from date, @to date, @locationid int', @from, @to, @locationid;
+EXEC sp_executesql @sqltext, N'@from datetime2, @to datetime2, @locationid int', @from, @to, @locationid;
 
 WITH UmlaufPerKdArti AS (
   SELECT _Umlauf.KdArtiID, SUM(_Umlauf.Umlauf) AS Umlauf
   FROM _Umlauf
-  WHERE _Umlauf.Datum = (SELECT MAX(_Umlauf.Datum) FROM _Umlauf WHERE _Umlauf.Datum BETWEEN @from AND @to)
+  WHERE _Umlauf.Datum = (SELECT MAX(_Umlauf.Datum) FROM _Umlauf WHERE _Umlauf.Datum >= @from AND _Umlauf.Datum <= DATEADD(day, 7, @to))
   GROUP BY _Umlauf.KdArtiID
 ),
 LiefermPerKdArti AS (
@@ -76,15 +76,16 @@ GROUP BY Kunden.KdNr, Kunden.SuchCode, Bereich.BereichBez$LAN$, Artikel.ArtikelN
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST($ENDDATE$ AS datetime2);
+DECLARE @from datetime2 = CAST($STARTDATE$ AS datetime2), @to datetime2 = CAST(DATEADD(day, 1, $ENDDATE$) AS datetime2);
+DECLARE @daycount int = DATEDIFF(day, @from, @to);
 DECLARE @weekcount int = DATEDIFF(week, @from, @to);
 
 SELECT FORMAT(@from, N'dd.MM.yyyy') + N' - ' + FORMAT(@to, N'dd.MM.yyyy') AS Auswertungszeitraum,
   #Final.*,
   ROUND(CAST(#Final.[Austausch absolut] AS float) / CAST(IIF(#Final.Umlaufmenge = 0, 1, #Final.Umlaufmenge) AS float) * CAST(100 AS float), 1) AS [Austausch relativ zu Umlauf in Prozent],
   #Final.Umlaufmenge / 208 AS [Wöchentlicher Austausch SOLL],
-  #Final.[Austausch absolut] / @weekcount AS [Wöchentlicher Austausch IST],
-  IIF(#Final.Umlaufmenge / 208 = 0, NULL, ROUND(CAST(#Final.[Austausch absolut] / @weekcount AS float) / CAST(IIF(#Final.Umlaufmenge / 208 = 0, 1, #Final.Umlaufmenge / 208) AS float) * CAST(100 AS float), 1)) AS [Abweichung in Prozent],
-  #Final.Umlaufmenge / IIF(#Final.[Austausch absolut] = 0, 1, #Final.[Austausch absolut]) AS [Reichweite in Monaten]
+  #Final.[Austausch absolut] / IIF(@weekcount = 0, 1, @weekcount) AS [Wöchentlicher Austausch IST],
+  IIF(#Final.Umlaufmenge / 208 = 0, NULL, ROUND(CAST(#Final.[Austausch absolut] / IIF(@weekcount = 0, 1, @weekcount) AS float) / CAST(IIF(#Final.Umlaufmenge / 208 = 0, 1, #Final.Umlaufmenge / 208) AS float) * CAST(100 AS float), 1)) AS [Abweichung in Prozent],
+  #Final.Umlaufmenge / IIF((#Final.[Austausch absolut] / @daycount * 30) = 0, 1, (#Final.[Austausch absolut] / @daycount * 30)) AS [Reichweite in Monaten]
 FROM #Final
 ORDER BY [Austausch absolut] DESC;
