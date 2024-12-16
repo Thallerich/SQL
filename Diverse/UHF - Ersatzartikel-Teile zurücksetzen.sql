@@ -8,8 +8,8 @@ FROM EinzTeil
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
 JOIN Vsa ON EinzTeil.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-WHERE Kunden.KdNr = 10001805
-  AND Artikel.ArtikelNr = N'111220040011'
+WHERE Kunden.KdNr = 10002705
+  AND Artikel.ArtikelNr = N'110620010020'
   AND EinzTeil.Status != N'Z'
   AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173);
 
@@ -19,7 +19,7 @@ BEGIN TRY
 
     UPDATE EinzTeil SET LastErsatzFuerKdArtiID = -1, LastErsatzArtGroeID = -1
     WHERE ID IN (SELECT EinzTeilID FROM @ErsatzTeil)
-      AND (LastErsatzFuerKdArtiID != 0 OR LastErsatzArtGroeID != 0);
+      AND (LastErsatzFuerKdArtiID > 0 OR LastErsatzArtGroeID > 0);
 
   COMMIT TRANSACTION;
 
