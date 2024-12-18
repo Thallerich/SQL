@@ -6,6 +6,7 @@
 
 SELECT WebUser.FullName AS [Name],
   Webuser.UserName AS [Benutzer],
+  WebUser.eMail,
   WebLogin.LastLoginTime AS [letzter Login],
   Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
