@@ -10,6 +10,7 @@ SELECT Kunden.KdNr,
   LiefKdArti.LetzteLieferung AS [Datum letzte Lieferung],
   KdArti.ID AS KdArtiID
 FROM KdArti
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 LEFT JOIN (
@@ -19,5 +20,6 @@ LEFT JOIN (
   GROUP BY LsPo.KdArtiID
 ) AS LiefKdArti ON LiefKdArti.KdArtiID = KdArti.ID
 WHERE Kunden.ID IN ($10$)
-  AND (($11$ = 1 AND KdArti.WaschPreis = 0 AND KdArti.LeasPreis = 0) OR ($11$ = 0))
+  AND KdBer.ServiceID IN ($11$)
+  AND (($12$ = 1 AND KdArti.WaschPreis = 0 AND KdArti.LeasPreis = 0) OR ($12$ = 0))
   AND KdArti.Status = N'F';
