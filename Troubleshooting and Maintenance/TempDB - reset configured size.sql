@@ -1,3 +1,19 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Check current values                                                                                                      ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+SELECT mf.name AS [logical file name], mf.type_desc AS [file type], mf.size * 8 / 1024 AS [configured file size MB], df.size AS [current file size MB]
+FROM sys.master_files AS mf
+JOIN (
+  SELECT df.name, df.type_desc, df.size * 8 / 1024 AS [size]
+  FROM tempdb.sys.database_files AS df
+) AS df ON df.name = mf.name AND df.type_desc = mf.type_desc
+WHERE mf.database_id = DB_ID(N'tempdb');
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Reset configured size                                                                                                     ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 USE [master]
 GO
 
