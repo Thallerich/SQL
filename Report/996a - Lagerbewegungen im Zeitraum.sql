@@ -12,7 +12,9 @@ SELECT LagerArt.LagerArtBez$LAN$ AS Lagerart,
   CAST(0 AS money) AS Preis,
   CAST(0 AS money) AS PreisVormonat,
   CAST(0 AS bigint) AS MengeZugang,
+  CAST(0 AS bigint) AS MengeZugangInventur,
   CAST(0 AS bigint) AS MengeAbgang,
+  CAST(0 AS bigint) AS MengeAbgangInventur,
   Artikel.ID AS ArtikelID,
   ArtGroe.ID AS ArtGroeID,
   LagerArt.ID AS LagerArtID,
@@ -31,26 +33,30 @@ WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND Artikel.ArtiTypeID = 1;  /* nur textile Artikel, keine Namenschilder, Embleme, ... */
 
 IF @NurEinAusgang = 0
-  UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeZugang, MengeAbgang = x.MengeAbgang
+  UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeWareneinang, MengeZugangInventur = x.MengeZugangInventur, MengeAbgang = x.MengeAbgang, MengeAbgangInventur = x.MengeAbgangInventur
   FROM #TmpLagerbewegung AS Lagerbewegung, (
     SELECT 
       Bestand.BestandID, 
       ISNULL((SELECT TOP 1 LB.BestandNeu FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Beginn ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandBeginn,
       ISNULL((SELECT TOP 1 ISNULL(LB.BestandNeu, 0) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Ende ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandEnde,
-      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND (LB.Differenz > 0 OR LB.LgBewCodID = (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'ÜRÜC')) AND LB.LgBewCodID != (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'WKOR')), 0) AS MengeZugang,
-      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID NOT IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code IN (N'WKOR', N'ÜRÜC'))), 0) AS MengeAbgang
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.LiefLsPoID > 0), 0) AS MengeWareneinang,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz > 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'INV')), 0) AS MengeZugangInventur,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID NOT IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code IN (N'WKOR', N'ÜRÜC', N'UMBO', N'DINV', N'INV', N'WECH'))), 0) AS MengeAbgang,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code IN (N'DINV', N'INV'))), 0) AS MengeAbgangInventur
     FROM #TmpLagerbewegung AS Bestand
   ) AS x
   WHERE x.BestandID = Lagerbewegung.BestandID;
 ELSE
-  UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeZugang, MengeAbgang = x.MengeAbgang
+  UPDATE Lagerbewegung SET BestandBeginn = x.BestandBeginn, BestandEnde = x.BestandEnde, MengeZugang = x.MengeZugang, MengeZugangInventur = x.MengeZugangInventur, MengeAbgang = x.MengeAbgang, MengeAbgangInventur = x.MengeAbgangInventur
   FROM #TmpLagerbewegung AS Lagerbewegung, (
     SELECT 
       Bestand.BestandID, 
       ISNULL((SELECT TOP 1 LB.BestandNeu FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Beginn ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandBeginn,
       ISNULL((SELECT TOP 1 ISNULL(LB.BestandNeu, 0) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt < @Ende ORDER BY LB.Zeitpunkt DESC, LB.ID DESC), 0) AS BestandEnde,
       ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND (LB.Differenz > 0 OR LB.LgBewCodID = (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'ÜRÜC')) AND LB.LiefLsPoID > 0 AND LB.LgBewCodID != (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'WKOR')), 0) AS MengeZugang,
-      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)), 0) AS MengeAbgang
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz > 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code = N'INV')), 0) AS MengeZugangInventur,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)), 0) AS MengeAbgang,
+      ISNULL((SELECT SUM(CAST(LB.Differenz AS bigint)) FROM LagerBew LB WHERE LB.BestandID = Bestand.BestandID AND LB.Zeitpunkt BETWEEN @Beginn AND @Ende AND LB.Differenz < 0 AND LB.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.Code IN (N'DINV', N'INV'))), 0) AS MengeAbgangInventur
     FROM #TmpLagerbewegung AS Bestand
   ) AS x
   WHERE x.BestandID = Lagerbewegung.BestandID;
