@@ -4,7 +4,9 @@
 /* ++ Author: Stefan THALLER - 2024-12-19                                                                                       ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Kunden.KdNr,
+SELECT KdGf.KurzBez AS Geschäfsbereich,
+  [Zone].ZonenCode AS Vertriebszone,
+  Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
   Vsa.VsaNr,
   Vsa.Bez AS [Vsa-Bezeichnung],
@@ -18,9 +20,11 @@ FROM TraeArti
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN [Zone] ON Kunden.ZoneID = [Zone].ID
 WHERE Traeger.Status != N'I'
   AND Traeger.Altenheim = 0
   AND Vsa.Status = N'A'
   AND Kunden.ID IN ($2$)
-GROUP BY Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.Bez
+GROUP BY KdGf.KurzBez, [Zone].ZonenCode, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.Bez
 ORDER BY KdNr, VsaNr;
