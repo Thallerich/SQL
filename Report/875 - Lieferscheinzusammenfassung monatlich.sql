@@ -1,4 +1,6 @@
-SELECT FORMAT($STARTDATE$, N'dd.MM.yyyy') AS Startdatum, FORMAT($ENDDATE$, N'dd.MM.yyyy') AS Enddatum;
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Reportdaten                                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT FORMAT(LsKo.Datum, 'yyyy-MM') AS Monat,
   Kunden.ID AS KundenID,
@@ -24,5 +26,11 @@ WHERE Kunden.ID = $ID$
   AND LsKo.[Status] >= N'O'
   AND KdArti.LSAusblenden = 0
   AND LsKo.LsKoArtID != (SELECT LsKoArt.ID FROM LsKoArt WHERE LsKoArt.Art = N'J')
-GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM'), Kunden.ID, Kunden.KdNr, Kunden.SuchCode, Kunden.AdressBlock, Artikel.ArtikelNr, Artikel.ArtikelBez, LsPo.Kostenlos, LsPo.EPreis
+GROUP BY FORMAT(LsKo.Datum, N'yyyy-MM'), Kunden.ID, Kunden.KdNr, Kunden.SuchCode, Kunden.AdressBlock, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, LsPo.Kostenlos, LsPo.EPreis
 ORDER BY Monat ASC, ArtikelNr ASC;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Kopfdaten                                                                                                                 ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+SELECT FORMAT($STARTDATE$, N'dd.MM.yyyy') AS Startdatum, FORMAT($ENDDATE$, N'dd.MM.yyyy') AS Enddatum;
