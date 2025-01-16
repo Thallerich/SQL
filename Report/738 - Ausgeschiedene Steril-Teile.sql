@@ -49,7 +49,7 @@ WHERE EinzTeil.WegDatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzTeil.WegGrundID IN ($3$)
   AND EinzTeil.Status = N'Z';
 
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, #OPSchrott.Code, WegGrund.WegGrundBez$LAN$ AS Schrottgrund, #OPSchrott.WegDatum AS Schrottdatum, ISNULL(Standort.SuchCode, N'<unbekannt>') AS [verschrottender Produktionsstandort], Kunden.KdNr AS [letzter Kunde], #OPSchrott.Erstwoche AS [Ersteinsatz-Woche], #OPSchrott.RuecklaufG AS [Anzahl Wäschen], Artikel.MaxWaschen AS [maximale Wäschen], Artikel.EKPreis AS Einkaufspreis, (Artikel.EKPreis/IIF(Artikel.MaxWaschen = 0, 1, Artikel.MaxWaschen)) * (Artikel.MaxWaschen - #OPSchrott.RuecklaufG) * IIF(Artikel.MaxWaschen = 0, 0, 1) AS [Restwert Kunden-unabhängig], #OPSchrott.Restwert AS [Restwert lt. RW-Konfiguration letzter Kunde]
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, #OPSchrott.Code, WegGrund.WegGrundBez$LAN$ AS Schrottgrund, #OPSchrott.WegDatum AS Schrottdatum, ISNULL(Standort.SuchCode, N'<unbekannt>') AS [verschrottender Produktionsstandort], Kunden.KdNr AS [letzter Kunde], Kunden.SuchCode AS [Stichwort letzter Kunde], Vsa.VsaNr, VSa.Bez AS [Vsa-Bezeichnung], #OPSchrott.Erstwoche AS [Ersteinsatz-Woche], #OPSchrott.RuecklaufG AS [Anzahl Wäschen], Artikel.MaxWaschen AS [maximale Wäschen], Artikel.EKPreis AS Einkaufspreis, (Artikel.EKPreis/IIF(Artikel.MaxWaschen = 0, 1, Artikel.MaxWaschen)) * (Artikel.MaxWaschen - #OPSchrott.RuecklaufG) * IIF(Artikel.MaxWaschen = 0, 0, 1) AS [Restwert Kunden-unabhängig], #OPSchrott.Restwert AS [Restwert lt. RW-Konfiguration letzter Kunde]
 FROM #OPSchrott
 JOIN Artikel ON #OPSchrott.ArtikelID = Artikel.ID
 JOIN WegGrund ON #OPSchrott.WegGrundID = WegGrund.ID
