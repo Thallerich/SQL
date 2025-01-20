@@ -45,7 +45,7 @@ BEGIN
   /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
   INSERT INTO Salesianer_SAWR.dbo.WascSoPr (KdArtiID, WascSortID, AnlageUserID_, UserID_)
-  SELECT KdArti.ID AS KdArtiID, WascSort.ID, @userid, @userid
+  SELECT DISTINCT KdArti.ID AS KdArtiID, WascSort.ID, @userid, @userid
   FROM Salesianer_SAWR.dbo.KdArti
   JOIN Salesianer_SAWR.dbo.Artikel ON KdArti.ArtikelID = Artikel.ID
   JOIN Salesianer_SAWR.dbo.Kunden ON KdArti.KundenID = Kunden.ID
