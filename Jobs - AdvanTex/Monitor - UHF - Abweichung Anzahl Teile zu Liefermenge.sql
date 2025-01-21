@@ -11,15 +11,21 @@ SELECT AnfPo.ID AS AnfPoID,
   AnfPo.Geliefert,
   AnfPo.UserID_,
   AnfPo.Update_,
+  Vsa.StandKonID,
+  Standort.Bez AS Produktion,
   CAST(0 AS int) AS TeileAnzahl
 INTO #AnfCheck
 FROM AnfPo
 JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
 JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
+JOIN Standort ON StandBer.ProduktionID = Standort.ID
 WHERE AnfKo.LieferDatum > CAST(GETDATE() AS date)
   AND AnfKo.[Status] = N'S'
   AND AnfPo.Geliefert != 0
-  AND Vsa.StandKonID = (SELECT StandKon.ID FROM StandKon WHERE StandKon.StandKonBez = N'Produktion GP Enns');
+  AND Standort.SuchCode LIKE N'WOE_';
 
 UPDATE #AnfCheck SET TeileAnzahl = ScanSum.Anzahl
 FROM (
@@ -33,7 +39,9 @@ FROM (
 ) AS ScanSum
 WHERE ScanSum.AnfPoID = #AnfCheck.AnfPoID;
 
-SELECT Kunden.KdNr,
+SELECT #AnfCheck.Produktion,
+  StandKon.StandKonBez AS [Standort-Konfiguration],
+  Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
   Vsa.VsaNr,
   Vsa.Bez AS [Vsa-Bezeichnung],
@@ -58,6 +66,7 @@ JOIN KdArti ON #AnfCheck.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON #AnfCheck.ArtGroeID = ArtGroe.ID
 JOIN Mitarbei ON #AnfCheck.UserID_ = Mitarbei.ID
+JOIN StandKon ON #AnfCheck.StandKonID = StandKon.ID
 WHERE ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0) >= 10
   AND CAST(#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl AS int) > Artikel.Packmenge
   AND #AnfCheck.TeileAnzahl > 0;
