@@ -24,6 +24,7 @@ SELECT Scans.EinzHistID, CAST(NULL AS datetime2) AS Rückgabe, Scans.TraegerID, 
     WHERE s.EinzHistID = Scans.EinzHistID
       AND s.ID > Scans.ID
       AND (s.Menge = 1 OR s.ActionsID = 159 OR s.ActionsID = 162)
+      AND s.[DateTime] >= @von
       AND s.[DateTime] < @bis
   )
 INTO #ScanRueckgabe
@@ -35,7 +36,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 WHERE Kunden.KdNr = 272295
   AND Vsa.VsaNr IN (902, 903)
   AND Scans.ActionsID = 2
-  AND Scans.[DateTime] >= @von
+  AND Scans.[DateTime] >= DATEADD(month, -4, @von)
   AND Scans.[DateTime] < @bis
   AND Scans.LsPoID > 0
   AND Traeger.ParentTraegerID > 0;
