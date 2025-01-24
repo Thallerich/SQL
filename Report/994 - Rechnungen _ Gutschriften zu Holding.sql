@@ -1,5 +1,8 @@
-SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, RechKo.RechNr, RechKo.Art, RechKo.RechDat AS Rechnungsdatum, RechPo.Bez AS Positionsbezeichnung, RechPo.Menge, RechPo.EPreis AS Einzelpreis, RechPo.GPreis AS Positionssumme
-FROM RechPo, RechKo, Kunden, Holding
+SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, RechKo.RechNr, RechKo.Art, RechKo.RechDat AS Rechnungsdatum, RechPo.Bez AS Positionsbezeichnung, RechPo.Menge, RechPo.EPreis AS Einzelpreis, RechPo.GPreis AS Positionssumme, CAST(IIF(RechPo.Bez = 'Gutschrift SO Umsatzbonus', LEFT(RechPo.Memo, 100), N'') AS nvarchar(100)) AS Umsatzbonus
+FROM RechPo
+JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+JOIN Kunden ON RechKo.KundenID = Kunden.ID
+JOIN Holding ON Kunden.HoldingID = Holding.ID
 WHERE RechPo.RechKoID = RechKo.ID
   AND RechKo.KundenID = Kunden.ID
   AND Kunden.HoldingID = Holding.ID
