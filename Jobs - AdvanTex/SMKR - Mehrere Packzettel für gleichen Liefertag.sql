@@ -10,7 +10,7 @@ AnfStatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'ANFKO'
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], AnfKo.AuftragsNr AS Packzettel, AnfKo.Lieferdatum, AnfStatus.StatusBez AS [Packzettel-Status], DENSE_RANK() OVER (PARTITION BY AnfKo.VsaID, AnfKo.Lieferdatum ORDER BY AnfKo.Anlage_ ASC) AS Reihenfolge, AnfKo.Anlage_ AS erstellt, AnfKo.Update_ AS geändert,
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], AnfKo.AuftragsNr AS Packzettel, AnfKo.Lieferdatum, AnfStatus.StatusBez AS [Packzettel-Status], DENSE_RANK() OVER (PARTITION BY AnfKo.VsaID, AnfKo.Lieferdatum ORDER BY AnfKo.Anlage_ ASC) AS Reihenfolge, AnfKo.Anlage_ AS erstellt, AnfKo.Update_ AS geändert, AnfKo.Druckzeitpunkt,
   [Angeforderte Menge] = (SELECT SUM(AnfPo.Angefordert) FROM AnfPo WHERE AnfPo.AnfKoID = AnfKo.ID)
 FROM MultipleAnf
 JOIN AnfKo ON MultipleAnf.VsaID = AnfKo.VsaID AND MultipleAnf.LieferDatum = AnfKo.LieferDatum
