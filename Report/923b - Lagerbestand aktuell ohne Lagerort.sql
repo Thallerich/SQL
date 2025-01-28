@@ -1,3 +1,25 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ prepareData                                                                                                               ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #Umlauf;
+
+SELECT _Umlauf.ArtikelID, _Umlauf.ArtGroeID, SUM(_Umlauf.Umlauf) AS Umlauf
+INTO #Umlauf
+FROM _Umlauf
+JOIN Vsa ON _Umlauf.VsaID = Vsa.ID
+JOIN KdArti ON _Umlauf.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN StandBer ON StandBer.StandKonID = Vsa.StandKonID AND StandBer.BereichID = KdBer.BereichID
+WHERE _Umlauf.Datum = (SELECT MAX(Datum) FROM _Umlauf)
+  AND StandBer.ProduktionID IN ($1$)
+  AND _Umlauf.Umlauf != 0
+GROUP BY _Umlauf.ArtikelID, _Umlauf.ArtGroeID;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Bestaende                                                                                                                 ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 SELECT Standort.Bez AS Lagerstandort,
   Lagerart.LagerartBez$LAN$ AS Lagerart,
   LagerArt.Neuwertig,
@@ -12,7 +34,7 @@ SELECT Standort.Bez AS Lagerstandort,
   ISNULL(Bestellt.Bestellt, 0) AS Bestellt,
   Entnahmen.AnzEntnahmen AS [Entnahmen 12 Monate],
   Bestand.GleitPreis AS GLD,
-  VsaAnfBestand.Vertragsbestand
+  ISNULL(Umlauf.Umlauf , 0) AS Umlaufmenge
 FROM Bestand
 JOIN Lagerart ON Bestand.LagerartID = Lagerart.ID
 JOIN Standort ON Lagerart.LagerID = Standort.ID
@@ -38,20 +60,7 @@ LEFT JOIN (
     AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE (LgBewCod.IstEntnahme = 1 OR LgBewCod.Code = N'UMZL'))
   GROUP BY LagerBew.BestandID
 ) AS Entnahmen ON Bestand.ID = Entnahmen.BestandID
-LEFT JOIN (
-  SELECT KdArti.ArtikelID, IIF(Bereich.VsaAnfGroe = 1, VsaAnf.ArtGroeID, -1) AS ArtGroeID, SUM(VsaAnf.Bestand) AS Vertragsbestand
-  FROM VsaAnf
-  JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
-  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-  JOIN Bereich ON KdBer.BereichID = Bereich.ID
-  JOIN Vsa ON VsaAnf.VsaID = Vsa.ID
-  JOIN Kunden ON Vsa.KundenID = Kunden.ID
-  WHERE VsaAnf.[Status] < N'E'
-    AND KdArti.[Status] = N'A'
-    AND Vsa.[Status] = N'A'
-    AND Kunden.[Status] = N'A'
-  GROUP BY KdArti.ArtikelID, IIF(Bereich.VsaAnfGroe = 1, VsaAnf.ArtGroeID, -1)
-) AS VsaAnfBestand ON VsaAnfBestand.ArtikelID = Artikel.ID AND ((VsaAnfBestand.ArtGroeID > 0 AND VsaAnfBestand.ArtGroeID = ArtGroe.ID) OR (VsaAnfBestand.ArtGroeID < 0 AND ArtGroe.Groesse = N'-'))
+LEFT JOIN #Umlauf AS Umlauf ON Umlauf.ArtikelID = Artikel.ID AND Umlauf.ArtGroeID = ArtGroe.ID
 WHERE Standort.ID IN ($1$)
   AND Artikel.BereichID IN ($2$)
   AND Bestand.Bestand != 0
