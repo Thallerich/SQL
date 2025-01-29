@@ -103,18 +103,21 @@ FROM (
 ) AS x
 GROUP BY ProduktionID, ArtikelID;
 
-SELECT KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
+SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
 INTO #Liefermenge
 FROM LsPo
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
 JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Vsa ON LsKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
 WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
   AND LsKo.ProduktionID = @ProductionLocation
   AND LsKo.[Status] >= 'O'
   AND Artikel.BereichID IN ($3$)
-GROUP BY KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
 
 SELECT Artikel.ArtikelNr,
   Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
@@ -216,6 +219,31 @@ SELECT Artikel.ArtikelNr,
     WHERE #Liefermenge.ArtikelID = Artikel.ID
     GROUP BY #Liefermenge.Monat
     ORDER BY SUM(#Liefermenge.Liefermenge) DESC
+  ),
+  [GAST] = (
+    SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF = N'GAST', #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+  ),
+  [MED] = (
+    SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF = N'MED', #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+  ),
+  [JOB] = (
+    SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF = N'JOB', #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+  ),
+  [MIC] = (
+    SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF = N'MIC', #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+  ),
+  [Rest] = (
+    SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF NOT IN (N'GAST', N'MED', N'JOB', N'MIC'), #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
   )
 INTO #ResultSet
 FROM Artikel
@@ -243,7 +271,12 @@ SELECT ArtikelNr,
   [EK-Preis],
   [TLM-Spitze],
   [TLM letzte 4 Wochen],
-  [stärkster Monat]
+  [stärkster Monat],
+  [GAST],
+  [MED],
+  [JOB],
+  [MIC],
+  [Rest]
 FROM #ResultSet
 WHERE [Liefermenge 12 Monate] IS NOT NULL
   OR [Bestellmenge 12 Monate] IS NOT NULL
