@@ -10,7 +10,7 @@ GO
 INSERT INTO _SAPPurchaseOrder (ID)
 SELECT BKo.ID
 FROM BKo
-WHERE BKo.BestNr = 412045908
+WHERE BKo.BestNr IN (412048350, 412048353)
   AND BKo.SentToSAP = 0;
 
 GO
@@ -32,6 +32,7 @@ GO
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 /* 
-DROP TABLE _SAPPurchaseOrder;
-GO
+UPDATE BKo SET SentToSAP = 1
+WHERE BKo.ID IN (SELECT _SAPPurchaseOrder.ID FROM _SAPPurchaseOrder)
+  AND BKo.LiefID IN (SELECT Lief.ID FROM Lief WHERE Lief.LiefTypeID IN (SELECT LiefType.ID FROM LiefType WHERE LiefType.InternerLief = 1));
 */
