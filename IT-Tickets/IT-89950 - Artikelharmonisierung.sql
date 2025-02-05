@@ -59,8 +59,6 @@ WHERE EinzHist.EinzHistTyp != 3
 SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Teiledatensätze zu aktualisieren!';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
-/* TODO: Check for missing new kdarti */
-/* TODO: Check for existing new VsaAnf */
 SELECT VsaAnf.ID AS VsaAnfID, VsaAnf.VsaID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(VsaAnf.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, CAST(NULL AS tinyint) AS Rank, HasExisting = IIF((
   SELECT COUNT(*)
   FROM VsaAnf AS v
@@ -117,8 +115,6 @@ BEGIN TRY
     ) AS UniqueInsert
     WHERE Rank = 1;
 
-    /* TODO: Preisarchiv */
-
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Kundenartikel eingefügt!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
@@ -163,7 +159,7 @@ BEGIN TRY
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' VsaAnf auf "nur einbuchen" gestellt!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
   
-  ROLLBACK;
+  COMMIT;
 END TRY
 BEGIN CATCH
   DECLARE @Message varchar(MAX) = ERROR_MESSAGE();
