@@ -20,7 +20,7 @@ CREATE TABLE #Reklamation (
   ArtikelNr nvarchar(15),
   Artikelbezeichnung nvarchar(60),
   Reklamationsgrund nvarchar(40),
-  Reklamationsmenge int,
+  Reklamationsmenge bigint,
   KundenID int,
   VsaID int,
   KdBerID int
