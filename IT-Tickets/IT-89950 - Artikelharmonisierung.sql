@@ -1,8 +1,10 @@
+/* System-Checkliste 322 checken - hatte aus irgendeinem Grund Fehler */
+
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
 
-DROP TABLE IF EXISTS #TeileHarmonisierung, #VsaAnfHarmonisierung;
+DROP TABLE IF EXISTS #TeileHarmonisierung, #VsaAnfHarmonisierung, #AnfPoHarmonisierung;
 GO
 
 DECLARE @msg nvarchar(max);
@@ -76,6 +78,21 @@ WHERE KdArti.ErsatzFuerKdArtiID < 0;
 SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' anforderbare Artikel zu aktualisieren!';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
+SELECT AnfPo.ID AS AnfPoID, AnfPo.AnfKoID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(AnfPo.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, AnfPo.Angefordert
+INTO #AnfPoHarmonisierung
+FROM AnfPo
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN @ArtiMap AS ArtiMap ON KdArti.ArtikelID = ArtiMap.ArtikelID_Alt
+LEFT JOIN KdArti AS KdArtiNeu ON ArtiMap.ArtikelID_Neu = KdArtiNeu.ArtikelID AND KdArti.KundenID = KdArtiNeu.KundenID AND KdArti.Variante = KdArtiNeu.Variante
+WHERE AnfKo.Lieferdatum > CAST(GETDATE() AS date)
+  AND AnfKo.[Status] <= N'F'
+  AND AnfPo.Angefordert > 0
+  AND KdArti.ErsatzFuerKdArtiID < 0;
+
+SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Anforderungspositionen zu aktualisieren!';
+RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
 SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ---------------------------------------------------';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
@@ -130,6 +147,15 @@ BEGIN TRY
     WHERE #VsaAnfHarmonisierung.KdArtiID_Alt = KdArti.ID
       AND #VsaAnfHarmonisierung.ArtikelID_Neu = KdArtiNeu.ArtikelID AND KdArti.KundenID = KdArtiNeu.KundenID AND KdArti.Variante = KdArtiNeu.Variante
       AND #VsaAnfHarmonisierung.KdArtiID IS NULL;
+    
+    UPDATE #AnfPoHarmonisierung SET KdArtiID = KdArtiNeu.ID
+    FROM KdArti, KdArti AS KdArtiNeu
+    WHERE #AnfPoHarmonisierung.KdArtiID_Alt = KdArti.ID
+      AND #AnfPoHarmonisierung.ArtikelID_Neu = KdArtiNeu.ArtikelID AND KdArti.KundenID = KdArtiNeu.KundenID AND KdArti.Variante = KdArtiNeu.Variante
+      AND #AnfPoHarmonisierung.KdArtiID IS NULL;
+
+    SEt @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - temporäre Arbeitstabellen mit neu angelegten Kundenartikeln aktualisiert!';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     UPDATE #VsaAnfHarmonisierung SET Rank = x.Rank
     FROM (
@@ -158,6 +184,49 @@ BEGIN TRY
 
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' VsaAnf auf "nur einbuchen" gestellt!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
+    /* AnfPo */
+    /* TODO: zukünftige Packzettel auch anpassen - neuer Artikel soll angefordert sein */
+    WITH NewAnfPo AS (
+      SELECT AnfKoID, KdArtiID, ArtGroeID, SUM(Angefordert) AS Angefordert
+      FROM #AnfPoHarmonisierung
+      GROUP BY AnfKoID, KdArtiID, ArtGroeID
+    )
+    UPDATE AnfPo SET Angefordert = AnfPo.Angefordert + NewAnfPo.Angefordert, UserID_ = @userid
+    FROM NewAnfPo
+    WHERE AnfPo.AnfKoID = NewAnfPo.AnfKoID
+      AND AnfPo.KdArtiID = NewAnfPo.KdArtiID
+      AND AnfPo.ArtGroeID = NewAnfPo.ArtGroeID
+      AND AnfPo.Angefordert != NewAnfPo.Angefordert;
+
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Anforderungsposition - Mengen bei bestehenden Positionen aktualisiert!';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
+    WITH NewAnfPo AS (
+      SELECT AnfKoID, KdArtiID, ArtGroeID, SUM(Angefordert) AS Angefordert
+      FROM #AnfPoHarmonisierung
+      GROUP BY AnfKoID, KdArtiID, ArtGroeID
+    )
+    INSERT INTO AnfPo (AnfKoID, KdArtiID, ArtGroeID, Angefordert, UserID_)
+    SELECT AnfKoID, KdArtiID, ArtGroeID, Angefordert, @userid
+    FROM NewAnfPo
+    WHERE NOT EXISTS (
+      SELECT *
+      FROM AnfPo
+      WHERE AnfPo.AnfKoID = NewAnfPo.AnfKoID
+        AND AnfPo.KdArtiID = NewAnfPo.KdArtiID
+        AND AnfPo.ArtGroeID = NewAnfPo.ArtGroeID
+    );
+
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' neue Anforderungspositionen erstellt!';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
+    UPDATE AnfPo SET Angefordert = 0, UserID_ = @userid
+    FROM #AnfPoHarmonisierung
+    WHERE AnfPo.ID = #AnfPoHarmonisierung.AnfPoID;
+    
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' alte Anforderungspositionen auf Menge = 0 gesetzt!';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
   
   COMMIT;
 END TRY
@@ -171,6 +240,9 @@ BEGIN CATCH
   
   RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
 END CATCH;
+
+SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - Artikelharmonisierung abgeschlossen!';
+RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
 GO
 
