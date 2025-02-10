@@ -34,12 +34,15 @@ SELECT Standort.Bez AS Lagerstandort,
   ISNULL(Bestellt.Bestellt, 0) AS Bestellt,
   Entnahmen.AnzEntnahmen AS [Entnahmen 12 Monate],
   Bestand.GleitPreis AS GLD,
+  Firma.WaeID AS GLD_WaeID,
   ISNULL(Umlauf.Umlauf , 0) AS Umlaufmenge
 FROM Bestand
 JOIN Lagerart ON Bestand.LagerartID = Lagerart.ID
+JOIN Firma ON Lagerart.FirmaID = Firma.ID
 JOIN Standort ON Lagerart.LagerID = Standort.ID
 JOIN ArtGroe ON Bestand.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
@@ -62,7 +65,7 @@ LEFT JOIN (
 ) AS Entnahmen ON Bestand.ID = Entnahmen.BestandID
 LEFT JOIN #Umlauf AS Umlauf ON Umlauf.ArtikelID = Artikel.ID AND Umlauf.ArtGroeID = ArtGroe.ID
 WHERE Standort.ID IN ($1$)
-  AND Artikel.BereichID IN ($2$)
+  AND Artikel.ID IN ($3$)
   AND Bestand.Bestand != 0
   AND Lagerart.ArtiTypeID = 1
-  AND (($3$ = 1 AND Lagerart.Neuwertig = 1) OR ($3$ = 0));
+  AND (($4$ = 1 AND Lagerart.Neuwertig = 1) OR ($4$ = 0));
