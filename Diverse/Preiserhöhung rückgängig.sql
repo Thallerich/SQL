@@ -10,19 +10,23 @@ DECLARE @PeBack TABLE (
 );
 
 DECLARE @Kunden TABLE (
-  KdNr int PRIMARY KEY,
-  KundenID int DEFAULT -1 NOT NULL
+ KundenID int PRIMARY KEY CLUSTERED
 );
 
 DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 DECLARE @PeKoID int = 817;
 
-INSERT INTO @Kunden (KdNr)
-VALUES (30992), (7110), (7100), (7080), (7130), (7180), (7139), (7160), (7170), (7156), (7135), (7150), (7090), (7070), (7083), (7081), (7161), (7140), (7073), (7077), (7157), (7155), (18001), (1162), (2022), (30142), (262000), (10001805), (50001), (10001810), (10001816), (10001671), (10001815), (10001814), (10001817), (10001811), (10001822), (8888), (10001672), (10001802), (8887), (8889), (10001813), (10001799), (10001812), (8131), (10002705), (10002709), (30055), (30056), (2304), (2306), (2303), (10005512), (10004871), (25007), (10001510), (10002702), (10001928), (10001662), (10001929), (30291), (30341), (30349), (31207), (31201), (10001913), (10001938), (31209), (215055), (10001910), (10004595), (10004548), (10001915), (10001922), (10004549), (31208), (10004592), (10001921), (31204), (10001902), (21093), (10004964), (10006294), (130042), (18089), (18100), (18085), (18078), (18084), (10006188), (18101), (18087), (18094), (18088), (30045), (18096), (18093), (18083), (18074), (8031), (16250), (22003), (19053), (19054), (13331), (10016), (8101), (10005365), (25028), (100703), (250912), (272783), (271909), (271908), (271910), (270138), (10003674), (245994), (248198), (248183), (13330), (2288), (15075), (2290), (1132), (5010), (8060), (6070), (12077), (16151), (5005), (20025), (11140), (7020), (16041), (7371), (25100), (11156), (11150), (12176), (21091), (22080), (5066), (21090), (8066), (14003), (8267), (16035), (2029), (7370), (16030), (16031), (20015), (5016), (15002), (10006237), (10006238), (10006235), (10006239), (10006240), (10006236), (26007), (10005948), (2035), (22025), (19068), (30075), (10006289), (10006290), (10006292), (10006291), (10006293), (1000000238), (14030), (24090), (22013), (261331), (30393), (30777), (16078), (15007), (30515), (30524), (20144), (18033), (20140), (20153), (20145), (20146), (10005063), (19159), (20160), (20143), (20142);
+DECLARE @AnkuendDatum date, @AnkuendMitarbeiID int;
 
-UPDATE @Kunden SET KundenID = Kunden.ID
-FROM Kunden
-WHERE [@Kunden].KdNr = Kunden.KdNr;
+INSERT INTO @Kunden (KundenID)
+SELECT DISTINCT Vertrag.KundenID
+FROM PePo
+JOIN Vertrag ON PePo.VertragID = Vertrag.ID
+WHERE PePo.PeKoID = @PeKoID;
+
+SELECT @AnkuendDatum = PeKo.AnkuendDatum, @AnkuendMitarbeiID = PeKo.AnkuendMitarbeiID
+FROM PeKo
+WHERE ID = @PeKoID;
 
 BEGIN TRY
 
@@ -44,7 +48,6 @@ BEGIN TRY
     JOIN LastPrArchiv ON LastPrArchiv.KdArtiID = KdArti.ID
     JOIN PrArchiv ON LastPrArchiv.PrArchivID = PrArchiv.ID
     WHERE PePo.PeKoID = @PeKoID
-      AND Vertrag.KundenID IN (SELECT KundenID FROM @Kunden)
       AND KdArti.LeasPreisPrListKdArtiID = -1
       AND KdArti.WaschPreisPrListKdArtiID = -1
       AND KdArti.SondPreisPrListKdArtiID = -1
@@ -73,10 +76,8 @@ BEGIN TRY
 
     DELETE FROM VsaTexte
     WHERE TextArtID = 13
-      AND AnlageUserID_ = 9012688
-      AND CAST(Anlage_ AS date) = N'2022-11-30'
-      AND VonDatum = N'2022-11-30'
-      AND BisDatum = N'2022-12-31'
+      AND AnlageUserID_ = @AnkuendMitarbeiID
+      AND CAST(Anlage_ AS date) = @AnkuendDatum
       AND KundenID IN (SELECT KundenID FROM @Kunden);
   
   COMMIT;
