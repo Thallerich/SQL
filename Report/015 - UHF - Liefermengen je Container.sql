@@ -58,3 +58,6 @@ BEGIN
 
   EXEC sp_executesql @sql, N'@contain varchar(33)', @contain;
 END;
+
+IF @contain = '' AND @ls <= 0 AND @pz = ''
+  SELECT N'Bitte einen Aufruf-Parameter eingeben!' AS Error;
