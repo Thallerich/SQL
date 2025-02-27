@@ -56,7 +56,10 @@ WHERE EinzHist.Entnommen = 1
   AND EinzHist.EntnPoID > 0
   AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)
   AND Kunden.ID IN ($3$)
-  AND EinzHist.IndienstDat BETWEEN $STARTDATE$ AND $ENDDATE$;
+  AND EinzHist.IndienstDat BETWEEN $STARTDATE$ AND $ENDDATE$
+  AND (($4$ = 1 AND Lagerart.Neuwertig = 1) OR ($4$ = 0))
+  AND (SELECT TOP 1 PrevEH.EinzHistTyp FROM EinzHist AS PrevEH WHERE PrevEH.EinzTeilID = EinzHist.EinzTeilID AND PrevEH.EinzHistVon <= EinzHist.EinzHistBis ORDER BY PrevEH.EinzHistVon DESC) = 2 /* nur wenn das Teil vorher im Lager war */
+;
 
 SELECT Erg.Schrottgrund, Erg.Barcode, Erg.[Status des Teils], Erg.[Indienststellungs-Datum], Erg.[Lagerentnahme Zeitpunkt], Erg.Artikelgruppe, Erg.ArtikelNr, Erg.Artikelbezeichnung, Erg.[VSA-Nr.], Erg.[VSA-Stichwort], Erg.[VSA-Bezeichnung], Erg.Produktionsstandort, Erg.KdNr, Erg.Kunde, Erg.Lagerart, ArGrLief.EkPreis, Lief.WaeID AS EKPreis_WaeID, Wae.IsoCode AS Währung
 FROM #TmpErgebnis999054 AS Erg
