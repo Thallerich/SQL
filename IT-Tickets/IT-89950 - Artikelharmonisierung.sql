@@ -1,4 +1,18 @@
 /* System-Checkliste 322 checken - hatte aus irgendeinem Grund Fehler */
+/* System-Checkliste 198 - Preislisten neu anwenden */
+
+/* VSAANF existiert bereits - alten auf inaktiven, neuen auf aktiv */
+/* Häkchen bei Kundenartikel und Status auf aktiv statt falsch geliefert */
+
+/* EinzTeil.ID = 30520431 -> EinzHist.Datensatz nicht angepasst */
+/*
+SELECT EinzTeil.ID, EinzTeil.CurrEinzHistID, EinzTeil.ArtikelID, EinzHist.ArtikelID, EinzTeil.ArtGroeID, EinzHist.ArtGroeID, EinzTeil.Code, EinzHist.Barcode, EinzTeil.Code2, EinzTeil.Code3, EinzTeil.Code4, Artikel.ArtikelNr, HistArtikel.ArtikelNr
+FROM EinzTeil
+JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN Artikel AS HistArtikel ON EinzHist.ArtikelID = HistArtikel.ID
+WHERE EinzTeil.ID = 30520431
+*/
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -61,7 +75,7 @@ WHERE EinzHist.EinzHistTyp != 3
 SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Teiledatensätze zu aktualisieren!';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
-SELECT VsaAnf.ID AS VsaAnfID, VsaAnf.VsaID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(VsaAnf.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, CAST(NULL AS tinyint) AS Rank, HasExisting = IIF((
+SELECT VsaAnf.ID AS VsaAnfID, VsaAnf.VsaID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(VsaAnf.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, VsaAnf.AbteilID, CAST(NULL AS tinyint) AS Rank, HasExisting = IIF((
   SELECT COUNT(*)
   FROM VsaAnf AS v
   WHERE v.VsaID = VsaAnf.VsaID
@@ -78,7 +92,7 @@ WHERE KdArti.ErsatzFuerKdArtiID < 0;
 SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' anforderbare Artikel zu aktualisieren!';
 RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
-SELECT AnfPo.ID AS AnfPoID, AnfPo.AnfKoID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(AnfPo.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, AnfPo.Angefordert
+SELECT AnfPo.ID AS AnfPoID, AnfPo.AnfKoID, KdArti.ID AS KdArtiID_Alt, KdArtiNeu.ID AS KdArtiID, IIF(AnfPo.ArtGroeID > 0, ArtiMap.ArtGroeID_Neu, -1) AS ArtGroeID, ArtiMap.ArtikelID_Neu, KdArti.Variante, AnfPo.AbteilID, AnfPo.Angefordert
 INTO #AnfPoHarmonisierung
 FROM AnfPo
 JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
@@ -115,6 +129,15 @@ BEGIN TRY
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' EinzHist aktualisiert!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
+    /* Check and fix errors */
+    UPDATE EinzHist SET ArtikelID = EinzTeil.ArtikelID, ArtGroeID = EinzTeil.ArtGroeID
+    FROM EinzTeil
+    WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
+      AND (EinzTeil.ArtikelID != EinzHist.ArtikelID OR EinzTeil.ArtGroeID != EinzHist.ArtGroeID);
+
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Fehler behoben!';
+    RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
     /* KdArti */
     
     /* TODO: Preislisten - KdArti.?PrListKdArtiID */
@@ -125,7 +148,7 @@ BEGIN TRY
     INTO @Archive (KdArtiID, LeasPreis, WaschPreis, SonderPreis, VKPreis, BasisRestwert, LeasPreisAbwAbWo)
     SELECT [Status], KundenID, ArtikelID, KdBerID, Variante, LeasPreis, WaschPreis, SonderPreis, VKPreis, Bestellerfassung, LiefArtID, WaschPrgID, AfaWochen, MaxWaschen, BasisRestwert, Lieferwochen, Vorlaeufig, KeineAnfPo, WebArtikel, LsAusblenden, BDE, EigentumID, IstBestandAnpass, Vertragsartikel, CheckPackmenge, ArtiZwingendBarcodiert, ArtiOptionalBarcodiert, AnlageUserID_, UserID_
     FROM (
-      SELECT DISTINCT KdArti.Status, KdArti.KundenID, #VsaAnfHarmonisierung.ArtikelID_Neu AS ArtikelID, KdArti.KdBerID, KdArti.Variante, KdArti.LeasPreis, KdArti.WaschPreis, KdArti.SonderPreis, KdArti.VKPreis, KdArti.Bestellerfassung, KdArti.LiefArtID, KdArti.WaschPrgID, KdArti.AfaWochen, KdArti.MaxWaschen, KdArti.BasisRestwert, KdArti.Lieferwochen, KdArti.Vorlaeufig, KdArti.KeineAnfPo, KdArti.WebArtikel, KdArti.LsAusblenden, KdArti.BDE, KdArti.EigentumID, KdArti.IstBestandAnpass, KdArti.Vertragsartikel, KdArti.CheckPackmenge, KdArti.ArtiZwingendBarcodiert, KdArti.ArtiOptionalBarcodiert, @userid AS AnlageUserID_, @userid AS UserID_, DENSE_RANK() OVER (PARTITION BY KdArti.KundenID, #VsaAnfHarmonisierung.ArtikelID_Neu, KdArti.Variante ORDER BY KdArti.ID DESC) AS Rank
+      SELECT DISTINCT N'A' AS [Status], KdArti.KundenID, #VsaAnfHarmonisierung.ArtikelID_Neu AS ArtikelID, KdArti.KdBerID, KdArti.Variante, KdArti.LeasPreis, KdArti.WaschPreis, KdArti.SonderPreis, KdArti.VKPreis, KdArti.Bestellerfassung, KdArti.LiefArtID, KdArti.WaschPrgID, KdArti.AfaWochen, KdArti.MaxWaschen, KdArti.BasisRestwert, KdArti.Lieferwochen, KdArti.Vorlaeufig, KdArti.KeineAnfPo, KdArti.WebArtikel, KdArti.LsAusblenden, KdArti.BDE, KdArti.EigentumID, KdArti.IstBestandAnpass, KdArti.Vertragsartikel, KdArti.CheckPackmenge, KdArti.ArtiZwingendBarcodiert, KdArti.ArtiOptionalBarcodiert, @userid AS AnlageUserID_, @userid AS UserID_, DENSE_RANK() OVER (PARTITION BY KdArti.KundenID, #VsaAnfHarmonisierung.ArtikelID_Neu, KdArti.Variante ORDER BY KdArti.ID DESC) AS Rank
       FROM #VsaAnfHarmonisierung
       JOIN KdArti ON #VsaAnfHarmonisierung.KdArtiID_Alt = KdArti.ID
       WHERE #VsaAnfHarmonisierung.KdArtiID IS NULL
@@ -203,12 +226,12 @@ BEGIN TRY
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     WITH NewAnfPo AS (
-      SELECT AnfKoID, KdArtiID, ArtGroeID, SUM(Angefordert) AS Angefordert
+      SELECT AnfKoID, KdArtiID, ArtGroeID, AbteilID, SUM(Angefordert) AS Angefordert
       FROM #AnfPoHarmonisierung
       GROUP BY AnfKoID, KdArtiID, ArtGroeID
     )
-    INSERT INTO AnfPo (AnfKoID, KdArtiID, ArtGroeID, Angefordert, UserID_)
-    SELECT AnfKoID, KdArtiID, ArtGroeID, Angefordert, @userid
+    INSERT INTO AnfPo (AnfKoID, KdArtiID, ArtGroeID, Angefordert, AbteilID, UserID_)
+    SELECT AnfKoID, KdArtiID, ArtGroeID, Angefordert, AbteilID, @userid
     FROM NewAnfPo
     WHERE NOT EXISTS (
       SELECT *
