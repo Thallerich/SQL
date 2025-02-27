@@ -54,6 +54,7 @@ WHERE EinzHist.Entnommen = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzHist.PoolFkt = 0
   AND EinzHist.EntnPoID > 0
+  AND LagerBew.LgBewCodID IN (SELECT LgBewCod.ID FROM LgBewCod WHERE LgBewCod.IstEntnahme = 1)
   AND Kunden.ID IN ($3$)
   AND EinzHist.IndienstDat BETWEEN $STARTDATE$ AND $ENDDATE$;
 
