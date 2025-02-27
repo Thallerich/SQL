@@ -8,8 +8,8 @@ LEFT JOIN (
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
-  WHERE LsKo.Datum >= DATEFROMPARTS(YEAR(GETDATE()) - 1, MONTH(GETDATE()), 1) /* Start des Monats vor einem Jahr (ergibt z.B. am 10. Februar 2025 als Startdatum den 01. Februar 2024) */
-    AND LsKo.Datum <= EOMONTH(GETDATE(), -1) /* Ende des letzten Monats (ergibt z.B. am 10. Februar 2025 als Datum den 31. Jänner 2025) */
+  WHERE LsKo.Datum >= $STARTDATE$
+    AND LsKo.Datum <= $ENDDATE$
     AND LsPo.ProduktionID = $1$
   GROUP BY KdArti.ArtikelID
 ) AS LsPoMenge ON LsPoMenge.ArtikelID = Artikel.ID
