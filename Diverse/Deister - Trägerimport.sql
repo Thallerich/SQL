@@ -10,6 +10,20 @@
 /* ++ Column9 → Ausdienst nchar(8)                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+/* Table for Excel import:
+IF OBJECT_ID(N'__DeisterBHS') IS NULL
+  CREATE TABLE __DeisterBHS (
+    TNr smallint,
+    PersNr nchar(14) COLLATE Latin1_General_CS_AS,
+    KartenNr nchar(20) COLLATE Latin1_General_CS_AS,
+    KdNr smallint,
+    KsSt nvarchar(50) COLLATE Latin1_General_CS_AS,
+    Indienst nchar(8) COLLATE Latin1_General_CS_AS,
+    Ausdienst nchar(8) COLLATE Latin1_General_CS_AS
+  );
+*/
+
+
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
@@ -107,5 +121,5 @@ GO
 
 DROP TABLE #ImportTable;
 GO
-DROP TABLE __DeisterBHS;
+TRUNCATE TABLE __DeisterBHS;
 GO
