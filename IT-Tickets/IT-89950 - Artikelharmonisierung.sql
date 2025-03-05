@@ -228,7 +228,7 @@ BEGIN TRY
     WITH NewAnfPo AS (
       SELECT AnfKoID, KdArtiID, ArtGroeID, AbteilID, SUM(Angefordert) AS Angefordert
       FROM #AnfPoHarmonisierung
-      GROUP BY AnfKoID, KdArtiID, ArtGroeID
+      GROUP BY AnfKoID, KdArtiID, ArtGroeID, AbteilID
     )
     INSERT INTO AnfPo (AnfKoID, KdArtiID, ArtGroeID, Angefordert, AbteilID, UserID_)
     SELECT AnfKoID, KdArtiID, ArtGroeID, Angefordert, AbteilID, @userid
