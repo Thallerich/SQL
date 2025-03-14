@@ -32,12 +32,14 @@ DECLARE @Archive TABLE (
 );
 
 INSERT INTO @ArtiMap (ArtikelNr_Alt, ArtikelNr_Neu)
-VALUES (N'118408010001', N'GH0100G'),
+VALUES (N'118408010001', N'GH0100G');
+/*
        (N'118416010001', N'GH0200G'),
        (N'118416011001', N'GH0246G'),
        (N'118420010001', N'GH0240'),
        (N'110616242901', N'7199T0'),
        (N'110616242701', N'7199T0');
+*/
 
 UPDATE @ArtiMap SET ArtikelID_Alt = ISNULL((SELECT ID FROM Artikel WHERE ArtikelNr = ArtikelNr_Alt), -9),
                     ArtikelID_Neu = ISNULL((SELECT ID FROM Artikel WHERE ArtikelNr = ArtikelNr_Neu), -9),
