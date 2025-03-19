@@ -1,10 +1,4 @@
-CREATE VIEW dbo.SalExLog_Delete AS
-  SELECT TOP 1000 *
-  FROM dbo.SalExLog
-  WHERE Anlage_ < DATEADD(month, -6, GETDATE())
-  ORDER BY ID ASC;
-
-GO
+EXEC('CREATE VIEW dbo.SalExLog_Delete AS SELECT TOP 1000 * FROM dbo.SalExLog WHERE Anlage_ < DATEADD(month, -6, GETDATE()) ORDER BY ID ASC;'); /* View muss über "dynamisches" SQL erstellt werden, da das CREATE VIEW ansonsten einen eigenen Batch benötigt würden! */
 
 DECLARE @EndTime datetime2(3) = DATEADD(minute, 60, GETDATE());  /* Skript läuft maximal 60 Minuten */
 DECLARE @IsError bit = 0;
