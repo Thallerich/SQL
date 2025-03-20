@@ -47,4 +47,8 @@ BEGIN
   GROUP BY Abteil.Abteilung, Abteil.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, Wochen.Woche, Traeger.Traeger, Traeger.PersNr, Traeger.Nachname, Traeger.Vorname, DiffCode.DiffCodeBez$LAN$
   HAVING SUM(LeasDiff.MengenDiff) <> 0
   ORDER BY Abteil.Abteilung, TraegerName, Wochen.Woche;
+END
+ELSE
+BEGIN
+  SELECT TOP 0 NULL;
 END;
