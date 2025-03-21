@@ -1,5 +1,4 @@
 DROP TABLE IF EXISTS #OPEtiKo, #Angefordert;
-GO
 
 SELECT OPEtiKo.ID, OPEtiKo.ArtikelID, OPEtiKo.PackZeitpunkt AS ProdDatum, OPEtiKo.ProduktionID
 INTO #OPEtiKo
@@ -7,8 +6,8 @@ FROM OPEtiKo
 JOIN Artikel ON OPEtiKo.ArtikelID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 WHERE Artikel.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'ST')
-  AND OPEtiKo.PackZeitpunkt BETWEEN N'2025-02-17' AND N'2025-03-07'
-  AND OPEtiKo.ProduktionID IN (2, 4)
+  AND OPEtiKo.PackZeitpunkt BETWEEN $STARTDATE$ AND $ENDDATE$
+  AND OPEtiKo.ProduktionID IN ($2$)
   AND ArtGru.SetImSet = 0
   AND ArtGru.Steril = 1;
 
@@ -21,8 +20,8 @@ JOIN TourPrio ON Touren.TourPrioID = TourPrio.ID
 JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
-WHERE AnfKo.Lieferdatum BETWEEN DATEADD(day, -7, N'2025-02-17') AND DATEADD(day, 7, N'2025-03-07')
-  AND AnfKo.ProduktionID IN (2, 4)
+WHERE AnfKo.Lieferdatum BETWEEN DATEADD(day, -7, $STARTDATE$) AND DATEADD(day, 7, $ENDDATE$)
+  AND AnfKo.ProduktionID IN ($2$)
   AND Artikel.ID IN (SELECT OPSets.ArtikelID FROM OPSets)
   AND Artikel.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich = N'ST')
   AND ArtGru.Steril = 1
@@ -30,10 +29,10 @@ WHERE AnfKo.Lieferdatum BETWEEN DATEADD(day, -7, N'2025-02-17') AND DATEADD(day,
 GROUP BY KdArti.ArtikelID, CAST(DATEADD(hour, TourPrio.OPSetVorlaufStd, CAST(AnfKo.Lieferdatum AS datetime2)) AS date)
 HAVING SUM(AnfPo.Angefordert) > 0;
 
-GO
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SELECT Artikel.ArtikelNr,
-  Artikel.ArtikelBez AS Artikelbezeichnung,
+  Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
   [Week].Woche,
   ISNULL(OPGepackt.AnzGepackt, 0) AS [Summe gepackt],
   CAST(ISNULL(Angefordert.AnzAngefordert, 0) AS int) AS [Summe angefordert],
@@ -50,7 +49,7 @@ LEFT JOIN (
   SELECT #OPEtiKo.ArtikelID, [Week].Woche, COUNT(#OPEtiKo.ID) AS AnzGepackt
   FROM #OPEtiKo
   JOIN [Week] ON #OPEtiKo.ProdDatum BETWEEN [Week].VonDat AND [Week].BisDat
-  WHERE #OPEtiKo.ProdDatum BETWEEN N'2025-02-17' AND N'2025-03-07'
+  WHERE #OPEtiKo.ProdDatum BETWEEN $STARTDATE$ AND $ENDDATE$
   GROUP BY #OPEtiKo.ArtikelID, [Week].Woche
 ) AS OPGepackt ON OPGepackt.ArtikelID = Artikel.ID AND OPGepackt.Woche = [Week].Woche
 LEFT JOIN (
@@ -59,8 +58,6 @@ LEFT JOIN (
   JOIN [Week] ON #Angefordert.Bereitstellungsdatum BETWEEN [Week].VonDat AND [Week].BisDat
   GROUP BY #Angefordert.ArtikelID, [Week].Woche
  ) AS Angefordert ON Angefordert.ArtikelID = Artikel.ID AND Angefordert.Woche = [Week].Woche
-WHERE [Week].VonDat >= N'2025-02-17'
-  AND [Week].BisDat <= N'2025-03-07'
+WHERE [Week].BisDat >= $STARTDATE$
+  AND [Week].VonDat <= $ENDDATE$
   AND (OPGepackt.AnzGepackt > 0 OR Angefordert.AnzAngefordert > 0);
-
-GO
