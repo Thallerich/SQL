@@ -1,3 +1,9 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+USE [master]
+EXEC sp_DatabaseRestore @Database = N'Salesianer', @BackupPathFull = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\', @RunRecovery = 1, @Execute = N'N';
+GO
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 SET NOCOUNT ON;
 
 IF UPPER(@@SERVERNAME) = N'SALADVTSQL1'
@@ -6,7 +12,7 @@ BEGIN
   BEGIN TRANSACTION;
 
     UPDATE Salesianer.dbo.Settings
-      SET [ValueMemo] = N'B75766'
+      SET [ValueMemo] = N'B7B7FF'
       WHERE [Parameter] = N'COLOR_BACKGROUND';
 
     UPDATE Salesianer.dbo.Settings
