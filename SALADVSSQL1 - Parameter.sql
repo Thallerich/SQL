@@ -1,8 +1,6 @@
 SET NOCOUNT ON;
 
-DECLARE @srvname nchar(10) = (SELECT LEFT(@@SERVERNAME, 10));
-
-IF @srvname = N'saladvssql'
+IF UPPER(@@SERVERNAME) = N'SALADVSSQL1'
 BEGIN
 
   BEGIN TRANSACTION;
