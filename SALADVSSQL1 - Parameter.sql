@@ -6,6 +6,26 @@ ALTER DATABASE [Salesianer] SET RECOVERY SIMPLE WITH NO_WAIT
 GO
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SELECT ID, Bez, ConnectPath, TestMandant, Verfuegbar, Anlage_, FertigEingespielt, DataPath, SQLConvertDateFormat, SQLConvertTimeFormat, AnlageUser_, User_
+INTO _MandantSave
+FROM dbSystem.dbo.Mandant;
+
+GO
+
+EXEC sp_DatabaseRestore @Database = N'dbSystem', @BackupPathFull = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\', @RunRecovery = 1, @Execute = N'Y';
+GO
+
+INSERT INTO dbSystem.dbo.Mandant (ID, Bez, ConnectPath, TestMandant, Verfuegbar, Anlage_, FertigEingespielt, DataPath, SQLConvertDateFormat, SQLConvertTimeFormat, AnlageUser_, User_)
+SELECT ID, Bez, ConnectPath, TestMandant, Verfuegbar, Anlage_, FertigEingespielt, DataPath, SQLConvertDateFormat, SQLConvertTimeFormat, AnlageUser_, User_
+FROM master.dbo._MandantSave;
+
+GO
+
+DROP TABLE master.dbo._MandantSave;
+GO
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 SET NOCOUNT ON;
 
 IF UPPER(@@SERVERNAME) = N'SALADVSSQL1'
