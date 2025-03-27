@@ -84,23 +84,27 @@ UmlaufDaten AS (
   ) AS x
   GROUP BY VsaID, KdArtiID, ArtGroeID
 )
-SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich AS Produktbereich, ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$ AS Produkthierarchie, KdArti.ID AS KdArtiID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfDaten.Groesse AS Größe, Artikel.Stueckgewicht AS Stückgewicht, StandKon.StandKonBez$LAN$ AS Standortkonfiguration, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf AS Umlauf
+SELECT AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode AS Kunde, ABC.ABCBez AS [ABC-Klasse], Vsa.ID AS VsaID, Vsa.VsaNr, Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich AS Produktbereich, Betreuer.Name AS Kundenbetreuer, KdService.Name AS Kundenservice, ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$ AS Produkthierarchie, KdArti.ID AS KdArtiID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, AnfDaten.Groesse AS Größe, Artikel.Stueckgewicht AS Stückgewicht, KdArti.WaschPreis AS Bearbeitungspreis, KdArti.LeasPreis AS Leasingpreis, StandKon.StandKonBez$LAN$ AS Standortkonfiguration, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz, ROUND(SUM(AnfDaten.Geliefert) / SUM(IIF(AnfDaten.Angefordert = 0, 1, AnfDaten.Angefordert)) * 100, 2) AS Prozent, Umlaufdaten.Umlauf AS Umlauf
 FROM AnfDaten
 JOIN Vsa ON AnfDaten.VsaID = Vsa.ID 
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN ABC ON Kunden.ABCID = ABC.ID
 JOIN KdArti ON AnfDaten.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN ProdHier ON Artikel.ProdHierID = ProdHier.ID
 JOIN Bereich ON Artikel.BereichID = Bereich.ID
 JOIN StandKon ON Vsa.StandKonID = StandKon.ID
+JOIN VsaBer ON VsaBer.VsaID = Vsa.ID AND VsaBer.KdBerID = KdArti.KdBerID
+JOIN Mitarbei AS Betreuer ON VsaBer.BetreuerID = Betreuer.ID
+JOIN Mitarbei AS KdService ON VsaBer.ServiceID = KdService.ID
 LEFT JOIN UmlaufDaten ON UmlaufDaten.KdArtiID = AnfDaten.KdArtiID AND UmlaufDaten.ArtGroeID = AnfDaten.ArtGroeID AND AnfDaten.VsaID = UmlaufDaten.VsaID
 WHERE Bereich.ID IN ($3$)
   AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
   AND Kunden.FirmaID IN ($5$)
   AND Kunden.StandortID IN ($6$)
   AND Kunden.KdGfID in ($7$)
-GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Bereich.Bereich, ArtGru.Gruppe, ArtGru.ArtGruBez$LAN$, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$, KdArti.ID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfDaten.Groesse, Artikel.Stueckgewicht, StandKon.StandKonBez$LAN$, Umlaufdaten.Umlauf
+GROUP BY AnfDaten.LieferDatum, Kunden.KdNr, Kunden.SuchCode, ABC.ABCBez, Vsa.ID, Vsa.VsaNr, Vsa.SuchCode, Vsa.Bez, Bereich.Bereich, Betreuer.Name, KdService.Name, ArtGru.Gruppe, ArtGru.ArtGruBez$LAN$, ProdHier.Lagerkategorie, ProdHier.ProdHierBez$LAN$, KdArti.ID, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, AnfDaten.Groesse, Artikel.Stueckgewicht, KdArti.WaschPreis, KdArti.LeasPreis, StandKon.StandKonBez$LAN$, Umlaufdaten.Umlauf
 ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
