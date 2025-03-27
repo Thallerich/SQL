@@ -15,11 +15,7 @@ WHERE Kunden.KdNr = 2022
     FROM KdArti
     WHERE KdArti.KundenID = Kunden.ID
       AND KdArti.ArtikelID = EinzTeil.ArtikelID
-      AND EXISTS (
-        SELECT ErsatzKdArti.*
-        FROM KdArti AS ErsatzKdArti
-        WHERE ErsatzKdArti.ErsatzFuerKdArtiID = KdArti.ID
-      )
+      AND KdArti.ErsatzFuerKdArtiID > 0
   );
 
 GO
