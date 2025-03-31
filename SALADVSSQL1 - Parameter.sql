@@ -30,6 +30,28 @@ GO
 
 DROP TABLE _MandantSave;
 GO
+
+USE [dbSystem]
+GO
+CREATE USER [SAL\GG_AdvanTex_Staging] FOR LOGIN [SAL\GG_AdvanTex_Staging]
+GO
+USE [dbSystem]
+GO
+ALTER ROLE [db_datareader] ADD MEMBER [SAL\GG_AdvanTex_Staging]
+GO
+USE [dbSystem]
+GO
+ALTER ROLE [db_datawriter] ADD MEMBER [SAL\GG_AdvanTex_Staging]
+GO
+USE [dbSystem]
+GO
+ALTER ROLE [db_ddladmin] ADD MEMBER [SAL\GG_AdvanTex_Staging]
+GO
+USE [dbSystem]
+GO
+ALTER ROLE [db_owner] ADD MEMBER [SAL\GG_AdvanTex_Staging]
+GO
+
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SET NOCOUNT ON;
@@ -40,7 +62,7 @@ BEGIN
   BEGIN TRANSACTION;
 
     UPDATE Salesianer.dbo.Settings
-      SET [ValueMemo] = N'FF8487'
+      SET [ValueMemo] = N'C2727D'
       WHERE [Parameter] = N'COLOR_BACKGROUND';
 
     UPDATE Salesianer.dbo.Settings
