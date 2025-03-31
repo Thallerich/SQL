@@ -15,7 +15,7 @@ CREATE TABLE #Result999118 (
   Bereich nchar(3) COLLATE Latin1_General_CS_AS,
   Gruppe nchar(8) COLLATE Latin1_General_CS_AS,
   ArtikelNr nchar(15) COLLATE Latin1_General_CS_AS,
-  Variante nchar(2) COLLATE Latin1_General_CS_AS,
+  Variante nchar(4) COLLATE Latin1_General_CS_AS,
   Artikelbezeichnung nvarchar(60) COLLATE Latin1_General_CS_AS,
   [Gewicht (kg/Stück)] numeric(18,4),
   Leasingpreis money,
