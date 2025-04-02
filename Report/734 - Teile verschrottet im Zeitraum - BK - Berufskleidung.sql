@@ -21,5 +21,5 @@ WHERE Kunden.KdGfID IN ($4$)
   AND EinzHist.EinzHistTyp = 1 /* ausgeschieden */
   AND WegGrund.ID IN ($3$)
   AND EinzHist.AusDienstDat BETWEEN $STARTDATE$ AND $ENDDATE$
-  AND Produktion.ID IN ($6$)
-  AND Bereich.ID IN ($5$);
+  AND Produktion.ID IN ($7$)
+  AND Artikel.ID IN ($6$);

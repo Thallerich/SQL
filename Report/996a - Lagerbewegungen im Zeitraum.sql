@@ -22,6 +22,7 @@ SELECT LagerArt.LagerArtBez$LAN$ AS Lagerart,
   Artikel.ID AS ArtikelID,
   ArtGroe.ID AS ArtGroeID,
   LagerArt.ID AS LagerArtID,
+  LagerArt.Neuwertig,
   Bestand.ID AS BestandID,
   ArtGroe.Zuschlag,
   CAST(0 AS bigint) AS BestandBeginn,
@@ -33,7 +34,6 @@ WHERE Bestand.ArtGroeID = ArtGroe.ID
   AND Artikel.ArtGruID = ArtGru.ID
   AND Bestand.LagerArtID = LagerArt.ID
   AND LagerArt.LagerID IN ($2$)
-  AND LagerArt.Neuwertig = 1
   AND Artikel.ArtiTypeID = 1;  /* nur textile Artikel, keine Namenschilder, Embleme, ... */
 
 IF @NurEinAusgang = 0
@@ -101,8 +101,9 @@ WHERE Lagerbewegung.ArtGroeID = ArtGroe.ID
 /* + Reportdaten                                                                                                                 + */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT FORMAT($STARTDATE$, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, $ENDDATE$), 'd', 'de-at') AS Zeitraum, Lagerart, Artikelgruppe, ArtikelNr, Artikelbezeichnung, Groesse AS Größe, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn AS [Bestand Zeitraum-Beginn], BestandBeginn * PreisVormonat AS [Wert Zeitraum-Beginn], MengeZugang AS [Menge Zugang], MengeZugang * Preis AS [Wert Zugang], MengeZugangInventur AS [Zugang durch Inventur], MengeAbgang AS [Menge Abgang], MengeAbgang * Preis AS [Wert Abgang], MengeAbgangInventur AS [Abgang durch Inventur], BestandEnde AS [Bestand Zeitraum-Ende], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Zeitraum-Ende]
+SELECT FORMAT($STARTDATE$, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, $ENDDATE$), 'd', 'de-at') AS Zeitraum, Lagerart, Neuwertig, Artikelgruppe, ArtikelNr, Artikelbezeichnung, Groesse AS Größe, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn AS [Bestand Zeitraum-Beginn], BestandBeginn * PreisVormonat AS [Wert Zeitraum-Beginn], MengeZugang AS [Menge Zugang], MengeZugang * Preis AS [Wert Zugang], MengeZugangInventur AS [Zugang durch Inventur], MengeAbgang AS [Menge Abgang], MengeAbgang * Preis AS [Wert Abgang], MengeAbgangInventur AS [Abgang durch Inventur], BestandEnde AS [Bestand Zeitraum-Ende], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Zeitraum-Ende]
 FROM #TmpLagerbewegung
 WHERE ArtikelID > 0
   AND (BestandBeginn > 0 OR BestandEnde > 0 OR MengeZugang > 0 OR MengeAbgang < 0)
+  AND (($4$ = 1 AND Neuwertig = 1) OR $4$ = 0)
 ORDER BY ArtikelNr, Groesse;
