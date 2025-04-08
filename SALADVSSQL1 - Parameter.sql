@@ -52,6 +52,15 @@ GO
 ALTER ROLE [db_owner] ADD MEMBER [SAL\GG_AdvanTex_Staging]
 GO
 
+ALTER DATABASE [dbSystem] SET NEW_BROKER WITH ROLLBACK IMMEDIATE;
+GO
+ALTER DATABASE [Salesianer] SET NEW_BROKER WITH ROLLBACK IMMEDIATE;
+GO
+ALTER AUTHORIZATION ON DATABASE::[dbSystem] TO [AdsSys];
+GO
+ALTER AUTHORIZATION ON DATABASE::[Salesianer] TO [AdsSys];
+GO
+
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 SET NOCOUNT ON;
