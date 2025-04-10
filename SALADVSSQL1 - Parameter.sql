@@ -304,3 +304,21 @@ END
 ELSE
   PRINT N'WARNING! - Server name incorrect - check server!';
 GO
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Neue Funktionen für ALLE berechtigen:
+
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = UPPER(REPLACE(USER_NAME(), N'SAL\', N'')));
+
+INSERT INTO ModAct (FormActID, RightsID, AnlageUserID_, UserID_)
+SELECT ModAct.FormActID, (SELECT ID FROM Rights WHERE RightsBez = N'__SAL_Allgemein verfügbar'), @userid, @userid
+FROM ModAct
+WHERE ModAct.RightsID = (SELECT ID FROM Rights WHERE RightsBez = N'#_NeueFunktionen')
+  AND ModAct.Anlage_ > N'2025-03-28 00:00:00.000'
+  AND NOT EXISTS (
+    SELECT ModAct2.*
+    FROM ModAct AS ModAct2
+    WHERE ModAct2.FormActID = ModAct.FormActID
+      AND ModAct2.RightsID != (SELECT ID FROM Rights WHERE RightsBez = N'#_NeueFunktionen')
+  );
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
