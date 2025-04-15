@@ -18,4 +18,5 @@ WHERE Traeger.[Status] = N'A'
   AND Firma.ID IN ($1$)
   AND KdGf.ID IN ($2$)
   AND [Zone].ID IN ($3$)
-  AND Standort.ID IN ($4$);
+  AND Standort.ID IN ($4$)
+  AND Kunden.KdNr != 10002912;
