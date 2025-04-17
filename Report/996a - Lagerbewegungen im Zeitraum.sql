@@ -2,8 +2,8 @@
 /* + prepareData                                                                                                                 + */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @Beginn date = $STARTDATE$;
-DECLARE @Ende date = $ENDDATE$;
+DECLARE @Beginn datetime2 = CAST($STARTDATE$ AS datetime2);
+DECLARE @Ende datetime2 = DATEADD(day, 1, CAST($ENDDATE$ AS datetime2));
 DECLARE @NurEinAusgang bit = $3$;
 
 DROP TABLE IF EXISTS #TmpLagerbewegung;
@@ -101,7 +101,7 @@ WHERE Lagerbewegung.ArtGroeID = ArtGroe.ID
 /* + Reportdaten                                                                                                                 + */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT FORMAT($STARTDATE$, 'd', 'de-at') + ' bis ' + FORMAT(DATEADD(day, -1, $ENDDATE$), 'd', 'de-at') AS Zeitraum, Lagerart, Neuwertig, Artikelgruppe, ArtikelNr, Artikelbezeichnung, Groesse AS Größe, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn AS [Bestand Zeitraum-Beginn], BestandBeginn * PreisVormonat AS [Wert Zeitraum-Beginn], MengeZugang AS [Menge Zugang], MengeZugang * Preis AS [Wert Zugang], MengeZugangInventur AS [Zugang durch Inventur], MengeAbgang AS [Menge Abgang], MengeAbgang * Preis AS [Wert Abgang], MengeAbgangInventur AS [Abgang durch Inventur], BestandEnde AS [Bestand Zeitraum-Ende], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Zeitraum-Ende]
+SELECT FORMAT($STARTDATE$, 'd', 'de-at') + ' bis ' + FORMAT($ENDDATE$, 'd', 'de-at') AS Zeitraum, Lagerart, Neuwertig, Artikelgruppe, ArtikelNr, Artikelbezeichnung, Groesse AS Größe, IIF(Preis = 0, PreisVormonat, Preis) AS Durchschnittspreis, PreisVormonat AS [Durchschnittspreis Zeitraum-Beginn], BestandBeginn AS [Bestand Zeitraum-Beginn], BestandBeginn * PreisVormonat AS [Wert Zeitraum-Beginn], MengeZugang AS [Menge Zugang], MengeZugang * Preis AS [Wert Zugang], MengeZugangInventur AS [Zugang durch Inventur], MengeAbgang AS [Menge Abgang], MengeAbgang * Preis AS [Wert Abgang], MengeAbgangInventur AS [Abgang durch Inventur], BestandEnde AS [Bestand Zeitraum-Ende], BestandEnde * IIF(Preis = 0, PreisVormonat, Preis) AS [Wert Zeitraum-Ende]
 FROM #TmpLagerbewegung
 WHERE ArtikelID > 0
   AND (BestandBeginn > 0 OR BestandEnde > 0 OR MengeZugang > 0 OR MengeAbgang < 0)
