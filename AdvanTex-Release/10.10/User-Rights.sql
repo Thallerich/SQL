@@ -26,7 +26,7 @@ BEGIN TRY
 
     PRINT 'Executing Query...'
 
-
+/* 
     -- Check ob Formact bereits auf LiveDB, sonst Inserten
     INSERT INTO FORMACT(Formclass,ActionName)
     SELECT DISTINCT FormClass, ActionName
@@ -38,7 +38,7 @@ BEGIN TRY
             SELECT liveFormact.Formclass, liveFormact.ActionName
             FROM [saladvpsqlc1a1.salres.com].[Salesianer].[dbo].FORMACT liveFormact
 )
-
+ */
 
     /* ################################################################################################################################# */
     /* ################################################################################################################################# */
