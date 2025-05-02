@@ -1,6 +1,6 @@
 SELECT KdGf.KurzBez AS Geschäftsbereich, Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung],
 Traeger.Traeger, Traeger.Vorname, Traeger.Nachname,
- EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez$LAN$ AS Außerdienststellungsgrund, WegGrund.WeggrundBez$LAN$ AS [Schrott-Grund], RwArt.RwArtBez$LAN$ AS [Restwert-Art], TeilSoFa.EPreis AS Restwert, TeilSoFaStatus.StatusBez AS [Status], IIF($3$ = 1, RechKo.RechNr, NULL) AS Rechnungsnummer, IIF($3$ = 1, Rechko.RechDat, NULL) AS Rechnungsdatum, Produktion.SuchCode AS Produktion, Betreuer.Name AS Kundenbetreuer, Kundenservice.Name AS Kundenservice, EinzHist.Ausdienst
+ EinzHist.Barcode, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Einsatz.EinsatzBez$LAN$ AS Außerdienststellungsgrund, WegGrund.WeggrundBez$LAN$ AS [Schrott-Grund], RwArt.RwArtBez$LAN$ AS [Restwert-Art], TeilSoFa.EPreis AS Restwert, TeilSoFaStatus.StatusBez AS [Status], IIF(TeilSoFa.RechPoID > 0, RechKo.RechNr, NULL) AS Rechnungsnummer, IIF(TeilSoFa.RechPoID > 0, Rechko.RechDat, NULL) AS Rechnungsdatum, Produktion.SuchCode AS Produktion, Betreuer.Name AS Kundenbetreuer, Kundenservice.Name AS Kundenservice, EinzHist.Ausdienst
 FROM TeilSofa
 JOIN (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
@@ -29,7 +29,7 @@ JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Traeger ON Traeger.Id = EinzHist.TraegerID
 WHERE TeilSoFa.SoFaArt = N'R' /* Restwert-Abrechnung */
   AND (
-    (TeilSoFa.[Status] = N'L' AND $3$ = 0) /* Abrechnung geplant  */
+    ($3$ = 0 AND ((TeilSoFa.[Status] = N'L') OR (TeilSoFa.[Status] = 'P' AND RechKo.[Status] = 'B'))) /* Abrechnung geplant  */
     OR
     (TeilSoFa.[Status] = N'P' AND RechKo.RechDat BETWEEN $STARTDATE$ AND $ENDDATE$ AND $3$ = 1) /* abgerechnet, nicht wieder gutgeschrieben */
   )
