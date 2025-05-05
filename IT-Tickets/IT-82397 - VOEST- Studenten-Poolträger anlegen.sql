@@ -1,3 +1,8 @@
+DECLARE @MaxTNrPerCustomer TABLE (
+  KdNr int,
+  MaxTraegerNr int
+);
+
 DECLARE @TraegerNr TABLE (
   KdNr int,
   VsaNr int,
@@ -7,19 +12,35 @@ DECLARE @TraegerNr TABLE (
 );
 
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+DECLARE @indienstdat date = N'2025-06-01';
+DECLARE @indienstwoche nchar(7) = (SELECT [Week].Woche FROM [Week] WHERE @indienstdat BETWEEN [Week].VonDat AND [Week].BisDat);
 
-INSERT INTO @TraegerNr (KdNr, VsaNr, VsaID, AbteilID, TraegerNr)
-SELECT Kunden.KdNr, Vsa.VsaNr, Vsa.ID, Vsa.AbteilID, MAX(Traeger.Traeger) AS TraegerNr
+INSERT INTO @MaxTNrPerCustomer (KdNr, MaxTraegerNr)
+SELECT Kunden.KdNr, MAX(Traeger.Traeger)
 FROM Traeger
 JOIN Vsa ON Traeger.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN _IT82397 ON Kunden.KdNr = _IT82397.Kdnr AND Vsa.VsaNr = _IT82397.VsaNr
-GROUP BY Kunden.KdNr, Vsa.VsaNr, Vsa.ID, Vsa.AbteilID;
+WHERE Kunden.KdNr IN (
+  SELECT [_VOESTStudentenImport].KdNr
+  FROM [_VOESTStudentenImport]
+)
+GROUP BY Kunden.KdNr;
 
 INSERT INTO Traeger (VsaID, Traeger, AbteilID, PersNr, Vorname, Nachname, Indienst, IndienstDat, AnlageUserID_, UserID_)
-SELECT [@TraegerNr].VsaID, [@TraegerNr].TraegerNr + CAST(ROW_NUMBER() OVER (ORDER BY _IT82397.Personalnummer) AS nvarchar), [@TraegerNr].AbteilID, _IT82397.Personalnummer, _IT82397.Vorname, [@TraegerNr].TraegerNr + CAST(ROW_NUMBER() OVER (ORDER BY _IT82397.Personalnummer) AS nvarchar), [Week].Woche, _IT82397.IndienstDat, @userid, @userid
-FROM _IT82397
-JOIN @TraegerNr ON _IT82397.Kdnr = [@TraegerNr].KdNr AND _IT82397.VsaNr = [@TraegerNr].VsaNr
-JOIN [Week] ON _IT82397.IndienstDat BETWEEN [Week].VonDat AND [Week].BisDat;
+SELECT
+  VsaID = Vsa.ID,
+  Traeger = [@MaxTNrPerCustomer].MaxTraegerNr + CAST(ROW_NUMBER() OVER (ORDER BY [_VOESTStudentenImport].PersNr) AS nvarchar),
+  AbteilID = COALESCE((SELECT TOP 1 Abteil.ID FROM Abteil WHERE Abteil.KundenID = Kunden.ID AND Abteil.Bez = [_VOESTStudentenImport].Kostenstelle), Vsa.AbteilID),
+  PersNr = [_VOESTStudentenImport].PersNr,
+  Vorname = [_VOESTStudentenImport].Vorname,
+  Nachname = [_VOESTStudentenImport].Nachname,
+  Indienst = @indienstwoche,
+  IndienstDat = @indienstdat,
+  AnlageUserID_ = @userid,
+  UserID_ = @userid
+FROM Vsa
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN [_VOESTStudentenImport] ON Kunden.KdNr = [_VOESTStudentenImport].Kdnr AND Vsa.VsaNr = [_VOESTStudentenImport].VsaNr
+JOIN @MaxTNrPerCustomer ON [@MaxTNrPerCustomer].KdNr = [_VOESTStudentenImport].KdNr;
 
 GO
