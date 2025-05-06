@@ -10,6 +10,7 @@ CREATE TABLE #LagerteileHist_1401 (
   EinzHistID int,
   EinzteilID int,
   KundenID int,
+  VsaID int,
   LagerortID int, 
   LagerartID int, 
   ArtikelID int,
@@ -24,11 +25,12 @@ CREATE INDEX Ind_LagerortID ON #LagerteileHist_1401 (LagerortID);
 CREATE INDEX Ind_ArtGroeID ON #LagerteileHist_1401 (ArtGroeID);
 CREATE INDEX Ind_LagerartID ON #LagerteileHist_1401 (LagerartID);
     
-INSERT INTO #LagerteileHist_1401 (Barcode, EinzHistID, EinzteilID, KundenID, LagerortID, LagerartID, ArtikelID, ArtGroeID, EKPreis, [Status], EinzHistVon, RuecklaufG)
+INSERT INTO #LagerteileHist_1401 (Barcode, EinzHistID, EinzteilID, KundenID, VsaID, LagerortID, LagerartID, ArtikelID, ArtGroeID, EKPreis, [Status], EinzHistVon, RuecklaufG)
 SELECT EinzHist.Barcode,
   EinzHist.ID,
   EinzHist.EinzTeilID,
   EinzHist.KundenID,
+  IIF(EinzHist.TraegerID < 0, EinzHist.VsaID, Traeger.VsaID) AS VsaID,
   Lagerort.ID AS LagerortID, 
   EinzHist.LagerArtID,
   Artikel.ID AS ArtikelID,
@@ -39,12 +41,13 @@ SELECT EinzHist.Barcode,
   EinzTeil.RuecklaufG
 FROM EinzTeil
 JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
-JOIN Lagerort ON EinzHist.LagerOrtID = LagerOrt.ID 
-JOIN Lagerart ON EinzHist.LagerArtID = Lagerart.Id 
-JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID 
-JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID 
-WHERE Lagerart.LagerID = @LagerID 
-  AND EinzHist.Status IN ('X', 'XE', 'XM') 
+JOIN Lagerort ON EinzHist.LagerOrtID = LagerOrt.ID
+JOIN Lagerart ON EinzHist.LagerArtID = Lagerart.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+WHERE Lagerart.LagerID = @LagerID
+  AND EinzHist.Status IN ('X', 'XE', 'XM')
   AND EinzHist.EinzHistTyp = 2;
 
 CREATE TABLE #Umlauf_Salesianer_1401 (
@@ -175,31 +178,12 @@ FROM (
     AND Traeger.[Status] != N'I'
 ) AS x 
 GROUP BY StandortID, ArtGroeID, ArtikelID;
-    
-WITH Artikelstatus AS ( 
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez 
-  FROM [Status] 
-  WHERE [Status].Tabelle = N'ARTIKEL'
-),    
-Teilestatus AS ( 
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez 
-  FROM [Status] 
-  WHERE [Status].Tabelle = N'EINZHIST'
-),
-ArtikelverwendungStandort AS (
-  SELECT ArtikelID, STRING_AGG(SuchCode, ', ') WITHIN GROUP (ORDER BY SuchCode) AS VerwendetIn
-  FROM (
-    SELECT DISTINCT Artikel.ID AS ArtikelID, Standort.Suchcode
-    FROM KdArti
-    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID 
-    JOIN Kunden ON KdArti.KundenID = Kunden.ID 
-    JOIN Standort ON Kunden.StandortID = Standort.ID
-  ) x
-  GROUP BY ArtikelID
-)
+  
 SELECT LagerteileHist.Barcode,
-  Kunden.KdNr,
-  Kunden.SuchCode as [Letzter Kunde],
+  IIF(Kunden.ID > 0, Kunden.KdNr, NULL) AS KdNr,
+  IIF(Kunden.ID > 0, Kunden.SuchCode, NULL) as [Letzter Kunde],
+  IIF(Vsa.ID > 0, Vsa.VsaNr, NULL) AS [letzte VsaNr],
+  IIF(Vsa.ID > 0, Vsa.Bez, NULL) AS [letzte Vsa],
   LagerteileHist.RuecklaufG as [Anzahl Wäschen],
   LagerteileHist.EinzHistVon AS [im Lager seit],
   Standort.Bez AS Lagerstandort, 
@@ -265,9 +249,24 @@ JOIN Standort ON Lagerart.LagerID = Standort.ID
 JOIN ArtGroe ON LagerteileHist.ArtGroeID = ArtGroe.ID
 JOIN Artikel ON LagerteileHist.ArtikelID = Artikel.ID
 JOIN Abc ON Artikel.AbcID = Abc.ID
-JOIN Artikelstatus ON LagerteileHist.Status = Artikelstatus.Status
-JOIN ArtikelverwendungStandort ON LagerteileHist.ArtikelID = ArtikelverwendungStandort.ArtikelID
+JOIN (
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez 
+  FROM [Status] 
+  WHERE [Status].Tabelle = N'ARTIKEL'
+) AS Artikelstatus ON LagerteileHist.Status = Artikelstatus.Status
+JOIN (
+  SELECT ArtikelID, STRING_AGG(SuchCode, ', ') WITHIN GROUP (ORDER BY SuchCode) AS VerwendetIn
+  FROM (
+    SELECT DISTINCT Artikel.ID AS ArtikelID, Standort.Suchcode
+    FROM KdArti
+    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID 
+    JOIN Kunden ON KdArti.KundenID = Kunden.ID 
+    JOIN Standort ON Kunden.StandortID = Standort.ID
+  ) x
+  GROUP BY ArtikelID
+) AS ArtikelverwendungStandort ON LagerteileHist.ArtikelID = ArtikelverwendungStandort.ArtikelID
 JOIN Kunden ON LagerteileHist.KundenID = Kunden.ID
+JOIN Vsa ON LagerteileHist.VsaID = Vsa.ID
 LEFT JOIN (
   SELECT ArtGroeID, ArtikelID, SUM(Umlauf) AS Umlauf
   FROM #Umlauf_Salesianer_1401
