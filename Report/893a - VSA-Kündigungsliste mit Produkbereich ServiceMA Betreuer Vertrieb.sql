@@ -31,6 +31,15 @@ SELECT Firma.SuchCode AS Firma,
   Kundenservice.Name AS Kundenservice,
   Betreuer.Name AS Kundenbetreuer,
   Vertreter.Name AS Vertrieb,
+  [Bereich-Jahresumsatz netto] = (
+    SELECT SUM(RechPo.GPreis)
+    FROM RechPo
+    JOIN RechKo ON RechPo.RechKoID = RechKo.ID
+    WHERE RechKo.KundenID = Kunden.ID
+      AND RechPo.KdBerID = KdBer.ID
+      AND RechPo.VsaID = Vsa.ID
+      AND RechKo.RechDat >= CAST(DATEADD(year, -1, DATETIMEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1, 0, 0, 0, 0)) AS date)
+  ),
   Vertrag.VertragLfdNr AS [Laufende Nr. Vertrag],
   Vertragstatus.StatusBez AS [Status Vertrag],
   Vertrag.VertragAbschluss AS [Abschluss-Datum],

@@ -1,4 +1,10 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ Pipeline: TempTable                                                                                                       ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+DROP TABLE IF EXISTS #ResultSet893;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Pipeline: DataPrep                                                                                                        ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
@@ -13,6 +19,11 @@ Vertragstatus AS (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
   WHERE [Status].Tabelle = N'VERTRAG'
+),
+KdberStatus AS (
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
+  FROM [Status]
+  WHERE [Status].Tabelle = N'KDBER'
 ),
 WebInfo AS (
   SELECT WebUser.KundenID, COUNT(WebUser.ID) AS AnzAktiveUser, LetzterLoginIrgendeinUser = (
@@ -41,6 +52,7 @@ SELECT Firma.Bez AS Firma,
   Kunden.PLZ,
   Kunden.Ort,
   Kundenstatus.StatusBez AS Kundenstatus,
+  Branche.BrancheBez$LAN$ as Branche,
   Standort.Bez AS Hauptstandort,
   Sichtbar.Bez AS Sichtbarkeit,
   ABC.ABCBez$LAN$ AS [ABC-Klasse],
@@ -48,7 +60,9 @@ SELECT Firma.Bez AS Firma,
   ZahlArt.ZahlArtBez$LAN$ AS Zahlungsart,
   BrLauf.BrLaufBez$LAN$ AS Bearbeitungsrechnungslauf,
   Bereich.BereichBez$LAN$ AS Produktbereich,
+  KDBERstatus.StatusBez as [Status Kundenbereich],
   FakFreq.FakFreqBez$LAN$ AS Fakturafrequenz,
+  ZahlZiel.ZahlZielBez$LAN$ + N' (Nr. ' + ZahlZiel.ZahlZiel + N')' AS Zahlungsziel,
   Adressgruppe = STUFF((
     SELECT N', ' + AdrGrp.AdrGrpBez + N' (' + AdrGrp.Nr + N')'
     FROM KdGru
@@ -84,6 +98,22 @@ SELECT Firma.Bez AS Firma,
       AND EinzTeil.AltenheimModus = 0
       AND EinzHist.[Status] = N'Z'
   ),
+    [Anzahl aktiver Teile] = (
+    SELECT COUNT(EinzHist.ID)
+    FROM EinzTeil
+    JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+    WHERE EinzHist.KundenID = Kunden.ID
+  --   AND EinzHist.PoolFkt = 0
+  --   AND EinzHist.EinzHistTyp = 1
+  --   AND EinzTeil.AltenheimModus = 0
+      AND EinzHist.[Status] = N'Q'
+  ),
+  [Umlauf] = (
+    SELECT SUM(KdArti.Umlauf)
+    FROM KdArti
+    WHERE KdArti.Status ='A'
+      AND KdArti.KdBerID = KdBer.ID
+),
   [Bereich-Jahresumsatz netto] = (
     SELECT SUM(RechPo.GPreis)
     FROM RechPo
@@ -128,12 +158,15 @@ JOIN Sichtbar ON Kunden.SichtbarID = Sichtbar.ID
 JOIN ABC ON Kunden.ABCID = ABC.ID
 JOIN Vertrag ON KdBer.VertragID = Vertrag.ID
 JOIN Vertragstatus ON Vertrag.[Status] = Vertragstatus.[Status]
+JOIN KdberStatus on KDBER.[Status] = KdberStatus.[Status]
 JOIN PrLauf ON Vertrag.PrLaufID = PrLauf.ID
 JOIN KuendGru ON Vertrag.KuendGruID = KuendGru.ID
 JOIN RwConfig ON Kunden.RWConfigID = RwConfig.ID
 JOIN BrLauf ON Kunden.BRLaufID = BrLauf.ID
 JOIN Wae AS RechWae ON Kunden.RechWaeID = RechWae.ID
 JOIN ZahlArt ON Kunden.ZahlArtID = ZahlArt.ID
+JOIN Branche ON Kunden.BrancheID = Branche.ID 
+JOIN ZahlZiel ON Kunden.ZahlZielID = ZahlZiel.ID
 LEFT JOIN WebInfo ON WebInfo.KundenID = Kunden.ID
 WHERE Kundenstatus.ID IN ($4$)
   AND Kunden.AdrArtID = 1
