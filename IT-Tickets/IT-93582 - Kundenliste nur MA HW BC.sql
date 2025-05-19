@@ -8,8 +8,11 @@ WHERE Kunden.AdrArtID = 1
     SELECT KdArti.*
     FROM KdArti
     JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+    JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+    JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
     WHERE KdBer.KundenID = Kunden.ID
       AND KdBer.BereichID IN (SELECT Bereich.ID FROM Bereich WHERE Bereich.Bereich IN (N'MA', N'HW', N'BC'))
+      AND ArtGru.Gruppe IN (N'HW', N'MA', N'WMA', N'DBD')
       AND KdArti.Umlauf != 0
   )
   AND NOT EXISTS (
