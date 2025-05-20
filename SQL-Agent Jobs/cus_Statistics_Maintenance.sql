@@ -13,10 +13,11 @@ BEGIN
 
   EXEC Salesianer_Archive.dbo.IndexOptimize
     @Databases = N'Salesianer',
-    @Indexes = N'ALL_INDEXES',
+    @Indexes = N'ALL_INDEXES, -Salesianer.dbo.SCANS',
+    @MinNumberOfPages = 10000,
     @FragmentationLow = NULL,
-    @FragmentationMedium = NULL,
-    @FragmentationHigh = NULL,
+    @FragmentationMedium = N'INDEX_REORGANIZE,INDEX_REBUILD_ONLINE',
+    @FragmentationHigh = N'INDEX_REBUILD_ONLINE,INDEX_REBUILD_OFFLINE',
     @FragmentationLevel1 = 50,
     @FragmentationLevel2 = 80,
     @UpdateStatistics = N'ALL',
