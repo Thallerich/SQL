@@ -1,0 +1,25 @@
+DECLARE @ImportFile TABLE (
+  EtiNr nchar(10) COLLATE Latin1_General_CS_AS
+);
+
+DECLARE @Webportal TABLE (
+  EtiNr nchar(10) COLLATE Latin1_General_CS_AS
+);
+
+INSERT INTO @ImportFile (EtiNr)
+VALUES ('3376660625'), ('3376660663'), ('3376660670'), ('3376660779'), ('3375736420'), ('3376383562'), ('3376108363'), ('3375363756'), ('3373988555'), ('3374334108'), ('3374638718'), ('3374638701'), ('3376387843'), ('3376762626'), ('3376294233');
+
+INSERT INTO @Webportal (EtiNr)
+VALUES ('3376549623'), ('3376473140'), ('3376552029'), ('3376549876'), ('3376110410'), ('3376473379'), ('3376551633'), ('3376297296'), ('3376296459'), ('3376475526'), ('3371858881'), ('3376387843'), ('3376294233'), ('3374846434'), ('3375154859'), ('3376111547'), ('3376660779'), ('3374954788'), ('3376660717'), ('3374741630'), ('3376762626'), ('3374638701'), ('3376108363'), ('3376660670'), ('3376660663'), ('3376388406'), ('3376550674'), ('3374334108'), ('3374638718'), ('3374954795'), ('3376383562'), ('3376387645'), ('3376473195'), ('3376295810'), ('3376108721'), ('3376297586'), ('3376551466'), ('3364350927'), ('3376108400'), ('3376664913'), ('3372147021'), ('3376762640'), ('3376764279'), ('3376293908'), ('3375736420');
+
+SELECT Artikel.ArtikelNr, Artikel.ArtikelBez AS Artikelbezeichnung, Kunden.KdNr, Vsa.VsaNr, Vsa.Bez AS [Vsa-Bezeichnung], OPEtiKo.EtiNr AS Seriennummer, IIF(ImportFile.EtiNr IS NOT NULL, N'x', N'') AS Schnittstelle, IIF(Webportal.EtiNr IS NOT NULL, N'x', N'') AS Webportal
+FROM OPEtiKo
+JOIN Artikel ON OPEtiKo.ArtikelID = Artikel.ID
+JOIN Vsa ON OPEtiKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+LEFT JOIN @ImportFile AS ImportFile ON OPEtiKo.EtiNr = ImportFile.EtiNr
+LEFT JOIN @Webportal AS Webportal ON OPEtiKo.EtiNr = Webportal.EtiNr
+WHERE OPEtiKo.EtiNr IN (SELECT EtiNr FROM @ImportFile UNION SELECT EtiNr FROM @Webportal)
+ORDER BY ArtikelNr ASC;
+
+GO
