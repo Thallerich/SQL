@@ -11,7 +11,7 @@ JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = Stan
 JOIN Lot ON Scans.LotID = Lot.ID
 JOIN Mitarbei ON Lot.EinleseMitarbeiID = Mitarbei.ID
 WHERE Scans.[DateTime] BETWEEN $1$ AND DATEADD(day, 1, $1$)
-  AND Scans.ZielNrID = 1
+  AND Scans.ActionsID = 1
   AND Scans.Menge = 1
   AND EinzTeil.AltenheimModus = 1
   AND StandBer.ProduktionID = $2$

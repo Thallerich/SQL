@@ -10,6 +10,6 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = StandBer.BereichID
 WHERE Scans.[DateTime] BETWEEN $1$ AND DATEADD(day, 1, $1$)
-  AND Scans.ZielNrID = 7
+  AND Scans.ActionsID = 23
   AND EinzTeil.AltenheimModus = 1
   AND StandBer.ProduktionID = $2$;
