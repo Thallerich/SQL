@@ -12,7 +12,15 @@ FROM (
     ), 1, 0) AS BIT)
   FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL
   WHERE SdcTcpL.TransNr = N'608'
-    AND SdcTcpL.Stamp > DATEADD(minute, -10, GETDATE())
+    AND SdcTcpL.Stamp > DATEADD(minute, -60, GETDATE())
+    AND NOT EXISTS (
+      SELECT 1
+      FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL AS SdcTcpL3
+      WHERE SdcTcpL3.TransNr IN (N'608', N'609')
+        AND SdcTcpL3.Chipcode = SdcTcpL.Chipcode
+        AND SdcTcpL3.Stamp BETWEEN DATEADD(minute, -2, SdcTcpL.Stamp) AND SdcTcpL.Stamp
+        AND SdcTcpL3.ID != SdcTcpL.ID
+    )
 ) AS x
 GROUP BY Ort
 HAVING SUM(IIF(Rückmeldung = 0, 1, 0)) >= 10;
