@@ -13,6 +13,11 @@ CREATE TABLE ##SdcQueueLength (
   QueueLength bigint
 );
 
+CREATE TABLE #SdcQueueLength (
+  SDCBez nvarchar(40),
+  QueueLength bigint
+);
+
 OPEN SdcDB;
 
 FETCH NEXT FROM SdcDB INTO @sdcbez, @linkedserverstring;
@@ -36,10 +41,20 @@ END;
 CLOSE SdcDB;
 DEALLOCATE SdcDB;
 
-SELECT *
-INTO #SdcQueueLength
-FROM ##SdcQueueLength;
+IF (OBJECT_ID('tempdb..##SdcQueueLength') IS NOT NULL AND OBJECT_ID('tempdb..#SdcQueueLength') IS NOT NULL)
+BEGIN
 
-DROP TABLE ##SdcQueueLength;
+  INSERT INTO #SdcQueueLength (SDCBez, QueueLength)
+  SELECT SDCBez, QueueLength
+  FROM ##SdcQueueLength;
+
+  DROP TABLE ##SdcQueueLength;
+
+END
+ELSE
+BEGIN
+  INSERT INTO #SdcQueueLength (SDCBez, QueueLength)
+  SELECT N'Error' AS SdcBez, 0 AS QueueLength;
+END;
 
 SELECT * FROM #SdcQueueLength WHERE QueueLength > 1000;
