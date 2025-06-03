@@ -20,6 +20,7 @@ CREATE TABLE #Result (
   Barcode nvarchar(33),
   ArtikelNr nvarchar(15),
   Artikelbezeichnung nvarchar(60),
+  Auslieferung nvarchar(60),
   Ausdienst char(7),
   Preis money,
   PreisPotentiell money,
@@ -64,7 +65,7 @@ FROM [Zone]
 WHERE [Zone].ID IN ($5$);
 
 SET @sqltext = N'
-  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
+  INSERT INTO #Result (Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Auslieferung, Ausdienst, Preis, PreisPotentiell, faktKZ, gutschrKZ, faktStatus, noFaktReason, AlterWochen, AnzahlWäschen, Schrottgrund)
   SELECT Firma.SuchCode AS Firma,
     KdGf.KurzBez AS Geschäftsbereich,
     [Zone].ZonenCode AS Vertriebszone,
@@ -77,6 +78,7 @@ SET @sqltext = N'
     EinzHist.Barcode,
     Artikel.ArtikelNr,
     Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+    LiefArt.LiefArtBez$LAN$ AS Auslieferung,
     EinzHist.Ausdienst,
     IIF(TeilSoFa.OhneBerechGrund > 0, 0, TeilSoFa.EPreis) AS Preis,
     TeilSoFa.EPreis AS [potentieller Preis],
@@ -101,6 +103,7 @@ SET @sqltext = N'
   JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
   JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN LiefArt ON KdArti.LiefArtID = LiefArt.ID
   JOIN Vsa ON EinzHist.VsaID = Vsa.ID
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN Firma ON Kunden.FirmaID = Firma.ID
@@ -139,7 +142,7 @@ EXEC sp_executesql @sqltext, N'@from date, @to date', @from, @to;
 /* ++ Pipeline: Details                                                                                                         ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
+SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Auslieferung, Ausdienst AS [Woche Außerdienststellung], Preis, PreisPotentiell AS [potentieller Preis], AlterWochen AS [Alter in Wochen], AnzahlWäschen AS [Anzahl Wäschen], Schrottgrund, fakturiert =
     CASE
         WHEN faktStatus = 3 THEN N'verrechnet'
         WHEN faktStatus = 2 THEN N'wird noch verrechnet'
@@ -171,7 +174,7 @@ SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Ku
 FROM (
   SELECT *
   FROM (
-    SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Ausdienst, Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, faktStatus, noFaktReason, ROW_NUMBER() OVER (PARTITION BY Barcode, Nachname, Vorname, KdNr ORDER BY AlterWochen DESC, AnzahlWäschen DESC, faktStatus DESC, noFaktReason DESC) AS SortRank
+    SELECT Firma, Geschäftsbereich, Vertriebszone, Hauptstandort, Holding, KdNr, Kunde, Vorname, Nachname, Barcode, ArtikelNr, Artikelbezeichnung, Auslieferung, Ausdienst, Preis, PreisPotentiell, AlterWochen, AnzahlWäschen, Schrottgrund, faktStatus, noFaktReason, ROW_NUMBER() OVER (PARTITION BY Barcode, Nachname, Vorname, KdNr ORDER BY AlterWochen DESC, AnzahlWäschen DESC, faktStatus DESC, noFaktReason DESC) AS SortRank
     FROM #Result
   ) RwData
   WHERE RwData.SortRank = 1
