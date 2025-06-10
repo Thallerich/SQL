@@ -1,5 +1,7 @@
 SELECT Mitarbei.ID AS MitarbeiID,
   Mitarbei.Initialen,
+  Firma.Bez AS Firma,
+  Standort.Bez AS Standort,
   Mitarbei.MitarbeiUser AS [Username],
   Mitarbei.Vorname,
   Mitarbei.Nachname,
