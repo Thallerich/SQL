@@ -37,7 +37,7 @@ JOIN Kunden ON EinzHist.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Wae ON Kunden.VertragWaeID = Wae.ID
 JOIN LagerteilStatus ON EinzHist.[Status] = LagerteilStatus.[Status]
-CROSS APPLY dbo.funcGetRestwert(EinzHist.ID, @curweek, 1) RwCalc
+CROSS APPLY dbo.advfunc_GetRestwertIgnoreAusdRestW(EinzHist.ID, @curweek, 1) RwCalc
 CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, IIF(RwCalc.RestwertInfo = 0, EinzHist.RestwertInfo, RwCalc.RestwertInfo), GETDATE()) AS VertragWaeRestwert
 CROSS APPLY dbo.advFunc_ConvertExchangeRate(Firma.WaeID, Kunden.VertragWaeID, EinzHist.RestwertInfo, GETDATE()) AS EinlagerRestwert
 WHERE EinzHist.ID = (SELECT EinzTeil.CurrEinzHistID FROM EinzTeil WHERE EinzTeil.ID = EinzHist.EinzTeilID)
