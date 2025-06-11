@@ -4,7 +4,7 @@ Import-Module BitsTransfer
 $source = @(
   @{location = 'Graz'; path = '\\SVATGRAZSQL1.sal.co.at\M$\Backup\SVATGRAZSQL1$SQL1\Salesianer_Graz\FULL\'},
   @{location = 'SA22'; path = '\\SVATSMWFP1.sal.co.at\SQL-Backups\SQL1FCIHQ22$SQL1\Salesianer_SA22\FULL\'},
-  @{location = 'Inzing'; path = '\\SVATINZSQL1.sal.co.at\M$\Backup\SVATINZSQL1$SQL1\Salesianer_Inzing\FULL\'},
+  @{location = 'Inzing'; path = '\\SVATINZSQL1.sal.co.at\m$\BACKUP\SVATINZSQL1$SQL1\Salesianer_Inzing\FULL'},
   @{location = 'Klagenfurt'; path = '\\SVATUMKLSQL1.sal.co.at\M$\Backup\SVATUMKLSQL1$SQL1\Salesianer_Klagenfurt\FULL\'},
   @{location = 'Wr. Neustadt'; path = '\\SVATSAWRSQL1.sal.co.at\M$\Backup\SVATSAWRSQL1$SQL1\Salesianer_SAWR\FULL\'},
   @{location = 'Bratislava'; path = '\\SVSKSMSKSQL1.sal.co.at\M$\Backup\SVSKSMSKSQL1$SQL1\Salesianer_SMSK\FULL\'},
@@ -39,7 +39,7 @@ foreach ($src in $source)
   $location = $src.location;
   $srcpath = $src.path;
 
-  if (($location -like "Enns ?") -or ($location -like "Lenzing ?") -or ($location -eq "SA22") -or ($location -eq "Inzing"))
+  if (($location -like "Enns ?") -or ($location -like "Lenzing ?") -or ($location -eq "SA22"))
   {
     $null = New-PSDrive -Name T -PSProvider FileSystem -Root $srcpath
   }
