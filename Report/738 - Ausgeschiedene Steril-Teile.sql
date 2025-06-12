@@ -20,20 +20,6 @@ IF $2$ = 3
 
 DROP TABLE IF EXISTS #OPSchrott;
 
-CREATE TABLE #OPSchrott (
-  EinzTeilID int PRIMARY KEY NOT NULL,
-  [Code] nvarchar(33) COLLATE Latin1_General_CS_AS,
-  ArtikelID int NOT NULL,
-  WegGrundID int NOT NULL,
-  WegDatum date,
-  VsaID int NOT NULL,
-  Erstwoche nchar(7) COLLATE Latin1_General_CS_AS,
-  RuecklaufG int NOT NULL,
-  Restwert money,
-  ProduktionID int NOT NULL
-);
-
-INSERT INTO #OPSchrott (EinzTeilID, [Code], ArtikelID, WegGrundID, WegDatum, VsaID, Erstwoche, RuecklaufG, Restwert, ProduktionID)
 SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), EinzTeil.RuecklaufG, EinzTeil.RestwertInfo, ProduktionID = ISNULL((
     SELECT TOP 1 COALESCE(IIF(ZielNr.ProduktionsID < 0, NULL, ZielNr.ProduktionsID), IIF(ArbPlatz.StandortID < 0, NULL, ArbPlatz.StandortID), IIF(Mitarbei.StandortID < 0, NULl, Mitarbei.StandortID), -1)
     FROM Scans
@@ -44,6 +30,7 @@ SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.We
       AND Scans.ActionsID IN (7, 108)
     ORDER BY Scans.[DateTime] DESC
   ), -1)
+INTO #OPSchrott
 FROM EinzTeil
 WHERE EinzTeil.WegDatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzTeil.WegGrundID IN ($3$)
