@@ -24,7 +24,7 @@ BEGIN
     
     BEGIN TRANSACTION;
     
-      UPDATE LsKo SET SendLsNachweis = 1
+      UPDATE LsKo SET SendLsNachweis = 1, UserID_ = @userid
       OUTPUT inserted.ID INTO @work (ID)
       WHERE ID IN (SELECT TOP 1000 ID FROM #LsNachweisCleanup WHERE Processed = 0);
 
