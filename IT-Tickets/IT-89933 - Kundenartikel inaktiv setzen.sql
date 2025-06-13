@@ -1,3 +1,7 @@
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ TRUNCATE TABLE _IT95226;                                                                                                  ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
@@ -14,11 +18,11 @@ DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 DECLARE @msg nvarchar(255);
 
 INSERT INTO @KdArti (KdArtiID)
-SELECT KdArti.ID
-FROM _IT89933
-JOIN Kunden ON _IT89933.KdNr = Kunden.KdNr
-JOIN Artikel ON _IT89933.ArtikelNr = Artikel.ArtikelNr
-JOIN KdArti ON KdArti.KundenID = Kunden.ID AND KdArti.ArtikelID = Artikel.ID AND KdArti.Variante = _IT89933.Variante
+SELECT DISTINCT KdArti.ID
+FROM _IT95226
+JOIN Kunden ON _IT95226.KdNr = Kunden.KdNr
+JOIN Artikel ON _IT95226.ArtikelNr = Artikel.ArtikelNr
+JOIN KdArti ON KdArti.KundenID = Kunden.ID AND KdArti.ArtikelID = Artikel.ID AND KdArti.Variante = _IT95226.Variante
 WHERE KdArti.[Status] != N'I';
 
 SET @msg = FORMAT(GETDATE(), N'yyyy-MM-dd HH:mm:ss') + N' - ' + FORMAT(@@ROWCOUNT, N'N0') + N' Kundenartikel gefunden.';
