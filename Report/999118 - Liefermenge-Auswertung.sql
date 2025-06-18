@@ -111,5 +111,5 @@ EXEC sp_executesql @sqltext, N'@startdate date, @enddate date', @startdate, @end
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, Leasingpreis, Gesamtpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], Kostenstelle, Kostenstellenbezeichnung, RechNr
+SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, Leasingpreis, Gesamtpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], [Gewicht (kg/Stück)] * Menge AS [kg Gesamt], Kostenstelle, Kostenstellenbezeichnung, RechNr
 FROM #Result999118;
