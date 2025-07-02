@@ -10,8 +10,8 @@ $source = @(
   @{location = 'Bratislava'; path = '\\SVSKSMSKSQL1.sal.co.at\M$\Backup\SVSKSMSKSQL1$SQL1\Salesianer_SMSK\FULL\'},
   @{location = 'Enns 1'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Enns_1\FULL\'},
   @{location = 'Enns 2'; path = '\\SRVATENHVREP01.sal.co.at\SQLBackup\SQL1FCIEN$SQL1\Salesianer_Enns_2\FULL\'},
-  @{location = 'Lenzing 1'; path = '\\SVATWMLESQL1.sal.co.at\M$\Salesianer_Lenzing_1\FULL\'},
-  @{location = 'Lenzing 2'; path = '\\SVATWMLESQL1.sal.co.at\M$\Salesianer_Lenzing_2\FULL\'}
+  @{location = 'Lenzing 1'; path = '\\SVATWMLESQL1.sal.co.at\M$\Backup\svatwmlesql1$SQL1\Salesianer_Lenzing_1\FULL\'},
+  @{location = 'Lenzing 2'; path = '\\SVATWMLESQL1.sal.co.at\M$\Backup\svatwmlesql1$SQL1\Salesianer_Lenzing_2\FULL\'}
 )
 
 # specificy destination directory where backups will be gathered
