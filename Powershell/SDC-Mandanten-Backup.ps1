@@ -51,7 +51,16 @@ foreach ($src in $source)
   if ((Test-Path -PathType Container $srcpath))
   {
     $lastbackupfile = Get-ChildItem -Path "T:" -Filter *.bak | Sort-Object LastWriteTime | Select-Object -Last 1
-    Start-BitsTransfer -Source $lastbackupfile -Destination $dest -Description $location -DisplayName "Mandant"
+
+    $destfile = $dest + $lastbackupfile.Name
+    if (-not (Test-Path $destfile))
+    {
+      Start-BitsTransfer -Source $lastbackupfile -Destination $dest -Description $location -DisplayName "Mandant"
+    }
+    else
+    {
+      Write-Host "$location has already been copied to $dest"
+    }
   }
   else
   {
