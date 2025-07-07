@@ -1,4 +1,5 @@
-SELECT Ort,
+SELECT FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') AS Auswertungszeitpunkt,
+   Ort,
   [Anzahl mit Rückmeldung] = SUM(IIF(Rückmeldung = 1, 1, 0)),
   [Anzahl ohne Rückmeldung] = SUM(IIF(Rückmeldung = 0, 1, 0))
 FROM (
