@@ -1,4 +1,23 @@
 /*
+CREATE TABLE _VOESTStudentenEntnahme (
+  KdNr int NOT NULL,
+  VsaNr int NOT NULL,
+  TNr nvarchar(8) COLLATE Latin1_General_CS_AS NOT NULL,
+  Barcode varchar(33) COLLATE Latin1_General_CS_AS NOT NULL,
+  EinzHistID int,
+  EinzTeilID int,
+  TraegerID int,
+  TraeArtiID int,
+  KdArtiID int,
+  ArtikelID int,
+  ArtGroeID int,
+  VsaID int,
+  KundenID int,
+  Variante nvarchar(4) COLLATE Latin1_General_CS_AS
+);
+*/
+
+/*
   TRUNCATE TABLE _VOESTStudentenEntnahme;
 */
 
@@ -57,11 +76,11 @@ DECLARE @MapTable TABLE (
 
 DECLARE @curdatetime datetime2 = GETDATE();
 /* Ausgabe in aktueller Woche */
-DECLARE @newindienst varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(DATEADD(week, 1, GETDATE()) AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
-DECLARE @newindienstdat date = (SELECT [Week].VonDat FROM [Week] WHERE CAST(DATEADD(week, 1, GETDATE()) AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
+/* DECLARE @newindienst varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(DATEADD(week, 1, GETDATE()) AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
+DECLARE @newindienstdat date = (SELECT [Week].VonDat FROM [Week] WHERE CAST(DATEADD(week, 1, GETDATE()) AS date) BETWEEN [Week].VonDat AND [Week].BisDat); */
 /* Ausgabe letzte Woche */
-/* DECLARE @newindienst varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
-DECLARE @newindienstdat date = (SELECT [Week].VonDat FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat); */
+DECLARE @newindienst varchar(7) = (SELECT [Week].Woche FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
+DECLARE @newindienstdat date = (SELECT [Week].VonDat FROM [Week] WHERE CAST(GETDATE() AS date) BETWEEN [Week].VonDat AND [Week].BisDat);
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
 DECLARE @msg nvarchar(max);
 
