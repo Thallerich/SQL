@@ -1,6 +1,6 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 USE [master]
-EXEC sp_DatabaseRestore @Database = N'Salesianer', @BackupPathFull = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\', @RunRecovery = 1, @Execute = N'N';
+EXEC sp_DatabaseRestore @Database = N'Salesianer', @BackupPathFull = N'\\salshdsvm09_681.salres.com\mssql_backup\_temp\', @RunRecovery = 1, @ExistingDBAction = 2, @EnableBroker = 1, @Execute = N'N';
 GO
 ALTER DATABASE [Salesianer] SET RECOVERY SIMPLE WITH NO_WAIT
 GO
