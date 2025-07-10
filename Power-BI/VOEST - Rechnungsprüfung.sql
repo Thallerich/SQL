@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS #TmpVOESTRechnung;
+DROP TABLE IF EXISTS #TmpVOESTRechnung, #RechKo;
 
-DECLARE @RechKo TABLE (
+CREATE TABLE #RechKo (
   RechKoID int
 );
 
@@ -10,14 +10,14 @@ DECLARE @RechKo TABLE (
 /* ++ Diese einfach tauschen, um entsprechend alle Kunden auszuwerten                                                           ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-/*INSERT INTO @RechKo (RechKoID)
+/*INSERT INTO #RechKo (RechKoID)
 SELECT RechKo.ID
 FROM RechKo
 WHERE RechKo.RechDat >= DATEADD(year, -1, GETDATE())
   AND RechKo.KundenID = (SELECT Kunden.ID FROM Kunden WHERE Kunden.KdNr = 272295);
   */
 
-INSERT INTO @RechKo (RechKoID)
+INSERT INTO #RechKo (RechKoID)
 SELECT RechKo.ID
 FROM RechKo
 WHERE RechKo.RechDat >= DATEADD(MONTH, -11, GETDATE())
@@ -75,7 +75,7 @@ JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON TraeArti.ArtGroeID = ArtGroe.ID
-WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
+WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo)
 GROUP BY Artikel.ID,
   KdBer.BereichID,
   Traeger.ID,
@@ -137,7 +137,7 @@ JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
+WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo)
   AND NOT EXISTS (
     SELECT TraeArch.*
     FROM TraeArch
@@ -207,7 +207,7 @@ JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
 JOIN Traeger AS VaterTraeger ON Traeger.ParentTraegerID = VaterTraeger.ID
 JOIN Vsa AS VaterVsa ON VaterTraeger.VsaID = VaterVsa.ID
-WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
+WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo)
 GROUP BY Artikel.ID,
   KdBer.BereichID,
   Traeger.ID,
@@ -268,7 +268,7 @@ JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo)
+WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo)
   AND NOT EXISTS (
     SELECT Scans.*
     FROM Scans
@@ -340,7 +340,7 @@ JOIN Vsa ON RechPo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN RwArt ON TeilSoFa.RwArtID = RwArt.ID
-WHERE RechKo.ID IN (SELECT RechKoID FROM @RechKo);
+WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo);
 
 WITH VOESTProduktbereich AS (
   SELECT Bereich.ID AS BereichID,
