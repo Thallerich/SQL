@@ -72,12 +72,28 @@ JOIN Abteil ON LsPo.AbteilID = Abteil.ID
 WHERE Kunden.ID = (SELECT RechKo.KundenID FROM RechKo WHERE RechKo.ID = @RechKoID)
   AND Abteil.ID IN (SELECT RechPo.AbteilID FROM RechPo WHERE RechPo.RechKoID = @RechKoID)
   AND LsKo.Datum BETWEEN @MinDate AND @MaxDate
-  AND LsPo.RechPoID < 0
+  AND EXISTS (
+    SELECT Pos.ID
+    FROM LsPo AS Pos
+    WHERE Pos.LsKoID = LsKo.ID
+      AND Pos.RechPoID <= -1
+  
+    UNION
+  
+    SELECT Pos.ID
+    FROM LsPo AS Pos
+    INNER JOIN RechPo ON RechPo.ID = Pos.RechPoID
+    WHERE Pos.LsKoID = LsKo.ID
+      AND RechPo.RechKoID = -1
+      AND RechPo.OriginalRechPoID <= -1
+      AND RechPo.FakLaufID > 0
+  )
   AND NOT EXISTS (
     SELECT pos.*
     FROM LsPo AS pos
+    JOIN RechPo ON pos.RechPoID = RechPo.ID
     WHERE pos.LsKoID = LsKo.ID
-      AND pos.RechPoID > 0
+      AND RechPo.RechKoID > 0
   );
 
 INSERT INTO #LsDataRKoAnlag3062 (KundenID, KdNr, AbteilID, KsSt, KsStBez)
