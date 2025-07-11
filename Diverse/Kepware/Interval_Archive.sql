@@ -1,8 +1,14 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Kepware - Script to archive measurements as consumption in an interval of 15 minutes and 1 minute                         ++ */
 /* ++                                                                                                                           ++ */
-/* ++ Author: Stefan THALLER - 2025-07-08                                                                                       ++ */
+/* ++ Author: Stefan THALLER - 2025-07-11                                                                                       ++ */
+/* ++ Version: 1.1                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/*
+TRUNCATE TABLE KEPWARE_LINZ_CONSUMPTION_15m;
+TRUNCATE TABLE KEPWARE_LINZ_CONSUMPTION_1m;
+*/
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -17,8 +23,21 @@ DROP TABLE IF EXISTS #Kepware_Interval_Archive_15m, #Kepware_Interval_Archive_1m
 SELECT _NAME, _NUMERICID, Timestamp_Interval_15, SUM(TRY_CAST(_VALUE AS decimal) - TRY_CAST(Previous_Value AS decimal)) AS Value_Change_in_Interval
 INTO #Kepware_Interval_Archive_15m
 FROM (
-  SELECT _NAME, _NUMERICID, DATEADD(minute, CEILING((DATEDIFF(minute, N'1900-01-01 00:00:00.000', _TIMESTAMP) + 1) / CAST(15 AS decimal)) * 15, N'1900-01-01 00:00:00.000') AS Timestamp_Interval_15, _VALUE, LAG(_VALUE, 1, 0) OVER (PARTITION BY _NAME, _NUMERICID ORDER BY _TIMESTAMP ASC) AS Previous_Value
-  FROM KEPWARE_LINZ
+  SELECT _NAME, _NUMERICID, DATEADD(minute, CEILING((DATEDIFF(minute, N'1900-01-01 00:00:00.000', _TIMESTAMP) + 1) / CAST(15 AS decimal)) * 15, N'1900-01-01 00:00:00.000') AS Timestamp_Interval_15, _VALUE + ISNULL(OverflowValue, 0) AS _VALUE, LAG(_VALUE + ISNULL(OverflowValue, 0), 1, 0) OVER (PARTITION BY _NAME, _NUMERICID ORDER BY _TIMESTAMP ASC) AS Previous_Value
+  FROM (
+    SELECT KEPWARE_LINZ._NAME, KEPWARE_LINZ._NUMERICID, KEPWARE_LINZ._TIMESTAMP, meter.meter_type_name, KEPWARE_LINZ._VALUE,
+    OverflowValue = (
+      SELECT TOP 1 KepOverflow._VALUE * OverflowMeter.conversion_factor
+      FROM KEPWARE_LINZ AS KepOverflow
+      JOIN Puls_Test.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
+      WHERE KepOverflow._NUMERICID = meter.helper_meter_id
+        AND KepOverflow._TIMESTAMP <= KEPWARE_LINZ._TIMESTAMP
+      ORDER BY KepOverflow._TIMESTAMP DESC
+    )
+    FROM KEPWARE_LINZ
+    JOIN Puls_Test.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
+    WHERE meter.meter_type_name != N'OVERFLOW'
+  ) AS CalcMeterData
 ) AS IntervalData
 GROUP BY _NAME, _NUMERICID, Timestamp_Interval_15
 ORDER BY Timestamp_Interval_15 DESC;
@@ -26,8 +45,21 @@ ORDER BY Timestamp_Interval_15 DESC;
 SELECT _NAME, _NUMERICID, Timestamp_Interval_1, SUM(TRY_CAST(_VALUE AS decimal) - TRY_CAST(Previous_Value AS decimal)) AS Value_Change_in_Interval
 INTO #Kepware_Interval_Archive_1m
 FROM (
-  SELECT _NAME, _NUMERICID, DATEADD(minute, CEILING((DATEDIFF(minute, N'1900-01-01 00:00:00.000', _TIMESTAMP) + 1) / CAST(1 AS decimal)) * 1, N'1900-01-01 00:00:00.000') AS Timestamp_Interval_1, _VALUE, LAG(_VALUE, 1, 0) OVER (PARTITION BY _NAME, _NUMERICID ORDER BY _TIMESTAMP ASC) AS Previous_Value
-  FROM KEPWARE_LINZ
+  SELECT _NAME, _NUMERICID, DATEADD(minute, CEILING((DATEDIFF(minute, N'1900-01-01 00:00:00.000', _TIMESTAMP) + 1) / CAST(1 AS decimal)) * 1, N'1900-01-01 00:00:00.000') AS Timestamp_Interval_1, _VALUE + ISNULL(OverflowValue, 0) AS _VALUE, LAG(_VALUE + ISNULL(OverflowValue, 0), 1, 0) OVER (PARTITION BY _NAME, _NUMERICID ORDER BY _TIMESTAMP ASC) AS Previous_Value
+  FROM (
+    SELECT KEPWARE_LINZ._NAME, KEPWARE_LINZ._NUMERICID, KEPWARE_LINZ._TIMESTAMP, meter.meter_type_name, KEPWARE_LINZ._VALUE,
+    OverflowValue = (
+      SELECT TOP 1 KepOverflow._VALUE * OverflowMeter.conversion_factor
+      FROM KEPWARE_LINZ AS KepOverflow
+      JOIN Puls_Test.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
+      WHERE KepOverflow._NUMERICID = meter.helper_meter_id
+        AND KepOverflow._TIMESTAMP <= KEPWARE_LINZ._TIMESTAMP
+      ORDER BY KepOverflow._TIMESTAMP DESC
+    )
+    FROM KEPWARE_LINZ
+    JOIN Puls_Test.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
+    WHERE meter.meter_type_name != N'OVERFLOW'
+  ) AS CalcMeterData
 ) AS IntervalData
 GROUP BY _NAME, _NUMERICID, Timestamp_Interval_1
 ORDER BY Timestamp_Interval_1 DESC;
