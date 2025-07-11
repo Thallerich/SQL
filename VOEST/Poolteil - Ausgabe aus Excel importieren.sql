@@ -92,7 +92,7 @@ BEGIN TRY
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
     INSERT INTO TraeArti (VsaID, TraegerID, ArtGroeID, KdArtiID, AnlageUserID_, UserID_)
-    SELECT DISTINCT _VOESTStudentenEntnahme.VsaID, _VOESTStudentenEntnahme.TraegerID, _VOESTStudentenEntnahme.ArtGroeID, _VOESTStudentenEntnahme.KdArtiID, @userid, @userid
+    SELECT DISTINCT _VOESTStudentenEntnahme.VsaID, _VOESTStudentenEntnahme.TraegerID, _VOESTStudentenEntnahme.ArtGroeID, _VOESTStudentenEntnahme.KdArtiID , @userid, @userid
     FROM _VOESTStudentenEntnahme
     WHERE _VOESTStudentenEntnahme.TraeArtiID IS NULL
       AND _VOESTStudentenEntnahme.VsaID IS NOT NULL
@@ -174,5 +174,17 @@ GO
 SELECT *
 FROM _VOESTStudentenEntnahme
 WHERE EinzHistID IS NULL OR TraegerID IS NULL OR TraeArtiID IS NULL;
+
+GO
+
+SELECT Barcode
+FROM _VOESTStudentenEntnahme
+WHERE EinzHistID IS NOT NULL
+  AND TraegerID IS NOT NULL
+  AND TraeArtiID IS NOT NULL
+  AND KdArtiID IS NOT NULL
+  AND VsaID IS NOT NULL
+  AND ArtGroeID IS NOT NULL
+  AND KdArtiID IS NOT NULL;
 
 GO
