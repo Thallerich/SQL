@@ -22,7 +22,7 @@ CREATE TABLE #Schwundteile (
   ArtikelNr nvarchar(15) COLLATE Latin1_General_CS_AS,
   Artikelbezeichnung nvarchar(60) COLLATE Latin1_General_CS_AS,
   Größe nvarchar(12) COLLATE Latin1_General_CS_AS,
-  Variante nvarchar(2) COLLATE Latin1_General_CS_AS,
+  Variante nvarchar(4) COLLATE Latin1_General_CS_AS,
   Barcode varchar(33) COLLATE Latin1_General_CS_AS,
   Chipcode varchar(33) COLLATE Latin1_General_CS_AS,
   [aktueller Status] nvarchar(40) COLLATE Latin1_General_CS_AS,
