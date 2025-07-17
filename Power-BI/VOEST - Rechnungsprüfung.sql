@@ -58,7 +58,8 @@ SELECT Artikel.ID AS ArtikelID,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(TraeArch.Menge) AS Menge,
   ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
-  CAST(N'Mietpreis' AS nchar(20)) AS Art
+  CAST(N'Mietpreis' AS nchar(20)) AS Art,
+  CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit) AS Poolentnahme
 INTO #TmpVOESTRechnung
 FROM TraeArch
 JOIN AbtKdArW ON TraeArch.AbtKdArWID = AbtKdArW.ID
@@ -109,11 +110,12 @@ GROUP BY Artikel.ID,
   [Week].BisDat,
   [Week].VonDat,
   AbtKdArW.EPreis,
-  TraeArch.TraeArtiID;
+  TraeArch.TraeArtiID,
+  CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit);
 
 /* Leasing sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art, Poolentnahme)
 SELECT Artikel.ID AS ArtikelID,
   KdBer.BereichID,
   CAST(-1 AS int) AS TraegerID,
@@ -136,7 +138,8 @@ SELECT Artikel.ID AS ArtikelID,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(AbtKdArW.Menge) AS Menge,
   ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
-  N'Mietpreis' AS Art
+  N'Mietpreis' AS Art,
+  CAST(0 AS bit) AS Poolentnahme
 FROM AbtKdArW
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
 JOIN RechPo ON ABtKdArW.RechPoID = RechPo.ID
@@ -175,7 +178,7 @@ GROUP BY Artikel.ID,
 
 /* Bearbeitung BK */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID,VsaNr, VsaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID,VsaNr, VsaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art, Poolentnahme)
 SELECT Artikel.ID AS ArtikelID,
   KdBer.BereichID,
   Traeger.ID AS TraegerID,
@@ -203,7 +206,8 @@ SELECT Artikel.ID AS ArtikelID,
   LsPo.EPreis AS Einzelpreis,
   COUNT(Scans.ID) AS Menge,
   ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten,
-  N'Waschpreis' AS Art
+  N'Waschpreis' AS Art,
+  CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit) AS Poolentnahme
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -252,11 +256,12 @@ GROUP BY Artikel.ID,
   KdArti.VariantBez,
   [Week].Woche,
   LsPo.EPreis,
-  EinzHist.Barcode;
+  EinzHist.Barcode,
+  CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit);
 
 /* Bearbeitung sonstige */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID,VsaNr, VSaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID,VsaNr, VSaBez, Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, ArtikelNr, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art, Poolentnahme)
 SELECT Artikel.ID AS ArtikelID,
   KdBer.BereichID,
   CAST(-1 AS int) AS TraegerID,
@@ -279,7 +284,8 @@ SELECT Artikel.ID AS ArtikelID,
   LsPo.EPreis AS Einzelpreis,
   SUM(LsPo.Menge) AS Menge,
   ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten,
-  N'Waschpreis' AS Art
+  N'Waschpreis' AS Art,
+  CAST(0 AS bit) AS Poolentnahme
 FROM LsPo
 JOIN RechPo ON LsPo.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -319,7 +325,7 @@ GROUP BY Artikel.ID,
 
 /* Restwert-fakturierte Teile */
 
-INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaBez,Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art)
+INSERT INTO #TmpVOESTRechnung (ArtikelID, BereichID, TraegerID, RechPoID, RechNr, RechDat, KdNr, Kunde, VsaID, VsaNr, VsaBez,Abteilung, Bereich, AbteilID, Kostenstelle, Kostenstellenbezeichnung, TraegerNr, PersNr, Nachname, Vorname, ArtikelNr, Größe, Variante, Abrechnungswoche, Einzelpreis, Menge, Kosten, Art, Poolentnahme)
 SELECT Artikel.ID AS ArtikelID,
   KdBer.BereichID,
   Traeger.ID AS TraegerID,
@@ -351,7 +357,8 @@ SELECT Artikel.ID AS ArtikelID,
     CASE
       WHEN RwArt.ID <> -1 THEN N'Verkauf und Restwert' --IN (2,6, 7, 8) 
       ELSE CONCAT('XXXXXX_',RwArt.ID)
-    END
+    END,
+  CAST(0 AS bit) AS Poolentnahme
 FROM TeilSoFa
 JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
@@ -381,7 +388,7 @@ WITH VOESTProduktbereich AS (
       END
   FROM Bereich
 )
-SELECT #TmpVOESTRechnung.RechNr, #TmpVOESTRechnung.RechDat AS Rechnungsdatum, #TmpVOESTRechnung.KdNr, #TmpVOESTRechnung.Kunde, #TmpVOESTRechnung.VsaID,#TmpVOESTRechnung.Vsanr, #TmpVOESTRechnung.VsaBez ,#TmpVOESTRechnung.Abteilung, #TmpVOESTRechnung.Bereich, #TmpVOESTRechnung.Kostenstelle, #TmpVOESTRechnung.Kostenstellenbezeichnung, #TmpVOESTRechnung.TraegerNr AS TrägerNr, #TmpVOESTRechnung.TraegerID, #TmpVOESTRechnung.PersNr AS Personalnummer, #TmpVOESTRechnung.Nachname, #TmpVOESTRechnung.Vorname, #TmpVOESTRechnung.ArtikelNr, VOESTProduktbereich.Bereichsbezeichnung AS Artikelbereich, #TmpVOESTRechnung.Variante AS Verrechnungsart, #TmpVOESTRechnung.Abrechnungswoche, #TmpVOESTRechnung.Kosten, #TmpVOESTRechnung.Menge, #TmpVOESTRechnung.Art
+SELECT #TmpVOESTRechnung.RechNr, #TmpVOESTRechnung.RechDat AS Rechnungsdatum, #TmpVOESTRechnung.KdNr, #TmpVOESTRechnung.Kunde, #TmpVOESTRechnung.VsaID,#TmpVOESTRechnung.Vsanr, #TmpVOESTRechnung.VsaBez ,#TmpVOESTRechnung.Abteilung, #TmpVOESTRechnung.Bereich, #TmpVOESTRechnung.Kostenstelle, #TmpVOESTRechnung.Kostenstellenbezeichnung, #TmpVOESTRechnung.TraegerNr AS TrägerNr, #TmpVOESTRechnung.TraegerID, #TmpVOESTRechnung.PersNr AS Personalnummer, #TmpVOESTRechnung.Nachname, #TmpVOESTRechnung.Vorname, #TmpVOESTRechnung.ArtikelNr, VOESTProduktbereich.Bereichsbezeichnung AS Artikelbereich, #TmpVOESTRechnung.Variante AS Verrechnungsart, #TmpVOESTRechnung.Abrechnungswoche, #TmpVOESTRechnung.Kosten, #TmpVOESTRechnung.Menge, #TmpVOESTRechnung.Art, #TmpVOESTRechnung.Poolentnahme
 FROM #TmpVOESTRechnung
 JOIN VOESTProduktbereich ON #TmpVOESTRechnung.BereichID = VOESTProduktbereich.BereichID
 ORDER BY RechNr, KdNr, VsaID, TrägerNr, ArtikelNr;
