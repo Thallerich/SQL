@@ -15,7 +15,9 @@ JOIN Abteil ON Abteil.KundenID = Kunden.ID AND TRY_CAST(Abteil.Abteilung AS int)
 
 GO
 
-UPDATE Traeger SET PersNr = #TraegerUpdate.PersNr, AbteilID = #TraegerUpdate.AbteilID
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = UPPER(REPLACE(ORIGINAL_LOGIN(), N'SAL\', N'')));
+
+UPDATE Traeger SET PersNr = #TraegerUpdate.PersNr, AbteilID = #TraegerUpdate.AbteilID, UserID_ = @userid
 FROM #TraegerUpdate
 WHERE #TraegerUpdate.TraegerID = Traeger.ID;
 
