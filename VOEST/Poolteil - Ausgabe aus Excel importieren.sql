@@ -40,7 +40,7 @@ BEGIN TRY
     JOIN Traeger ON Traeger.VsaID = Vsa.ID 
     WHERE Kunden.KdNr = _VOESTStudentenEntnahme.KdNr
       AND Vsa.VsaNr = _VOESTStudentenEntnahme.VsaNr
-      AND TRY_CAST(Traeger.Traeger AS int) = TRY_CAST(_VOESTStudentenEntnahme.TNr AS int);
+      AND Traeger.Traeger = _VOESTStudentenEntnahme.TNr;
 
     UPDATE _VOESTStudentenEntnahme SET KdArtiID = KdArti.ID
     FROM KdArti
