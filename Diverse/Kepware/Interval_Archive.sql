@@ -1,8 +1,8 @@
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Kepware - Script to archive measurements as consumption in an interval of 15 minutes and 1 minute                         ++ */
 /* ++                                                                                                                           ++ */
-/* ++ Author: Stefan THALLER - 2025-07-11                                                                                       ++ */
-/* ++ Version: 1.1                                                                                                              ++ */
+/* ++ Author: Stefan THALLER - 2025-07-23                                                                                       ++ */
+/* ++ Version: 1.2                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 /*
@@ -37,6 +37,7 @@ FROM (
     FROM KEPWARE_LINZ
     JOIN Puls_Test.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
     WHERE meter.meter_type_name != N'OVERFLOW'
+      AND KEPWARE_LINZ._VALUE != 0
   ) AS CalcMeterData
 ) AS IntervalData
 GROUP BY _NAME, _NUMERICID, Timestamp_Interval_15
@@ -54,6 +55,7 @@ FROM (
       JOIN Puls_Test.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
       WHERE KepOverflow._NUMERICID = meter.helper_meter_id
         AND KepOverflow._TIMESTAMP <= KEPWARE_LINZ._TIMESTAMP
+        AND KEPWARE_LINZ._VALUE != 0
       ORDER BY KepOverflow._TIMESTAMP DESC
     )
     FROM KEPWARE_LINZ
