@@ -14,17 +14,21 @@ DECLARE @Kunden TABLE (
 );
 
 DECLARE @UserID int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
-DECLARE @PeKoID int = 817;
+DECLARE @PeKoID int = 1578;
 
-DECLARE @AnkuendDatum date, @AnkuendMitarbeiID int;
+DECLARE @AnkuendDatum date, @AnkuendMitarbeiID int, @PeKoBez nvarchar(40);
 
 INSERT INTO @Kunden (KundenID)
-SELECT DISTINCT Vertrag.KundenID
+SELECT DISTINCT Kunden.ID
 FROM PePo
 JOIN Vertrag ON PePo.VertragID = Vertrag.ID
-WHERE PePo.PeKoID = @PeKoID;
+JOIN Kunden ON Vertrag.KundenID = Kunden.ID
+JOIN Firma ON Kunden.FirmaID = Firma.ID
+WHERE PePo.PeKoID = @PeKoID
+  AND PePo.PeProzent != 0
+  AND Firma.SuchCode != N'FA14';
 
-SELECT @AnkuendDatum = PeKo.AnkuendDatum, @AnkuendMitarbeiID = PeKo.AnkuendMitarbeiID
+SELECT @AnkuendDatum = PeKo.AnkuendDatum, @AnkuendMitarbeiID = PeKo.AnkuendMitarbeiID, @PeKoBez = PeKo.Bez
 FROM PeKo
 WHERE ID = @PeKoID;
 
@@ -48,6 +52,7 @@ BEGIN TRY
     JOIN LastPrArchiv ON LastPrArchiv.KdArtiID = KdArti.ID
     JOIN PrArchiv ON LastPrArchiv.PrArchivID = PrArchiv.ID
     WHERE PePo.PeKoID = @PeKoID
+      AND KdArti.KundenID IN (SELECT KundenID FROM @Kunden)
       AND KdArti.LeasPreisPrListKdArtiID = -1
       AND KdArti.WaschPreisPrListKdArtiID = -1
       AND KdArti.SondPreisPrListKdArtiID = -1
@@ -65,7 +70,7 @@ BEGIN TRY
     );
 
     INSERT INTO History (TableName, TableID, HistKatID, HistKanID, Zeitpunkt, MitarbeiID, VorgangsNr, Memo, [Status],  ErfasstDurchMitarbeiID, ErledigtDurchMitarbeiID, VertragID, EMailMsgID, Betreff, HistRichID, HistVorgID, ErfasstAm, ErledigtAm, AnlageUserID_, UserID_)
-    SELECT N'KUNDEN' AS TableName, PeHistory.KundenID, 10125 AS HistKatID, 4 AS HistKanID, GETDATE() AS Zeitpunkt, @UserID AS MitarbeiID, NEXT VALUE FOR NEXTID_HISTORYVORGANG AS VorgangsNr, N'Preiserhöhung für Vertrag zurückgenommen, Preiserhöhung: CO2 Erhöhung 1,15% und 1,42%, Vertrag: ' + Vertrag.VertragNr AS Memo, N'S' AS [Status], @UserID AS ErfasstDurchMitarbeiID, @UserID AS ErledigtDurchMitarbeiID, Vertrag.ID AS VertragID, NULL AS EMailMsgID, N'Rücknahme Preiserhöhung' AS Betreff, 3 AS HistRichID, 1 AS HistVorgID, GETDATE() AS ErfasstAm, GETDATE() AS ErledigtAm, @UserID AS AnlageUserID_, @UserID AS UserID_
+    SELECT N'KUNDEN' AS TableName, PeHistory.KundenID, 10125 AS HistKatID, 4 AS HistKanID, GETDATE() AS Zeitpunkt, @UserID AS MitarbeiID, NEXT VALUE FOR NEXTID_HISTORYVORGANG AS VorgangsNr, N'Preiserhöhung für Vertrag zurückgenommen, Preiserhöhung: ' + @PeKoBez + N', Vertrag: ' + Vertrag.VertragNr AS Memo, N'S' AS [Status], @UserID AS ErfasstDurchMitarbeiID, @UserID AS ErledigtDurchMitarbeiID, Vertrag.ID AS VertragID, NULL AS EMailMsgID, N'Rücknahme Preiserhöhung' AS Betreff, 3 AS HistRichID, 1 AS HistVorgID, GETDATE() AS ErfasstAm, GETDATE() AS ErledigtAm, @UserID AS AnlageUserID_, @UserID AS UserID_
     FROM (
       SELECT DISTINCT KdArti.KundenID, KdBer.VertragID
       FROM @PeBack PeBack
