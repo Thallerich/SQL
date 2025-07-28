@@ -40,10 +40,15 @@ DECLARE @pivotcols nvarchar(max);
 DECLARE @pivotcolshead nvarchar(max);
 DECLARE @pivotsql nvarchar(max);
 
-SET @pivotcols = STUFF((SELECT ', [' + CAST(AfaWochen AS nvarchar) + ']' FROM #TmpMultiAfa GROUP BY AfaWochen ORDER BY AfaWochen FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
-SET @pivotcolshead = STUFF((SELECT ', [' + CAST(AfaWochen AS nvarchar) + '] AS [AfaWochen ' + CAST(AfaWochen AS nvarchar) + N']' FROM #TmpMultiAfa GROUP BY AfaWochen ORDER BY AfaWochen FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
-SET @pivotsql = N'SELECT KdNr, Kunde, ' + @pivotcolshead + N' FROM #TmpMultiAfa AS PivotData PIVOT (SUM(KdArtiAnz) FOR AfaWochen IN (' + @pivotcols + N')) AS p ORDER BY KdNr ASC;';
-
-PRINT @pivotsql;
+IF NOT EXISTS (SELECT * FROM #TmpMultiAfa)
+BEGIN
+  SET @pivotsql = N'SELECT N''Keine Abweichungen gefunden!'' AS Meldung;';
+END
+ELSE
+BEGIN
+  SET @pivotcols = STUFF((SELECT ', [' + CAST(AfaWochen AS nvarchar) + ']' FROM #TmpMultiAfa GROUP BY AfaWochen ORDER BY AfaWochen FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
+  SET @pivotcolshead = STUFF((SELECT ', [' + CAST(AfaWochen AS nvarchar) + '] AS [AfaWochen ' + CAST(AfaWochen AS nvarchar) + N']' FROM #TmpMultiAfa GROUP BY AfaWochen ORDER BY AfaWochen FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'),1,1,'');
+  SET @pivotsql = N'SELECT KdNr, Kunde, ' + @pivotcolshead + N' FROM #TmpMultiAfa AS PivotData PIVOT (SUM(KdArtiAnz) FOR AfaWochen IN (' + @pivotcols + N')) AS p ORDER BY KdNr ASC;';
+END;
 
 EXEC sp_executesql @pivotsql;
