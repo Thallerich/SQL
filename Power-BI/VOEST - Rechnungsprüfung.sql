@@ -57,7 +57,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(TraeArch.Menge) AS Menge,
-  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
+  ROUND(SUM(TraeArch.Menge) * AbtKdArW.EPreis, Wae.NK) AS Kosten,
   CAST(N'Mietpreis' AS nchar(20)) AS Art,
   CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit) AS Poolentnahme
 INTO #TmpVOESTRechnung
@@ -71,6 +71,7 @@ JOIN TraeArti ON TraeArch.TraeArtiID = TraeArti.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON TraeArch.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Wae ON Kunden.RechWaeID = Wae.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
@@ -110,6 +111,7 @@ GROUP BY Artikel.ID,
   [Week].BisDat,
   [Week].VonDat,
   AbtKdArW.EPreis,
+  Wae.NK,
   TraeArch.TraeArtiID,
   CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit);
 
@@ -137,7 +139,7 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   AbtKdArW.EPreis AS Einzelpreis,
   SUM(AbtKdArW.Menge) AS Menge,
-  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, 2) AS Kosten,
+  ROUND(SUM(AbtKdArW.Menge) * AbtKdArW.EPreis, Wae.NK) AS Kosten,
   N'Mietpreis' AS Art,
   CAST(0 AS bit) AS Poolentnahme
 FROM AbtKdArW
@@ -146,6 +148,7 @@ JOIN RechPo ON ABtKdArW.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Vsa ON AbtKdArW.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Wae ON Kunden.RechWaeID = Wae.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
@@ -174,7 +177,8 @@ GROUP BY Artikel.ID,
   Artikel.ArtikelNr,
   KdArti.VariantBez,
   Wochen.Woche,
-  AbtKdArW.EPreis;
+  AbtKdArW.EPreis,
+  Wae.NK;
 
 /* Bearbeitung BK */
 
@@ -205,7 +209,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   COUNT(Scans.ID) AS Menge,
-  ROUND(COUNT(Scans.ID) * LsPo.EPreis, 2) AS Kosten,
+  ROUND(COUNT(Scans.ID) * LsPo.EPreis, Wae.NK) AS Kosten,
   N'Waschpreis' AS Art,
   CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit) AS Poolentnahme
 FROM LsPo
@@ -216,6 +220,7 @@ JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
 JOIN Wochen ON [Week].Woche = Wochen.Woche
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Wae ON Kunden.RechWaeID = Wae.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
@@ -257,6 +262,7 @@ GROUP BY Artikel.ID,
   [Week].Woche,
   LsPo.EPreis,
   EinzHist.Barcode,
+  Wae.NK,
   CAST(IIF(VaterVsa.ID IS NOT NULL AND Vsa.VsaNr IN (902, 903), 1, 0) AS bit);
 
 /* Bearbeitung sonstige */
@@ -283,7 +289,7 @@ SELECT Artikel.ID AS ArtikelID,
   [Week].Woche AS Abrechnungswoche,
   LsPo.EPreis AS Einzelpreis,
   SUM(LsPo.Menge) AS Menge,
-  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, 2) AS Kosten,
+  ROUND(SUM(LsPo.Menge) * LsPo.EPreis, Wae.NK) AS Kosten,
   N'Waschpreis' AS Art,
   CAST(0 AS bit) AS Poolentnahme
 FROM LsPo
@@ -293,6 +299,7 @@ JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Wae ON Kunden.RechWaeID = Wae.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN KdArti ON RechPo.KdArtiID = KdArti.ID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
@@ -321,7 +328,8 @@ GROUP BY Artikel.ID,
   Artikel.ArtikelNr,
   KdArti.VariantBez,
   [Week].Woche,
-  LsPo.EPreis;
+  LsPo.EPreis,
+  Wae.NK;
 
 /* Restwert-fakturierte Teile */
 
@@ -352,7 +360,7 @@ SELECT Artikel.ID AS ArtikelID,
   Wochen.Woche AS Abrechnungswoche,
   TeilSoFa.EPreis AS Einzelpreis,
   RechPo.Menge,
-  ROUND(RechPo.Menge * TeilSoFa.EPreis, 2) AS Kosten,
+  ROUND(RechPo.Menge * TeilSoFa.EPreis, Wae.NK) AS Kosten,
   Art = 
     CASE
       WHEN RwArt.ID <> -1 THEN N'Verkauf und Restwert' --IN (2,6, 7, 8) 
@@ -372,6 +380,7 @@ JOIN ArtGroe ON EinzHist.ArtGroeID = ArtGroe.ID
 JOIN Traeger ON TraeArti.TraegerID = Traeger.ID
 JOIN Vsa ON RechPo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN Wae ON Kunden.RechWaeID = Wae.ID
 JOIN Abteil ON RechPo.AbteilID = Abteil.ID
 JOIN RwArt ON TeilSoFa.RwArtID = RwArt.ID
 WHERE RechKo.ID IN (SELECT RechKoID FROM #RechKo);
