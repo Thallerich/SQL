@@ -27,6 +27,8 @@ JOIN PflegTag ON PflegTag.AbteilID = Abteil.ID AND PflegTag.Monat = CAST(DATEPAR
 WHERE Kunden.ID = $ID$
   AND LsKo.Datum >= $STARTDATE$
   AND LsKo.Datum <= $ENDDATE$
+  AND ArtGru.ID IN ($3$)
+  AND Artikel.ProdHierID IN ($4$)
   AND PflegTag.Pflegetage != 0
 GROUP BY Abteil.Abteilung, Abteil.Bez, ArtGru.ArtGruBez$LAN$, PflegTag.Monat, PflegTag.Pflegetage, Wae.NK, Wae.ID;
 
@@ -34,45 +36,54 @@ GROUP BY Abteil.Abteilung, Abteil.Bez, ArtGru.ArtGruBez$LAN$, PflegTag.Monat, Pf
 
 DECLARE @pivotcols1 nvarchar(max), @pivotcols2 nvarchar(max), @pivotcols3 nvarchar(max), @pivotcols4 nvarchar(max), @pivotcols5 nvarchar(max), @pivotcolshead nvarchar(max), @pivotsql nvarchar(max);
 
-SET @pivotcolshead = STUFF((SELECT DISTINCT N', SUM(ISNULL([' + Monat + N'], 0)) AS [Liefermenge ' + Monat + N'], SUM(ISNULL([' + Monat + N'_2], 0)) AS [Umsatz ' + Monat + N'], WaeID AS [Umsatz ' + Monat + N'_WaeID], SUM(ISNULL([' + Monat + N'_3], 0)) AS [Pflegetage ' + Monat + N'], SUM(ISNULL([' + Monat + N'_4], 0)) AS [Liefermenge je Pflegetag ' + Monat + N'], SUM(ISNULL([' + Monat + N'_5], 0)) AS [Umsatz je Pflegetag ' + Monat + N'], WaeID AS [Umsatz je Pflegetag ' + Monat + N'_WaeID]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+IF (NOT EXISTS (SELECT 1 FROM #Pflegedaten))
+BEGIN
+  SET @pivotsql = N'SELECT N''Keine Daten vorhanden!'' AS Fehlermeldung;'
+END
+ELSE
+BEGIN
 
-SET @pivotcols1 = STUFF((SELECT DISTINCT N', [' + Monat + N']' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
-SET @pivotcols2 = STUFF((SELECT DISTINCT N', [' + Monat + N'_2]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
-SET @pivotcols3 = STUFF((SELECT DISTINCT N', [' + Monat + N'_3]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
-SET @pivotcols4 = STUFF((SELECT DISTINCT N', [' + Monat + N'_4]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
-SET @pivotcols5 = STUFF((SELECT DISTINCT N', [' + Monat + N'_5]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+  SET @pivotcolshead = STUFF((SELECT DISTINCT N', SUM(ISNULL([' + Monat + N'], 0)) AS [Liefermenge ' + Monat + N'], SUM(ISNULL([' + Monat + N'_2], 0)) AS [Umsatz ' + Monat + N'], WaeID AS [Umsatz ' + Monat + N'_WaeID], SUM(ISNULL([' + Monat + N'_3], 0)) AS [Pflegetage ' + Monat + N'], SUM(ISNULL([' + Monat + N'_4], 0)) AS [Liefermenge je Pflegetag ' + Monat + N'], SUM(ISNULL([' + Monat + N'_5], 0)) AS [Umsatz je Pflegetag ' + Monat + N'], WaeID AS [Umsatz je Pflegetag ' + Monat + N'_WaeID]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
 
-SET @pivotsql = N'
-  SELECT KoSt, Kostenstelle, Artikelgruppe,' + @pivotcolshead + N'
-  FROM (
-    SELECT #Pflegedaten.*,
-      #Pflegedaten.Monat + N''_2'' AS Monat2,
-      #Pflegedaten.Monat + N''_3'' AS Monat3,
-      #Pflegedaten.Monat + N''_4'' AS Monat4,
-      #Pflegedaten.Monat + N''_5'' AS Monat5
-    FROM #Pflegedaten
-  ) AS p
-  PIVOT (
-    SUM(LiefermengeMonat)
-    FOR Monat IN (' + @pivotcols1 + N')
-  ) AS pvt
-  PIVOT (
-    SUM(UmsatzMonat)
-    FOR Monat2 IN (' + @pivotcols2 + N')
-  ) AS pvt2
-  PIVOT (
-    SUM(Pflegetage)
-    FOR Monat3 IN (' + @pivotcols3 + N')
-  ) AS pvt3
-  PIVOT (
-    SUM(LiefermengePflegetag)
-    FOR Monat4 IN (' + @pivotcols4 + N')
-  ) AS pvt4
-  PIVOT (
-    SUM(UmsatzPflegetag)
-    FOR Monat5 IN (' + @pivotcols5 + N')
-  ) AS pvt5
-  GROUP BY KoSt, Kostenstelle, Artikelgruppe, WaeID;
-';
+  SET @pivotcols1 = STUFF((SELECT DISTINCT N', [' + Monat + N']' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+  SET @pivotcols2 = STUFF((SELECT DISTINCT N', [' + Monat + N'_2]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+  SET @pivotcols3 = STUFF((SELECT DISTINCT N', [' + Monat + N'_3]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+  SET @pivotcols4 = STUFF((SELECT DISTINCT N', [' + Monat + N'_4]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+  SET @pivotcols5 = STUFF((SELECT DISTINCT N', [' + Monat + N'_5]' FROM #Pflegedaten ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
+
+  SET @pivotsql = N'
+    SELECT KoSt, Kostenstelle, Artikelgruppe,' + @pivotcolshead + N'
+    FROM (
+      SELECT #Pflegedaten.*,
+        #Pflegedaten.Monat + N''_2'' AS Monat2,
+        #Pflegedaten.Monat + N''_3'' AS Monat3,
+        #Pflegedaten.Monat + N''_4'' AS Monat4,
+        #Pflegedaten.Monat + N''_5'' AS Monat5
+      FROM #Pflegedaten
+    ) AS p
+    PIVOT (
+      SUM(LiefermengeMonat)
+      FOR Monat IN (' + @pivotcols1 + N')
+    ) AS pvt
+    PIVOT (
+      SUM(UmsatzMonat)
+      FOR Monat2 IN (' + @pivotcols2 + N')
+    ) AS pvt2
+    PIVOT (
+      SUM(Pflegetage)
+      FOR Monat3 IN (' + @pivotcols3 + N')
+    ) AS pvt3
+    PIVOT (
+      SUM(LiefermengePflegetag)
+      FOR Monat4 IN (' + @pivotcols4 + N')
+    ) AS pvt4
+    PIVOT (
+      SUM(UmsatzPflegetag)
+      FOR Monat5 IN (' + @pivotcols5 + N')
+    ) AS pvt5
+    GROUP BY KoSt, Kostenstelle, Artikelgruppe, WaeID;
+  ';
+
+END;
 
 EXEC sp_executesql @pivotsql;
