@@ -103,6 +103,7 @@ SELECT DISTINCT
   Vsa.Bez AS [VSA-Bezeichnung],
   Vsa.Strasse,
   ISNULL(Vsa.PLZ, N'') + ' ' + ISNULL(Vsa.Ort, N'') AS PLZ,
+  StandKon.StandKonBez AS [Standort-Konfiguration],
   [Liefertour Abholung Montag] = 
     CASE Montagstour.LiefWochentag
       WHEN 1 THEN N'MO'
@@ -234,6 +235,7 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN VsaBer ON VsaBer.VsaID = Vsa.ID
 JOIN KdBer ON VsaBer.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
+JOIN StandKon ON Vsa.StandKonID = StandKon.ID
 LEFT OUTER JOIN (
   SELECT VsaTour.VsaID, VsaTour.KdBerID, Touren.Tour, Touren.Bez AS TourenBez, LiefTouren.Wochentag AS LiefWochentag, LiefTouren.Tour AS LiefTour, LiefTouren.Bez AS LiefTourenBez, LiefVsaTour.Folge
   FROM VsaTour
