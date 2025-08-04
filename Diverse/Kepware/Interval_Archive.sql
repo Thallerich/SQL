@@ -2,7 +2,7 @@
 /* ++ Kepware - Script to archive measurements as consumption in an interval of 15 minutes and 1 minute                         ++ */
 /* ++                                                                                                                           ++ */
 /* ++ Author: Stefan THALLER - 2025-07-23                                                                                       ++ */
-/* ++ Version: 1.2                                                                                                              ++ */
+/* ++ Version: 1.3                                                                                                              ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 /*
@@ -29,15 +29,16 @@ FROM (
     OverflowValue = (
       SELECT TOP 1 KepOverflow._VALUE * OverflowMeter.conversion_factor
       FROM KEPWARE_LINZ AS KepOverflow
-      JOIN Puls_Test.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
+      JOIN Puls_Prod.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
       WHERE KepOverflow._NUMERICID = meter.helper_meter_id
         AND KepOverflow._TIMESTAMP <= KEPWARE_LINZ._TIMESTAMP
       ORDER BY KepOverflow._TIMESTAMP DESC
     )
     FROM KEPWARE_LINZ
-    JOIN Puls_Test.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
+    JOIN Puls_Prod.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
     WHERE meter.meter_type_name != N'OVERFLOW'
-      AND KEPWARE_LINZ._VALUE != 0
+      AND TRY_CAST(KEPWARE_LINZ._VALUE AS bigint) != 0
+      AND TRY_CAST(KEPWARE_LINZ._VALUE AS bigint) IS NOT NULL
   ) AS CalcMeterData
 ) AS IntervalData
 GROUP BY _NAME, _NUMERICID, Timestamp_Interval_15
@@ -52,14 +53,15 @@ FROM (
     OverflowValue = (
       SELECT TOP 1 KepOverflow._VALUE * OverflowMeter.conversion_factor
       FROM KEPWARE_LINZ AS KepOverflow
-      JOIN Puls_Test.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
+      JOIN Puls_Prod.dbo.meter AS OverflowMeter ON KepOverflow._NUMERICID = OverflowMeter.id
       WHERE KepOverflow._NUMERICID = meter.helper_meter_id
         AND KepOverflow._TIMESTAMP <= KEPWARE_LINZ._TIMESTAMP
-        AND KEPWARE_LINZ._VALUE != 0
+        AND TRY_CAST(KEPWARE_LINZ._VALUE AS bigint) != 0
+        AND TRY_CAST(KEPWARE_LINZ._VALUE AS bigint) IS NOT NULL
       ORDER BY KepOverflow._TIMESTAMP DESC
     )
     FROM KEPWARE_LINZ
-    JOIN Puls_Test.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
+    JOIN Puls_Prod.dbo.meter ON KEPWARE_LINZ._NUMERICID = meter.id
     WHERE meter.meter_type_name != N'OVERFLOW'
   ) AS CalcMeterData
 ) AS IntervalData
