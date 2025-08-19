@@ -1,9 +1,13 @@
-SELECT N'800' AS TransactionNumber, EinzTeil.Code AS ExternalIdentifier, Contain.Barcode AS BundleID, Kunden.KdNr AS CustomerID
+SELECT
+  TransactionNumber  = N'800',
+  ExternalIdentifier = EinzHist.Barcode,
+  BundleID           = IIF(Scans.ContainID > 0, Contain.Barcode, (SELECT TOP 1 Contain.Barcode FROM LsCont JOIN Contain ON LsCont.ContainID = Contain.ID WHERE LsCont.LsKoID = LsKo.ID ORDER BY LsCont.ID DESC)),
+  CustomerID         = Kunden.KdNr
 FROM Scans
-JOIN EinzTeil ON Scans.EinzTeilID = EinzTeil.ID
+JOIN EinzHist ON Scans.EinzHistID = EinzHist.ID
 JOIN Contain ON Scans.ContainID = Contain.ID
-JOIN AnfPo ON Scans.AnfPoID = AnfPo.ID
-JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
-JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN LsPo ON Scans.LsPoID = LsPo.ID
+JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-WHERE AnfKo.AuftragsNr = N'29820705';
+WHERE LsKo.LsNr = 58412518;
