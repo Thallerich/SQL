@@ -4,8 +4,7 @@ SELECT DISTINCT Kunden.KdNr,
   Vsa.Bez AS [VSA-Bezeichnung],
   VSA.Suchcode,
   ISNULL(VSA.Strasse,'') +' '+ ISNULL(VSA.PLZ,'') + ' ' + ISNULL(VSA.Ort,'')  as Adresse,
-  Bereich.BereichBez$LAN$ AS Produktbereich, 
-  Mitarbei.Name AS [Kundenservice-Mitarbeiter],
+  Bereich.BereichBez$LAN$ AS Produktbereich,
   Touren.Tour, 
   Touren.Bez AS Tourbezeichnung, 
   Wochentag = 
@@ -31,7 +30,6 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN Standort ON Touren.ExpeditionID = Standort.ID
 JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
-JOIN Mitarbei ON KdBer.ServiceID = Mitarbei.ID
 WHERE VsaTour.ID > 0
 AND VsaTour.VsaID > 0
 AND Kunden.Status = N'A'
