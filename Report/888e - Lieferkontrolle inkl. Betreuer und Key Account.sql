@@ -11,9 +11,11 @@ JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
 JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
 JOIN KdBer ON KdArti.KdBerID = KdBer.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN LsKo ON AnfKo.LsKoID = LsKo.ID
+LEFT JOIN LsPo ON LsPo.LsKoID = LsKo.ID AND AnfPo.KdArtiID = LsPo.KdArtiID AND AnfPo.ArtGroeID = LsPo.ArtGroeID AND AnfPo.VpsKoID = LsPo.VpsKoID AND AnfPo.LsKoGruID = LsPo.LsKoGruID AND AnfPo.Kostenlos = LsPo.Kostenlos
 LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
 WHERE AnfKo.Lieferdatum = $1$
-  AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR AnfPo.Geliefert > 0)
+  AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR (AnfPo.Geliefert > 0 OR ISNULL(LsPo.Menge, 0) > 0))
   AND AnfKo.Status >= N'I'
   AND Vsa.StandKonID IN ($3$)
 ;
