@@ -47,7 +47,7 @@ AND Vsa.StandKonID IN ($2$);
 
 SELECT KdNr, Kunde, Expedition
 FROM (
-  SELECT KdNr, Kunde, Expedition, DENSE_RANK() OVER (PARTITION BY KdNr ORDER BY COUNT(*) DESC) AS Rank
+  SELECT KdNr, Kunde, Expedition, ROW_NUMBER() OVER (PARTITION BY KdNr ORDER BY COUNT(*) DESC) AS Rank
   FROM (
     SELECT DISTINCT Kunden.KdNr, 
       Kunden.SuchCode AS Kunde, 
