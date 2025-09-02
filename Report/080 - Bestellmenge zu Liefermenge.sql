@@ -10,6 +10,14 @@ DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE(
 DECLARE @ProductionLocation int = $1$;
 DECLARE @WarehouseLocation int = $2$;
 
+CREATE TABLE #Liefermenge (
+  SGF nvarchar(5),
+  ArtikelID bigint,
+  Monat char(7),
+  Woche char(7),
+  Liefermenge numeric(18,4)
+);
+
 SELECT ProduktionID, ArtikelID, SUM(Umlauf) AS Umlauf
 INTO #Umlauf
 FROM (
@@ -103,21 +111,44 @@ FROM (
 ) AS x
 GROUP BY ProduktionID, ArtikelID;
 
-SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
-INTO #Liefermenge
-FROM LsPo
-JOIN LsKo ON LsPo.LsKoID = LsKo.ID
-JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
-JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
-JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-JOIN Vsa ON LsKo.VsaID = Vsa.ID
-JOIN Kunden ON Vsa.KundenID = Kunden.ID
-JOIN KdGf ON Kunden.KdGfID = KdGf.ID
-WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
-  AND LsKo.ProduktionID = @ProductionLocation
-  AND LsKo.[Status] >= 'O'
-  AND Artikel.BereichID IN ($3$)
-GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+IF $4$ = 0
+BEGIN
+  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Liefermenge)
+  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
+  FROM LsPo
+  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+  JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
+  JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN Vsa ON LsKo.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
+  JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+  WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
+    AND LsKo.ProduktionID = @ProductionLocation
+    AND LsKo.[Status] >= 'O'
+    AND Artikel.BereichID IN ($3$)
+  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+END
+ELSE
+BEGIN
+  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Liefermenge)
+  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
+  FROM LsPo
+  JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+  JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
+  JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN Vsa ON LsKo.VsaID = Vsa.ID
+  JOIN Kunden ON Vsa.KundenID = Kunden.ID
+  JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+  JOIN StandBer ON StandBer.BereichID = KdBer.BereichID AND StandBer.StandKonID = Vsa.StandKonID
+  WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
+    AND StandBer.ProduktionID = @ProductionLocation
+    AND LsKo.[Status] >= 'O'
+    AND Artikel.BereichID IN ($3$)
+  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+END;
 
 SELECT Artikel.ArtikelNr,
   Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
@@ -206,10 +237,11 @@ SELECT Artikel.ArtikelNr,
   [TLM letzte 4 Wochen] = (
     SELECT SUM(TLMMenge.Liefermenge) / 20
     FROM (
-      SELECT TOP 4 #Liefermenge.Liefermenge
+      SELECT TOP 4 #Liefermenge.Woche, SUM(#Liefermenge.Liefermenge) AS Liefermenge
       FROM #Liefermenge
       WHERE #Liefermenge.ArtikelID = Artikel.ID
         AND #Liefermenge.Woche < @CurrentWeek
+      GROUP BY #Liefermenge.Woche
       ORDER BY #Liefermenge.Woche DESC
     ) AS TLMMenge
   ),
