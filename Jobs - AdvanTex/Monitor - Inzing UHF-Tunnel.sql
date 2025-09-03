@@ -1,3 +1,11 @@
+DROP TABLE IF EXISTS #SdcTcpLInz;
+
+SELECT ID, Stamp, TransNr, Chipcode, Message60
+INTO #SdcTcpLInz
+FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL
+WHERE TransNr IN ('608', '609')
+  AND Stamp BETWEEN DATEADD(minute, -62, GETDATE()) AND GETDATE();
+
 SELECT CAST(FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') AS char(19)) AS Auswertungszeitpunkt,
    Ort,
   [Anzahl mit Rückmeldung] = SUM(IIF(Rückmeldung = 1, 1, 0)),
@@ -6,17 +14,17 @@ FROM (
   SELECT SUBSTRING(SdcTcpL.Message60, 12, 4) AS Ort,
     [Rückmeldung] = CAST(IIF(EXISTS(
       SELECT 1
-      FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL AS SdcTcpL2
+      FROM #SdcTcpLInz AS SdcTcpL2
       WHERE SdcTcpL2.TransNr = N'609'
         AND SdcTcpL2.Stamp BETWEEN SdcTcpL.Stamp AND DATEADD(minute, 1, SdcTcpL.Stamp)
         AND SdcTcpL2.Chipcode = SdcTcpL.Chipcode
     ), 1, 0) AS BIT)
-  FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL
+  FROM #SdcTcpLInz AS SdcTcpL
   WHERE SdcTcpL.TransNr = N'608'
     AND SdcTcpL.Stamp > DATEADD(minute, -60, GETDATE())
     AND NOT EXISTS (
       SELECT 1
-      FROM [SVATINZSQL1.sal.co.at].Salesianer_Inzing.dbo.SdcTcpL AS SdcTcpL3
+      FROM #SdcTcpLInz AS SdcTcpL3
       WHERE SdcTcpL3.TransNr IN (N'608', N'609')
         AND SdcTcpL3.Chipcode = SdcTcpL.Chipcode
         AND SdcTcpL3.Stamp BETWEEN DATEADD(minute, -2, SdcTcpL.Stamp) AND SdcTcpL.Stamp
