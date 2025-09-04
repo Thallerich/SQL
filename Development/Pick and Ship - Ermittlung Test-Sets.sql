@@ -11,7 +11,7 @@ WITH Chargenstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'OPCHARGE'
 )
-SELECT TOP 10 Kunden.KdNr, Vsa.VsaNr, Vsa.Bez, OPEtiKo.EtiNr, OPEtiKo.[Status], OPEtiKo.VerfallDatum, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGru.Gruppe, ArtGru.Steril, OPCharge.ChargeNr, OPcharge.ChargeDatum, Chargenstatus.StatusBez AS [Status Steril-Charge]
+SELECT TOP 10 Kunden.KdNr, Vsa.VsaNr, Vsa.Bez, OPEtiKo.EtiNr, OPEtiKo.[Status], OPEtiKo.VerfallDatum, Artikel.ArtikelNr, Artikel.ArtikelBez, ArtGru.Gruppe, ArtGru.Steril, OPCharge.ChargeNr, OPcharge.ChargeDatum, Chargenstatus.StatusBez AS [Status Steril-Charge], OPEtiKo.PackLiefDat
 FROM OPEtiKo
 JOIN Vsa ON OPEtiKo.PackVsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
@@ -21,6 +21,8 @@ JOIN OPCharge ON OPEtiKo.OPChargeID = OPCharge.ID
 JOIN Chargenstatus ON OPCharge.[Status] = Chargenstatus.[Status]
 WHERE OPEtiKo.[Status] = N'M'
   AND DATEADD(day, @OPAblauf * -1, OPEtiKo.VerfallDatum) > CAST(GETDATE() AS date)
-  AND OPEtiKo.PackVsaID > 0;
+  AND OPEtiKo.PackVsaID > 0
+  AND OPEtiKo.PackLiefDat > CAST(GETDATE() AS date)
+ORDER BY OPEtiKo.PackLiefDat ASC;
 
 GO
