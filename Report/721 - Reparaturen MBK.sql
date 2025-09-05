@@ -159,3 +159,30 @@ WHERE RepDaten.TraegerID = Traeger.ID
   AND Produktion.ID IN ($2$)
   AND RepType.ArtiTypeID = 5 -- nur Reparaturen
 ORDER BY Reparaturgrund, Produktion;
+
+/* Pipeline Reparaturen ausständig */
+
+SELECT KdGf.KurzBez AS Geschäftsbereich, Kunden.KdNr, Kunden.SuchCode, Standort.Bez AS Hauptstandort, Vsa.SuchCode AS VsaNr, Vsa.Bez AS Vsa, Traeger.Traeger, Traeger.Vorname, Traeger.Nachname, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, EinzHist.Barcode, ZielNr.ZielNrBez AS [letzter Ort], EinzTeil.LastScanTime AS [letzter Scan], EinzHist.Eingang1 AS [letzter Eingang], EinzHist.Indienst, Standort.Bez AS Produktion, Prod.AusDat AS [Plan-Lieferdatum], Touren.Tour AS Liefertour, Touren.Bez AS [Bezeichnung Liefertour]
+FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
+JOIN ZielNr ON EinzTeil.ZielNrID = ZielNr.ID
+JOIN Traeger ON EinzHist.TraegerID = Traeger.ID
+JOIN Vsa ON Traeger.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdGf ON Kunden.KdGfID = KdGf.ID
+JOIN Standort ON Kunden.StandortID = Standort.ID
+JOIN Artikel ON EinzHist.ArtikelID = Artikel.ID
+JOIN KdArti ON EinzHist.KdArtiID = KdArti.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN StandBer ON KdBer.BereichID = StandBer.BereichID AND Vsa.StandKonID = StandBer.StandKonID
+JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
+JOIN Prod ON Prod.EinzHistID = EinzHist.ID
+JOIN Touren ON Prod.AusTourID = Touren.ID
+WHERE ZielNr.LeitstandSpalte = N'Reparatur'
+  AND EXISTS (
+    SELECT SdcZiel.*
+    FROM SdcZiel
+    WHERE SdcZiel.ZielNrID = ZielNr.ID
+  )
+  AND EinzTeil.LastScanTime BETWEEN $STARTDATE$ AND $ENDDATE$
+  AND Produktion.ID IN ($2$);
