@@ -10,4 +10,8 @@ JOIN LsPo ON Scans.LsPoID = LsPo.ID
 JOIN LsKo ON LsPo.LsKoID = LsKo.ID
 JOIN Vsa ON LsKo.VsaID = Vsa.ID
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
-WHERE LsKo.LsNr = 58412518;
+WHERE Kunden.KdNr = 20156
+  AND Vsa.RentomatID = 108
+  AND LsKo.Datum > CAST(GETDATE() AS date)
+  AND LsKo.[Status] >= 'O'
+  AND LsKo.LsKoArtID != (SELECT ID FROM LsKoArt WHERE Art = 'G');
