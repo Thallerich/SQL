@@ -7,7 +7,6 @@ DROP TABLE IF EXISTS #Liefermenge;
 DROP TABLE IF EXISTS #ResultSet;
 
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
-DECLARE @ProductionLocation int = $1$;
 DECLARE @WarehouseLocation int = $2$;
 
 CREATE TABLE #Liefermenge (
@@ -124,7 +123,7 @@ BEGIN
   JOIN Kunden ON Vsa.KundenID = Kunden.ID
   JOIN KdGf ON Kunden.KdGfID = KdGf.ID
   WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
-    AND LsKo.ProduktionID = @ProductionLocation
+    AND LsKo.ProduktionID IN ($1$)
     AND LsKo.[Status] >= 'O'
     AND Artikel.BereichID IN ($3$)
   GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
@@ -144,7 +143,7 @@ BEGIN
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN StandBer ON StandBer.BereichID = KdBer.BereichID AND StandBer.StandKonID = Vsa.StandKonID
   WHERE LsKo.Datum BETWEEN CAST(DATEADD(month, -12, GETDATE()) AS date) AND CAST(GETDATE() AS date)
-    AND StandBer.ProduktionID = @ProductionLocation
+    AND StandBer.ProduktionID IN ($1$)
     AND LsKo.[Status] >= 'O'
     AND Artikel.BereichID IN ($3$)
   GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
@@ -181,10 +180,10 @@ SELECT Artikel.ArtikelNr,
       AND BPo.LiefMenge < BPo.Menge
   ),
   Umlaufmenge = (
-    SELECT #Umlauf.Umlauf
+    SELECT SUM(#Umlauf.Umlauf) AS Umlauf
     FROM #Umlauf
     WHERE #Umlauf.ArtikelID = Artikel.ID
-      AND #Umlauf.ProduktionID = @ProductionLocation
+      AND #Umlauf.ProduktionID IN ($1$)
   ),
   [EK-Preis] = (
     SELECT TOP 1 ArtiLief.EkPreis
