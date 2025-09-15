@@ -15,7 +15,7 @@ DECLARE @MapTable TABLE (
 );
 
 /* Die folgenden Kundennummern werden von diesem Skript automatisch Schwund-gebucht */
-INSERT INTO @KdNr VALUES (6071), (7240), (9013), (15001), (15007), (18029), (19080), (20000), (20156), (23032), (23037), (23041), (23042), (23044), (24045), (242013), (245347), (246805), (248564), (2710498), (2710499), (10001671), (10001672), (10001770), (10001810), (10001816), (10003247);
+INSERT INTO @KdNr VALUES (6071), (7240), (9013), (15001), (15007), (18029), (19080), (20000), (20156), (23032), (23037), (23041), (23042), (23044), (24045), (242013), (245347), (246805), (248564), (271910), (272783), (2710498), (2710499), (10001671), (10001672), (10001770), (10001810), (10001816), (10003247), (10007031);
 
 DROP TABLE IF EXISTS #PoolSchwund;
 
@@ -42,7 +42,7 @@ JOIN Bereich ON Artikel.BereichID = Bereich.ID
 WHERE Kunden.KdNr IN (SELECT KdNr FROM @KdNr)
   AND EinzTeil.Status = N'Q'
   AND Bereich.Bereich != N'ST'
-  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173)
+  AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 165, 173)
   AND EinzHist.PoolFkt = 1
   AND EinzHist.EinzHistTyp = 1
   AND EinzTeil.LastScanTime < @HalfYearAgo;
