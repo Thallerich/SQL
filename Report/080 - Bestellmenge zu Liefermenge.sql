@@ -234,15 +234,10 @@ SELECT Artikel.ArtikelNr,
     ORDER BY TLMMenge.Liefermenge DESC
   ),
   [TLM letzte 4 Wochen] = (
-    SELECT SUM(TLMMenge.Liefermenge) / 20
-    FROM (
-      SELECT TOP 4 #Liefermenge.Woche, SUM(#Liefermenge.Liefermenge) AS Liefermenge
-      FROM #Liefermenge
-      WHERE #Liefermenge.ArtikelID = Artikel.ID
-        AND #Liefermenge.Woche < @CurrentWeek
-      GROUP BY #Liefermenge.Woche
-      ORDER BY #Liefermenge.Woche DESC
-    ) AS TLMMenge
+    SELECT SUM(#Liefermenge.Liefermenge) / 20
+    FROM #Liefermenge
+    WHERE #Liefermenge.ArtikelID = Artikel.ID
+      AND #Liefermenge.Woche IN (SELECT TOP 4 [Week].Woche COLLATE Latin1_General_CI_AS FROM [Week] WHERE [Week].Woche < @CurrentWeek ORDER BY [Week].Woche DESC)
   ),
   [stärkster Monat] = (
     SELECT TOP 1 #Liefermenge.Monat
