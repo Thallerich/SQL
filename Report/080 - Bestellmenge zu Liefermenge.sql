@@ -158,7 +158,7 @@ SELECT Artikel.ArtikelNr,
     WHERE #Liefermenge.ArtikelID = Artikel.ID
   ),
   [Bestellmenge 12 Monate] = (
-    SELECT SUM(BPo.LiefMenge)
+    SELECT SUM(BPo.Menge)
     FROM BPo
     JOIN BKo ON BPo.BKoID = BKo.ID
     JOIN Lagerart ON BKo.LagerartID = Lagerart.ID
