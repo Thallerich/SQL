@@ -41,6 +41,7 @@ BEGIN
   SELECT Abteil.Abteilung AS KoSt,
     Abteil.Bez AS Kostenstelle,
     IIF(CHARINDEX(N' ', ProdHier.Hierarchie, 1) > 0, LEFT(ProdHier.Hierarchie, CHARINDEX(N' ', ProdHier.Hierarchie, 1)) + N' - ', N'') + ProdHier.ProdHierBez$LAN$ AS Produkthierarchie,
+    ArtGru.ArtGruBez$LAN$ AS Artikelgruppe,
     PflegTag.Monat,
     SUM(LsPo.Menge) AS LiefermengeMonat,
     CAST(ROUND(SUM(LsPo.Menge * LsPo.EPreis * IIF(LsPo.RechPoID != -1, (100 - RechPo.RabattProz) / 100, (100 - KdBer.RabattWasch) / 100)), Wae.NK) AS money) AS UmsatzMonat,
@@ -57,6 +58,7 @@ BEGIN
   JOIN KdArti ON LsPo.KdArtiID = KdArti.ID
   JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
   JOIN ProdHier ON Artikel.ProdHierID = ProdHier.ID
+  JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
   JOIN KdBer ON KdArti.KdBerID = KdBer.ID
   JOIN RechPo ON LsPo.RechPoID = RechPo.ID
   JOIN PflegTag ON PflegTag.AbteilID = Abteil.ID AND PflegTag.Monat = CAST(DATEPART(year, LsKo.Datum) AS nchar(4)) + N'-' + RIGHT('0' + CAST(DATEPART(month, LsKo.Datum) AS nvarchar(2)), 2)
@@ -64,7 +66,7 @@ BEGIN
     AND LsKo.Datum >= $STARTDATE$
     AND LsKo.Datum <= $ENDDATE$
     AND PflegTag.Pflegetage != 0
-  GROUP BY Abteil.Abteilung, Abteil.Bez, IIF(CHARINDEX(N' ', ProdHier.Hierarchie, 1) > 0, LEFT(ProdHier.Hierarchie, CHARINDEX(N' ', ProdHier.Hierarchie, 1)) + N' - ', N'') + ProdHier.ProdHierBez$LAN$, PflegTag.Monat, PflegTag.Pflegetage, Wae.NK, Wae.ID;
+  GROUP BY Abteil.Abteilung, Abteil.Bez, IIF(CHARINDEX(N' ', ProdHier.Hierarchie, 1) > 0, LEFT(ProdHier.Hierarchie, CHARINDEX(N' ', ProdHier.Hierarchie, 1)) + N' - ', N'') + ProdHier.ProdHierBez$LAN$, ArtGru.ArtGruBez$LAN$, PflegTag.Monat, PflegTag.Pflegetage, Wae.NK, Wae.ID;
 
 END;
 
@@ -147,7 +149,7 @@ BEGIN
     SET @pivotcols5 = STUFF((SELECT DISTINCT N', [' + Monat + N'_5]' FROM #PflegedatenProdHier ORDER BY 1 FOR XML PATH(''), TYPE).value('.', 'nvarchar(max)'), 1, 1, '');
 
     SET @pivotsql = N'
-      SELECT KoSt, Kostenstelle, Produkthierarchie,' + @pivotcolshead + N'
+      SELECT KoSt, Kostenstelle, Produkthierarchie, Artikelgruppe, ' + @pivotcolshead + N'
       FROM (
         SELECT #PflegedatenProdHier.*,
           #PflegedatenProdHier.Monat + N''_2'' AS Monat2,
@@ -176,7 +178,7 @@ BEGIN
         SUM(UmsatzPflegetag)
         FOR Monat5 IN (' + @pivotcols5 + N')
       ) AS pvt5
-      GROUP BY KoSt, Kostenstelle, Produkthierarchie, WaeID;
+      GROUP BY KoSt, Kostenstelle, Produkthierarchie, Artikelgruppe, WaeID;
     ';
 
   END;
