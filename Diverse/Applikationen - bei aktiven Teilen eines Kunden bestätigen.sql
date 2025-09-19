@@ -17,7 +17,8 @@ JOIN Kunden ON EinzHist.KundenID = Kunden.ID
 WHERE EinzHist.ID = (SELECT EinzTeil.CurrEinzHistID FROM EinzTeil WHERE EinzTeil.ID = EinzHist.EinzTeilID)
   AND Kunden.KdNr = @customer
   AND EinzHist.[Status] >= 'Q'
-  AND TeilAppl.Bearbeitung != '-';
+  AND TeilAppl.Bearbeitung != '-'
+OPTION (MAXDOP 1);
 
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = UPPER(REPLACE(ORIGINAL_LOGIN(), N'SAL\', N'')));
 DECLARE @msg nvarchar(max);
