@@ -1,16 +1,16 @@
 SET NOCOUNT ON;
 
-DECLARE @kdnr int = 10001901;
-DECLARE @sourcevsanr int = 4;
-DECLARE @destinationvsanr int = 18;
+DECLARE @kdnr int = 271790;
+DECLARE @sourcevsanr int = 7;
+DECLARE @destinationvsanr int = 1;
 
 DECLARE @Article TABLE (
   ArticleNr nvarchar(15) COLLATE Latin1_General_CS_AS,
   ArticleID int DEFAULT -1
 );
 
-INSERT INTO @Article (ArticleNr)
-VALUES ('41001983514'), ('41001983512'), ('41001983507'), ('41001983513'), ('41001983515'), ('41001983511'), ('41001983510'), ('41001983509');
+/* INSERT INTO @Article (ArticleNr)
+VALUES ('41001983514'), ('41001983512'), ('41001983507'), ('41001983513'), ('41001983515'), ('41001983511'), ('41001983510'), ('41001983509'); */
 
 DECLARE @sourcevsaid int, @destinationvsaid int, @severity int;
 DECLARE @state smallint;
@@ -56,7 +56,7 @@ BEGIN
           FROM EinzTeil
           WHERE EinzTeil.VsaID = VsaAnf.VsaID
             AND EinzTeil.ArtikelID = KdArti.ArtikelID
-            AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154)
+            AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173, 165)
             AND EinzTeil.LastErsatzFuerKdArtiID = -1
         )
         AND VsaAnf.BestandIst != 0
@@ -104,7 +104,7 @@ BEGIN
             FROM EinzTeil
             WHERE EinzTeil.VsaID = VsaAnf.VsaID
               AND EinzTeil.ArtikelID = KdArti.ArtikelID
-              AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154)
+              AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 173, 165)
               AND EinzTeil.LastErsatzFuerKdArtiID = -1
           )
           AND VsaAnf.BestandIst != 0
