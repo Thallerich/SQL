@@ -10,7 +10,7 @@ WHERE LogItem.Anlage_ > '2025-10-28 22:00:00.000'
 
 GO
 
-SELECT N'RUN;KAS_INCEXPORT' + CAST(RentomatID AS nvarchar) AS ScriptCall, RentomatBez AS Bekleidungsausgabesystem, [Start], [Ende], DATEDIFF(minute, [Start], [Ende]) AS DauerInMinuten
+SELECT N'RUN;KAS_FULLEXPORT' + CAST(RentomatID AS nvarchar) AS ScriptCall, RentomatBez AS Bekleidungsausgabesystem, [Start], [Ende], DATEDIFF(minute, [Start], [Ende]) AS DauerInMinuten
 FROM (
   SELECT #RentoLog.RentomatID, #RentoLog.Zeitpunkt, #RentoLog.Typ, Rentomat.Bez AS RentomatBez
   FROM #RentoLog
