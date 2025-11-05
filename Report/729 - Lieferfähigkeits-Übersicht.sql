@@ -113,33 +113,44 @@ ORDER BY Artikel.ArtikelNr, AnfDaten.LieferDatum;
 /* ++ Artikel Gesamtaufstellung                                                                                                 ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-WITH AnfDaten AS (
-  SELECT AnfKo.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) AS Angefordert, ISNULL(LsPo.Menge, AnfPo.Geliefert) AS Geliefert, AnfPo.KdArtiID, AnfKo.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
-  FROM AnfPo
-  JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
-  JOIN ArtGroe ON AnfPo.ArtGroeID = ArtGroe.ID
-  JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
-  JOIN VsaBer ON AnfKo.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
-  JOIN KdBer ON KdArti.KdBerID = KdBer.ID
-  JOIN Kunden ON KdBer.KundenID = Kunden.ID
-  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-  JOIN LsKo ON AnfKo.LsKoID = LsKo.ID
-  LEFT JOIN LsPo ON LsPo.LsKoID = LsKo.ID AND AnfPo.KdArtiID = LsPo.KdArtiID AND AnfPo.ArtGroeID = LsPo.ArtGroeID AND AnfPo.VpsKoID = LsPo.VpsKoID AND AnfPo.LsKoGruID = LsPo.LsKoGruID AND AnfPo.Kostenlos = LsPo.Kostenlos
-  LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND AnfKo.ProduktionID = ArtiStan.StandortID
-  WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
-    AND (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND AnfPo.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND AnfPo.Angefordert = 1, 0, AnfPo.Angefordert) > 0 OR (AnfPo.Geliefert > 0 OR ISNULL(LsPo.Menge, 0) > 0))
-)
-SELECT Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz
-FROM AnfDaten
+DROP TABLE IF EXISTS #AnfDaten, #Packzettel;
+
+SELECT AnfKo.ID, AnfKo.Lieferdatum, AnfKo.VsaID, AnfKo.LsKoID, AnfKo.ProduktionID, AnfPo.ArtGroeID, AnfPo.KdArtiID, AnfPo.VpsKoID, AnfPo.LsKoGruID, AnfPo.Kostenlos, AnfPo.Angefordert, AnfPo.Geliefert
+INTO #Packzettel
+FROM AnfPo
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+JOIN Kunden ON Vsa.KundenID = Kunden.ID
+JOIN KdArti ON AnfPo.KdArtiID = KdArti.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+WHERE AnfKo.Lieferdatum BETWEEN $STARTDATE$ AND $ENDDATE$
+  AND Kunden.FirmaID IN ($5$)
+  AND Kunden.StandortID IN ($6$)
+  AND Kunden.KdGfID in ($7$)
+  AND Artikel.BereichID IN ($3$);
+
+SELECT #Packzettel.Lieferdatum, IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND #Packzettel.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND #Packzettel.Angefordert = 1, 0, #Packzettel.Angefordert) AS Angefordert, ISNULL(LsPo.Menge, #Packzettel.Geliefert) AS Geliefert, #Packzettel.KdArtiID, #Packzettel.VsaID, ArtGroe.Groesse, ArtGroe.ID AS ArtGroeID
+INTO #AnfDaten
+FROM #Packzettel
+JOIN ArtGroe ON #Packzettel.ArtGroeID = ArtGroe.ID
+JOIN KdArti ON #Packzettel.KdArtiID = KdArti.ID
+JOIN VsaBer ON #Packzettel.VsaID = VsaBer.VsaID AND KdArti.KdBerID = VsaBer.KdBerID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Kunden ON KdBer.KundenID = Kunden.ID
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN LsKo ON #Packzettel.LsKoID = LsKo.ID
+LEFT JOIN LsPo ON LsPo.LsKoID = LsKo.ID AND #Packzettel.KdArtiID = LsPo.KdArtiID AND #Packzettel.ArtGroeID = LsPo.ArtGroeID AND #Packzettel.VpsKoID = LsPo.VpsKoID AND #Packzettel.LsKoGruID = LsPo.LsKoGruID AND #Packzettel.Kostenlos = LsPo.Kostenlos
+LEFT JOIN ArtiStan ON ArtiStan.ArtikelID = Artikel.ID AND #Packzettel.ProduktionID = ArtiStan.StandortID
+WHERE (IIF((VsaBer.AnfAusEpo > 1 OR KdBer.AnfAusEPo > 1 OR Kunden.CheckPackmenge = 1) AND #Packzettel.Angefordert % COALESCE(NULLIF(ArtiStan.PackMenge, -1), Artikel.PackMenge) != 0 AND #Packzettel.Angefordert = 1, 0, #Packzettel.Angefordert) > 0 OR (#Packzettel.Geliefert > 0 OR ISNULL(LsPo.Menge, 0) > 0));
+
+SELECT ArtGru.Gruppe AS Artikelgruppe, ArtGru.ArtgruBez$LAN$ AS Artikelgruppenbezeichnung, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, SUM(AnfDaten.Angefordert) AS Angefordert, SUM(AnfDaten.Geliefert) AS Geliefert, SUM(AnfDaten.Angefordert - AnfDaten.Geliefert) AS Differenz
+FROM #AnfDaten AS AnfDaten
 JOIN Vsa ON AnfDaten.VsaID = Vsa.ID 
 JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN KdArti ON AnfDaten.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Bereich ON Artikel.BereichID = Bereich.ID
-WHERE Bereich.ID IN ($3$)
-  AND (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
-  AND Kunden.FirmaID IN ($5$)
-  AND Kunden.StandortID IN ($6$)
-  AND Kunden.KdGfID in ($7$)
-GROUP BY Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$
+JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
+WHERE (($4$ = 1 AND AnfDaten.Angefordert - AnfDaten.Geliefert <> 0) OR ($4$ = 0))
+GROUP BY ArtGru.Gruppe, ArtGru.ArtgruBez$LAN$, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$
 ORDER BY Artikel.ArtikelNr;
