@@ -13,7 +13,7 @@ JOIN Scans ON Scans.LsPoID = LsPo.ID
 JOIN Vsa ON Vsa.ID = LsKo.VsaID
 JOIN Kunden ON Kunden.ID = Vsa.KundenID
 WHERE Kunden.KdNr = 10006208
-  AND Vsa.VsaNr = 4
+  AND Vsa.VsaNr = (4, 7)
   AND LsKo.Status >= N'O'
   AND LsKo.DruckZeitpunkt >= DATEADD(hour, -1, GETDATE());
 
