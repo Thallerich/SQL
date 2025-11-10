@@ -14,7 +14,7 @@ JOIN Standort AS Produktion ON StandBer.ProduktionID = Produktion.ID
 JOIN Standort AS Kundenservice ON Kunden.StandortID = Kundenservice.ID
 JOIN EinzTeil ON EinzHist.EinzTeilID = EinzTeil.ID
 JOIN [Week] ON DATEADD(day, Einzteil.AnzTageImLager, Einzteil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat
-LEFT JOIN TeilSoFa ON TeilSoFa.EinzHistID = EinzHist.ID AND TeilSoFa.SoFaArt = N'R' AND (TeilSoFa.RechPoID > 0 OR TeilSoFa.Status IN (N'L', N'P'))
+LEFT JOIN TeilSoFa ON TeilSoFa.EinzHistID = EinzHist.ID AND TeilSoFa.SoFaArt = N'R' AND (TeilSoFa.RechPoID > 0 OR (TeilSoFa.Status IN (N'L', N'P') AND TeilSoFa.OhneBerechGrund = 0))
 LEFT JOIN RWArt ON RWArt.ID = TeilSoFa.RwArtID
 WHERE Kunden.KdGfID IN ($4$)
   AND EinzHist.[Status] = N'Y'
