@@ -31,7 +31,8 @@ CREATE TABLE #Result999118 (
   Gesamtpreis money,
   Kostenstelle nchar(20) COLLATE Latin1_General_CS_AS,
   Kostenstellenbezeichnung nvarchar(80) COLLATE Latin1_General_CS_AS,
-  RechNr int
+  RechNr int,
+  WaeID int
 );
 
 SELECT Kunden.ID
@@ -59,7 +60,7 @@ ELSE
 
 IF @onlyUHF = 0
   SET @sqltext = N'
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr, Kunden.VertragWaeID AS WaeID
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN LsKoArt ON LsKo.LsKoArtID = LsKoArt.ID
@@ -104,12 +105,12 @@ ELSE
     );
   ';
 
-INSERT INTO #Result999118 (KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Leasingpreis, Lieferdatum, LsKoID, LsNr, Art, [Lieferschein-Art], Menge, Einzelpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis, Kostenstelle, Kostenstellenbezeichnung, RechNr)
+INSERT INTO #Result999118 (KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Leasingpreis, Lieferdatum, LsKoID, LsNr, Art, [Lieferschein-Art], Menge, Einzelpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis, Kostenstelle, Kostenstellenbezeichnung, RechNr, WaeID)
 EXEC sp_executesql @sqltext, N'@startdate date, @enddate date', @startdate, @enddate;
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, Leasingpreis, Gesamtpreis, [Rabatt in Prozent], Rabatt, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], [Gewicht (kg/Stück)] * Menge AS [kg Gesamt], Kostenstelle, Kostenstellenbezeichnung, RechNr
+SELECT KdNr, Kunde, [VSA-Nr], [VSA-Stichwort], [VSA-Bezeichnung], Bereich, Gruppe, ArtikelNr, Variante, Artikelbezeichnung, [Gewicht (kg/Stück)], Lieferdatum, LsKoID, LsNr, Menge, Einzelpreis, WaeID AS Einzelpreis_WaeID, Leasingpreis, WaeID AS Leasingpreis_WaeID, Gesamtpreis, WaeID AS Gesamtpreis_WaeID, [Rabatt in Prozent], Rabatt, WaeID AS Rabatt_WaeID, Gesamtpreis - Rabatt AS [Gesamtpreis rabattiert], WaeID AS [Gesamtpreis rabattiert_WaeID], [Gewicht (kg/Stück)] * Menge AS [kg Gesamt], Kostenstelle, Kostenstellenbezeichnung, RechNr
 FROM #Result999118;
