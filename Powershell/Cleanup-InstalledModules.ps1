@@ -10,7 +10,7 @@ Get-InstalledModule | ForEach-Object {
         Write-Host "Found old version $modulename [$oldVersion] - current version is $currentVersion - uninstalling"
 
         # Uninstall outdated version
-        Write-Host "Uninstall-Module -Name $moduleName -RequiredVersion $oldVersion -Force"
+        Uninstall-Module -Name $moduleName -RequiredVersion $oldVersion -Force
       }
     }
   }
