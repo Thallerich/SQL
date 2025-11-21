@@ -9,7 +9,7 @@ FROM BrLauf
 
 UNION ALL
 
-SELECT N'RECHCK' AS TableName, RechChk.ID AS TableID, RechChk.RechChkBez AS [Bezeichnung DE], RechChk.RechChkBez3 AS [Bezeichnung RO]
+SELECT N'RECHCHK' AS TableName, RechChk.ID AS TableID, RechChk.RechChkBez AS [Bezeichnung DE], RechChk.RechChkBez3 AS [Bezeichnung RO]
 FROM RechChk
 
 UNION ALL
