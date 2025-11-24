@@ -1,4 +1,4 @@
-SELECT Holding.Holding, Holding.Bez AS Holdingbezeichnung, Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS [Varianten-Bezeichnung], Bereich.Bereich AS Produktbereich, KdArti.WaschPreis AS [Bearbeitungs-Preis], LeasPreisWoche.LeasPreisProWo AS [Leasing-Preis], KdArti.BasisRestwert, Artikel.EKPreis, KdArti.VkPreis, KdArti.AfaWochen, FakFreq.FakFreqBez AS Fakturafrequenz, KdArti.KundenID, KdArti.ID AS KdArtiID
+SELECT Holding.Holding, Holding.Bez AS Holdingbezeichnung, Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, KdArti.Variante, KdArti.VariantBez AS [Varianten-Bezeichnung], Bereich.Bereich AS Produktbereich, KdArti.WaschPreis AS [Bearbeitungs-Preis], LeasPreisWoche.LeasPreisProWo AS [Leasing-Preis], KdArti.BasisRestwert, Artikel.EKPreis, KdArti.VkPreis, KdArti.AfaWochen, KdArti.Umlauf, FakFreq.FakFreqBez AS Fakturafrequenz, KdArti.KundenID, KdArti.ID AS KdArtiID
 FROM KdArti
 CROSS APPLY dbo.advFunc_GetLeasPreisProWo(KdArti.ID) AS LeasPreisWoche
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
