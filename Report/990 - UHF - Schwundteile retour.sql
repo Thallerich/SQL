@@ -4,6 +4,12 @@
 /* ++ Pipeline: prepareData                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* ++ IT-96116                                                                                                                  ++ */
+/* ++ Author: Stefan THALLER - 2025-07-04                                                                                       ++ */
+/* ++ Pipeline: prepareData                                                                                                     ++ */
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DROP TABLE IF EXISTS #SchwundRetour990;
 
 CREATE TABLE #SchwundRetour990 (
@@ -26,13 +32,14 @@ CREATE TABLE #SchwundRetour990 (
 INSERT INTO #SchwundRetour990 (Holding, KdNr, Kunde, ArtikelNr, Artikelbezeichnung, Chipcode, RechNr, Rechnungsdatum, [Erstell-Datum Rechnungsposition], [Erster Scan nach Verrechnung], [Gutschrift bis X Tage nach Verrechnung], [wird gutgeschrieben], [Zeitpunkt Schwundbuchung], [Zeitpunkt Eingang nach Schwundbuchung])
 SELECT Holding.Holding, Kunden.KdNr, Kunden.SuchCode AS Kunde, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, EinzTeil.Code AS Chipcode, RechKo.RechNr, RechKo.RechDat AS Rechnungsdatum, CAST(RechPo.Anlage_ AS date) AS [Erstell-Datum Rechnungsposition], EinzTeil.FirstScanAfterInvoice AS [Erster Scan nach Verrechnung], Kunden.RWGutschriftXTage AS [Gutschrift bis X Tage nach Verrechnung], CAST(IIF(Kunden.RWGutschriftXTage > 0 AND DATEADD(day, Kunden.RWGutschriftXTage, RechKo.RechDat) <= CAST(EinzTeil.FirstScanAfterInvoice AS date), 1, 0) AS bit) AS [wird gutgeschrieben], CAST(NULL AS datetime2) AS [Zeitpunkt Schwundbuchung], CAST(NULL AS datetime2) AS [Zeitpunkt Eingang nach Schwundbuchung]
 FROM EinzTeil
-JOIN RechPo ON EinzTeil.RechPoID = RechPo.ID
+JOIN (SELECT TOP 1 TeilSoFa.* FROM TeilSoFa WHERE TeilSoFa.SoFaArt = 'R' AND TeilSoFa.Status >= 'P' ORDER BY TeilSoFa.Zeitpunkt DESC) AS TeilSoFa ON TeilSoFa.EinzTeilID = EinzTeil.ID
+JOIN RechPo ON TeilSoFa.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Kunden ON RechKo.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
 WHERE EinzTeil.[Status] < N'W'
-  AND EinzTeil.RechPoID > 0
+  AND TeilSoFa.RechPoID > 0
   AND EinzTeil.FirstScanAfterInvoice IS NOT NULL
   AND EinzTeil.FirstScanAfterInvoice > RechKo.RechDat
   AND RechPo.RPoTypeID = 23

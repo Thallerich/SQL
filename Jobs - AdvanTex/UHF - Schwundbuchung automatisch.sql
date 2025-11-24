@@ -76,7 +76,7 @@ BEGIN TRY
     /* ++ EinzTeil-Datensatz anpassen                                                                                               ++ */
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-    UPDATE EinzTeil SET [Status] = N'W', CurrEinzHistID = [@MapTable].EinzHistID, LastActionsID = 116, ZielNrID = -1, RechPoID = -2, UserID_ = @userid
+    UPDATE EinzTeil SET [Status] = N'W', CurrEinzHistID = [@MapTable].EinzHistID, LastActionsID = 116, ZielNrID = -1, UserID_ = @userid
     FROM #PoolSchwund
     JOIN @MapTable ON #PoolSchwund.EinzTeilID = [@MapTable].EinzTeilID
     WHERE #PoolSchwund.EinzTeilID = EinzTeil.ID
