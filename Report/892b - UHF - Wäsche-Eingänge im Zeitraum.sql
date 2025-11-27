@@ -2,7 +2,7 @@ DECLARE @KundenID int = $0$;
 DECLARE @EingelesenVon datetime = $1$;
 DECLARE @EingelesenBis datetime = $2$;
 
-DROP TABLE IF EXISTS #InScan;
+DROP TABLE IF EXISTS #InScan, #AnfPos;
 
 CREATE TABLE #InScan (
   ScansID bigint PRIMARY KEY,
@@ -12,6 +12,14 @@ CREATE TABLE #InScan (
 
 CREATE INDEX InScan_EinzTeilID ON #InScan (EinzTeilID);
 
+SELECT AnfPo.ID
+INTO #AnfPos
+FROM AnfPo
+JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
+JOIN Vsa ON AnfKo.VsaID = Vsa.ID
+WHERE Vsa.KundenID = @KundenID
+  AND AnfKo.Lieferdatum >= @EingelesenVon;
+
 INSERT INTO #InScan (ScansID, EinzTeilID, [DateTime])
 SELECT Scans.ID AS ScansID, Scans.EinzTeilID, Scans.[DateTime]
 FROM Scans
@@ -20,11 +28,7 @@ WHERE Scans.[DateTime] BETWEEN @EingelesenVon AND @EingelesenBis
   AND Scans.EinzTeilID IN (
     SELECT DISTINCT Scans.EinzTeilID
     FROM Scans
-    JOIN AnfPo ON Scans.AnfPoID = AnfPo.ID
-    JOIN AnfKo ON AnfPo.AnfKoID = AnfKo.ID
-    JOIN Vsa ON AnfKo.VsaID = Vsa.ID
-    WHERE Vsa.KundenID = @KundenID
-      AND AnfKo.Lieferdatum >= @EingelesenVon
+    WHERE Scans.AnfPoID IN (SELECT ID FROM #AnfPos)
   );
 
 WITH Eingangsscans AS (
@@ -35,7 +39,7 @@ WITH Eingangsscans AS (
     AND Ausgangsscan.[DateTime] > Eingangsscan.[DateTime]
   GROUP BY Ausgangsscan.EinzTeilID, Eingangsscan.ScansID
 )
-SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Scans_In.[DateTime] AS [Einlese-Zeitpunkt], ZielNr.ZielNrBez AS [Einlese-Ort], LsKo.LsNr AS [geliefert mit LsNr], LsKo.Datum AS [geliefert am], EINZTEIL.Code AS Chipcode, CAST(IIF(EinzTeil.VsaOwnerID > 0, 1, 0) AS bit) AS [Eigenwäsche?]
+SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr, Vsa.SuchCode AS [Vsa-Stichwort], Vsa.Bez AS [Vsa-Bezeichnung], Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, Scans_In.[DateTime] AS [Einlese-Zeitpunkt], ZielNr.ZielNrBez$LAN$ AS [Einlese-Ort], LsKo.LsNr AS [geliefert mit LsNr], LsKo.Datum AS [geliefert am], EINZTEIL.Code AS Chipcode, CAST(IIF(EinzTeil.VsaOwnerID > 0, 1, 0) AS bit) AS [Eigenwäsche?]
 FROM Eingangsscans
 JOIN EinzTeil ON Eingangsscans.EinzTeilID = EinzTeil.ID
 JOIN ArtGroe ON EinzTeil.ArtGroeID = ArtGroe.ID
