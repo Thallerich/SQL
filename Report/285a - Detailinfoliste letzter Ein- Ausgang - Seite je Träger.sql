@@ -11,6 +11,7 @@ WHERE EinzTeil.CurrEinzHistID = EinzHist.ID
   AND EinzHist.Indienst IS NOT NULL
   AND Traeger.Status IN (N'A', N'K')
   AND EinzHist.Status BETWEEN N'Q' AND N'W'
+  AND EinzHist.Status != N'T'
   AND EinzHist.Einzug IS NULL
   AND Artikel.BereichID IN ($1$)
   AND EinzHist.PoolFkt = 0
