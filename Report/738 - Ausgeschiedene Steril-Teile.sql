@@ -20,7 +20,7 @@ IF $2$ = 3
 
 DROP TABLE IF EXISTS #OPSchrott;
 
-SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), EinzTeil.RuecklaufG, EinzTeil.RestwertInfo, ProduktionID = ISNULL((
+SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.WegGrundID, EinzTeil.WegDatum, EinzTeil.VsaID, Erstwoche = (SELECT [Week].Woche FROM [Week] WHERE DATEADD(day, EinzTeil.AnzTageImLager, EinzTeil.ErstDatum) BETWEEN [Week].VonDat AND [Week].BisDat), EinzTeil.RuecklaufG, EinzHist.RestwertInfo, ProduktionID = ISNULL((
     SELECT TOP 1 COALESCE(IIF(ZielNr.ProduktionsID < 0, NULL, ZielNr.ProduktionsID), IIF(ArbPlatz.StandortID < 0, NULL, ArbPlatz.StandortID), IIF(Mitarbei.StandortID < 0, NULL, Mitarbei.StandortID), -1)
     FROM Scans
     JOIN ZielNr ON Scans.ZielNrID = ZielNr.ID
@@ -32,6 +32,7 @@ SELECT EinzTeil.ID AS EinzTeilID, EinzTeil.Code, EinzTeil.ArtikelID, EinzTeil.We
   ), -1)
 INTO #OPSchrott
 FROM EinzTeil
+JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID
 WHERE EinzTeil.WegDatum BETWEEN $STARTDATE$ AND $ENDDATE$
   AND EinzTeil.WegGrundID IN ($3$)
   AND EinzTeil.Status = N'Z';
