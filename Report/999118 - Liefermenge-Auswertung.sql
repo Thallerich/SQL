@@ -80,7 +80,7 @@ IF @onlyUHF = 0
   ';
 ELSE
   SET @sqltext = N'
-  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr
+  SELECT Kunden.KdNr, Kunden.SuchCode AS Kunde, Vsa.VsaNr AS [VSA-Nr], Vsa.SuchCode AS [VSA-Stichwort], Vsa.Bez AS [VSA-Bezeichnung], Bereich.Bereich, ArtGru.Gruppe, Artikel.ArtikelNr, KdArti.Variante, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, Artikel.StueckGewicht AS [Gewicht (kg/Stück)], KdArti.LeasPreis AS Leasingpreis, LsKo.Datum AS Lieferdatum, LsKo.ID AS LsKoID, LsKo.LsNr, LsKoArt.Art, LsKoArt.LsKoArtBez$LAN$ AS [Lieferschein-Art], LsPo.Menge, LsPo.EPreis AS Einzelpreis, RechPo.RabattProz AS [Rabatt in Prozent], IIF(RechPo.RabattProz = 0, 0, (LsPo.EPreis * LsPo.Menge) * (RechPo.RabattProz / 100)) AS Rabatt, LsPo.EPreis * LsPo.Menge AS Gesamtpreis, Abteil.Abteilung AS Kostenstelle, Abteil.Bez AS Kostenstellenbezeichnung, RechKo.RechNr, Kunden.VertragWaeID AS WaeID
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN LsKoArt ON LsKo.LsKoArtID = LsKoArt.ID
