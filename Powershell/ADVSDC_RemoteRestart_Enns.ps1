@@ -1,7 +1,7 @@
 # Script to remotely start a scheduled task
 # Author: Stefan THALLER
-# Version: 1.0
-# Timestamp: 2025-07-03 15:35
+# Version: 1.1
+# Timestamp: 2025-12-05 07:52
 
 # Script to create encrypted credential file in the current location of this script - comment out everything else and uncomment the following block
 
@@ -31,7 +31,17 @@ $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $user
 $rmtsession = New-CimSession -ComputerName $remoteserver -Credential $cred
 $errormsg = ""
 
-Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateways remote restart" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg
+$selection = Read-Host -Prompt "Welcher SDC-Gateway soll neu gestartet werden? (Zahl in eckiger Klammer eingeben)`nMetrik 1 [1]  Metrik 3 [2]  Beide [0]"
+
+switch($selection) {
+  "0" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateways remote restart" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
+  "1" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Enns 1" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
+  "2" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Enns 2" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
+  default {
+    Write-Host "Ungültige Eingabe!"
+    Exit
+  }
+}
 
 if ($errormsg -eq "") {
   $mailnotification = @{
