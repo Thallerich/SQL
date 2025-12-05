@@ -1,2 +1,0 @@
-(Get-WmiObject win32_process -Filter "name = 'Advantex.exe' and commandline like '%Containerverfolgung%'").Terminate()
-Start-Process -FilePath "\\ATENADVANTEX01\AdvanTex\Apps\Loader\Loader.exe" -ArgumentList "/ONLY:WEBSERVICE /EXITTIME:2355 /USERNAME:JOB /MANDANT:Wozabal /TASKNAME:Containerverfolgung /UNATT:J"

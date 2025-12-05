@@ -3,20 +3,32 @@
 # Version: 1.0
 # Timestamp: 2025-07-03 15:35
 
-# Script to create encrypted credential XML in the current location of this script - comment out everything else and uncomment the following block
-# Resulting file is not portable as it is encrypted for the user and machine that created it
+# Script to create encrypted credential file in the current location of this script - comment out everything else and uncomment the following block
 
 <#
-$cred = Get-Credential
-Export-CliXml -InputObject $cred -Path "$PSScriptRoot\SDCEncryptedCredential.xml"
+Function Save-Credential([string]$UserName, [string]$KeyPath) {
+   If (!(Test-Path $KeyPath)) {
+       Try {
+           New-Item -ItemType Directory -Path $KeyPath -ErrorAction STOP | Out-Null
+       }
+       Catch {
+           Throw $_.Exception.Message
+       }
+   }
+   $Credential = Get-Credential -Message "Enter the Credentials:" -UserName $UserName
+   $Credential.Password | ConvertFrom-SecureString | Out-File "$($KeyPath)\SDCAdmin.cred" -Force
+}
+
+Save-Credential -UserName "sal\AdvantexAdmin" -KeyPath "$PSScriptRoot"
 #>
 
 Clear-Host
 
 $remoteserver = "SRVATENSDC01.sal.co.at"
-$credxml = "$PSScriptRoot\SDCEncryptedCredential.xml"
-$rmtcred = Import-CliXml -Path $credxml
-$rmtsession = New-CimSession -ComputerName $remoteserver -Credential $rmtcred
+$username = "sal\AdvantexAdmin"
+$pwdsecurestring = Get-Content "$PSScriptRoot\SDCAdmin.cred" | ConvertTo-SecureString
+$cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $pwdsecurestring
+$rmtsession = New-CimSession -ComputerName $remoteserver -Credential $cred
 $errormsg = ""
 
 Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateways remote restart" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg
