@@ -39,7 +39,7 @@ foreach ($src in $source)
   $location = $src.location;
   $srcpath = $src.path;
 
-  if (($location -like "Enns ?") -or ($location -like "Lenzing ?") -or ($location -eq "SA22"))
+  if (($location -like "Enns ?") -or ($location -eq "SA22"))
   {
     $null = New-PSDrive -Name T -PSProvider FileSystem -Root $srcpath
   }
