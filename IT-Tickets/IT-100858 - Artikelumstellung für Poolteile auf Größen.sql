@@ -1,7 +1,7 @@
 /* System-Checkliste 198 - Preislisten neu anwenden */
 
 /* VSAANF existiert bereits - alten auf inaktiven, neuen auf aktiv */
-/* Häkchen bei Kundenartikel und Status auf aktiv statt falsch geliefert */
+/* HÃ¤kchen bei Kundenartikel und Status auf aktiv statt falsch geliefert */
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
@@ -12,6 +12,7 @@ GO
 
 DECLARE @msg nvarchar(max);
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+DECLARE @kundenid int = (SELECT ID FROM Kunden WHERE KdNr = 10003771);
 
 DECLARE @ArtiMap TABLE (
   ArtikelID_Alt int NOT NULL DEFAULT -1,
@@ -46,7 +47,7 @@ UPDATE @ArtiMap SET ArtikelID_Alt = ISNULL((SELECT ID FROM Artikel WHERE Artikel
 
 IF EXISTS (SELECT * FROM @ArtiMap WHERE ArtikelID_Alt < 0 OR ArtikelID_Neu < 0)
 BEGIN
-  RAISERROR('ArtikelIDs konnte nicht vollständig ermittelt werden', 16, 1);
+  RAISERROR('ArtikelIDs konnte nicht vollstï¿½ndig ermittelt werden', 16, 1);
   SET NOEXEC ON;
 END;
 
@@ -68,9 +69,11 @@ BEGIN TRY
     JOIN @ArtiMap AS ArtiMap ON EinzTeil.ArtikelID = ArtiMap.ArtikelID_Alt
     WHERE EinzHist.EinzHistTyp != 3
       AND EinzHist.Status != N'5'
-      AND EinzHist.Status < N'Y';
+      AND EinzHist.Status < N'Y'
+      AND EinzHist.PoolFkt = 1
+      AND EinzHist.KundenID = @kundenid;
 
-    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Teiledatensätze zu aktualisieren!';
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Teiledatensï¿½tze zu aktualisieren!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     UPDATE EinzTeil SET ArtikelID = #TeileHarmonisierung.ArtikelID_Neu, ArtGroeID = #TeileHarmonisierung.ArtGroeID_Neu, UserID_ = @userid
@@ -110,7 +113,8 @@ BEGIN TRY
     JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
     JOIN @ArtiMap AS ArtiMap ON KdArti.ArtikelID = ArtiMap.ArtikelID_Alt
     LEFT JOIN KdArti AS KdArtiNeu ON ArtiMap.ArtikelID_Neu = KdArtiNeu.ArtikelID AND KdArti.KundenID = KdArtiNeu.KundenID AND KdArti.Variante = KdArtiNeu.Variante
-    WHERE KdArti.ErsatzFuerKdArtiID < 0;
+    WHERE KdArti.ErsatzFuerKdArtiID < 0
+      AND KdArti.KundenID = @kundenid;
 
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' anforderbare Artikel zu aktualisieren!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
@@ -130,14 +134,14 @@ BEGIN TRY
     ) AS UniqueInsert
     WHERE Rank = 1;
 
-    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Kundenartikel eingefügt!';
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Kundenartikel eingefï¿½gt!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     INSERT INTO PrArchiv (KdArtiID, Datum, LeasPreis, WaschPreis, SonderPreis, VKPreis, BasisRestwert, LeasPreisAbwAbWo, MitarbeiID, Aktivierungszeitpunkt, AnlageUserID_, UserID_)
     SELECT KdArtiID, CAST(GETDATE() AS date) AS Datum, LeasPreis, WaschPreis, SonderPreis, VKPreis, BasisRestwert, LeasPreisAbwAbWo, @userid, GETDATE(), @userid, @userid
     FROM @Archive;
 
-    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Preisarchiv-Einträge eingefügt!';
+    SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Preisarchiv-Eintrï¿½ge eingefï¿½gt!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     UPDATE #VsaAnfHarmonisierung SET KdArtiID = KdArtiNeu.ID
@@ -146,7 +150,7 @@ BEGIN TRY
       AND #VsaAnfHarmonisierung.ArtikelID_Neu = KdArtiNeu.ArtikelID AND KdArti.KundenID = KdArtiNeu.KundenID AND KdArti.Variante = KdArtiNeu.Variante
       AND #VsaAnfHarmonisierung.KdArtiID IS NULL;
     
-    SEt @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - temporäre Arbeitstabellen mit neu angelegten Kundenartikeln aktualisiert!';
+    SEt @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - temporï¿½re Arbeitstabellen mit neu angelegten Kundenartikeln aktualisiert!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     UPDATE #VsaAnfHarmonisierung SET Rank = x.Rank
@@ -171,7 +175,8 @@ BEGIN TRY
     WHERE AnfKo.Lieferdatum >= CAST(GETDATE() AS date)
       AND AnfKo.[Status] <= N'F'
       AND AnfPo.Angefordert > 0
-      AND KdArti.ErsatzFuerKdArtiID < 0;
+      AND KdArti.ErsatzFuerKdArtiID < 0
+      AND AnfKo.VsaID IN (SELECT Vsa.ID FROM Vsa WHERE Vsa.KundenID = @kundenid);
 
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Anforderungspositionen zu aktualisieren!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
@@ -194,7 +199,7 @@ BEGIN TRY
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     /* AnfPo */
-    /* TODO: zukünftige Packzettel auch anpassen - neuer Artikel soll angefordert sein */
+    /* TODO: zukÃ¼nftige Packzettel auch anpassen - neuer Artikel soll angefordert sein */
     WITH NewAnfPo AS (
       SELECT AnfKoID, KdArtiID, ArtGroeID, SUM(Angefordert) AS Angefordert
       FROM #AnfPoHarmonisierung
