@@ -70,8 +70,7 @@ BEGIN TRY
     WHERE EinzHist.EinzHistTyp != 3
       AND EinzHist.Status != N'5'
       AND EinzHist.Status < N'Y'
-      AND EinzHist.PoolFkt = 1
-      AND EinzHist.KundenID = @kundenid;
+      AND EinzHist.PoolFkt = 1;
 
     SET @msg = FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') + ' - ' + FORMAT(@@ROWCOUNT, N'N0') + ' Teiledatens�tze zu aktualisieren!';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
