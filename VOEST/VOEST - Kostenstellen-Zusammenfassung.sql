@@ -23,5 +23,5 @@ FROM Abteil
 JOIN Kunden ON Abteil.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
 WHERE Holding.Holding = N'VOES'
-  AND Abteil.Abteilung LIKE N'%/%'
+  --AND Abteil.Abteilung LIKE N'%/%'
 ORDER BY KdNr ASC, [Kostenstelle neu] ASC;
