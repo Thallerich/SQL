@@ -12,8 +12,7 @@ JOIN LsPo ON LsPo.LsKoID = LsKo.ID
 JOIN Scans ON Scans.LsPoID = LsPo.ID
 JOIN Vsa ON Vsa.ID = LsKo.VsaID
 JOIN Kunden ON Kunden.ID = Vsa.KundenID
-WHERE Kunden.KdNr = 7700428
-  AND Vsa.VsaNr = 5
+WHERE ((Kunden.KdNr = 7700428 AND Vsa.VsaNr = 5) OR (Kunden.KdNr = 7701091 AND Vsa.VsaNr IN (2, 5)))
   AND LsKo.Status >= N'O'
   AND LsKo.DruckZeitpunkt >= DATEADD(hour, -1, GETDATE());
 

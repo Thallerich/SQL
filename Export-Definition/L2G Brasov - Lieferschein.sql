@@ -13,7 +13,7 @@ JOIN Scans ON Scans.LsPoID = LsPo.ID
 JOIN Vsa ON Vsa.ID = LsKo.VsaID
 JOIN Kunden ON Kunden.ID = Vsa.KundenID
 WHERE Kunden.KdNr = 7701091
-  AND Vsa.VsaNr IN (1, 2, 5)
+  AND Vsa.VsaNr = 1
   AND LsKo.Status >= N'O'
   AND LsKo.DruckZeitpunkt >= DATEADD(hour, -1, GETDATE());
 
