@@ -43,16 +43,26 @@ switch($selection) {
   }
 }
 
+switch($selection) {
+  "0" { $Body = "The user $env:USERNAME has executed the remote restart script for SDC Gateways in Lenzing!" }
+  "1" { $Body = "The user $env:USERNAME has executed the remote restart script for SDC Gateway for Metrik 1 in Lenzing!" }
+  "2" { $Body = "The user $env:USERNAME has executed the remote restart script for SDC Gateway for Metrik 2 in Lenzing!" }
+}
+
 if ($errormsg -eq "") {
   $mailnotification = @{
       From = 'SDC Restart Script <no-reply@salesianer.com>'
       To = 'Stefan THALLER <s.thaller@salesianer.com>'
       Subject = 'SDC Gateways restart script - ENNS'
-      Body = "The user $env:USERNAME has executed the remote restart script for SDC Gateways in Enns!"
+      Body = $Body
       SmtpServer = 'SMWMAIL2.sal.co.at'
   }
 
-  Write-Host "Neustart für die SDC Gateways für Metrik 1 und Metrik 3 wurde erfolgreich ausgelöst!" -ForegroundColor Green
+  switch($selection) {
+    "0" { Write-Host "Neustart für die SDC Gateways für Metrik 1 und Metrik 2 wurde erfolgreich ausgelöst!" -ForegroundColor Green }
+    "1" { Write-Host "Neustart für die SDC Gateways für Metrik 1 wurde erfolgreich ausgelöst!" -ForegroundColor Green }
+    "2" { Write-Host "Neustart für die SDC Gateways für Metrik 2 wurde erfolgreich ausgelöst!" -ForegroundColor Green }
+  }
   Write-Host "Bitte 5 Minuten warten, bis der Neustart abgeschlossen ist!" -ForegroundColor Yellow
 }
 else {
@@ -64,7 +74,11 @@ else {
       SmtpServer = 'SMWMAIL2.sal.co.at'
   }
 
-  Write-Host "Fehler beim Auslösen des Neustarts der SDC Gateways für Metrik 1 und Metrik 3!" -ForegroundColor Red
+  switch($selection) {
+    "0" { Write-Host "Fehler beim Auslösen des Neustarts der SDC Gateways für Metrik 1 und Metrik 2!" -ForegroundColor Red }
+    "1" { Write-Host "Fehler beim Auslösen des Neustarts der SDC Gateways für Metrik 1!" -ForegroundColor Green }
+    "2" { Write-Host "Fehler beim Auslösen des Neustarts der SDC Gateways für Metrik 2!" -ForegroundColor Green }
+  }
   Write-Host "Bitte die IT-Abteilung kontaktieren!" -ForegroundColor Red
 }
 
