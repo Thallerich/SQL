@@ -4,25 +4,25 @@ DECLARE @Artikelharmonisierung TABLE (
 );
 
 INSERT INTO @Artikelharmonisierung
-VALUES ('110620662001', '710160'),
-  ('111204040001', '313700'),
-  ('111228040001', '323700'),
-  ('111220040001', '333700'),
-  ('111290040001', '344000');
+VALUES ('112606005018', 'KDT250'),
+  ('112603005031', 'KD1T56');
 
 SELECT N'ARTIKEL_HARMONISIERUNG;' + CAST(AltArtikel.ID AS nvarchar) + ';' + CAST(NeuArtikel.ID AS nvarchar)
 FROM @Artikelharmonisierung AS x
 JOIN Artikel AS AltArtikel ON x.AltArtikel = AltArtikel.ArtikelNr
 JOIN Artikel AS NeuArtikel ON x.NeuArtikel = NeuArtikel.ArtikelNr;
 
-SELECT ArtiKomp.*
+SELECT N'fehlende Ersatzartikel-Definitonen' AS Typ, BasisArtikel.ArtikelNr AS Basisartikel, ArtikelErsatz.ArtikelNr AS Ersatzartikel, ArtikelErsatzNeu.ArtikelNr AS ErsatzartikelNeu
 FROM ArtiKomp
+JOIN Artikel AS BasisArtikel ON ArtiKomp.ArtikelID = BasisArtikel.ID
 JOIN Artikel AS ArtikelErsatz ON ArtiKomp.KompArtikelID = ArtikelErsatz.ID
 JOIN @Artikelharmonisierung AS x ON x.AltArtikel = ArtikelErsatz.ArtikelNr
-JOIN Artikel AS ArtikelErsatzNeu ON x.NeuArtikel = ArtikelErsatzNeu.ID
-WHERE NOT EXISTS (
-  SELECT ak.*
-  FROM ArtiKomp AS ak
-  WHERE ak.KompArtikelID = ArtikelErsatzNeu.ID
-    AND ak.ArtikelID = ArtiKomp.ArtikelID
-);
+JOIN Artikel AS ArtikelErsatzNeu ON x.NeuArtikel = ArtikelErsatzNeu.ArtikelNr
+WHERE ArtiKomp.ArtiRelID = 1
+  AND NOT EXISTS (
+    SELECT ak.*
+    FROM ArtiKomp AS ak
+    WHERE ak.KompArtikelID = ArtikelErsatzNeu.ID
+      AND ak.ArtikelID = ArtiKomp.ArtikelID
+      AND ak.ArtiRelID = 1
+  );
