@@ -53,7 +53,7 @@ if ($errormsg -eq "") {
   $mailnotification = @{
       From = 'SDC Restart Script <no-reply@salesianer.com>'
       To = 'Stefan THALLER <s.thaller@salesianer.com>'
-      Subject = 'SDC Gateways restart script - ENNS'
+      Subject = 'SDC Gateways restart script - Lenzing'
       Body = $Body
       SmtpServer = 'SMWMAIL2.sal.co.at'
   }
@@ -69,8 +69,8 @@ else {
   $mailnotification = @{
       From = 'SDC Restart Script <no-reply@salesianer.com>'
       To = 'Stefan THALLER <s.thaller@salesianer.com>'
-      Subject = 'ERROR: SDC Gateways restart script - ENNS'
-      Body = "The user $env:USERNAME has encountered an error while executing the remote restart script for SDC Gateways in Enns! Error message is: $errormsg"
+      Subject = 'ERROR: SDC Gateways restart script - Lenzing'
+      Body = "The user $env:USERNAME has encountered an error while executing the remote restart script for SDC Gateways in Lenzing! Error message is: $errormsg"
       SmtpServer = 'SMWMAIL2.sal.co.at'
   }
 
