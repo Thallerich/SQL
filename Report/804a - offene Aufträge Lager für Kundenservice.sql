@@ -22,6 +22,7 @@ CREATE TABLE #Result804a (
   Artikelbezeichnung nvarchar(60),
   Größe nvarchar(12),
   Anlage datetime2,
+  AuftragsNr nvarchar(40),
   ABTermin date,
   Entnahmeliste int,
   EntnahmeAnlage datetime2,
@@ -41,8 +42,8 @@ Traegerstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = N'TRAEGER'
 )
-INSERT INTO #Result804a (ServiceMA, BetreuerMA, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage, ABTermin, Entnahmeliste, EntnahmeAnlage, EntnahmeDruck, EntnhameZeit, EntnahmePatch, Einsatzgrund)
-SELECT ServiceMA.Name AS ServiceMA, BetreuerMA.Name AS BetreuerMA, Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Anlage_ AS Anlage, LiefAbPo.Termin AS ABTermin, EntnKo.ID AS Entnahmeliste, EntnKo.Anlage_ AS EntnahmeAnlage, EntnKo.DruckDatum AS EntnahmeDruck, EntnahmeZeit = (
+INSERT INTO #Result804a (ServiceMA, BetreuerMA, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage, AuftragsNr, ABTermin, Entnahmeliste, EntnahmeAnlage, EntnahmeDruck, EntnhameZeit, EntnahmePatch, Einsatzgrund)
+SELECT ServiceMA.Name AS ServiceMA, BetreuerMA.Name AS BetreuerMA, Kunden.KdNr, Kunden.SuchCode AS Kunde, Holding.Holding, Traeger.Nachname, Traeger.Vorname, Traegerstatus.StatusBez AS Trägerstatus, EinzHist.Barcode, Teilestatus.StatusBez AS Teilestatus, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGroe.Groesse AS Größe, EinzHist.Anlage_ AS Anlage, Auftrag.AuftragsNr, LiefAbPo.Termin AS ABTermin, EntnKo.ID AS Entnahmeliste, EntnKo.Anlage_ AS EntnahmeAnlage, EntnKo.DruckDatum AS EntnahmeDruck, EntnahmeZeit = (
   SELECT MAX(Scans.[DateTime])
   FROM Scans
   WHERE Scans.EinzHistID = EinzHist.ID
@@ -64,6 +65,7 @@ JOIN Holding ON Kunden.HoldingID = Holding.ID
 JOIN Teilestatus ON EinzHist.[Status] = Teilestatus.[Status]
 JOIN Traegerstatus ON Traeger.[Status] = Traegerstatus.[Status]
 JOIN Einsatz ON EinzHist.EinsatzGrund = Einsatz.EinsatzGrund
+JOIN Auftrag ON EinzHist.StartAuftragID = Auftrag.ID
 LEFT JOIN EntnPo ON EinzHist.EntnPoID = EntnPo.ID AND EinzHist.EntnPoID > 0
 LEFT JOIN EntnKo ON EntnPo.EntnKoID = EntnKo.ID
 LEFT JOIN TeileBPo ON TeileBPo.EinzHistID = EinzHist.ID AND TeileBPo.Latest = 1
@@ -86,8 +88,6 @@ WHERE EinzHist.Anlage_ > CAST(N'2019-04-01 00:00:00' AS datetime2)
 /* ++ Pipeline: Reportdaten                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DECLARE @lieftage int = (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'INTERNET_LIEFZEITNACHANLIEF');
-
-SELECT ServiceMA AS [Kundenservice-Mitarbeiter], BetreuerMA AS Betreuer, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage AS [Teil angelegt am], ABTermin AS [Termin Auftragsbestätigung], Entnahmeliste AS EntnahmelistenNr, EntnahmeAnlage AS [Entnahmeliste angelegt am], EntnahmeDruck AS [Druckdatum Entnahmeliste], EntnhameZeit AS [Entnahme-Datum], EntnahmePatch AS [Patchdatum Entnahmeliste], Einsatzgrund, DATEADD(day, @lieftage, ABTermin) AS [Termin Lieferung Kunde]
+SELECT ServiceMA AS [Kundenservice-Mitarbeiter], BetreuerMA AS Betreuer, KdNr, Kunde, Holding, Nachname, Vorname, Trägerstatus, Barcode, Teilestatus, ArtikelNr, Artikelbezeichnung, Größe, Anlage AS [Teil angelegt am], AuftragsNr AS [Auftrags-Nummer], ABTermin AS [Termin Auftragsbestätigung], Entnahmeliste AS EntnahmelistenNr, EntnahmeAnlage AS [Entnahmeliste angelegt am], EntnahmeDruck AS [Druckdatum Entnahmeliste], EntnhameZeit AS [Entnahme-Datum], EntnahmePatch AS [Patchdatum Entnahmeliste], Einsatzgrund, DATEADD(day, (SELECT CAST(Settings.ValueMemo AS int) FROM Settings WHERE Settings.Parameter = N'INTERNET_LIEFZEITNACHANLIEF'), ABTermin) AS [Termin Lieferung Kunde]
 FROM #Result804a
 ORDER BY [Entnahmeliste angelegt am];
