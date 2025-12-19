@@ -1,4 +1,4 @@
-DECLARE @Computer nvarchar(50) = N'THAT192025';
+DECLARE @Computer nvarchar(50) = N'';
 
 IF @Computer != N''
   SELECT TOP 50 ArbPlatz.ComputerName, Mitarbei.MitarbeiUser AS Benutzer, Mitarbei.UserName AS Kürzel, LoginLog.LogInZeit, LoginLog.AdvanTexVersion, REPLACE(LoginLog.StartParameter, N'/Exit=Yes /MANDANT:Salesianer', N'') AS StartParameter, LoginLog.WindowsUserName,
