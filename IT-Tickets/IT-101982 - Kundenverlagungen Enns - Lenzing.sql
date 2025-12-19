@@ -15,7 +15,7 @@ JOIN StandKon AS StandKonNeu ON _IT101982_StandKon.StandKonID = StandKonNeu.ID;
 
 GO
 
-SELECT VsaTour.ID AS VsaTourID, VsaTour.VsaID, VsaTour.TourenID, VsaTour.KdBerID, Bereich.ID AS BereichID, _IT101982_Touren.FolgeNeu, VsaTour.Holen, VsaTour.Bringen, VsaTour.StopZeit, VsaTour.AusliefDauer, _IT101982_Touren.VonDatum AS VonDatum_TourNeu, _IT101982_Touren.BisDatum AS BisDatum_TourAlt, _IT101982_Touren.MinBearbTage, Vsa.VsaNr, Touren.Tour, Bereich.BereichBez
+SELECT VsaTour.ID AS VsaTourID, VsaTour.VsaID, VsaTour.TourenID, TourenNeu.ID AS TourenNeuID, VsaTour.KdBerID, Bereich.ID AS BereichID, _IT101982_Touren.FolgeNeu, VsaTour.Holen, VsaTour.Bringen, VsaTour.StopZeit, VsaTour.AusliefDauer, _IT101982_Touren.VonDatum AS VonDatum_TourNeu, _IT101982_Touren.BisDatum AS BisDatum_TourAlt, _IT101982_Touren.MinBearbTage, Vsa.VsaNr, Touren.Tour, Bereich.BereichBez
 INTO #VsaTourUpdate
 FROM VsaTour
 JOIN Vsa ON VsaTour.VsaID = Vsa.ID
@@ -24,7 +24,8 @@ JOIN Touren ON VsaTour.TourenID = Touren.ID
 JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN _IT101982_Touren ON Kunden.KdNr = _IT101982_Touren.KdNr AND Vsa.VsaNr = _IT101982_Touren.VsaNr AND Bereich.BereichBez = _IT101982_Touren.Bereich AND Touren.Tour = _IT101982_Touren.Tour AND VsaTour.Folge = _IT101982_Touren.Folge
-WHERE CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum;
+JOIN Touren AS TourenNeu ON _IT101982_Touren.TourenNeu = Touren.Tour
+WHERE CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum; 
 
 GO
 
@@ -63,7 +64,7 @@ BEGIN TRY
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
 
     INSERT INTO VsaTour (VsaID, TourenID, KdBerID, Folge, Holen, Bringen, StopZeit, AusliefDauer, VonDatum, BisDatum, AnlageUserID_, UserID_)
-    SELECT VsaID, TourenID, KdBerID, FolgeNeu AS Folge, Holen, Bringen, StopZeit, AusliefDauer, VonDatum_TourNeu AS VonDatum, '2099-12-31' AS BisDatum, @userid AS AnlageUserID_, @userid AS UserID_
+    SELECT VsaID, TourenNeuID, KdBerID, FolgeNeu AS Folge, Holen, Bringen, StopZeit, AusliefDauer, VonDatum_TourNeu AS VonDatum, '2099-12-31' AS BisDatum, @userid AS AnlageUserID_, @userid AS UserID_
     FROM #VsaTourUpdate;
 
     SET @msg = CAST(@@ROWCOUNT AS nvarchar) + N' neue VSA-Touren wurden angelegt.';
