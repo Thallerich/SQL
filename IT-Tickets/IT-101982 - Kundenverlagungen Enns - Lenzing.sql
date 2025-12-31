@@ -5,7 +5,7 @@ GO
 DROP TABLE IF EXISTS #VsaStandKon, #VsaTourUpdate;
 GO
 
-SELECT Vsa.ID AS VsaID, _IT101982_StandKon.StandKonID, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu
+SELECT Vsa.ID AS VsaID, _IT101982_StandKon.StandKonID, StandKonAlt.ID AS StandKonIDAlt, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu
 INTO #VsaStandKon
 FROM _IT101982_StandKon
 JOIN Vsa ON _IT101982_StandKon.VsaNr = Vsa.VsaNr
@@ -24,7 +24,7 @@ JOIN Touren ON VsaTour.TourenID = Touren.ID
 JOIN KdBer ON VsaTour.KdBerID = KdBer.ID
 JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN _IT101982_Touren ON Kunden.KdNr = _IT101982_Touren.KdNr AND Vsa.VsaNr = _IT101982_Touren.VsaNr AND Bereich.BereichBez = _IT101982_Touren.Bereich AND Touren.Tour = _IT101982_Touren.Tour AND VsaTour.Folge = _IT101982_Touren.Folge
-JOIN Touren AS TourenNeu ON _IT101982_Touren.TourenNeu = Touren.Tour
+JOIN Touren AS TourenNeu ON _IT101982_Touren.TourNeu = TourenNeu.Tour
 WHERE CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum; 
 
 GO
@@ -89,5 +89,34 @@ BEGIN CATCH
   
   RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
 END CATCH;
+
+GO
+
+DECLARE curVsaUpdate CURSOR FOR
+  SELECT VsaID, StandKonID, StandKonIDAlt
+  FROM #VsaStandKon;
+
+DECLARE @VsaID bigint, @StandKonIDNeu bigint, @StandKonIDAlt bigint, @rownumber int = 1, @maxrows int;
+DECLARE @msg nvarchar(max);
+
+SELECT @maxrows = COUNT(*) FROM #VsaStandKon;
+
+OPEN curVsaUpdate;
+FETCH NEXT FROM curVsaUpdate INTO @VsaID, @StandKonIDNeu, @StandKonIDAlt;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+  EXEC dbo.SdcUpdateForVSA @VsaID = @VsaID, @OldStandKonID = @StandKonIDAlt, @NewStandKonID = @StandKonIDNeu;
+
+  SELECT @msg = N'Running SDC Update for VSA row number ' + CAST(@rownumber AS nvarchar) + N' / ' + CAST(@maxrows AS nvarchar);
+  RAISERROR(@msg, 0, 1) WITH NOWAIT;
+
+  SET @rownumber += 1;
+
+  FETCH NEXT FROM curVsaUpdate INTO @VsaID, @StandKonIDNeu, @StandKonIDAlt;
+END;
+
+CLOSE curVsaUpdate;
+DEALLOCATE curVsaUpdate;
 
 GO
