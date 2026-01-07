@@ -36,14 +36,14 @@ DECLARE @curweek nchar(7) = (SELECT Week.Woche FROM [WEEK] WHERE GETDATE() BETWE
 BEGIN TRY
   BEGIN TRANSACTION;
   
-    UPDATE EinzHist SET WegGrundID = @ArtikelwechselGrundID
+    UPDATE EinzHist SET WegGrundID = @ArtikelwechselGrundID, UserID_ = @userid
     WHERE ID IN (SELECT EinzHistID FROM #Artikeltausch);
 
-    UPDATE EinzTeil SET ArtGroeID = #Artikeltausch.ArtGroeIDNeu, ArtikelID = #Artikeltausch.ArtikelIDNeu
+    UPDATE EinzTeil SET ArtGroeID = #Artikeltausch.ArtGroeIDNeu, ArtikelID = #Artikeltausch.ArtikelIDNeu, UserID_ = @userid
     FROM #Artikeltausch
     WHERE #Artikeltausch.EinzTeilID = EinzTeil.ID;
     
-    UPDATE #EinzHistNeu SET ID = NEXT VALUE FOR NextID_EINZHIST, Barcode = EinzTeil.Code, RentomatChip = EinzTeil.Code2, SecondaryCode = EinzTeil.Code3, UebernahmeCode = EinzTeil.Code4, ArtikelID = EinzTeil.ArtikelID, ArtGroeID = EinzTeil.ArtGroeID, Archiv = 0, EinzHistVon = @worktimestamp, EinzHistBis = N'2099-12-31 23:59:59', EinzHistTyp = 1, PoolFkt = Bereich.UsesBkOpTeile, Indienst = IIF(#EinzHistNeu.Indienst IS NOT NULL, @curweek, NULL), IndienstDat = IIF(#EinzHistNeu.Indienst IS NOT NULL, @today, NULL), NachfolgeEinzHistID = -1, LagerOrtID = -1, Anlage_ = GETDATE(), AnlageUserID_ = @userid
+    UPDATE #EinzHistNeu SET ID = NEXT VALUE FOR NextID_EINZHIST, Barcode = EinzTeil.Code, RentomatChip = EinzTeil.Code2, SecondaryCode = EinzTeil.Code3, UebernahmeCode = EinzTeil.Code4, ArtikelID = EinzTeil.ArtikelID, ArtGroeID = EinzTeil.ArtGroeID, Archiv = 0, EinzHistVon = @worktimestamp, EinzHistBis = N'2099-12-31 23:59:59', EinzHistTyp = 1, Indienst = IIF(#EinzHistNeu.Indienst IS NOT NULL, @curweek, NULL), IndienstDat = IIF(#EinzHistNeu.Indienst IS NOT NULL, @today, NULL), NachfolgeEinzHistID = -1, LagerOrtID = -1, Anlage_ = GETDATE(), AnlageUserID_ = @userid, Update_ = GETDATE(), UserID_ = @userid
     FROM EinzTeil
     JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
     JOIN Bereich ON Artikel.BereichID = Bereich.ID
@@ -53,11 +53,11 @@ BEGIN TRY
     SELECT *
     FROM #EinzHistNeu;
 
-    UPDATE EinzHist SET EinzHistBis = @worktimestamp, Ausdienst = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AusdienstDat = IIF(EinzHist.Indienst IS NOT NULL, @today, NULL), Abmeldung = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AbmeldDat = IIF(EinzHist.Indienst IS NOT NULL, @today, NULL)
+    UPDATE EinzHist SET EinzHistBis = @worktimestamp, Ausdienst = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AusdienstDat = IIF(EinzHist.Indienst IS NOT NULL, @today, NULL), Abmeldung = IIF(EinzHist.Indienst IS NOT NULL, @curweek, NULL), AbmeldDat = IIF(EinzHist.Indienst IS NOT NULL, @today, NULL), UserID_ = @userid
     FROM #Artikeltausch
     WHERE #Artikeltausch.EinzHistID = EinzHist.ID;
 
-    UPDATE EinzTeil SET CurrEinzHistID = #EinzHistNeu.ID
+    UPDATE EinzTeil SET CurrEinzHistID = #EinzHistNeu.ID, UserID_ = @userid
     FROM #EinzHistNeu
     WHERE EinzTeil.ID = #EinzHistNeu.EinzTeilID;
   
