@@ -22,7 +22,7 @@ AS
         WHEN N'Article'
           THEN N'SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<ArticleNumber>'', SalExLog.HTTPRequest, 1) + 15, CHARINDEX(N''</ArticleNumber>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<ArticleNumber>'', SalExLog.HTTPRequest, 1) + 15)) = @searchstring'
         WHEN N'Invoice'
-          THEN N'TRY_CAST(SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<InvoiceNumber>'', SalExLog.HTTPRequest, 1) + 15, CHARINDEX(N''</InvoiceNumber>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<InvoiceNumber>'', SalExLog.HTTPRequest, 1) + 15)) AS int) = TRY_CAST(@searchstring AS int)'
+          THEN N'SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<InvoiceNumber>'', SalExLog.HTTPRequest, 1) + 15, CHARINDEX(N''</InvoiceNumber>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<InvoiceNumber>'', SalExLog.HTTPRequest, 1) + 15)) = @searchstring'
         WHEN N'Customer'
           THEN N'TRY_CAST(SUBSTRING(SalExLog.HTTPRequest, CHARINDEX(N''<Number>'', SalExLog.HTTPRequest, 1) + 8, CHARINDEX(N''</Number>'', SalExLog.HTTPRequest, 1) - (CHARINDEX(N''<Number>'', SalExLog.HTTPRequest, 1) + 8)) AS int) = TRY_CAST(@searchstring AS int)'
         WHEN N'PayedWash'
