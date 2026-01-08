@@ -21,7 +21,7 @@ SET @sqltext = N'
     Vsa.Bez AS Vsa,
     Artikel.ArtikelNr,
     Artikel.ArtikelBez$LAN$ AS Artikel,
-    ISNULL(VsaAnf.Bestand, 0) AS Vertragsbestand,
+    SUM(ISNULL(VsaAnf.Bestand, 0)) AS Vertragsbestand,
     SUM(IIF(EinzTeil.Status = N''Q'', 1, 0)) AS [Teile beim Kunden],
     SUM(IIF(EinzTeil.Status = N''W'' AND EinzTeil.IsInvoiced = 1, 1, 0)) AS [Schwundmarkiert (verrechnet)],
     SUM(IIF(EinzTeil.Status = N''W'' AND EinzTeil.IsInvoiced = 0, 1, 0)) AS [Schwundmarkiert (nicht verrechnet)],
@@ -43,7 +43,7 @@ SET @sqltext = N'
   WHERE Kunden.ID = @kundenid
     AND EinzTeil.Status IN (N''Q'', N''W'')
     AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 165, 173, 116)
-  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, VsaAnf.Bestand;
+  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$;
 ';
 
 EXEC sp_executesql @sqltext, N'@kundenid int, @stark int, @schwach int, @kaum int', @kundenid, @stark, @schwach, @kaum;
