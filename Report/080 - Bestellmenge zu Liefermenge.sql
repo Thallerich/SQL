@@ -439,12 +439,12 @@ SELECT ArtikelNr,
   Artikelstatus,
   [Bestellmenge offen],
   [Bestellmenge 12 Monate],
-  [Liefermenge 12 Monate],
+  [Liefermenge 12 Monate] = TRY_CAST([Liefermenge 12 Monate] AS bigint),
   [Bestellmenge zu Liefermenge %] = ROUND(IIF(ISNULL([Bestellmenge 12 Monate], 0) = 0, 0, 100 * ISNULL([Bestellmenge 12 Monate], 0) / IIF(ISNULL([Liefermenge 12 Monate], 0) = 0, 1, [Liefermenge 12 Monate])), 2),
-  Umlaufmenge,
+  Umlaufmenge = TRY_CAST(Umlaufmenge AS bigint),
   [EK-Preis],
-  [TLM-Spitze],
-  [TLM letzte 4 Wochen],
+  [TLM-Spitze] = TRY_CAST([TLM-Spitze] AS bigint),
+  [TLM letzte 4 Wochen] = TRY_CAST([TLM letzte 4 Wochen] AS bigint),
   [stärkster Monat],
   [GAST],
   [MED],
@@ -459,7 +459,7 @@ SELECT ArtikelNr,
                             WHEN 5 THEN N'Freitag'
                             ELSE N'-'
                           END,
-  [Min. Menge TLM-Spitze],
+  [Min. Menge TLM-Spitze] = TRY_CAST([Min. Menge TLM-Spitze] AS bigint),
   [Max. Tag TLM-Spitze] = CASE #ResultSet.[Max. Tag TLM-Spitze]
                             WHEN 1 THEN N'Montag'
                             WHEN 2 THEN N'Dienstag'
@@ -468,7 +468,7 @@ SELECT ArtikelNr,
                             WHEN 5 THEN N'Freitag'
                             ELSE N'-'
                           END,
-  [Max. Menge TLM-Spitze],
+  [Max. Menge TLM-Spitze] = TRY_CAST([Max. Menge TLM-Spitze] AS bigint),
   [Schwankungsgrad TLM-Spitze] = ROUND([Max. Menge TLM-Spitze] / IIF([Min. Menge TLM-Spitze] = 0, 1, [Min. Menge TLM-Spitze]), 2),
   [Min. Tag TLM-4-Wochen] = CASE #ResultSet.[Min. Tag TLM-4-Wochen]
                             WHEN 1 THEN N'Montag'
@@ -478,7 +478,7 @@ SELECT ArtikelNr,
                             WHEN 5 THEN N'Freitag'
                             ELSE N'-'
                           END,
-  [Min. Menge TLM-4-Wochen],
+  [Min. Menge TLM-4-Wochen] = TRY_CAST([Min. Menge TLM-4-Wochen] AS bigint),
   [Max. Tag TLM-4-Wochen] = CASE #ResultSet.[Max. Tag TLM-4-Wochen]
                             WHEN 1 THEN N'Montag'
                             WHEN 2 THEN N'Dienstag'
@@ -487,7 +487,7 @@ SELECT ArtikelNr,
                             WHEN 5 THEN N'Freitag'
                             ELSE N'-'
                           END,
-  [Min. Menge TLM-4-Wochen],
+  [Max. Menge TLM-4-Wochen] = TRY_CAST([Max. Menge TLM-4-Wochen] AS bigint),
   [Schwankungsgrad TLM-4-Wochen] = ROUND([Max. Menge TLM-4-Wochen] / IIF([Min. Menge TLM-4-Wochen] = 0, 1, [Min. Menge TLM-4-Wochen]), 2)
 FROM #ResultSet
 WHERE [Liefermenge 12 Monate] IS NOT NULL
