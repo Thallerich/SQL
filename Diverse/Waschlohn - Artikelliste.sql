@@ -12,7 +12,7 @@ JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = Stan
 JOIN RechPo ON AbtKdArW.RechPoID = RechPo.ID
 JOIN RechKo ON RechPo.RechKoID = RechKo.ID
 JOIN Wochen ON AbtKdArW.WochenID = Wochen.ID
-WHERE Wochen.Monat1 BETWEEN N'2024-04' AND N'2025-03'
+WHERE Wochen.Monat1 BETWEEN N'2025-01' AND N'2025-12'
   AND RechKo.[Status] < N'X'
   AND RechKo.[Status] >= N'N'
   AND Kunden.FirmaID = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'FA14')
@@ -29,8 +29,8 @@ JOIN Bereich ON Artikel.BereichID = Bereich.ID
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 JOIN Standort ON LsPo.ProduktionID = Standort.ID
 LEFT JOIN #LeasingUmsatz ON #LeasingUmsatz.KdArtiID = KdArti.ID AND #LeasingUmsatz.ProduktionID = Standort.ID
-WHERE LsKo.Datum >= N'2024-04-01'
-  AND LsKo.Datum <= N'2025-03-31'
+WHERE LsKo.Datum >= N'2025-01-01'
+  AND LsKo.Datum <= N'2025-12-31'
   AND LsKo.InternKalkFix = 1
   AND LsKo.SentToSAP = 1
   AND Kunden.FirmaID = (SELECT Firma.ID FROM Firma WHERE Firma.SuchCode = N'FA14')
