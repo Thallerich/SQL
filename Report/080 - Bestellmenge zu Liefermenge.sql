@@ -2,9 +2,7 @@
 /* ++ Pipeline: prepareData                                                                                                     ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-DROP TABLE IF EXISTS #Umlauf;
-DROP TABLE IF EXISTS #Liefermenge;
-DROP TABLE IF EXISTS #ResultSet;
+DROP TABLE IF EXISTS #Umlauf, #Liefermenge, #ResultSet;
 
 DECLARE @CurrentWeek nchar(7) = (SELECT Week.Woche FROM Week WHERE CAST(GETDATE() AS date) BETWEEN Week.VonDat AND Week.BisDat);
 DECLARE @WarehouseLocation int = $2$;
@@ -14,6 +12,8 @@ CREATE TABLE #Liefermenge (
   ArtikelID bigint,
   Monat char(7),
   Woche char(7),
+  Datum date,
+  Wochentag tinyint,
   Liefermenge numeric(18,4)
 );
 
@@ -112,8 +112,8 @@ GROUP BY ProduktionID, ArtikelID;
 
 IF $4$ = 0
 BEGIN
-  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Liefermenge)
-  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
+  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Datum, Wochentag, Liefermenge)
+  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, LsKo.Datum, DATEPART(weekday, LsKo.Datum) AS Wochentag, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
@@ -126,12 +126,12 @@ BEGIN
     AND LsKo.ProduktionID IN ($1$)
     AND LsKo.[Status] >= 'O'
     AND Artikel.BereichID IN ($3$)
-  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche, LsKo.Datum, DATEPART(weekday, LsKo.Datum);
 END
 ELSE
 BEGIN
-  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Liefermenge)
-  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, SUM(LsPo.Menge) AS Liefermenge
+  INSERT INTO #Liefermenge (SGF, ArtikelID, Monat, Woche, Datum, Wochentag, Liefermenge)
+  SELECT KdGf.KurzBez AS SGF, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM') AS Monat, [Week].Woche, LsKo.Datum, DATEPART(weekday, LsKo.Datum) AS Wochentag, SUM(LsPo.Menge) AS Liefermenge
   FROM LsPo
   JOIN LsKo ON LsPo.LsKoID = LsKo.ID
   JOIN [Week] ON LsKo.Datum BETWEEN [Week].VonDat AND [Week].BisDat
@@ -146,7 +146,7 @@ BEGIN
     AND StandBer.ProduktionID IN ($1$)
     AND LsKo.[Status] >= 'O'
     AND Artikel.BereichID IN ($3$)
-  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche;
+  GROUP BY KdGf.KurzBez, KdArti.ArtikelID, FORMAT(LsKo.Datum, N'yyyy-MM'), [Week].Woche, LsKo.Datum, DATEPART(weekday, LsKo.Datum);
 END;
 
 SELECT Artikel.ArtikelNr,
@@ -270,7 +270,155 @@ SELECT Artikel.ArtikelNr,
     SELECT ROUND(100 * (SUM(IIF(#Liefermenge.SGF NOT IN (N'GAST', N'MED', N'JOB', N'MIC'), #Liefermenge.Liefermenge, 0)) / IIF(SUM(#Liefermenge.Liefermenge) = 0, 1, SUM(#Liefermenge.Liefermenge))), 2)
     FROM #Liefermenge
     WHERE #Liefermenge.ArtikelID = Artikel.ID
-  )
+  ),
+  [Min. Tag TLM-Spitze] = (
+    SELECT TOP 1 Wochentag
+    FROM (
+      SELECT #Liefermenge.Monat, #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+      GROUP BY #Liefermenge.Monat, #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    WHERE TLMTag.Monat = (
+      SELECT TOP 1 TLMMenge.Monat
+      FROM (
+        SELECT #Liefermenge.Monat, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+        FROM #Liefermenge
+        WHERE #Liefermenge.ArtikelID = Artikel.ID
+        GROUP BY #Liefermenge.Monat
+      ) AS TLMMenge
+      ORDER BY TLMMenge.Liefermenge DESC
+    )
+    ORDER BY TLMTag.Liefermenge ASC
+  ),
+  [Min. Menge TLM-Spitze] = ISNULL((
+    SELECT TOP 1 Liefermenge
+    FROM (
+      SELECT #Liefermenge.Monat, #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+      GROUP BY #Liefermenge.Monat, #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    WHERE TLMTag.Monat = (
+      SELECT TOP 1 TLMMenge.Monat
+      FROM (
+        SELECT #Liefermenge.Monat, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+        FROM #Liefermenge
+        WHERE #Liefermenge.ArtikelID = Artikel.ID
+        GROUP BY #Liefermenge.Monat
+      ) AS TLMMenge
+      ORDER BY TLMMenge.Liefermenge DESC
+    )
+    ORDER BY TLMTag.Liefermenge ASC
+  ), 0),
+  [Max. Tag TLM-Spitze] = (
+    SELECT TOP 1 Wochentag
+    FROM (
+      SELECT #Liefermenge.Monat, #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+      GROUP BY #Liefermenge.Monat, #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    WHERE TLMTag.Monat = (
+      SELECT TOP 1 TLMMenge.Monat
+      FROM (
+        SELECT #Liefermenge.Monat, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+        FROM #Liefermenge
+        WHERE #Liefermenge.ArtikelID = Artikel.ID
+        GROUP BY #Liefermenge.Monat
+      ) AS TLMMenge
+      ORDER BY TLMMenge.Liefermenge DESC
+    )
+    ORDER BY TLMTag.Liefermenge DESC
+  ),
+  [Max. Menge TLM-Spitze] = ISNULL((
+    SELECT TOP 1 Liefermenge
+    FROM (
+      SELECT #Liefermenge.Monat, #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+      GROUP BY #Liefermenge.Monat, #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    WHERE TLMTag.Monat = (
+      SELECT TOP 1 TLMMenge.Monat
+      FROM (
+        SELECT #Liefermenge.Monat, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+        FROM #Liefermenge
+        WHERE #Liefermenge.ArtikelID = Artikel.ID
+        GROUP BY #Liefermenge.Monat
+      ) AS TLMMenge
+      ORDER BY TLMMenge.Liefermenge DESC
+    )
+    ORDER BY TLMTag.Liefermenge DESC
+  ), 0),
+  [Min. Tag TLM-4-Wochen] = (
+    SELECT TOP 1 Wochentag
+    FROM (
+      SELECT #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+        AND #Liefermenge.Woche IN (SELECT TOP 4 [Week].Woche COLLATE Latin1_General_CI_AS FROM [Week] WHERE [Week].Woche < @CurrentWeek ORDER BY [Week].Woche DESC)
+      GROUP BY #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    ORDER BY TLMTag.Liefermenge ASC
+  ),
+  [Min. Menge TLM-4-Wochen] = ISNULL((
+    SELECT TOP 1 Liefermenge
+    FROM (
+      SELECT #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+        AND #Liefermenge.Woche IN (SELECT TOP 4 [Week].Woche COLLATE Latin1_General_CI_AS FROM [Week] WHERE [Week].Woche < @CurrentWeek ORDER BY [Week].Woche DESC)
+      GROUP BY #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    ORDER BY TLMTag.Liefermenge ASC
+  ), 0),
+  [Max. Tag TLM-4-Wochen] = (
+    SELECT TOP 1 Wochentag
+    FROM (
+      SELECT #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+        AND #Liefermenge.Woche IN (SELECT TOP 4 [Week].Woche COLLATE Latin1_General_CI_AS FROM [Week] WHERE [Week].Woche < @CurrentWeek ORDER BY [Week].Woche DESC)
+      GROUP BY #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    ORDER BY TLMTag.Liefermenge DESC
+  ),
+  [Max. Menge TLM-4-Wochen] = ISNULL((
+    SELECT TOP 1 Liefermenge
+    FROM (
+      SELECT #Liefermenge.Wochentag, SUM(#Liefermenge.Liefermenge) AS Liefermenge
+      FROM #Liefermenge
+      WHERE #Liefermenge.ArtikelID = Artikel.ID
+        AND #Liefermenge.Wochentag >= 1 /* Montag */
+        AND #Liefermenge.Wochentag <= 5 /* Freitag */
+        AND #Liefermenge.Woche IN (SELECT TOP 4 [Week].Woche COLLATE Latin1_General_CI_AS FROM [Week] WHERE [Week].Woche < @CurrentWeek ORDER BY [Week].Woche DESC)
+      GROUP BY #Liefermenge.Wochentag
+      HAVING SUM(#Liefermenge.Liefermenge) > 0
+    ) AS TLMTag
+    ORDER BY TLMTag.Liefermenge DESC
+  ), 0)
 INTO #ResultSet
 FROM Artikel
 JOIN (
@@ -302,7 +450,45 @@ SELECT ArtikelNr,
   [MED],
   [JOB],
   [MIC],
-  [Rest]
+  [Rest],
+  [Min. Tag TLM-Spitze] = CASE #ResultSet.[Min. Tag TLM-Spitze]
+                            WHEN 1 THEN N'Montag'
+                            WHEN 2 THEN N'Dienstag'
+                            WHEN 3 THEN N'Mittwoch'
+                            WHEN 4 THEN N'Donnerstag'
+                            WHEN 5 THEN N'Freitag'
+                            ELSE N'-'
+                          END,
+  [Min. Menge TLM-Spitze],
+  [Max. Tag TLM-Spitze] = CASE #ResultSet.[Max. Tag TLM-Spitze]
+                            WHEN 1 THEN N'Montag'
+                            WHEN 2 THEN N'Dienstag'
+                            WHEN 3 THEN N'Mittwoch'
+                            WHEN 4 THEN N'Donnerstag'
+                            WHEN 5 THEN N'Freitag'
+                            ELSE N'-'
+                          END,
+  [Max. Menge TLM-Spitze],
+  [Schwankungsgrad TLM-Spitze] = ROUND([Max. Menge TLM-Spitze] / IIF([Min. Menge TLM-Spitze] = 0, 1, [Min. Menge TLM-Spitze]), 2),
+  [Min. Tag TLM-4-Wochen] = CASE #ResultSet.[Min. Tag TLM-4-Wochen]
+                            WHEN 1 THEN N'Montag'
+                            WHEN 2 THEN N'Dienstag'
+                            WHEN 3 THEN N'Mittwoch'
+                            WHEN 4 THEN N'Donnerstag'
+                            WHEN 5 THEN N'Freitag'
+                            ELSE N'-'
+                          END,
+  [Min. Menge TLM-4-Wochen],
+  [Max. Tag TLM-4-Wochen] = CASE #ResultSet.[Max. Tag TLM-4-Wochen]
+                            WHEN 1 THEN N'Montag'
+                            WHEN 2 THEN N'Dienstag'
+                            WHEN 3 THEN N'Mittwoch'
+                            WHEN 4 THEN N'Donnerstag'
+                            WHEN 5 THEN N'Freitag'
+                            ELSE N'-'
+                          END,
+  [Min. Menge TLM-4-Wochen],
+  [Schwankungsgrad TLM-4-Wochen] = ROUND([Max. Menge TLM-4-Wochen] / IIF([Min. Menge TLM-4-Wochen] = 0, 1, [Min. Menge TLM-4-Wochen]), 2)
 FROM #ResultSet
 WHERE [Liefermenge 12 Monate] IS NOT NULL
   OR [Bestellmenge 12 Monate] IS NOT NULL
