@@ -21,7 +21,7 @@ SET @sqltext = N'
     Vsa.Bez AS Vsa,
     Artikel.ArtikelNr,
     Artikel.ArtikelBez$LAN$ AS Artikel,
-    SUM(ISNULL(VsaAnf.Bestand, 0)) AS Vertragsbestand,
+    ISNULL(VsaAnf.Bestand, 0) AS Vertragsbestand,
     SUM(IIF(EinzTeil.Status = N''Q'', 1, 0)) AS [Teile beim Kunden],
     SUM(IIF(EinzTeil.Status = N''W'' AND EinzTeil.IsInvoiced = 1, 1, 0)) AS [Schwundmarkiert (verrechnet)],
     SUM(IIF(EinzTeil.Status = N''W'' AND EinzTeil.IsInvoiced = 0, 1, 0)) AS [Schwundmarkiert (nicht verrechnet)],
@@ -39,11 +39,15 @@ SET @sqltext = N'
   JOIN Artikel ON EinzTeil.ArtikelID = Artikel.ID
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
   JOIN KdArti ON KdArti.ArtikelID = Artikel.ID AND KdArti.KundenID = Kunden.ID
-  LEFT JOIN VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = KdArti.ID
+  LEFT JOIN (
+    SELECT VsaAnf.VsaID, VsaAnf.KdArtiID, SUM(VsaAnf.Bestand) AS Bestand
+    FROM VsaAnf
+    GROUP BY VsaAnf.VsaID, VsaAnf.KdArtiID
+  ) AS VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = KdArti.ID
   WHERE Kunden.ID = @kundenid
     AND EinzTeil.Status IN (N''Q'', N''W'')
     AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 165, 173, 116)
-  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$;
+  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, VsaAnf.Bestand;
 ';
 
 EXEC sp_executesql @sqltext, N'@kundenid int, @stark int, @schwach int, @kaum int', @kundenid, @stark, @schwach, @kaum;
