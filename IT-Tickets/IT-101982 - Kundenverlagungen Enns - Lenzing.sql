@@ -5,17 +5,17 @@ GO
 DROP TABLE IF EXISTS #VsaStandKon, #VsaTourUpdate;
 GO
 
-SELECT Vsa.ID AS VsaID, _IT101982_StandKon.StandKonID, StandKonAlt.ID AS StandKonIDAlt, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu
+SELECT Vsa.ID AS VsaID, StandKonNeu.ID AS StandKonID, StandKonAlt.ID AS StandKonIDAlt, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu, _IT101982_StandKon.KontrolleXMal
 INTO #VsaStandKon
 FROM _IT101982_StandKon
 JOIN Vsa ON _IT101982_StandKon.VsaNr = Vsa.VsaNr
 JOIN Kunden ON _IT101982_StandKon.KdNr = Kunden.KdNr AND Vsa.KundenID = Kunden.ID
 JOIN StandKon AS StandKonAlt ON Vsa.StandKonID = StandKonAlt.ID
-JOIN StandKon AS StandKonNeu ON _IT101982_StandKon.StandKonID = StandKonNeu.ID;
+JOIN StandKon AS StandKonNeu ON _IT101982_StandKon.StandKonBez = StandKonNeu.StandKonBez;
 
 GO
 
-SELECT VsaTour.ID AS VsaTourID, VsaTour.VsaID, VsaTour.TourenID, TourenNeu.ID AS TourenNeuID, VsaTour.KdBerID, Bereich.ID AS BereichID, _IT101982_Touren.FolgeNeu, VsaTour.Holen, VsaTour.Bringen, VsaTour.StopZeit, VsaTour.AusliefDauer, _IT101982_Touren.VonDatum AS VonDatum_TourNeu, _IT101982_Touren.BisDatum AS BisDatum_TourAlt, _IT101982_Touren.MinBearbTage, Vsa.VsaNr, Touren.Tour, Bereich.BereichBez
+/* SELECT VsaTour.ID AS VsaTourID, VsaTour.VsaID, VsaTour.TourenID, TourenNeu.ID AS TourenNeuID, VsaTour.KdBerID, Bereich.ID AS BereichID, _IT101982_Touren.FolgeNeu, VsaTour.Holen, VsaTour.Bringen, VsaTour.StopZeit, VsaTour.AusliefDauer, _IT101982_Touren.VonDatum AS VonDatum_TourNeu, _IT101982_Touren.BisDatum AS BisDatum_TourAlt, _IT101982_Touren.MinBearbTage, Vsa.VsaNr, Touren.Tour, Bereich.BereichBez
 INTO #VsaTourUpdate
 FROM VsaTour
 JOIN Vsa ON VsaTour.VsaID = Vsa.ID
@@ -27,7 +27,7 @@ JOIN _IT101982_Touren ON Kunden.KdNr = _IT101982_Touren.KdNr AND Vsa.VsaNr = _IT
 JOIN Touren AS TourenNeu ON _IT101982_Touren.TourNeu = TourenNeu.Tour
 WHERE CAST(GETDATE() AS date) BETWEEN VsaTour.VonDatum AND VsaTour.BisDatum; 
 
-GO
+GO */
 
 DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = UPPER(REPLACE(ORIGINAL_LOGIN(), N'SAL\', N'')));
 DECLARE @msg nvarchar(max);
@@ -35,7 +35,7 @@ DECLARE @msg nvarchar(max);
 BEGIN TRY
   BEGIN TRANSACTION;
 
-    UPDATE Vsa SET StandKonID = #VsaStandKon.StandKonID, UserID_ = @userid
+    UPDATE Vsa SET StandKonID = #VsaStandKon.StandKonID, KontrolleXMal = #VsaStandKon.KontrolleXMal, UserID_ = @userid
     FROM #VsaStandKon
     WHERE Vsa.ID = #VsaStandKon.VsaID;
 
@@ -48,7 +48,8 @@ BEGIN TRY
 
     SET @msg = CAST(@@ROWCOUNT AS nvarchar) + N' VSA-Standortkonfigurations-Historieneinträge wurden erstellt.';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
-  
+    
+    /*   
     UPDATE VsaTour SET BisDatum = #VsaTourUpdate.BisDatum_TourAlt, UserID_ = @userid
     FROM #VsaTourUpdate
     WHERE #VsaTourUpdate.VsaTourID = VsaTour.ID;
@@ -76,7 +77,8 @@ BEGIN TRY
 
     SET @msg = CAST(@@ROWCOUNT AS nvarchar) + N' neue VSA-Tour-Historieneinträge (Neuanlage) wurden erstellt.';
     RAISERROR(@msg, 0, 1) WITH NOWAIT;
-  
+    */
+
   COMMIT;
 END TRY
 BEGIN CATCH
