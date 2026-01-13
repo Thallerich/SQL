@@ -3,6 +3,8 @@
 /* VSAANF existiert bereits - alten auf inaktiven, neuen auf aktiv */
 /* Häkchen bei Kundenartikel und Status auf aktiv statt falsch geliefert */
 
+/* TODO: TraeArti anpassen / einfügen !!! */
+
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 GO
