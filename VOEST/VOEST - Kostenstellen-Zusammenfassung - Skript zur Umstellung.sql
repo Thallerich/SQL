@@ -10,9 +10,8 @@ INTO #AbteilCombine
 FROM Abteil
 JOIN Kunden ON Abteil.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
-WHERE Holding.Holding = N'VOES'
-  --AND Abteil.Abteilung LIKE N'%/%'
-  AND Kunden.KdNr = 272353;
+WHERE Kunden.KdNr IN (272376, 271583, 272353)
+  AND (Abteil.Bez = '-' OR TRY_CAST(Abteil.Bez AS bigint) IS NOT NULL);
 
 GO
 
@@ -25,12 +24,27 @@ DECLARE @AbteilNew TABLE (
 
 BEGIN TRY
   BEGIN TRANSACTION;
+
+    UPDATE Abteil SET Abteilung = Abteil.Abteilung + N'***'
+    FROM (
+      SELECT DISTINCT KundenID, [Kostenstelle neu] AS Abteilung
+      FROM #AbteilCombine
+    ) AS x
+    WHERE x.KundenID = Abteil.KundenID
+      AND x.Abteilung = Abteil.Abteilung
+      AND Abteil.[Status] = 'I';
   
-    INSERT INTO Abteil (KundenID, Abteilung, [Status], Code, AnlageUserID_, UserID_)
+    INSERT INTO Abteil (KundenID, Abteilung, Bez, [Status], Code, AnlageUserID_, UserID_)
     OUTPUT inserted.ID, inserted.Abteilung
     INTO @AbteilNew
-    SELECT DISTINCT KundenID, [Kostenstelle neu] AS Abteilung, N'A' AS [Status], Code, @userid AS AnlageUserID_, @userid AS UserID_
-    FROM #AbteilCombine;
+    SELECT DISTINCT KundenID, [Kostenstelle neu] AS Abteilung, [Kostenstelle neu] AS Bez, N'A' AS [Status], Code, @userid AS AnlageUserID_, @userid AS UserID_
+    FROM #AbteilCombine
+    WHERE NOT EXISTS (
+      SELECT Abteil.*
+      FROM Abteil
+      WHERE Abteil.KundenID = #AbteilCombine.KundenID
+        AND Abteil.Abteilung = #AbteilCombine.[Kostenstelle neu]
+    );
 
     UPDATE #AbteilCombine SET AbteilID_Neu = [@AbteilNew].AbteilID
     FROM @AbteilNew
