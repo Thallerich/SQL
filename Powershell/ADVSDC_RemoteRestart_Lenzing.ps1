@@ -31,14 +31,14 @@ $key = (34, 212, 87, 145, 3, 199, 56, 78, 243, 12, 90, 255, 18, 67, 132, 201, 44
 $pwdsecurestring = Get-Content "$PSScriptRoot\SDCAdmin.cred" | ConvertTo-SecureString -Key $key
 $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $pwdsecurestring
 $rmtsession = New-CimSession -ComputerName $remoteserver -Credential $cred
-$errormsg = ""
+$errorvar = ""
 
 $selection = Read-Host -Prompt "Welcher SDC-Gateway soll neu gestartet werden? (Zahl in eckiger Klammer eingeben)`nMetrik 1 [1]  Metrik 2 [2]  Beide [0]"
 
 switch($selection) {
-  "0" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateways remote restart" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
-  "1" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Lenzing 1" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
-  "2" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Lenzing 2" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errormsg }
+  "0" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateways remote restart" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errorvar }
+  "1" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Lenzing 1" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errorvar }
+  "2" { Start-ScheduledTask -TaskPath "\AdvanTex\" -TaskName "SDC Gateway Lenzing 2" -CimSession $rmtsession -ErrorAction SilentlyContinue -ErrorVariable errorvar }
   default {
     Write-Host "Ungültige Eingabe!"
     Exit
@@ -51,7 +51,7 @@ switch($selection) {
   "2" { $Body = "The user $env:USERNAME has executed the remote restart script for SDC Gateway for Metrik 2 in Lenzing!" }
 }
 
-if ($errormsg -eq "") {
+if (-not $errorvar) {
   $mailnotification = @{
       From = 'SDC Restart Script <no-reply@salesianer.com>'
       To = 'Stefan THALLER <s.thaller@salesianer.com>'
@@ -68,11 +68,20 @@ if ($errormsg -eq "") {
   Write-Host "Bitte 5 Minuten warten, bis der Neustart abgeschlossen ist!" -ForegroundColor Yellow
 }
 else {
+  switch($selection) {
+    "0" { $subject = "ERROR: SDC Gateways restart script - Lenzing 1 und Lenzing 2" }
+    "1" { $subject = "ERROR: SDC Gateways restart script - Lenzing 1" }
+    "2" { $subject = "ERROR: SDC Gateways restart script - Lenzing 2" }
+  }
+
+  $body = "The user $env:USERNAME has encountered an error while executing the remote restart script for SDC Gateways in Lenzing! Error message is:"
+  $errorvar | ForEach-Object { $body += "`n`n$_.Exception.Message" }
+
   $mailnotification = @{
       From = 'SDC Restart Script <no-reply@salesianer.com>'
       To = 'Stefan THALLER <s.thaller@salesianer.com>'
-      Subject = 'ERROR: SDC Gateways restart script - Lenzing'
-      Body = "The user $env:USERNAME has encountered an error while executing the remote restart script for SDC Gateways in Lenzing! Error message is: $errormsg"
+      Subject = $subject
+      Body = $body
       SmtpServer = 'SMWMAIL2.sal.co.at'
   }
 
@@ -86,7 +95,7 @@ else {
 
 Send-MailMessage @mailnotification -WarningAction SilentlyContinue
 
-if ($errormsg -eq "") {
+if (-not $errorvar) {
   # Define the total duration in seconds
   $duration = 300
 
