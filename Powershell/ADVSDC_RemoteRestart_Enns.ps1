@@ -1,7 +1,7 @@
 # Script to remotely start a scheduled task
 # Author: Stefan THALLER
-# Version: 1.1
-# Timestamp: 2025-12-05 07:52
+# Version: 1.2
+# Timestamp: 2026-01-14 09:55
 
 # Script to create encrypted credential file in the current location of this script - comment out everything else and uncomment the following block
 
@@ -16,7 +16,8 @@ Function Save-Credential([string]$UserName, [string]$KeyPath) {
        }
    }
    $Credential = Get-Credential -Message "Enter the Credentials:" -UserName $UserName
-   $Credential.Password | ConvertFrom-SecureString | Out-File "$($KeyPath)\SDCAdmin.cred" -Force
+   $Key = (34, 212, 87, 145, 3, 199, 56, 78, 243, 12, 90, 255, 18, 67, 132, 201, 44, 8, 176, 230, 119, 25, 154, 63)
+   $Credential.Password | ConvertFrom-SecureString -Key $Key | Out-File "$($KeyPath)\SDCAdmin.cred" -Force
 }
 
 Save-Credential -UserName "sal\AdvantexAdmin" -KeyPath "$PSScriptRoot"
@@ -26,7 +27,8 @@ Clear-Host
 
 $remoteserver = "SRVATENSDC01.sal.co.at"
 $username = "sal\AdvantexAdmin"
-$pwdsecurestring = Get-Content "$PSScriptRoot\SDCAdmin.cred" | ConvertTo-SecureString
+$key = (34, 212, 87, 145, 3, 199, 56, 78, 243, 12, 90, 255, 18, 67, 132, 201, 44, 8, 176, 230, 119, 25, 154, 63)
+$pwdsecurestring = Get-Content "$PSScriptRoot\SDCAdmin.cred" | ConvertTo-SecureString -Key $key
 $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $pwdsecurestring
 $rmtsession = New-CimSession -ComputerName $remoteserver -Credential $cred
 $errormsg = ""
