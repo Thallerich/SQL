@@ -13,6 +13,7 @@ SELECT AnfPo.ID AS AnfPoID,
   AnfPo.Update_,
   Vsa.StandKonID,
   Standort.Bez AS Produktion,
+  Standort.ID AS ProduktionID,
   CAST(0 AS int) AS TeileAnzahl
 INTO #AnfCheck
 FROM AnfPo
@@ -24,7 +25,6 @@ JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = Stan
 JOIN Standort ON StandBer.ProduktionID = Standort.ID
 WHERE AnfKo.LieferDatum > CAST(GETDATE() AS date)
   AND AnfKo.[Status] = N'S'
-  AND AnfPo.Geliefert != 0
   AND Standort.SuchCode LIKE N'WOE_';
 
 UPDATE #AnfCheck SET TeileAnzahl = ScanSum.Anzahl
@@ -55,7 +55,7 @@ SELECT #AnfCheck.Produktion,
   CAST(#AnfCheck.Geliefert AS int) AS Geliefert,
   #AnfCheck.TeileAnzahl AS [Anzahl Teile],
   CAST(#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl AS int) AS Abweichung,
-  FORMAT(ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0) / 100, N'# %') AS [Abweichung in Prozent],
+  FORMAT(IIF(#AnfCheck.Geliefert = 0, 1, ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0) / 100), N'# %') AS [Abweichung in Prozent],
   Mitarbei.Name AS [Letzte Änderung von],
   #AnfCheck.Update_ AS Änderungszeitpunkt
 FROM #AnfCheck
@@ -67,6 +67,7 @@ JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN ArtGroe ON #AnfCheck.ArtGroeID = ArtGroe.ID
 JOIN Mitarbei ON #AnfCheck.UserID_ = Mitarbei.ID
 JOIN StandKon ON #AnfCheck.StandKonID = StandKon.ID
-WHERE ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0) >= 10
-  AND CAST(#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl AS int) > Artikel.Packmenge
+LEFT JOIN ArtiStan ON #AnfCheck.ProduktionID = ArtiStan.StandortID AND KdArti.ArtikelID = ArtiStan.ArtikelID
+WHERE IIF(#AnfCheck.Geliefert = 0, 100, ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0)) >= 10
+  AND ABS(CAST(#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl AS int)) > COALESCE(IIF(ArtiStan.Packmenge < 0, NULL, ArtiStan.Packmenge), Artikel.Packmenge)
   AND #AnfCheck.TeileAnzahl > 0;
