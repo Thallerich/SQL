@@ -40,14 +40,15 @@ SET @sqltext = N'
   JOIN Bereich ON Artikel.BereichID = Bereich.ID
   JOIN KdArti ON KdArti.ArtikelID = Artikel.ID AND KdArti.KundenID = Kunden.ID
   LEFT JOIN (
-    SELECT VsaAnf.VsaID, VsaAnf.KdArtiID, SUM(VsaAnf.Bestand) AS Bestand
+    SELECT VsaAnf.VsaID, KdArti.ArtikelID, SUM(VsaAnf.Bestand) AS Bestand
     FROM VsaAnf
-    GROUP BY VsaAnf.VsaID, VsaAnf.KdArtiID
-  ) AS VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.KdArtiID = KdArti.ID
+    JOIN KdArti ON VsaAnf.KdArtiID = KdArti.ID
+    GROUP BY VsaAnf.VsaID, KdArti.ArtikelID
+  ) AS VsaAnf ON VsaAnf.VsaID = Vsa.ID AND VsaAnf.ArtikelID = Artikel.ID
   WHERE Kunden.ID = @kundenid
     AND EinzTeil.Status IN (N''Q'', N''W'')
     AND EinzTeil.LastActionsID IN (2, 102, 120, 129, 130, 136, 137, 154, 165, 173, 116)
-  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, VsaAnf.Bestand;
+  GROUP BY KdGf.KurzBez, Bereich.BereichBez$LAN$, Kunden.KdNr, Kunden.SuchCode, Vsa.ID, Vsa.Bez, Artikel.ArtikelNr, Artikel.ArtikelBez$LAN$, ISNULL(VsaAnf.Bestand, 0);
 ';
 
 EXEC sp_executesql @sqltext, N'@kundenid int, @stark int, @schwach int, @kaum int', @kundenid, @stark, @schwach, @kaum;
