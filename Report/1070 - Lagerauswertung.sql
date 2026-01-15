@@ -5,7 +5,7 @@ DECLARE @vonWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @von BETWEEN Wee
 DECLARE @bisWoche nchar(7) = (SELECT Week.Woche FROM Week WHERE @bis BETWEEN Week.VonDat AND Week.BisDat);
 
 WITH BestandNeu AS (
-  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand
+  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand, MAX(Bestand.LetzteBewegung) AS LetzteBewegung
   FROM Bestand
   OUTER APPLY (
     SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
@@ -20,7 +20,7 @@ WITH BestandNeu AS (
   GROUP BY Bestand.ArtGroeID
 ),
 BestandGebraucht AS (
-  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand
+  SELECT Bestand.ArtGroeID, SUM(CAST(LastLagerBew.BestandNeu AS bigint)) AS Bestand, MAX(Bestand.LetzteBewegung) AS LetzteBewegung
   FROM Bestand
   OUTER APPLY (
     SELECT TOP 1 LagerBew.Zeitpunkt, LagerBew.BestandNeu
@@ -154,9 +154,10 @@ Artikelstatus AS (
   FROM [Status]
   WHERE [Status].Tabelle = UPPER(N'Artikel')
 )
-SELECT Artikel.ArtikelNr, ArtGroe.Groesse AS Größe, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.Gruppe AS Artikelgruppe, Artikelstatus.StatusBez AS [Status Artikel], SUM(ISNULL(BestandNeu.Bestand, 0)) AS Neu, SUM(ISNULL(BestandGebraucht.Bestand, 0)) AS Gebraucht, SUM(ISNULL(LagerBewNeu.Lagerabgang, 0)) AS [Lagerabgang Neu], SUM(ISNULL(LagerBewGebraucht.Lagerabgang, 0)) AS [Lagerabgang gebraucht], SUM(ISNULL(Kundenstand.Umlauf, 0)) AS [aktuell Kundenstand]
+SELECT Artikel.ArtikelNr, ArtGroe.Groesse AS Größe, Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung, ArtGru.Gruppe AS Artikelgruppe, Artikelstatus.StatusBez AS [Status Artikel], ABC.ABC, ABC.ABCBez$LAN$ AS [ABC-Bezeichnung], Bereich.Bereich, Artikel.Umlaufmenge, SUM(ISNULL(BestandNeu.Bestand, 0)) AS Neu, MAX(BestandNeu.LetzteBewegung) AS [Letzte Lagerbewegung Neu], SUM(ISNULL(BestandGebraucht.Bestand, 0)) AS Gebraucht, MAX(BestandGebraucht.LetzteBewegung) AS [Letzte Lagerbewegung Gebraucht], SUM(ISNULL(LagerBewNeu.Lagerabgang, 0)) AS [Lagerabgang Neu], SUM(ISNULL(LagerBewGebraucht.Lagerabgang, 0)) AS [Lagerabgang gebraucht], SUM(ISNULL(Kundenstand.Umlauf, 0)) AS [aktuell Kundenstand]
 FROM ArtGroe
 JOIN Artikel ON ArtGroe.ArtikelID = Artikel.ID
+JOIN Bereich on Bereich.id = Artikel.BereichID
 JOIN Artikelstatus ON Artikel.[Status] = Artikelstatus.[Status]
 JOIN ArtGru ON Artikel.ArtGruID = ArtGru.ID
 LEFT JOIN BestandNeu ON BestandNeu.ArtGroeID = ArtGroe.ID
@@ -164,5 +165,8 @@ LEFT JOIN BestandGebraucht ON BestandGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewNeu ON LagerBewNeu.ArtGroeID = ArtGroe.ID
 LEFT JOIN LagerBewGebraucht ON LagerBewGebraucht.ArtGroeID = ArtGroe.ID
 LEFT JOIN Kundenstand ON Kundenstand.ArtGroeID = ArtGroe.ID
+JOIN ABC ON ABC.ID = Artikel.ABCID
 WHERE Artikel.ID > 0
-GROUP BY Artikel.ArtikelNr, ArtGroe.Groesse, Artikel.ArtikelBez$LAN$, ArtGru.Gruppe, Artikelstatus.StatusBez;
+AND ARTGRU.ID IN ($5$) -- MEYECR IT-86239
+AND (($6$ = 1 AND Kundenstand.Umlauf > 0) OR ($6$ = 0)) -- DOBR IT-95508
+GROUP BY Artikel.ArtikelNr, ArtGroe.Groesse, Artikel.ArtikelBez$LAN$, ArtGru.Gruppe, Artikelstatus.StatusBez, ABC.ABC, ABC.ABCBez$LAN$, Bereich.Bereich, Artikel.Umlaufmenge;
