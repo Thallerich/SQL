@@ -1,4 +1,4 @@
-DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = N'THALST');
+DECLARE @userid int = (SELECT ID FROM Mitarbei WHERE UserName = UPPER(REPLACE(ORIGINAL_LOGIN(), N'SAL\', N'')));
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* ++ Cleanup                                                                                                                   ++ */
@@ -43,7 +43,7 @@ SELECT DISTINCT KdArti.ID AS KdArtiID, WascSort.ID, 51 AS SdcDevID, @userid, @us
 FROM KdArti
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
-JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr
+JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr AND KdArti.Variante = __Sortmaster.Variante COLLATE Latin1_General_CS_AS
 JOIN WascSort ON __Sortmaster.Waschsortierung = WascSort.Waschsortierung
 WHERE __Sortmaster.Waschsortierung IS NOT NULL
   AND __Sortmaster.Waschsortierung != 0;
@@ -52,11 +52,15 @@ WHERE __Sortmaster.Waschsortierung IS NOT NULL
 /* ++ Import "Waschprogramme"                                                                                                   ++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
-SELECT KdArti.ID AS KdArtiID, WaschPrg.ID AS WaschPrgID
-FROM KdArti
-JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
-JOIN Kunden ON KdArti.KundenID = Kunden.ID
-JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr
-JOIN WaschPrg ON CAST(__Sortmaster.Waschprogramm AS nvarchar) = WaschPrg.WaschPrg
-WHERE __Sortmaster.Waschprogramm IS NOT NULL
-  AND __Sortmaster.Waschprogramm != 0;
+UPDATE KdArti SET WaschPrgID = SortmasterDiff.WaschPrgID, UserID_ = @userid
+FROM (
+  SELECT KdArti.ID AS KdArtiID, WaschPrg.ID AS WaschPrgID
+  FROM KdArti
+  JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+  JOIN Kunden ON KdArti.KundenID = Kunden.ID
+  JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr AND KdArti.Variante = __Sortmaster.Variante COLLATE Latin1_General_CS_AS
+  JOIN WaschPrg ON CAST(__Sortmaster.Waschprogramm COLLATE Latin1_General_CS_AS AS nvarchar) = WaschPrg.WaschPrg
+  WHERE __Sortmaster.Waschprogramm IS NOT NULL
+    AND __Sortmaster.Waschprogramm != 0
+) AS SortmasterDiff
+WHERE SortmasterDiff.KdArtiID = KdArti.ID;
