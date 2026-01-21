@@ -25,6 +25,7 @@ JOIN StandBer ON Vsa.StandKonID = StandBer.StandKonID AND KdBer.BereichID = Stan
 JOIN Standort ON StandBer.ProduktionID = Standort.ID
 WHERE AnfKo.LieferDatum > CAST(GETDATE() AS date)
   AND AnfKo.[Status] = N'S'
+  AND AnfPo.Angefordert != 0
   AND Standort.SuchCode LIKE N'WOE_';
 
 UPDATE #AnfCheck SET TeileAnzahl = ScanSum.Anzahl
@@ -64,10 +65,20 @@ JOIN Kunden ON Vsa.KundenID = Kunden.ID
 JOIN LsKo ON #AnfCheck.LsKoID = LsKo.ID
 JOIN KdArti ON #AnfCheck.KdArtiID = KdArti.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN KdBer ON KdArti.KdBerID = KdBer.ID
+JOIN Bereich ON KdBer.BereichID = Bereich.ID
 JOIN ArtGroe ON #AnfCheck.ArtGroeID = ArtGroe.ID
 JOIN Mitarbei ON #AnfCheck.UserID_ = Mitarbei.ID
 JOIN StandKon ON #AnfCheck.StandKonID = StandKon.ID
 LEFT JOIN ArtiStan ON #AnfCheck.ProduktionID = ArtiStan.StandortID AND KdArti.ArtikelID = ArtiStan.ArtikelID
 WHERE IIF(#AnfCheck.Geliefert = 0, 100, ROUND((#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl) / (#AnfCheck.Geliefert / 100), 0)) >= 10
   AND ABS(CAST(#AnfCheck.Geliefert - #AnfCheck.TeileAnzahl AS int)) > COALESCE(IIF(ArtiStan.Packmenge < 0, NULL, ArtiStan.Packmenge), Artikel.Packmenge)
-  AND #AnfCheck.TeileAnzahl > 0;
+  AND (
+    #AnfCheck.TeileAnzahl > 0
+    OR (
+      #AnfCheck.TeileAnzahl = 0
+      AND (KdArti.ArtiZwingendBarcodiert = 1 OR KdArti.ArtiOptionalBarcodiert = 1)
+      AND EXISTS (SELECT * FROM EinzTeil JOIN EinzHist ON EinzTeil.CurrEinzHistID = EinzHist.ID WHERE EinzTeil.ArtikelID = Artikel.ID AND EinzHist.PoolFkt = 1 AND EinzTeil.[Status] = 'Q')
+      AND Bereich.Bereich != N'RT'
+    )
+  );
