@@ -43,7 +43,7 @@ SELECT DISTINCT KdArti.ID AS KdArtiID, WascSort.ID, 51 AS SdcDevID, @userid, @us
 FROM KdArti
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
-JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr AND KdArti.Variante = __Sortmaster.Variante COLLATE Latin1_General_CS_AS
+JOIN __Sortmaster ON Artikel.ArtikelNr = __Sortmaster.ArtikelNr COLLATE Latin1_General_CS_AS AND Kunden.KdNr = __Sortmaster.KdNr AND KdArti.Variante = ISNULL(__Sortmaster.Variante, '-') COLLATE Latin1_General_CS_AS
 JOIN WascSort ON __Sortmaster.Waschsortierung = WascSort.Waschsortierung
 WHERE __Sortmaster.Waschsortierung IS NOT NULL
   AND __Sortmaster.Waschsortierung != 0;
