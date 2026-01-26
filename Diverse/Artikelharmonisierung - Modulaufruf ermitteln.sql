@@ -5,7 +5,7 @@ DECLARE @Artikelharmonisierung TABLE (
 
 INSERT INTO @Artikelharmonisierung
 VALUES ('112606005018', 'KDT250'),
-  ('112603005031', 'KD1T56');
+       ('112603005031', 'KD1T56');
 
 SELECT N'ARTIKEL_HARMONISIERUNG;' + CAST(AltArtikel.ID AS nvarchar) + ';' + CAST(NeuArtikel.ID AS nvarchar)
 FROM @Artikelharmonisierung AS x
@@ -19,6 +19,7 @@ JOIN Artikel AS ArtikelErsatz ON ArtiKomp.KompArtikelID = ArtikelErsatz.ID
 JOIN @Artikelharmonisierung AS x ON x.AltArtikel = ArtikelErsatz.ArtikelNr
 JOIN Artikel AS ArtikelErsatzNeu ON x.NeuArtikel = ArtikelErsatzNeu.ArtikelNr
 WHERE ArtiKomp.ArtiRelID = 1
+  AND BasisArtikel.ArtikelNr NOT IN (SELECT AltArtikel FROM @Artikelharmonisierung)
   AND NOT EXISTS (
     SELECT ak.*
     FROM ArtiKomp AS ak
