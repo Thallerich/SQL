@@ -1,3 +1,5 @@
+/* Pipeline: prepareData +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 DROP TABLE IF EXISTS #Liefermenge446;
 
 CREATE TABLE #Liefermenge446 (
@@ -31,20 +33,19 @@ WHERE LsPo.LsKoID IN (
 )
 GROUP BY LsPo.KdArtiID;
 
-WITH KdArtiStatus AS (
-  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
-  FROM [Status]
-  WHERE [Status].Tabelle = N'KDARTI'
-)
+/* Pipeline: Reportdaten +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
 SELECT Firma.SuchCode AS Firma,
   KdGf.KurzBez AS SGF,
   [Zone].ZonenCode AS Transportzone,
   Standort.SuchCode AS Hauptstandort,
+  Holding.Holding,
   Kunden.KdNr,
   Kunden.SuchCode AS Kunde,
   Kunden.Name1,
   Artikel.ArtikelNr,
   Artikel.ArtikelBez$LAN$ AS Artikelbezeichnung,
+  Artgru.Gruppe AS Artikelgruppe,
   KdArti.Variante,
   KdArti.VariantBez AS Variantenbezeichnung,
   KdArti.Umlauf,
@@ -52,15 +53,28 @@ SELECT Firma.SuchCode AS Firma,
   #Liefermenge446.Liefermenge,
   KdArtiStatus.StatusBez AS KundenartikelStatus,
   KdArti.Vorlaeufig,
-  KdArti.ID AS KdArtiID
+  KdArti.ID AS KdArtiID,
+  [Preis Aktivierungszeitpunkt] = (
+    SELECT TOP 1 CAST(PrArchiv.Aktivierungszeitpunkt AS date)
+    FROM PrArchiv
+    WHERE PrArchiv.KdArtiID = KdArti.ID
+      AND PrArchiv.Aktivierungszeitpunkt IS NOT NULL
+    ORDER BY PrArchiv.Aktivierungszeitpunkt DESC
+  )
 FROM KdArti
 JOIN Kunden ON KdArti.KundenID = Kunden.ID
-JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN KdGf ON Kunden.KdGFID = KdGf.ID
 JOIN Firma ON Kunden.FirmaID = Firma.ID
+JOIN Holding ON Holding.ID = Kunden.HoldingID
 JOIN Standort ON Kunden.StandortID = Standort.ID
 JOIN [Zone] ON Kunden.ZoneID = Zone.ID
-JOIN KdArtiStatus ON KdArti.[Status] = KdArtiStatus.[Status]
+JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
+JOIN Artgru ON Artikel.ArtgruID = Artgru.ID
+JOIN (
+  SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
+  FROM [Status]
+  WHERE [Status].Tabelle = N'KDARTI'
+) AS KdArtiStatus ON KdArti.[Status] = KdArtiStatus.[Status]
 LEFT JOIN #Liefermenge446 ON #Liefermenge446.KdArtiID = KdArti.ID
 WHERE KdArti.KundenID = Kunden.ID
   AND Kunden.KdgfID = KdGf.ID
@@ -81,4 +95,19 @@ WHERE KdArti.KundenID = Kunden.ID
   )
   AND Kunden.FirmaID IN ($1$)
   AND Kunden.SichtbarID IN ($SICHTBARIDS$)
-ORDER BY Kunden.KdNr, Artikel.ArtikelNr;
+  AND (
+    (
+      ($5$) = 0
+      AND EXISTS (
+        SELECT PreisKdArti.*
+        FROM KdArti AS PreisKdArti
+        JOIN Artikel AS PreisArtikel ON PreisKdArti.ArtikelID = PreisArtikel.ID
+        JOIN ArtGru AS PreisArtGru ON PreisArtikel.ArtGruID = PreisArtGru.ID
+        WHERE PreisArtGru.Gruppe = ArtGru.Gruppe  /* prüfen auf ArtGru.Gruppe anstatt ArtGru.ID weil mehrere Einträge mit gleicher Gruppe existieren */
+          AND PreisKdArti.KundenID = Kunden.ID
+          AND (PreisKdArti.LeasPreis != 0 OR PreisKdArti.WaschPreis != 0)
+      )
+    )
+    OR ($5$) = 1
+  )
+ORDER BY Holding.Holding, Kunden.KdNr, Artikel.ArtikelNr;
