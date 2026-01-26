@@ -1,7 +1,7 @@
 /* LIEFTAGE, ARTILIEF, ARGRLIEF, LIEFPRIO, ARTEKHIS */
 
-DECLARE @liefnr_source int = 200019610;
-DECLARE @liefnr_destination int = 200020806;
+DECLARE @liefnr_source int = 37039;
+DECLARE @liefnr_destination int = 200022986;
 
 DECLARE @liefid_source int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @liefnr_source);
 DECLARE @liefid_destination int = (SELECT Lief.ID FROM Lief WHERE Lief.LiefNr = @liefnr_destination);
