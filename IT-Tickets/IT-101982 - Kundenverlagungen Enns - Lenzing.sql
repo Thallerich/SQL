@@ -5,7 +5,7 @@ GO
 DROP TABLE IF EXISTS #VsaStandKon, #VsaTourUpdate;
 GO
 
-SELECT Vsa.ID AS VsaID, StandKonNeu.ID AS StandKonID, StandKonAlt.ID AS StandKonIDAlt, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu, _IT101982_StandKon.KontrolleXMal, _IT101982_StandKon.VsaName3
+SELECT Vsa.ID AS VsaID, StandKonNeu.ID AS StandKonID, StandKonAlt.ID AS StandKonIDAlt, StandKonAlt.StandKonBez AS StandKonBezAlt, StandKonNeu.StandKonBez AS StandKonBezNeu, _IT101982_StandKon.KontrolleXMal, _IT101982_StandKon.VsaName2, _IT101982_StandKon.VsaName3
 INTO #VsaStandKon
 FROM _IT101982_StandKon
 JOIN Vsa ON _IT101982_StandKon.VsaNr = Vsa.VsaNr
@@ -35,7 +35,7 @@ DECLARE @msg nvarchar(max);
 BEGIN TRY
   BEGIN TRANSACTION;
 
-    UPDATE Vsa SET StandKonID = #VsaStandKon.StandKonID, KontrolleXMal = #VsaStandKon.KontrolleXMal, Name3 = #VsaStandKon.VsaName3, UserID_ = @userid
+    UPDATE Vsa SET StandKonID = #VsaStandKon.StandKonID, KontrolleXMal = #VsaStandKon.KontrolleXMal, Name2 = #VsaStandKon.VsaName2, Name3 = #VsaStandKon.VsaName3, UserID_ = @userid
     FROM #VsaStandKon
     WHERE Vsa.ID = #VsaStandKon.VsaID;
 
