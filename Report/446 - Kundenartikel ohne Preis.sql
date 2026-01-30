@@ -70,6 +70,7 @@ JOIN Standort ON Kunden.StandortID = Standort.ID
 JOIN [Zone] ON Kunden.ZoneID = Zone.ID
 JOIN Artikel ON KdArti.ArtikelID = Artikel.ID
 JOIN Artgru ON Artikel.ArtgruID = Artgru.ID
+JOIN Eigentum ON KdArti.EigentumID = Eigentum.ID
 JOIN (
   SELECT [Status].ID, [Status].[Status], [Status].StatusBez$LAN$ AS StatusBez
   FROM [Status]
@@ -84,8 +85,8 @@ WHERE KdArti.KundenID = Kunden.ID
   AND Kunden.ZoneID = [Zone].ID
   AND Kunden.StandortID = Standort.ID
   AND KdGf.ID IN ($2$)
-  AND KdArti.LeasPreis = 0  
-  AND KdArti.WaschPreis = 0 
+  AND ((KdArti.LeasPreis = 0 AND KdArti.WaschPreis = 0 AND KdArti.KaufwareModus != 2 AND Eigentum.Code != 'V') OR (KdArti.KaufwareModus = 2 AND KdArti.VKPreis = 0) OR (Eigentum.Code = 'V' AND KdArti.VKPreis = 0))
+  AND Artikel.ArtiTypeID != 7
   AND KdArti.Status = N'A'
   AND (($4$ = 0 AND KdArti.Vorlaeufig = 0) OR ($4$ = 1))
   AND KdArti.Anlage_ > $6$
