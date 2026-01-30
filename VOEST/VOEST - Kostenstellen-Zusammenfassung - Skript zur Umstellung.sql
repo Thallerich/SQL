@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS #AbteilCombine;
+DROP TABLE IF EXISTS #LsPoCombine;
 GO
 
 SELECT Abteil.ID AS AbteilID_Old,
@@ -10,7 +11,7 @@ INTO #AbteilCombine
 FROM Abteil
 JOIN Kunden ON Abteil.KundenID = Kunden.ID
 JOIN Holding ON Kunden.HoldingID = Holding.ID
-WHERE Kunden.KdNr IN (272376, 271583, 272353)
+WHERE Kunden.KdNr IN (272376, 271583, 272353, 272643)
   AND (Abteil.Bez = '-' OR TRY_CAST(Abteil.Bez AS bigint) IS NOT NULL);
 
 GO
@@ -58,12 +59,87 @@ BEGIN TRY
     FROM #AbteilCombine
     WHERE Vsa.AbteilID = #AbteilCombine.AbteilID_Old;
 
-/*     UPDATE LsPo SET AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
-    FROM #AbteilCombine, LsKo
-    WHERE LsPo.AbteilID = #AbteilCombine.AbteilID_Old
-      AND LsPo.LsKoID = LsKo.ID
-      AND LsKo.[Status] < 'W'
-      AND LsPo.RechPoID = -1; */
+    /* Lieferschein-Positionen - Start */
+
+    SELECT LsPo.LsKoID, SUM(LsPo.Menge) AS Menge, SUM(LsPo.MengeZurueck) AS MengeZurueck, SUM(LsPo.MengeReserviert) AS MengeReserviert, SUM(LsPo.MengeEntnommen) AS MengeEntnommen, SUM(LsPo.UrMenge) AS UrMenge, SUM(LsPo.NachLief) AS NachLief, LsPo.EPreis, SUM(LsPo.FehlMenge) AS FehlMenge, LsPo.EPreisRech, LsPo.WaeKursID, LsPo.ProduktionID, LsPo.GrundNoServiceID, LsPo.InternKalkPreis, #AbteilCombine.AbteilID_Neu, LsPo.KdArtiID, LsPo.Kostenlos, LsPo.ArtGroeID, LsPo.VsaOrtID, LsPo.LagerOrtID, LsPo.LsKoGruID, LsPo.VpsKoID, LsPo.TraegerID, STRING_AGG(CAST(LsPo.ID AS nvarchar), ',') AS LsPoIDs, COUNT(LsPo.ID) AS AnzLsPos, CAST(NULL AS bigint) AS LsPoID_Neu, ROW_NUMBER() OVER (ORDER BY LsKoID ASC) AS Rownumber
+    INTO #LsPoCombine
+    FROM LsPo
+    JOIN LsKo ON LsPo.LsKoID = LsKo.ID
+    JOIN Abteil ON LsPo.AbteilID = Abteil.ID
+    JOIN #AbteilCombine ON Abteil.ID = #AbteilCombine.AbteilID_Old
+    WHERE LsKo.[Status] < 'W'
+      AND Abteil.[Status] = 'I'
+      AND LsPo.RechPoID = -1
+      AND LsKo.VsaID IN (
+        SELECT Vsa.ID
+        FROM Vsa
+        WHERE Vsa.KundenID IN (
+          SELECT #AbteilCombine.KundenID
+          FROM #AbteilCombine
+        )
+      )
+    GROUP BY LsPo.LsKoID, LsPo.EPreis, LsPo.EPreisRech, LsPo.WaeKursID, LsPo.ProduktionID, LsPo.GrundNoServiceID, LsPo.InternKalkPreis, #AbteilCombine.AbteilID_Neu, LsPo.KdArtiID, LsPo.Kostenlos, LsPo.ArtGroeID, LsPo.VsaOrtID, LsPo.LagerOrtID, LsPo.LsKoGruID, LsPo.VpsKoID, LsPo.TraegerID;
+
+    UPDATE LsPo SET AbteilID = #LsPoCombine.AbteilID_Neu
+    FROM #LsPoCombine
+    JOIN #AbteilCombine ON #LsPoCombine.AbteilID_Neu = #AbteilCombine.AbteilID_Neu
+    WHERE #LsPoCombine.AnzLsPos = 1
+      AND LsPo.LsKoID = #LsPoCombine.LsKoID
+      AND LsPo.AbteilID = #AbteilCombine.AbteilID_Old
+      AND LsPo.KdArtiID = #LsPoCombine.KdArtiID
+      AND LsPo.Kostenlos = #LsPoCombine.Kostenlos
+      AND LsPo.ArtGroeID = #LsPoCombine.ArtGroeID
+      AND LsPo.VsaOrtID = #LsPoCombine.VsaOrtID
+      AND LsPo.LagerOrtID = #LsPoCombine.LagerOrtID
+      AND LsPo.LsKoGruID = #LsPoCombine.LsKoGruID
+      AND LsPo.VpsKoID = #LsPoCombine.VpsKoID
+      AND LsPo.TraegerID = #LsPoCombine.TraegerID;
+
+    DECLARE NewLsPo CURSOR FOR
+      SELECT Rownumber, LsPoIDs
+      FROM #LsPoCombine
+      WHERE AnzLsPos > 1
+        AND LsPoID_Neu IS NULL;
+
+    OPEN NewLsPo;
+
+    DECLARE @rownumber int, @newlspoid bigint;
+    DECLARE @lspoids nvarchar(max), @sqltext nvarchar(max);
+    DECLARE @LsPo TABLE (LsPoID int);
+
+    FETCH NEXT FROM NewLsPo INTO @rownumber, @lspoids;
+      
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+      INSERT INTO LsPo (LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID)
+      OUTPUT inserted.ID INTO @LsPo (LsPoID)
+      SELECT LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID_Neu, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID
+      FROM #LsPoCombine
+      WHERE #LsPoCombine.Rownumber = @rownumber;
+
+      SELECT @newlspoid = LsPoID FROM @LsPo;
+      UPDATE #LsPoCombine SET LsPoID_Neu = @newlspoid;
+
+      SET @sqltext = '
+        UPDATE Scans SET LsPoID = ' + CAST(@newlspoid AS nvarchar) + ' WHERE LsPoID IN (' + @lspoids + ');
+        UPDATE EinzHist SET LastLsPoID = ' + CAST(@newlspoid AS nvarchar) + ' WHERE LastLsPoID IN (' + @lspoids + ');
+      ';
+
+      EXEC sp_executesql @sqltext;
+
+      SET @sqltext = '
+        DELETE FROM LsPo WHERE ID IN (' + @lspoids + ');
+      ';
+
+      EXEC sp_executesql @sqltext;
+
+      FETCH NEXT FROM NewLsPo INTO @rownumber, @lspoids;
+    END;
+
+    CLOSE NewLsPo;
+    DEALLOCATE NewLsPo;
+
+    /* Lieferschein-Positionen - Ende */
 
     UPDATE VsaLeas SET AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
     FROM #AbteilCombine
@@ -93,3 +169,8 @@ BEGIN CATCH
   
   RAISERROR(@Message, @Severity, @State) WITH NOWAIT;
 END CATCH;
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+
+
