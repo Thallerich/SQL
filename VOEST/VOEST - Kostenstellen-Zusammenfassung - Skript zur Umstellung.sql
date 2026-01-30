@@ -59,6 +59,22 @@ BEGIN TRY
     FROM #AbteilCombine
     WHERE Vsa.AbteilID = #AbteilCombine.AbteilID_Old;
 
+    UPDATE VsaLeas SET AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
+    FROM #AbteilCombine
+    WHERE VsaLeas.AbteilID = #AbteilCombine.AbteilID_Old;
+
+    UPDATE Schrank SET Schrank.AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
+    FROM #AbteilCombine
+    WHERE Schrank.AbteilID = #AbteilCombine.AbteilID_Old;
+
+    UPDATE VsaAnf SET VsaAnf.AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
+    FROM #AbteilCombine
+    WHERE VsaAnf.AbteilID = #AbteilCombine.AbteilID_Old;
+
+    UPDATE Abteil SET [Status] = 'I', UserID_ = @userid
+    FROM #AbteilCombine
+    WHERE Abteil.ID = #AbteilCombine.AbteilID_Old;
+
     /* Lieferschein-Positionen - Start */
 
     SELECT LsPo.LsKoID, SUM(LsPo.Menge) AS Menge, SUM(LsPo.MengeZurueck) AS MengeZurueck, SUM(LsPo.MengeReserviert) AS MengeReserviert, SUM(LsPo.MengeEntnommen) AS MengeEntnommen, SUM(LsPo.UrMenge) AS UrMenge, SUM(LsPo.NachLief) AS NachLief, LsPo.EPreis, SUM(LsPo.FehlMenge) AS FehlMenge, LsPo.EPreisRech, LsPo.WaeKursID, LsPo.ProduktionID, LsPo.GrundNoServiceID, LsPo.InternKalkPreis, #AbteilCombine.AbteilID_Neu, LsPo.KdArtiID, LsPo.Kostenlos, LsPo.ArtGroeID, LsPo.VsaOrtID, LsPo.LagerOrtID, LsPo.LsKoGruID, LsPo.VpsKoID, LsPo.TraegerID, STRING_AGG(CAST(LsPo.ID AS nvarchar), ',') AS LsPoIDs, COUNT(LsPo.ID) AS AnzLsPos, CAST(NULL AS bigint) AS LsPoID_Neu, ROW_NUMBER() OVER (ORDER BY LsKoID ASC) AS Rownumber
@@ -80,7 +96,7 @@ BEGIN TRY
       )
     GROUP BY LsPo.LsKoID, LsPo.EPreis, LsPo.EPreisRech, LsPo.WaeKursID, LsPo.ProduktionID, LsPo.GrundNoServiceID, LsPo.InternKalkPreis, #AbteilCombine.AbteilID_Neu, LsPo.KdArtiID, LsPo.Kostenlos, LsPo.ArtGroeID, LsPo.VsaOrtID, LsPo.LagerOrtID, LsPo.LsKoGruID, LsPo.VpsKoID, LsPo.TraegerID;
 
-    UPDATE LsPo SET AbteilID = #LsPoCombine.AbteilID_Neu
+    UPDATE LsPo SET AbteilID = #LsPoCombine.AbteilID_Neu, UserID_ = @userid
     FROM #LsPoCombine
     JOIN #AbteilCombine ON #LsPoCombine.AbteilID_Neu = #AbteilCombine.AbteilID_Neu
     WHERE #LsPoCombine.AnzLsPos = 1
@@ -111,9 +127,9 @@ BEGIN TRY
       
     WHILE @@FETCH_STATUS = 0
     BEGIN
-      INSERT INTO LsPo (LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID)
+      INSERT INTO LsPo (LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID, AnlageUserID_, UserID_)
       OUTPUT inserted.ID INTO @LsPo (LsPoID)
-      SELECT LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID_Neu, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID
+      SELECT LsKoID, Menge, MengeZurueck, MengeReserviert, MengeEntnommen, UrMenge, NachLief, EPreis, FehlMenge, EPreisRech, WaeKursID, ProduktionID, GrundNoServiceID, InternKalkPreis, AbteilID_Neu, KdArtiID, Kostenlos, ArtGroeID, VsaOrtID, LagerOrtID, LsKoGruID, VpsKoID, TraegerID, @userid AS AnlageUserID_, @userid AS UserID_
       FROM #LsPoCombine
       WHERE #LsPoCombine.Rownumber = @rownumber;
 
@@ -121,8 +137,8 @@ BEGIN TRY
       UPDATE #LsPoCombine SET LsPoID_Neu = @newlspoid;
 
       SET @sqltext = '
-        UPDATE Scans SET LsPoID = ' + CAST(@newlspoid AS nvarchar) + ' WHERE LsPoID IN (' + @lspoids + ');
-        UPDATE EinzHist SET LastLsPoID = ' + CAST(@newlspoid AS nvarchar) + ' WHERE LastLsPoID IN (' + @lspoids + ');
+        UPDATE Scans SET LsPoID = ' + CAST(@newlspoid AS nvarchar) + ', UserID_ = ' + CAST(@userid AS nvarchar) + ' WHERE LsPoID IN (' + @lspoids + ');
+        UPDATE EinzHist SET LastLsPoID = ' + CAST(@newlspoid AS nvarchar) + ', UserID_ = ' + CAST(@userid AS nvarchar) + ' WHERE LastLsPoID IN (' + @lspoids + ');
       ';
 
       EXEC sp_executesql @sqltext;
@@ -140,22 +156,6 @@ BEGIN TRY
     DEALLOCATE NewLsPo;
 
     /* Lieferschein-Positionen - Ende */
-
-    UPDATE VsaLeas SET AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
-    FROM #AbteilCombine
-    WHERE VsaLeas.AbteilID = #AbteilCombine.AbteilID_Old;
-
-    UPDATE Schrank SET Schrank.AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
-    FROM #AbteilCombine
-    WHERE Schrank.AbteilID = #AbteilCombine.AbteilID_Old;
-
-    UPDATE VsaAnf SET VsaAnf.AbteilID = #AbteilCombine.AbteilID_Neu, UserID_ = @userid
-    FROM #AbteilCombine
-    WHERE VsaAnf.AbteilID = #AbteilCombine.AbteilID_Old;
-
-    UPDATE Abteil SET [Status] = 'I', UserID_ = @userid
-    FROM #AbteilCombine
-    WHERE Abteil.ID = #AbteilCombine.AbteilID_Old;
   
   COMMIT;
 END TRY
