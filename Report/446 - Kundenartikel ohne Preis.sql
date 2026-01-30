@@ -88,6 +88,8 @@ WHERE KdArti.KundenID = Kunden.ID
   AND KdArti.WaschPreis = 0 
   AND KdArti.Status = N'A'
   AND (($4$ = 0 AND KdArti.Vorlaeufig = 0) OR ($4$ = 1))
+  AND KdArti.Anlage_ > $6$
+  AND KdArti.Anlage_ < $7$
   AND Kunden.Status IN (
     SELECT [Status].[Status]
     FROM [Status]
